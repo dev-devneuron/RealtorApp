@@ -1,1 +1,0 @@
-https://realtorapp.lovable.app/

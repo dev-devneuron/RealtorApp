@@ -76,17 +76,7 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Action Buttons */}
-          <div className="hidden lg:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-navy hover:text-gold">
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Chat Bot
-            </Button>
-            <Button variant="gold" size="sm">
-              <Phone className="mr-2 h-4 w-4" />
-              Call Bot
-            </Button>
-          </div>
+          {/* Action Buttons - Removed Chat Bot and Call Bot buttons */}
 
           {/* Mobile Menu Button */}
           <button
@@ -130,16 +120,6 @@ const Header = () => {
                   </a>
                 )
               ))}
-              <div className="pt-4 space-y-3">
-                <Button variant="ghost" className="w-full text-navy">
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Chat Bot
-                </Button>
-                <Button variant="gold" className="w-full">
-                  <Phone className="mr-2 h-4 w-4" />
-                  Call Bot
-                </Button>
-              </div>
             </nav>
           </div>
         )}

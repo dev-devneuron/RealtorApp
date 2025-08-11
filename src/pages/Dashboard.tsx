@@ -14,7 +14,7 @@ const Dashboard = () => {
 
   // Basic SEO for SPA route
   useEffect(() => {
-    const title = "Client Dashboard | EliteRealty AI";
+    const title = "Dashboard | EliteRealty AI";
     const description = "Personalized real estate dashboard with your properties and bookings.";
     document.title = title;
 
@@ -157,7 +157,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            Review your saved properties and manage your bookings. Data shown is placeholder until your account is fully connected.
+            Review your saved properties and manage your bookings.
           </motion.p>
         </div>
       </motion.header>

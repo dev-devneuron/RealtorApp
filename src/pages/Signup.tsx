@@ -22,7 +22,7 @@ const Signup = () => {
     setIsSubmitting(true);
 
     try {
-      // Sign up the user
+      // Sign up the user (Supabase will send a confirmation email if enabled)
       const { error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -31,9 +31,40 @@ const Signup = () => {
         },
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // If the user already exists, attempt to resend the confirmation email
+        // @ts-ignore Supabase error may include a status code
+        if ((authError as any)?.status === 422) {
+          const { error: resendError } = await supabase.auth.resend({
+            type: 'signup',
+            email: formData.email,
+            options: { emailRedirectTo: `${window.location.origin}/` },
+          });
+          if (resendError) throw resendError;
 
-      // Send confirmation email to user
+          toast({
+            title: "Confirmation email re-sent",
+            description: "Please check your inbox to confirm your email.",
+          });
+
+          // Best-effort notifications (non-blocking)
+          await supabase.functions.invoke('send-signup-confirmation', {
+            body: { name: formData.name, email: formData.email }
+          }).catch(() => {});
+          await supabase.functions.invoke('send-signup-confirmation', {
+            body: { name: formData.name, email: formData.email, adminNotification: true }
+          }).catch(() => {});
+
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 2000);
+
+          return;
+        }
+        throw authError;
+      }
+
+      // Success path - Supabase has sent a confirmation email automatically
       const { error: userEmailError } = await supabase.functions.invoke('send-signup-confirmation', {
         body: {
           name: formData.name,
@@ -41,7 +72,6 @@ const Signup = () => {
         }
       });
 
-      // Send notification to admin
       const { error: adminEmailError } = await supabase.functions.invoke('send-signup-confirmation', {
         body: {
           name: formData.name,
@@ -56,14 +86,14 @@ const Signup = () => {
 
       toast({
         title: "Welcome to your free trial!",
-        description: "Check your email for confirmation and start using our AI tools.",
+        description: "We sent a confirmation email. Please check your inbox.",
       });
 
       setFormData({ name: "", email: "", password: "" });
       
-      // Redirect to home after 2 seconds
+      // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        navigate('/');
+        navigate('/dashboard');
       }, 2000);
     } catch (error: any) {
       toast({

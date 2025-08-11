@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface SignupModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ const SignupModal = ({ open, onOpenChange }: SignupModalProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +53,7 @@ const SignupModal = ({ open, onOpenChange }: SignupModalProps) => {
       });
 
       setFormData({ name: "", email: "", password: "" });
+      navigate('/dashboard');
       onOpenChange(false);
     } catch (error: any) {
       toast({

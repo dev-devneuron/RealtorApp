@@ -18,6 +18,7 @@ const Header = () => {
 
   const navigation = [
     { name: "Home", href: "/", isRoute: true },
+    { name: "Dashboard", href: "/dashboard", isRoute: true },
     { name: "Services", href: "#services", isRoute: false },
     { name: "Properties", href: "/properties", isRoute: true },
     { name: "AI Tools", href: "#ai-tools", isRoute: false },

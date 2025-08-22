@@ -54,6 +54,7 @@ export default function UploadPage() {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -99,6 +100,7 @@ export default function UploadPage() {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
+        credentials: "include",
       });
 
       const data = await res.json();

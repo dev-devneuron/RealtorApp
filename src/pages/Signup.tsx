@@ -247,7 +247,7 @@ const Signup = () => {
       console.log("Response:", data);
 
       setFormData({ name: "", email: "", contact: "", password: "" });
-      navigate("/login");
+      navigate("/SignIn");
     } catch (error: any) {
       toast({
         title: "Error",

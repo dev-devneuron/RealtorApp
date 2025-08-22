@@ -139,9 +139,9 @@ export default function UploadPage() {
           </CardHeader>
           <CardContent className="space-y-8">
             
-            <h2 className="text-lg font-semibold text-gold mb-2">Click on this link to give access to calendar</h2>
+            <h2 className="text-lg font-semibold text-gold mb-2">Click on this link to give access to calendar<br/>Your Auth Link:</h2>
               {authLink ? (
-                <p className="text-white text-center flex items-center justify-center space-x-2">Your Auth Link: <a href={authLink} target="_blank" rel="noopener noreferrer">{authLink}</a></p>
+                <p className="text-white text-center flex items-center justify-center space-x-2"> <a href={authLink} target="_blank" rel="noopener noreferrer">{authLink}</a></p>
               ) : (
                 <p className="text-white text-center flex items-center justify-center space-x-2">No Auth Link available</p>
               )}

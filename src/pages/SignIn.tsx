@@ -38,6 +38,7 @@ const SignIn = () => {
         throw new Error(data.detail || data.message || "Login failed");
       }
 
+      if (data.auth_link) localStorage.setItem("auth_link", data.auth_link);
       if (data.access_token) localStorage.setItem("access_token", data.access_token);
       if (data.refresh_token) localStorage.setItem("refresh_token", data.refresh_token);
       if (data.realtor_id) localStorage.setItem("realtor_id", data.realtor_id);
@@ -47,7 +48,7 @@ const SignIn = () => {
         description: `Welcome back, Realtor ID: ${data.user?.realtor_id || "Unknown"}`,
       });
 
-      navigate("/Dashboard");
+      navigate("/UploadPage");
     } catch (err: any) {
       toast({
         title: "Error",

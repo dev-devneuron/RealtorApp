@@ -37,6 +37,7 @@ const SignIn = () => {
       if (!response.ok) {
         throw new Error(data.detail || data.message || "Login failed");
       }
+      console.log("data fetched:",data)
       console.log("url fetched:",data.auth_link)
       if (data.auth_link) localStorage.setItem("auth_link", data.auth_link);
       if (data.access_token) localStorage.setItem("access_token", data.access_token);

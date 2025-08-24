@@ -94,7 +94,7 @@ export default function UploadPage() {
       }
 
       const formData = new FormData();
-      listingFiles.forEach((file) => formData.append("files", file));
+      listingFiles.forEach((file) => formData.append("listing_file", file));
 
       const res = await fetch(`${API_BASE}/UploadListings`, {
         method: "POST",

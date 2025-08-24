@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Upload } from "lucide-react";
 
-const API_BASE = "https://leasing-copilot-mvp.onrender.com";
+const API_BASE = "https://leasing-copilot-supabase.onrender.com";
 
 export default function UploadPage() {
   const [ruleFiles, setRuleFiles] = useState([]);

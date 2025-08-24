@@ -145,9 +145,14 @@ const Dashboard = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex gap-3"
             >
               <Button asChild className="hover-lift bg-navy/90 text-white hover:bg-navy">
                 <Link to="/">Back to Home</Link>
+              </Button>
+  
+              <Button asChild className="hover-lift bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link to="/uploadpage">Upload Docs</Link>
               </Button>
             </motion.div>
           </motion.div>

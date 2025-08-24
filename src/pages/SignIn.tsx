@@ -49,7 +49,7 @@ const SignIn = () => {
         description: `Welcome back, Realtor ID: ${data.user?.realtor_id || "Unknown"}`,
       });
 
-      navigate("/UploadPage");
+      navigate("/dashboard");
     } catch (err: any) {
       toast({
         title: "Error",

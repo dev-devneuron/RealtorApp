@@ -24,22 +24,20 @@ const About = () => {
       <div className="container mx-auto px-6 py-24">
         <div className="mb-12">
           <Link to="/">
-            <Button variant="ghost" className="mb-6">
+            <Button variant="ghost" className="mb-6 font-bold">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Home
             </Button>
           </Link>
-          <h1 className="text-4xl font-bold text-navy mb-6">About EliteRealty AI</h1>
+          <h1 className="text-4xl font-bold text-gold mb-6">About EliteRealty AI</h1>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
             <div>
               <h2 className="text-3xl font-semibold text-navy mb-6">Revolutionizing Real Estate with AI</h2>
-              <p className="text-navy/70 mb-6 leading-relaxed">
-                At EliteRealty AI, we combine cutting-edge artificial intelligence with deep real estate expertise to deliver unparalleled service to our clients. Our innovative platform transforms how properties are bought, sold, and managed.
-              </p>
-              <p className="text-navy/70 mb-6 leading-relaxed">
-                Founded in 2009, we've grown from a small boutique agency to a technology-driven powerhouse, serving thousands of satisfied clients across the region. Our AI-powered tools provide market insights, property valuations, and personalized recommendations that give our clients a competitive edge.
-              </p>
+              <p className="text-navy/70 mb-6 leading-relaxed font-semibold">
+               At Leasap, we empower realtors with cutting-edge AI and real estate expertise to simplify their daily challenges. Our platform automates client chats, calls, and bookings, helping agents close deals faster, boost leads, and focus on what they do best: selling homes.</p>
+              <p className="text-navy/70 mb-6 leading-relaxed font-semibold">
+                Since our founding, Leasap has evolved from a small real estate venture into a powerful AI-driven platform built for realtors. What started as a vision to simplify property transactions has grown into a mission to empower agents with tools that handle client inquiries, schedule visits, and generate actionable market insights. Today, we partner with realtors across the region, helping them save time, win more clients, and close deals with confidence.</p>
               <Link to="/signup">
                 <Button variant="luxury" size="lg">
                   Schedule Consultation
@@ -73,14 +71,12 @@ const About = () => {
             <Card className="p-8 bg-luxury-gradient text-white border-0">
               <h3 className="text-2xl font-semibold mb-4">Our Mission</h3>
               <p className="leading-relaxed">
-                To democratize access to premium real estate services through innovative AI technology, making luxury property transactions seamless and accessible for everyone.
-              </p>
+                Our mission is to revolutionize the real estate industry by automating the daily challenges faced by realtors, such as booking property visits, managing endless chats and calls, and handling client queries. Through AI-powered solutions, we aim to simplify operations, enhance client engagement, and increase lead conversions by <strong>30% or more</strong>.</p>
             </Card>
             <Card className="p-8 bg-accent-gradient text-navy border-0">
               <h3 className="text-2xl font-semibold mb-4">Our Vision</h3>
               <p className="leading-relaxed">
-                To become the world's leading AI-powered real estate platform, setting new standards for transparency, efficiency, and client satisfaction in property markets globally.
-              </p>
+                To be the world’s leading AI-powered real estate platform, empowering realtors to sell smarter and faster. By automating routine tasks, streamlining client communication, and offering data driven insights, we enable realtors to focus on relationships and closing deals setting new standards of transparency, efficiency, and client satisfaction in global property markets</p>
             </Card>
           </div>
 

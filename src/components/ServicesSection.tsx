@@ -139,9 +139,9 @@ const ServicesSection = () => {
             Join 500+ realtors already using our AI solutions to grow their business
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="gold" size="lg">
+            {/* <Button variant="gold" size="lg">
               Start Free Trial
-            </Button>
+            </Button> */}
             <DemoScheduleModal>
               <Button variant="premium" size="lg">
                 Schedule Demo

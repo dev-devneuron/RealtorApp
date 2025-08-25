@@ -219,19 +219,19 @@ const CallBotSection = () => {
             {/* Call Stats */}
             <div className="bg-white rounded-2xl p-6 shadow-card">
               <h4 className="font-bold text-navy mb-4 text-center">CallBot Performance</h4>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gold">92%</div>
                   <div className="text-gray-600 text-sm">Call Success Rate</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gold">45s</div>
-                  <div className="text-gray-600 text-sm">Avg Response Time</div>
+                  <div className="text-2xl font-bold text-gold">Realtime</div>
+                  <div className="text-gray-600 text-sm">Response </div>
                 </div>
-                <div className="text-center">
+                {/* <div className="text-center">
                   <div className="text-2xl font-bold text-gold">85%</div>
                   <div className="text-gray-600 text-sm">Lead Conversion</div>
-                </div>
+                </div> */}
               </div>
             </div>
 

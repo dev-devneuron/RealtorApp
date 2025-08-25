@@ -18,7 +18,7 @@ const Header = () => {
 
   const navigation = [
     { name: "Home", href: "/", isRoute: true },
-    { name: "Dashboard", href: "/dashboard", isRoute: true },
+    // { name: "Dashboard", href: "/dashboard", isRoute: true },
     { name: "Services", href: "#services", isRoute: false },
     { name: "Properties", href: "/properties", isRoute: true },
     { name: "AI Tools", href: "#ai-tools", isRoute: false },
@@ -31,7 +31,7 @@ const Header = () => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
           ? "bg-white/95 backdrop-blur-lg shadow-luxury"
-          : "bg-transparent"
+          : "bg-gold backdrop-blur-md"
       }`}
     >
       <div className="container mx-auto px-6 py-4">
@@ -39,11 +39,19 @@ const Header = () => {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <div className="bg-accent-gradient p-2 rounded-lg">
+              <Link to="/"
+               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
               <Home className="h-6 w-6 text-navy" />
+              </Link>
             </div>
+            <Link to="/"
+               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
             <div className="text-xl font-bold text-navy">
-              Elite<span className="text-gold">Realty AI</span>
+              Leasap
             </div>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
@@ -53,7 +61,7 @@ const Header = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-navy hover:text-gold transition-colors duration-300 font-medium"
+                  className="text-navy hover:text-orange-700 transition-colors duration-300 font-medium"
                 >
                   {item.name}
                 </Link>
@@ -61,7 +69,7 @@ const Header = () => {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-navy hover:text-gold transition-colors duration-300 font-medium"
+                  className="text-navy hover:text-orange-700 transition-colors duration-300 font-medium"
                     onClick={(e) => {
                       if (item.href.startsWith('#')) {
                         e.preventDefault();

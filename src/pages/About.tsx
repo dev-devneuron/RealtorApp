@@ -5,30 +5,17 @@ import { Link } from "react-router-dom";
 
 const About = () => {
   const stats = [
-    { icon: Building, label: "Properties Sold", value: "2,500+" },
-    { icon: Users, label: "Happy Clients", value: "5,000+" },
-    { icon: Award, label: "Awards Won", value: "25+" },
-    { icon: TrendingUp, label: "Years Experience", value: "15+" }
+    { icon: Building, label: "Properties Managed", value: "500+" },
+    { icon: Users, label: "Happy Clients", value: "500+" },
+    { icon: TrendingUp, label: "Years Experience", value: "3+" }
   ];
 
   const team = [
     {
-      name: "Sarah Johnson",
+      name: "Tayyab Tahir",
       role: "CEO & Founder",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=300&h=300&fit=crop&crop=face",
+      image:"/images/photos/ceo.jpg",
       description: "15+ years in real estate with a vision for AI-powered property solutions."
-    },
-    {
-      name: "Michael Chen",
-      role: "AI Technology Director",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face",
-      description: "Leading expert in AI applications for real estate market analysis."
-    },
-    {
-      name: "Emily Rodriguez",
-      role: "Client Relations Manager",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face",
-      description: "Dedicated to ensuring exceptional client experiences and satisfaction."
     }
   ];
 
@@ -53,9 +40,11 @@ const About = () => {
               <p className="text-navy/70 mb-6 leading-relaxed">
                 Founded in 2009, we've grown from a small boutique agency to a technology-driven powerhouse, serving thousands of satisfied clients across the region. Our AI-powered tools provide market insights, property valuations, and personalized recommendations that give our clients a competitive edge.
               </p>
-              <Button variant="luxury" size="lg">
-                Schedule Consultation
-              </Button>
+              <Link to="/signup">
+                <Button variant="luxury" size="lg">
+                  Schedule Consultation
+                </Button>
+              </Link>
             </div>
             <div className="relative">
               <img 
@@ -67,7 +56,7 @@ const About = () => {
           </div>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {stats.map((stat, index) => (
               <Card key={index} className="text-center p-6 bg-white/80 backdrop-blur-sm border-0 hover:shadow-luxury transition-all duration-300">
                 <CardContent className="p-0">
@@ -98,18 +87,18 @@ const About = () => {
           {/* Team Section */}
           <div>
             <h2 className="text-3xl font-semibold text-navy mb-8 text-center">Meet Our Team</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex justify-center grid-cols-1 md:grid-cols-3 gap-8">
               {team.map((member, index) => (
-                <Card key={index} className="text-center bg-white/80 backdrop-blur-sm border-0 hover:shadow-luxury transition-all duration-300 transform hover:-translate-y-2">
+                <Card key={index} className="text-center bg-luxury-gradient backdrop-blur-sm border-0 text-white hover:shadow-luxury transition-all duration-300 transform hover:-translate-y-2">
                   <CardContent className="p-6">
                     <img 
                       src={member.image} 
                       alt={member.name}
                       className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
                     />
-                    <h3 className="text-xl font-semibold text-navy mb-2">{member.name}</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">{member.name}</h3>
                     <div className="text-gold font-medium mb-3">{member.role}</div>
-                    <p className="text-navy/70 text-sm leading-relaxed">{member.description}</p>
+                    <p className="text-white text-sm leading-relaxed">{member.description}</p>
                   </CardContent>
                 </Card>
               ))}

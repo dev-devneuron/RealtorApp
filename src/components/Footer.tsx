@@ -76,12 +76,12 @@ const Footer = () => {
     { name: "Analytics", href: "#" },
   ];
 
-  const legal = [
-    { name: "Privacy Policy", href: "#" },
-    { name: "Terms of Service", href: "#" },
-    { name: "Cookie Policy", href: "#" },
-    { name: "GDPR Compliance", href: "#" },
-  ];
+  // const legal = [
+  //   { name: "Privacy Policy", href: "#" },
+  //   { name: "Terms of Service", href: "#" },
+  //   { name: "Cookie Policy", href: "#" },
+  //   { name: "GDPR Compliance", href: "#" },
+  // ];
 
   const socialLinks = [
     { icon: Facebook, href: "#", name: "Facebook" },
@@ -131,7 +131,7 @@ const Footer = () => {
                 <Home className="h-6 w-6 text-navy" />
               </div>
               <div className="text-xl font-bold">
-                Elite<span className="text-gold">Realty AI</span>
+                Leasap
               </div>
             </div>
             
@@ -143,7 +143,7 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-gold" />
-                <span className="text-white/80">hello@eliterealtyai.com</span>
+                <span className="text-white/80">hello@leasap.com</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-gold" />
@@ -205,7 +205,7 @@ const Footer = () => {
           </div>
 
           {/* Legal */}
-          <div>
+          {/* <div>
             <h4 className="font-bold text-lg mb-6">Legal</h4>
             <ul className="space-y-3">
               {legal.map((item, index) => (
@@ -219,7 +219,7 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -228,15 +228,11 @@ const Footer = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-white/60 text-sm">
-              © 2024 EliteRealty AI. All rights reserved.
+              © 2025 Leasap. All rights reserved.
             </p>
             
             <div className="flex items-center space-x-6 text-sm text-white/60">
               <span>Powered by Advanced AI Technology</span>
-              <div className="flex items-center space-x-2">
-                <MessageCircle className="h-4 w-4 text-gold" />
-                <Phone className="h-4 w-4 text-gold" />
-              </div>
             </div>
           </div>
         </div>

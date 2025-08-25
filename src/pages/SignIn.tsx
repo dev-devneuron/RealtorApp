@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Home } from "lucide-react";
 
-const API_BASE = "https://leasing-copilot-supabase.onrender.com";
+const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 const SignIn = () => {
   const navigate = useNavigate();

@@ -226,7 +226,7 @@ const Signup = () => {
       payload.append("contact", formData.contact);
       payload.append("password", formData.password);
 
-      const response = await fetch("https://leasing-copilot-supabase.onrender.com/CreateRealtor", {
+      const response = await fetch("https://leasing-copilot-mvp.onrender.com/CreateRealtor", {
         method: "POST",
         body: payload,
         mode: "cors",

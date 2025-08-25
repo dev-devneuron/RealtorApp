@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Upload } from "lucide-react";
+import Header from "@/components/Header";
 
-const API_BASE = "https://leasing-copilot-supabase.onrender.com";
+const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 export default function UploadPage() {
   const [ruleFiles, setRuleFiles] = useState([]);
@@ -130,7 +131,9 @@ export default function UploadPage() {
   };
 
   return (
+    
     <div className="min-h-screen bg-gradient-to-br from-navy to-navy/80 flex items-center justify-center px-4">
+      <Header/>
       <div className="w-full max-w-2xl">
         <Card className="bg-white/10 backdrop-blur-lg border-white/20">
           <CardHeader>
@@ -143,10 +146,21 @@ export default function UploadPage() {
             
             <h2 className="text-lg font-semibold text-gold mb-2">Click on this link to give access to calendar<br/>Your Auth Link:</h2>
               {authLink ? (
-                <p className="text-white text-center flex items-center justify-center space-x-2"> <a href={authLink} target="_blank" rel="noopener noreferrer">{authLink}</a></p>
-              ) : (
-                <p className="text-white text-center flex items-center justify-center space-x-2">No Auth Link available</p>
-              )}
+              <p className="text-white text-center flex items-center justify-center space-x-2">
+                <a
+                  href={authLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 underline hover:text-blue-500"
+                >
+                  Click here to authorize
+                </a>
+              </p>
+            ) : (
+              <p className="text-white text-center flex items-center justify-center space-x-2">
+                No Auth Link available
+              </p>
+            )}
             {/* Upload Rules */}
             <div>
               <h2 className="text-lg font-semibold text-gold mb-2">
@@ -224,5 +238,6 @@ export default function UploadPage() {
         </Card>
       </div>
     </div>
+    
   );
 }

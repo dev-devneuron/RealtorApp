@@ -69,7 +69,7 @@ const HeroSection = () => {
                 <div className="text-white/80">AI Availability</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-gold">85%</div>
+                <div className="text-3xl font-bold text-gold">25-30%</div>
                 <div className="text-white/80">Lead Conversion</div>
               </div>
               <div className="text-center">

@@ -247,7 +247,8 @@ const Signup = () => {
       console.log("Response:", data);
 
       setFormData({ name: "", email: "", contact: "", password: "" });
-      navigate("/SignIn");
+      navigate("/confirmation", { state: { email: formData.email } });
+
     } catch (error: any) {
       toast({
         title: "Error",

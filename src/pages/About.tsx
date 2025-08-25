@@ -15,7 +15,7 @@ const About = () => {
       name: "Tayyab Tahir",
       role: "CEO & Founder",
       image:"/images/photos/ceo.jpg",
-      description: "15+ years in real estate with a vision for AI-powered property solutions."
+      description: "3+ years in real estate with a vision for AI-powered property solutions."
     }
   ];
 

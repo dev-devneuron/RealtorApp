@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import DemoScheduleModal from "@/components/DemoScheduleModal";
 import { 
   Phone, 
@@ -80,7 +81,7 @@ const CallBotSection = () => {
                   <span>AI CallBot Demo</span>
                   <div className="ml-auto flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm">Live</span>
+                    
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -236,10 +237,13 @@ const CallBotSection = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
+              <Link to="/signup">   
               <Button variant="luxury" size="lg" className="flex-1">
                 <Phone className="mr-2 h-5 w-5" />
-                Try CallBot Free
+                Get Your CallBot Companion
               </Button>
+              </Link>
+
               <DemoScheduleModal>
                 <Button variant="premium" size="lg" className="flex-1">
                   <Mic className="mr-2 h-5 w-5" />

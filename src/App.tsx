@@ -10,6 +10,7 @@ import Signup from "./pages/Signup";
 import SignIn from "./pages/SignIn";
 import Upload from "./pages/UploadPage";
 import Dashboard from "./pages/Dashboard";
+import ConfirmationPage from "./pages/ConfirmationPage"
 import PropertyDetails from "./pages/PropertyDetails";
 import NotFound from "./pages/NotFound";
 
@@ -27,9 +28,10 @@ const App = () => (
           <Route path="/properties/:id" element={<PropertyDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/signIn" element={<SignIn />} />
+          <Route path="/signin" element={<SignIn />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/uploadpage" element={<Upload />} />
+          <Route path="/confirmation" element={<ConfirmationPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

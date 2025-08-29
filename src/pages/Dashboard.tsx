@@ -63,7 +63,7 @@ const Dashboard = () => {
 
     const data = await res.json();
     console.log(data)
-    setMyNumber(data.number);
+    setMyNumber(data.twilio_number);
   } catch (err: any) {
     console.error(err);
     toast.error("Could not load your number");

@@ -20,46 +20,46 @@ const Footer = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubscribe = async () => {
-    if (!email) {
-      toast({
-        title: "Error",
-        description: "Please enter your email address.",
-        variant: "destructive",
-      });
-      return;
-    }
+  // const handleSubscribe = async () => {
+  //   if (!email) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Please enter your email address.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
 
-    setIsSubmitting(true);
+  //   setIsSubmitting(true);
 
-    try {
-      // Send notification to admin about new subscriber
-      const { error } = await supabase.functions.invoke('send-signup-confirmation', {
-        body: {
-          name: "Newsletter Subscriber",
-          email: email,
-          adminNotification: true,
-          subscriptionType: "newsletter"
-        }
-      });
+  //   try {
+  //     // Send notification to admin about new subscriber
+  //     const { error } = await supabase.functions.invoke('send-signup-confirmation', {
+  //       body: {
+  //         name: "Newsletter Subscriber",
+  //         email: email,
+  //         adminNotification: true,
+  //         subscriptionType: "newsletter"
+  //       }
+  //     });
 
-      if (error) throw error;
+  //     if (error) throw error;
 
-      toast({
-        title: "Subscribed!",
-        description: "You've successfully subscribed to our newsletter.",
-      });
-      setEmail("");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to subscribe. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //     toast({
+  //       title: "Subscribed!",
+  //       description: "You've successfully subscribed to our newsletter.",
+  //     });
+  //     setEmail("");
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to subscribe. Please try again.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
   const quickLinks = [
     { name: "Home", href: "#home" },
     { name: "Services", href: "#services" },
@@ -96,13 +96,13 @@ const Footer = () => {
       <div className="border-b border-white/10">
         <div className="container mx-auto px-6 py-12">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
-            <div>
+            {/* <div>
               <h3 className="text-2xl font-bold mb-2">Stay Updated with AI Real Estate Trends</h3>
               <p className="text-white/80">
                 Get weekly insights, tips, and updates about AI in real estate delivered to your inbox.
               </p>
-            </div>
-            <div className="flex space-x-4">
+            </div> */}
+            {/* <div className="flex space-x-4">
               <Input 
                 placeholder="Enter your email address" 
                 value={email}
@@ -116,7 +116,7 @@ const Footer = () => {
               >
                 {isSubmitting ? "Subscribing..." : "Subscribe"}
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

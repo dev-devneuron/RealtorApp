@@ -21,8 +21,6 @@ const Dashboard = () => {
     const title = "Dashboard | EliteRealty AI";
     const description = "Personalized real estate dashboard with your properties and bookings.";
     document.title = title;
-    
-    fetchNumber();
 
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
@@ -42,35 +40,33 @@ const Dashboard = () => {
 
     // Trigger staggered animations after component mount
     setTimeout(() => setAnimateCards(true), 300);
-  }, []);
+    const fetchNumber = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
 
+      const res = await fetch(`${API_BASE}/my-number`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  const fetchNumber = async () => {
-  try {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      toast.error("You must be signed in");
-      return;
+      if (!res.ok) throw new Error("Failed to fetch number");
+
+      const data = await res.json();
+      console.log("Fetched number:", data);
+      setMyNumber(data.twilio_number || null);
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Could not load your number");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const res = await fetch(`${API_BASE}/my-number`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) throw new Error("Failed to fetch number");
-
-    const data = await res.json();
-    console.log(data)
-    setMyNumber(data.twilio_number);
-  } catch (err: any) {
-    console.error(err);
-    toast.error("Could not load your number");
-  } finally {
-    setLoading(false);
-  }
-};
+  fetchNumber();
+  }, []);
 
 
 

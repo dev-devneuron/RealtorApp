@@ -7,16 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye } from "lucide-react";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [animateCards, setAnimateCards] = useState(false);
+  const [loading, setLoading] = useState(false)
+  const [myNumber, setMyNumber] = useState<string | null>(null);
 
   // Basic SEO for SPA route
   useEffect(() => {
     const title = "Dashboard | EliteRealty AI";
     const description = "Personalized real estate dashboard with your properties and bookings.";
     document.title = title;
+    
+    fetchNumber();
 
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
@@ -37,6 +42,69 @@ const Dashboard = () => {
     // Trigger staggered animations after component mount
     setTimeout(() => setAnimateCards(true), 300);
   }, []);
+
+
+  const fetchNumber = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/my-number`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch number");
+
+    const data = await res.json();
+    setMyNumber(data.number);
+  } catch (err: any) {
+    console.error(err);
+    toast.error("Could not load your number");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+  const handleBuyNumber = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("access_token"); // you stored it like this
+      if (!token) {
+        toast.error("You must be signed in to buy a number.");
+        navigate("/signin");
+        return;
+      }
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/buy-number`, {
+    method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ area_code: "412" }),
+      });
+
+      if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+      }
+
+    const data = await res.json();
+    console.log("Number purchased:", data);
+    }catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.detail || "Failed to buy number");
+    } finally {
+      setLoading(false);
+    }
+  }
+
 
   // Placeholder properties (capacity up to 100)
   const properties = useMemo(() => (
@@ -108,6 +176,8 @@ const Dashboard = () => {
     }
   };
 
+  
+
   return (
     <main className="min-h-screen dynamic-gradient">
       {/* Animated Header */}
@@ -154,6 +224,18 @@ const Dashboard = () => {
               <Button asChild className="hover-lift bg-accent text-accent-foreground hover:bg-accent/90">
                 <Link to="/uploadpage">Upload Docs</Link>
               </Button>
+              <Button 
+                onClick={handleBuyNumber} 
+                disabled={loading} 
+                className="hover-lift bg-gold text-navy hover:bg-gold/90"
+              >
+                {loading ? "Purchasing..." : "Buy a Twilio Number"}
+              </Button>
+              {myNumber ? (
+                <p className="mt-2">📱 Your Twilio Number: <b>{myNumber}</b></p>
+              ) : (
+                <p className="mt-2 text-gray-500">You don’t have a number yet.</p>
+              )}
             </motion.div>
           </motion.div>
           <motion.p 

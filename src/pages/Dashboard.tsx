@@ -53,7 +53,7 @@ const Dashboard = () => {
       return;
     }
 
-    const res = await fetch(`${API_BASE}/login`, {
+    const res = await fetch(`${API_BASE}/my-number`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -8,6 +8,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye } from "lucide-react";
 import { toast } from "sonner";
+const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ const Dashboard = () => {
       return;
     }
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/my-number`, {
+    const res = await fetch(`${API_BASE}/login`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -82,7 +83,7 @@ const Dashboard = () => {
         return;
       }
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/buy-number`, {
+      const res = await fetch(`${API_BASE}/buy-number`, {
     method: "POST",
       headers: {
         "Content-Type": "application/json",

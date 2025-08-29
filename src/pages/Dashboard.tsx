@@ -62,6 +62,7 @@ const Dashboard = () => {
     if (!res.ok) throw new Error("Failed to fetch number");
 
     const data = await res.json();
+    console.log(data)
     setMyNumber(data.number);
   } catch (err: any) {
     console.error(err);

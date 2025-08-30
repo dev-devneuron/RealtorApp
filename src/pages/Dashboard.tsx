@@ -228,7 +228,7 @@ const Dashboard = () => {
                 disabled={loading} 
                 className="hover-lift bg-gold text-navy hover:bg-gold/90"
               >
-                {loading ? "Purchasing..." : "Buy a Twilio Number"}
+                {loading ? "Purchasing..." : "Buy a Twilio Number\n$1.5"}
               </Button>
               {myNumber ? (
                 <p className="mt-2">Your Twilio Number: <b>{myNumber}</b></p>

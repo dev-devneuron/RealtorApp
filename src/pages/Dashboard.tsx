@@ -230,7 +230,7 @@ const Dashboard = () => {
                 {loading ? "Purchasing..." : "Buy a Twilio Number"}
               </Button>
               {myNumber ? (
-                <p className="mt-2">📱 Your Twilio Number: <b>{myNumber}</b></p>
+                <p className="mt-2">Your Twilio Number: <b>{myNumber}</b></p>
               ) : (
                 <p className="mt-2 text-gray-500">You don’t have a number yet.</p>
               )}

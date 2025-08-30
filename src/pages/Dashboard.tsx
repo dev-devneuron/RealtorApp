@@ -95,6 +95,7 @@ const Dashboard = () => {
 
     const data = await res.json();
     console.log("Number purchased:", data);
+    setMyNumber(data.twilio_contact || data.twilio_number || null);
     }catch (err: any) {
       console.error(err);
       toast.error(err.response?.data?.detail || "Failed to buy number");

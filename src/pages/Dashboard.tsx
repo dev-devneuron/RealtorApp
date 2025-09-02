@@ -70,32 +70,32 @@ const Dashboard = () => {
   fetchNumber();
 
 
-  const fetchRecordings = async () => {
-  try {
-    setLoadingRecordings(true);
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      toast.error("You must be signed in");
-      return;
-    }
+//   const fetchRecordings = async () => {
+//   try {
+//     setLoadingRecordings(true);
+//     const token = localStorage.getItem("access_token");
+//     if (!token) {
+//       toast.error("You must be signed in");
+//       return;
+//     }
 
-    const res = await fetch(`${API_BASE}/recordings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+//     const res = await fetch(`${API_BASE}/recordings`, {
+//       headers: { Authorization: `Bearer ${token}` },
+//     });
 
-    if (!res.ok) throw new Error("Failed to fetch recordings");
+//     if (!res.ok) throw new Error("Failed to fetch recordings");
 
-    const data = await res.json();
-    setRecordings(data.recordings || []);
-  } catch (err) {
-    console.error(err);
-    toast.error("Could not load recordings");
-  } finally {
-    setLoadingRecordings(false);
-  }
-};
+//     const data = await res.json();
+//     setRecordings(data.recordings || []);
+//   } catch (err) {
+//     console.error(err);
+//     toast.error("Could not load recordings");
+//   } finally {
+//     setLoadingRecordings(false);
+//   }
+// };
 
-fetchRecordings();
+// fetchRecordings();
   }, []);
 
 
@@ -374,9 +374,9 @@ fetchRecordings();
                 <TabsTrigger value="bookings" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Bookings
                 </TabsTrigger>
-                <TabsTrigger value="conversations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                {/* <TabsTrigger value="conversations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Conversations
-                </TabsTrigger>
+                </TabsTrigger> */}
               </TabsList>
             </motion.div>
 

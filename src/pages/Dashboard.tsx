@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye,Music, Phone } from "lucide-react";
 import { toast } from "sonner";
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
@@ -15,6 +15,8 @@ const Dashboard = () => {
   const [animateCards, setAnimateCards] = useState(false);
   const [loading, setLoading] = useState(false)
   const [myNumber, setMyNumber] = useState<string | null>(null);
+  const [recordings, setRecordings] = useState<{ url: string }[]>([]);
+  const [loadingRecordings, setLoadingRecordings] = useState(false);
 
   // Basic SEO for SPA route
   useEffect(() => {
@@ -66,6 +68,34 @@ const Dashboard = () => {
   };
 
   fetchNumber();
+
+
+  const fetchRecordings = async () => {
+  try {
+    setLoadingRecordings(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/recordings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch recordings");
+
+    const data = await res.json();
+    setRecordings(data.recordings || []);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load recordings");
+  } finally {
+    setLoadingRecordings(false);
+  }
+};
+
+fetchRecordings();
   }, []);
 
 
@@ -344,6 +374,9 @@ const Dashboard = () => {
                 <TabsTrigger value="bookings" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Bookings
                 </TabsTrigger>
+                <TabsTrigger value="conversations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                  Conversations
+                </TabsTrigger>
               </TabsList>
             </motion.div>
 
@@ -501,6 +534,64 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               </motion.div>
+            </TabsContent>
+            <TabsContent value="conversations">
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6 }}
+  >
+    <Card className="glass-card">
+      <CardHeader>
+        <CardTitle className="text-navy text-xl flex items-center gap-2">
+          <Music className="h-5 w-5 text-accent" />
+          Conversations (Call Recordings)
+        </CardTitle>
+        <p className="text-sm text-muted-foreground mt-1">
+          Listen to your recorded calls with leads and clients.
+        </p>
+      </CardHeader>
+      <CardContent>
+        {loadingRecordings ? (
+          <p className="text-muted-foreground">Loading recordings...</p>
+        ) : recordings.length === 0 ? (
+          <p className="text-muted-foreground">No recordings available.</p>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-border/50">
+            <Table>
+              <TableHeader className="bg-muted/30">
+                <TableRow>
+                  <TableHead className="font-semibold">Call</TableHead>
+                  <TableHead className="font-semibold">Recording</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recordings.map((rec, idx) => (
+                  <motion.tr
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: idx * 0.1 }}
+                    className="hover:bg-accent/5 transition-all duration-200 group"
+                  >
+                    <TableCell className="font-medium group-hover:text-accent transition-colors">
+                      Call #{idx + 1}
+                    </TableCell>
+                    <TableCell>
+                      <audio controls className="w-full">
+                        <source src={rec.url} type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                      </audio>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  </motion.div>
             </TabsContent>
           </Tabs>
         </motion.div>

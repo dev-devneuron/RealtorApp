@@ -119,7 +119,9 @@ const fetchBookings = async () => {
 
     const data = await res.json();
     console.log("Fetched bookings:", data);
-    setBookings(data.bookings || []);
+
+    // Fix: support both array and {bookings: []}
+    setBookings(Array.isArray(data) ? data : data.bookings || []);
   } catch (err) {
     console.error(err);
     toast.error("Could not load bookings");
@@ -530,7 +532,7 @@ const fetchBookings = async () => {
                     <TableCell className="font-medium group-hover:text-accent transition-colors">
                       {b.id}
                     </TableCell>
-                    <TableCell>{b.property || b.property_name}</TableCell>
+                    <TableCell>{b.property || b.property_name || b.address}</TableCell>
                     <TableCell>{b.date}</TableCell>
                     <TableCell>{b.time}</TableCell>
                     <TableCell>

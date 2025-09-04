@@ -17,6 +17,8 @@ const Dashboard = () => {
   const [myNumber, setMyNumber] = useState<string | null>(null);
   const [recordings, setRecordings] = useState<{ url: string }[]>([]);
   const [loadingRecordings, setLoadingRecordings] = useState(false);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
 
   // Basic SEO for SPA route
   useEffect(() => {
@@ -96,9 +98,35 @@ const Dashboard = () => {
 };
 
 fetchRecordings();
+
+fetchBookings();
   }, []);
 
+const fetchBookings = async () => {
+  try {
+    setLoadingBookings(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
 
+    const res = await fetch(`${API_BASE}/bookings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch bookings");
+
+    const data = await res.json();
+    console.log("Fetched bookings:", data);
+    setBookings(data.bookings || []);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load bookings");
+  } finally {
+    setLoadingBookings(false);
+  }
+};
 
   const handleBuyNumber = async () => {
     try {
@@ -152,16 +180,16 @@ fetchRecordings();
   ), []);
 
   // Placeholder bookings
-  const bookings = useMemo(() => (
-    Array.from({ length: 8 }, (_, i) => ({
-      id: `BK-${1000 + i}`,
-      property: `Premium Residence #${(i + 1) * 3}`,
-      propertyId: (i + 1) * 3,
-      date: new Date(Date.now() + i * 86400000).toLocaleDateString(),
-      time: "14:00",
-      status: i % 2 === 0 ? "Confirmed" : "Pending",
-    }))
-  ), []);
+  // const bookings = useMemo(() => (
+  //   Array.from({ length: 8 }, (_, i) => ({
+  //     id: `BK-${1000 + i}`,
+  //     property: `Premium Residence #${(i + 1) * 3}`,
+  //     propertyId: (i + 1) * 3,
+  //     date: new Date(Date.now() + i * 86400000).toLocaleDateString(),
+  //     time: "14:00",
+  //     status: i % 2 === 0 ? "Confirmed" : "Pending",
+  //   }))
+  // ), []);
 
   // Animation variants
   const containerVariants = {
@@ -455,86 +483,79 @@ fetchRecordings();
 
             {/* Bookings Table */}
             <TabsContent value="bookings">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <Card className="glass-card">
-                  <CardHeader>
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.6, delay: 0.2 }}
-                    >
-                      <CardTitle className="text-navy text-xl">Your Bookings</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Click on any booking to view property details
-                      </p>
-                    </motion.div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="overflow-hidden rounded-lg border border-border/50">
-                      <Table>
-                        <TableCaption className="text-muted-foreground">
-                          Placeholder bookings for demonstration.
-                        </TableCaption>
-                        <TableHeader className="bg-muted/30">
-                          <TableRow>
-                            <TableHead className="font-semibold">Booking ID</TableHead>
-                            <TableHead className="font-semibold">Property</TableHead>
-                            <TableHead className="font-semibold">Date</TableHead>
-                            <TableHead className="font-semibold">Time</TableHead>
-                            <TableHead className="font-semibold">Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {bookings.map((b, idx) => (
-                            <motion.tr
-                              key={b.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ duration: 0.4, delay: idx * 0.1 }}
-                              className="cursor-pointer hover:bg-accent/5 transition-all duration-200 group"
-                              onClick={() => navigate(`/properties/${b.propertyId}`)}
-                              whileHover={{ 
-                                backgroundColor: "hsl(var(--accent) / 0.1)",
-                                transition: { duration: 0.2 }
-                              }}
-                            >
-                              <TableCell className="font-medium group-hover:text-accent transition-colors">
-                                {b.id}
-                              </TableCell>
-                              <TableCell className="group-hover:text-navy transition-colors">
-                                {b.property}
-                              </TableCell>
-                              <TableCell>{b.date}</TableCell>
-                              <TableCell>{b.time}</TableCell>
-                              <TableCell>
-                                <motion.div
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  <Badge 
-                                    variant={b.status === "Confirmed" ? "default" : "secondary"}
-                                    className={b.status === "Confirmed" 
-                                      ? "bg-accent text-accent-foreground" 
-                                      : "bg-muted text-muted-foreground"
-                                    }
-                                  >
-                                    {b.status}
-                                  </Badge>
-                                </motion.div>
-                              </TableCell>
-                            </motion.tr>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </TabsContent>
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6 }}
+  >
+    <Card className="glass-card">
+      <CardHeader>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <CardTitle className="text-navy text-xl">Your Bookings</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            All your active and past bookings are listed below.
+          </p>
+        </motion.div>
+      </CardHeader>
+      <CardContent>
+        {loadingBookings ? (
+          <p className="text-muted-foreground">Loading bookings...</p>
+        ) : bookings.length === 0 ? (
+          <p className="text-muted-foreground">No bookings found.</p>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-border/50">
+            <Table>
+              <TableHeader className="bg-muted/30">
+                <TableRow>
+                  <TableHead className="font-semibold">Booking ID</TableHead>
+                  <TableHead className="font-semibold">Property</TableHead>
+                  <TableHead className="font-semibold">Date</TableHead>
+                  <TableHead className="font-semibold">Time</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((b, idx) => (
+                  <motion.tr
+                    key={b.id || idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: idx * 0.1 }}
+                    className="hover:bg-accent/5 transition-all duration-200 group"
+                  >
+                    <TableCell className="font-medium group-hover:text-accent transition-colors">
+                      {b.id}
+                    </TableCell>
+                    <TableCell>{b.property || b.property_name}</TableCell>
+                    <TableCell>{b.date}</TableCell>
+                    <TableCell>{b.time}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={b.status === "Confirmed" ? "default" : "secondary"}
+                        className={
+                          b.status === "Confirmed"
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }
+                      >
+                        {b.status}
+                      </Badge>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  </motion.div>
+</TabsContent>
+
             <TabsContent value="conversations">
   <motion.div
     initial={{ opacity: 0, y: 20 }}

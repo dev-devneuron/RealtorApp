@@ -535,7 +535,7 @@ const Dashboard = () => {
                 </Card>
               </motion.div>
             </TabsContent>
-            <TabsContent value="conversations">
+            {/* <TabsContent value="conversations">
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -592,7 +592,7 @@ const Dashboard = () => {
       </CardContent>
     </Card>
   </motion.div>
-            </TabsContent>
+            </TabsContent> */}
           </Tabs>
         </motion.div>
       </section>

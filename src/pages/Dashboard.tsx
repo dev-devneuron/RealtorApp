@@ -19,6 +19,9 @@ const Dashboard = () => {
   const [loadingRecordings, setLoadingRecordings] = useState(false);
   const [bookings, setBookings] = useState<any[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const [apartments, setApartments] = useState<any[]>([]);
+  const [loadingApartments, setLoadingApartments] = useState(false);
+
 
   // Basic SEO for SPA route
   useEffect(() => {
@@ -44,7 +47,18 @@ const Dashboard = () => {
 
     // Trigger staggered animations after component mount
     setTimeout(() => setAnimateCards(true), 300);
-    const fetchNumber = async () => {
+    
+
+  fetchNumber();
+ 
+fetchApartments();
+fetchRecordings();
+
+fetchBookings();
+
+  }, []);
+
+  const fetchNumber = async () => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
@@ -68,11 +82,61 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+const fetchBookings = async () => {
+  try {
+    setLoadingBookings(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
 
-  fetchNumber();
+    const res = await fetch(`${API_BASE}/bookings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
+    if (!res.ok) throw new Error("Failed to fetch bookings");
 
-  const fetchRecordings = async () => {
+    const data = await res.json();
+
+    setBookings(Array.isArray(data) ? data : data.bookings || []);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load bookings");
+  } finally {
+    setLoadingBookings(false);
+  }
+};
+
+const fetchApartments = async () => {
+  try {
+    setLoadingApartments(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/apartments`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch apartments");
+
+    const data = await res.json();
+    console.log("Fetched apartments:", data);
+
+    // since backend returns raw array
+    setApartments(Array.isArray(data) ? data : data.apartments || []);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load apartments");
+  } finally {
+    setLoadingApartments(false);
+  }
+};
+
+const fetchRecordings = async () => {
   try {
     setLoadingRecordings(true);
     const token = localStorage.getItem("access_token");
@@ -97,38 +161,7 @@ const Dashboard = () => {
   }
 };
 
-fetchRecordings();
 
-fetchBookings();
-  }, []);
-
-const fetchBookings = async () => {
-  try {
-    setLoadingBookings(true);
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      toast.error("You must be signed in");
-      return;
-    }
-
-    const res = await fetch(`${API_BASE}/bookings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (!res.ok) throw new Error("Failed to fetch bookings");
-
-    const data = await res.json();
-    console.log("Fetched bookings:", data);
-
-    // Fix: support both array and {bookings: []}
-    setBookings(Array.isArray(data) ? data : data.bookings || []);
-  } catch (err) {
-    console.error(err);
-    toast.error("Could not load bookings");
-  } finally {
-    setLoadingBookings(false);
-  }
-};
 
   const handleBuyNumber = async () => {
     try {
@@ -165,33 +198,22 @@ const fetchBookings = async () => {
   }
 
 
-  // Placeholder properties (capacity up to 100)
-  const properties = useMemo(() => (
-    Array.from({ length: 100 }, (_, i) => ({
-      id: i + 1,
-      title: `Premium Residence #${i + 1}`,
-      price: 350000 + (i * 1250),
-      location: i % 3 === 0 ? "Downtown" : i % 3 === 1 ? "Uptown" : "Waterfront",
-      beds: (i % 5) + 1,
-      baths: (i % 3) + 1,
-      sqft: 800 + (i * 15),
-      type: i % 2 === 0 ? "For Sale" : "For Rent",
-      featured: i % 7 === 0,
-      image: `/images/properties/property-${(i % 6) + 1}.jpg`,
-    }))
-  ), []);
-
-  // Placeholder bookings
-  // const bookings = useMemo(() => (
-  //   Array.from({ length: 8 }, (_, i) => ({
-  //     id: `BK-${1000 + i}`,
-  //     property: `Premium Residence #${(i + 1) * 3}`,
-  //     propertyId: (i + 1) * 3,
-  //     date: new Date(Date.now() + i * 86400000).toLocaleDateString(),
-  //     time: "14:00",
-  //     status: i % 2 === 0 ? "Confirmed" : "Pending",
+  // // Placeholder properties (capacity up to 100)
+  // const properties = useMemo(() => (
+  //   Array.from({ length: 100 }, (_, i) => ({
+  //     id: i + 1,
+  //     title: `Premium Residence #${i + 1}`,
+  //     price: 350000 + (i * 1250),
+  //     location: i % 3 === 0 ? "Downtown" : i % 3 === 1 ? "Uptown" : "Waterfront",
+  //     beds: (i % 5) + 1,
+  //     baths: (i % 3) + 1,
+  //     sqft: 800 + (i * 15),
+  //     type: i % 2 === 0 ? "For Sale" : "For Rent",
+  //     featured: i % 7 === 0,
+  //     image: `/images/properties/property-${(i % 6) + 1}.jpg`,
   //   }))
   // ), []);
+
 
   // Animation variants
   const containerVariants = {
@@ -326,7 +348,7 @@ const fetchBookings = async () => {
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.8, type: "spring" as const }}
                   >
-                  {properties.length}
+                  {apartments.length}
                 </motion.p>
               </div>
               <motion.div 
@@ -412,76 +434,69 @@ const fetchBookings = async () => {
 
             {/* Properties Grid */}
             <TabsContent value="properties">
-              <motion.div 
-                className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {properties.map((p, idx) => (
-                  <motion.div
-                    key={p.id}
-                    variants={itemVariants}
-                    whileHover={{ 
-                      y: -8,
-                      transition: { duration: 0.2 }
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Card className="glass-card hover-lift group overflow-hidden h-full">
-                      <div className="relative aspect-[4/3] overflow-hidden">
-                        <motion.img
-                          src={p.image}
-                          alt={`Property ${p.title} in ${p.location} with ${p.beds} beds and ${p.baths} baths`}
-                          loading="lazy"
-                          className="h-full w-full object-cover"
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.4 }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="absolute top-3 left-3 flex gap-2">
-                          <Badge variant="secondary" className="backdrop-blur-sm bg-white/90">{p.type}</Badge>
-                          {p.featured && (
-                            <motion.div
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <Badge className="bg-gold text-navy backdrop-blur-sm pulse-glow">Featured</Badge>
-                            </motion.div>
-                          )}
-                        </div>
-                      </div>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-navy text-base group-hover:text-accent transition-colors">
-                          {p.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex items-center text-sm text-muted-foreground gap-2">
-                          <MapPin className="h-4 w-4" /> {p.location}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="inline-flex items-center gap-1"><Bed className="h-4 w-4" /> {p.beds} bd</span>
-                          <span className="inline-flex items-center gap-1"><Bath className="h-4 w-4" /> {p.baths} ba</span>
-                          <span className="inline-flex items-center gap-1"><Ruler className="h-4 w-4" /> {p.sqft.toLocaleString()} sqft</span>
-                        </div>
-                        <div className="flex items-center justify-between pt-1">
-                          <div className="text-lg font-semibold text-navy">${p.price.toLocaleString()}</div>
-                          <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground" size="sm">
-                              <Link to={`/properties/${p.id}`}>View</Link>
-                            </Button>
-                          </motion.div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </TabsContent>
+  <motion.div 
+    className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    variants={containerVariants}
+    initial="hidden"
+    animate="visible"
+  >
+    {loadingApartments ? (
+      <p className="text-muted-foreground">Loading apartments...</p>
+    ) : apartments.length === 0 ? (
+      <p className="text-muted-foreground">No apartments found.</p>
+    ) : (
+      apartments.map((apt, idx) => (
+        <motion.div
+          key={apt.id || idx}
+          variants={itemVariants}
+          whileHover={{ 
+            y: -8,
+            transition: { duration: 0.2 }
+          }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Card className="glass-card hover-lift group overflow-hidden h-full">
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <motion.img
+                src={apt.image_url || "/images/properties/default.jpg"}
+                alt={`Apartment at ${apt.address}`}
+                loading="lazy"
+                className="h-full w-full object-cover"
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.4 }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-navy text-base group-hover:text-accent transition-colors">
+                {apt.address}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center text-sm text-muted-foreground gap-2">
+                <MapPin className="h-4 w-4" /> {apt.city || "Unknown location"}
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <div className="text-lg font-semibold text-navy">
+                  ${apt.price ? apt.price.toLocaleString() : "N/A"}
+                </div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground" size="sm">
+                    <Link to={`/apartments/${apt.id}`}>View</Link>
+                  </Button>
+                </motion.div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))
+    )}
+  </motion.div>
+</TabsContent>
+
 
             {/* Bookings Table */}
             <TabsContent value="bookings">

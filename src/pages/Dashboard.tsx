@@ -458,7 +458,7 @@ const fetchRecordings = async () => {
           <Card className="glass-card hover-lift group overflow-hidden h-full">
             <div className="relative aspect-[4/3] overflow-hidden">
               <motion.img
-                src={apt.image_url || "/images/properties/default.jpg"}
+                src={apt.image_url || "/images/properties/property-1.jpg"}
                 alt={`Apartment at ${apt.address}`}
                 loading="lazy"
                 className="h-full w-full object-cover"

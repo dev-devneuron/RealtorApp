@@ -20,7 +20,7 @@ const Dashboard = () => {
 
   // Basic SEO for SPA route
   useEffect(() => {
-    const title = "Dashboard | EliteRealty AI";
+    const title = "Dashboard | Leasap";
     const description = "Personalized real estate dashboard with your properties and bookings.";
     document.title = title;
 
@@ -70,32 +70,32 @@ const Dashboard = () => {
   fetchNumber();
 
 
-//   const fetchRecordings = async () => {
-//   try {
-//     setLoadingRecordings(true);
-//     const token = localStorage.getItem("access_token");
-//     if (!token) {
-//       toast.error("You must be signed in");
-//       return;
-//     }
+  const fetchRecordings = async () => {
+  try {
+    setLoadingRecordings(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
 
-//     const res = await fetch(`${API_BASE}/recordings`, {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
+    const res = await fetch(`${API_BASE}/recordings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-//     if (!res.ok) throw new Error("Failed to fetch recordings");
+    if (!res.ok) throw new Error("Failed to fetch recordings");
 
-//     const data = await res.json();
-//     setRecordings(data.recordings || []);
-//   } catch (err) {
-//     console.error(err);
-//     toast.error("Could not load recordings");
-//   } finally {
-//     setLoadingRecordings(false);
-//   }
-// };
+    const data = await res.json();
+    setRecordings(data.recordings || []);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load recordings");
+  } finally {
+    setLoadingRecordings(false);
+  }
+};
 
-// fetchRecordings();
+fetchRecordings();
   }, []);
 
 
@@ -258,10 +258,10 @@ const Dashboard = () => {
                 disabled={loading} 
                 className="hover-lift bg-gold text-navy hover:bg-gold/90"
               >
-                {loading ? "Purchasing..." : "Buy a Twilio Number\n$1.5"}
+                {loading ? "Purchasing..." : "Get a Number for Trail\n($1.5)"}
               </Button>
               {myNumber ? (
-                <p className="mt-2">Your Twilio Number: <b>{myNumber}</b></p>
+                <p className="mt-2">Your Leasap Number: <b>{myNumber}</b></p>
               ) : (
                 <p className="mt-2 text-gray-500">You don’t have a number yet.</p>
               )}
@@ -374,9 +374,9 @@ const Dashboard = () => {
                 <TabsTrigger value="bookings" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Bookings
                 </TabsTrigger>
-                {/* <TabsTrigger value="conversations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                <TabsTrigger value="conversations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Conversations
-                </TabsTrigger> */}
+                </TabsTrigger>
               </TabsList>
             </motion.div>
 
@@ -535,7 +535,7 @@ const Dashboard = () => {
                 </Card>
               </motion.div>
             </TabsContent>
-            {/* <TabsContent value="conversations">
+            <TabsContent value="conversations">
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -592,7 +592,7 @@ const Dashboard = () => {
       </CardContent>
     </Card>
   </motion.div>
-            </TabsContent> */}
+            </TabsContent>
           </Tabs>
         </motion.div>
       </section>

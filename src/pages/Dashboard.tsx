@@ -458,7 +458,7 @@ const fetchRecordings = async () => {
           <Card className="glass-card hover-lift group overflow-hidden h-full">
             <div className="relative aspect-[4/3] overflow-hidden">
               <motion.img
-                src={apt.image_url || "/images/properties/property-1.jpg"}
+                src={apt.image_url || "/images/properties/default.jpg"}
                 alt={`Apartment at ${apt.address}`}
                 loading="lazy"
                 className="h-full w-full object-cover"
@@ -484,9 +484,9 @@ const fetchRecordings = async () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground" size="sm">
+                  {/* <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground" size="sm">
                     <Link to={`/apartments/${apt.id}`}>View</Link>
-                  </Button>
+                  </Button> */}
                 </motion.div>
               </div>
             </CardContent>

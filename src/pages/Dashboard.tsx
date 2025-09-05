@@ -686,38 +686,37 @@ const fetchChats = async () => {
           <p className="text-muted-foreground">No chats available.</p>
         ) : (
           <div className="grid gap-6">
-            {Object.entries(chats).map(([customer, messages]: any, idx) => (
-              <div key={idx} className="border rounded-xl p-4 glass-card">
-                <h3 className="text-lg font-semibold text-navy mb-3">
-                  Chat with {customer}
-                </h3>
-                <div className="h-64 overflow-y-auto space-y-3 pr-2">
-                  {messages.map((msg: any, i: number) => (
-                    <div
-                      key={i}
-                      className={`flex ${
-                        msg.sender === "realtor" ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`px-4 py-2 rounded-2xl max-w-xs text-sm shadow ${
-                          msg.sender === "realtor"
-                            ? "bg-accent text-accent-foreground rounded-br-none"
-                            : "bg-muted text-navy rounded-bl-none"
-                        }`}
-                      >
-                        {msg.message}
-                        <div className="text-[10px] opacity-70 mt-1">
-                          {msg.timestamp
-                            ? new Date(msg.timestamp).toLocaleString()
-                            : ""}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+           {Object.entries(chats).map(([customer, messages]: any, idx) => (
+  <div key={idx} className="border rounded-xl p-4 glass-card">
+    <h3 className="text-lg font-semibold text-navy mb-3">
+      Chat with {customer}
+    </h3>
+    <div className="h-64 overflow-y-auto space-y-3 pr-2">
+      {messages.map((msg: any, i: number) => (
+        <div
+          key={i}
+          className={`flex ${
+            msg.sender === "realtor" ? "justify-end" : "justify-start"
+          }`}
+        >
+          <div
+            className={`px-4 py-2 rounded-2xl max-w-xs text-sm shadow ${
+              msg.sender === "realtor"
+                ? "bg-accent text-accent-foreground rounded-br-none"
+                : "bg-muted text-navy rounded-bl-none"
+            }`}
+          >
+            {msg.message}
+            <div className="text-[10px] opacity-70 mt-1">
+              {msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ""}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+))}
+
           </div>
         )}
       </CardContent>

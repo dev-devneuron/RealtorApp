@@ -474,7 +474,7 @@ const fetchRecordings = async () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center text-sm text-muted-foreground gap-2">
-                <MapPin className="h-4 w-4" /> {apt.city || "Unknown location"}
+                <MapPin className="h-4 w-4" /> {apt.bedrooms + "Beds" || "Unknown location"}
               </div>
               <div className="flex items-center justify-between pt-1">
                 <div className="text-lg font-semibold text-navy">

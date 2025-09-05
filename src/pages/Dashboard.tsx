@@ -310,7 +310,7 @@ const fetchRecordings = async () => {
                 disabled={loading} 
                 className="hover-lift bg-gold text-navy hover:bg-gold/90"
               >
-                {loading ? "Purchasing..." : "Get a Number for Trail\n($1.5)"}
+                {loading ? "Purchasing..." : "Get a Number for Trial\n($1.5)"}
               </Button>
               {myNumber ? (
                 <p className="mt-2">Your Leasap Number: <b>{myNumber}</b></p>

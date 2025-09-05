@@ -689,7 +689,7 @@ const fetchChats = async () => {
             {Object.entries(chats).map(([customer, messages]: any, idx) => (
               <div
                 key={idx}
-                className="border rounded-xl p-4 glass-card w-full max-w-[590] mx-auto"
+                className="border rounded-xl p-4 glass-card w-full max-w-[550] mx-auto"
               >
                 <h3 className="text-lg font-semibold text-navy mb-3 text-center">
                   Chat with {customer}

@@ -180,8 +180,8 @@ const fetchChats = async () => {
     if (!res.ok) throw new Error("Failed to fetch chats");
 
     const data = await res.json();
-    // backend returns: { customer1: [...], customer2: [...] }
-    setChats(data);
+    // FIX: unwrap .chats
+    setChats(data.chats || {});
   } catch (err) {
     console.error(err);
     toast.error("Could not load chats");

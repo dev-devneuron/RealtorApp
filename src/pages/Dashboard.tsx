@@ -173,7 +173,7 @@ const fetchChats = async () => {
       return;
     }
 
-    const res = await fetch(`${API_BASE}/chat-history/all`, {
+    const res = await fetch(`${API_BASE}/chat-history`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

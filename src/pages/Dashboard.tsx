@@ -663,7 +663,7 @@ const fetchChats = async () => {
     </Card>
   </motion.div>
             </TabsContent>
-            <TabsContent value="chats">
+           <TabsContent value="chats">
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -685,44 +685,51 @@ const fetchChats = async () => {
         ) : Object.keys(chats).length === 0 ? (
           <p className="text-muted-foreground">No chats available.</p>
         ) : (
-          <div className="grid gap-6">
-           {Object.entries(chats).map(([customer, messages]: any, idx) => (
-  <div key={idx} className="border rounded-xl p-4 glass-card">
-    <h3 className="text-lg font-semibold text-navy mb-3">
-      Chat with {customer}
-    </h3>
-    <div className="h-64 overflow-y-auto space-y-3 pr-2">
-      {messages.map((msg: any, i: number) => (
-        <div
-          key={i}
-          className={`flex ${
-            msg.sender === "realtor" ? "justify-end" : "justify-start"
-          }`}
-        >
-          <div
-            className={`px-4 py-2 rounded-2xl max-w-xs text-sm shadow ${
-              msg.sender === "realtor"
-                ? "bg-accent text-accent-foreground rounded-br-none"
-                : "bg-muted text-navy rounded-bl-none"
-            }`}
-          >
-            {msg.message}
-            <div className="text-[10px] opacity-70 mt-1">
-              {msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ""}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-))}
-
+          <div className="flex flex-col items-center gap-6 overflow-x-hidden">
+            {Object.entries(chats).map(([customer, messages]: any, idx) => (
+              <div
+                key={idx}
+                className="border rounded-xl p-4 glass-card w-full max-w-lg mx-auto"
+              >
+                <h3 className="text-lg font-semibold text-navy mb-3 text-center">
+                  Chat with {customer}
+                </h3>
+                <div className="h-64 overflow-y-auto space-y-3 pr-2">
+                  {messages.map((msg: any, i: number) => (
+                    <div
+                      key={i}
+                      className={`flex ${
+                        msg.sender === "realtor"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`px-4 py-2 rounded-2xl max-w-[75%] text-sm shadow ${
+                          msg.sender === "realtor"
+                            ? "bg-accent text-accent-foreground rounded-br-none"
+                            : "bg-muted text-navy rounded-bl-none"
+                        }`}
+                      >
+                        {msg.message}
+                        <div className="text-[10px] opacity-70 mt-1">
+                          {msg.timestamp
+                            ? new Date(msg.timestamp).toLocaleString()
+                            : ""}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
     </Card>
   </motion.div>
 </TabsContent>
+
 
           </Tabs>
         </motion.div>

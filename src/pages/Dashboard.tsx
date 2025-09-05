@@ -21,6 +21,8 @@ const Dashboard = () => {
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [apartments, setApartments] = useState<any[]>([]);
   const [loadingApartments, setLoadingApartments] = useState(false);
+  const [chats, setChats] = useState<any>({});
+const [loadingChats, setLoadingChats] = useState(false);
 
 
   // Basic SEO for SPA route
@@ -55,10 +57,11 @@ fetchApartments();
 fetchRecordings();
 
 fetchBookings();
+fetchChats(); 
 
   }, []);
 
-  const fetchNumber = async () => {
+const fetchNumber = async () => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
@@ -81,7 +84,7 @@ fetchBookings();
     } finally {
       setLoading(false);
     }
-  };
+};
 const fetchBookings = async () => {
   try {
     setLoadingBookings(true);
@@ -161,6 +164,31 @@ const fetchRecordings = async () => {
   }
 };
 
+const fetchChats = async () => {
+  try {
+    setLoadingChats(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/chat-history/all`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch chats");
+
+    const data = await res.json();
+    // backend returns: { customer1: [...], customer2: [...] }
+    setChats(data);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load chats");
+  } finally {
+    setLoadingChats(false);
+  }
+};
 
 
   const handleBuyNumber = async () => {
@@ -429,6 +457,10 @@ const fetchRecordings = async () => {
                 <TabsTrigger value="conversations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Conversations
                 </TabsTrigger>
+                <TabsTrigger value="chats" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                  Chats
+                </TabsTrigger>
+
               </TabsList>
             </motion.div>
 
@@ -631,6 +663,68 @@ const fetchRecordings = async () => {
     </Card>
   </motion.div>
             </TabsContent>
+            <TabsContent value="chats">
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6 }}
+  >
+    <Card className="glass-card">
+      <CardHeader>
+        <CardTitle className="text-navy text-xl flex items-center gap-2">
+          <Phone className="h-5 w-5 text-accent" />
+          Customer Chats
+        </CardTitle>
+        <p className="text-sm text-muted-foreground mt-1">
+          View conversations with your clients in a chat-style layout.
+        </p>
+      </CardHeader>
+      <CardContent>
+        {loadingChats ? (
+          <p className="text-muted-foreground">Loading chats...</p>
+        ) : Object.keys(chats).length === 0 ? (
+          <p className="text-muted-foreground">No chats available.</p>
+        ) : (
+          <div className="grid gap-6">
+            {Object.entries(chats).map(([customer, messages]: any, idx) => (
+              <div key={idx} className="border rounded-xl p-4 glass-card">
+                <h3 className="text-lg font-semibold text-navy mb-3">
+                  Chat with {customer}
+                </h3>
+                <div className="h-64 overflow-y-auto space-y-3 pr-2">
+                  {messages.map((msg: any, i: number) => (
+                    <div
+                      key={i}
+                      className={`flex ${
+                        msg.sender === "realtor" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`px-4 py-2 rounded-2xl max-w-xs text-sm shadow ${
+                          msg.sender === "realtor"
+                            ? "bg-accent text-accent-foreground rounded-br-none"
+                            : "bg-muted text-navy rounded-bl-none"
+                        }`}
+                      >
+                        {msg.message}
+                        <div className="text-[10px] opacity-70 mt-1">
+                          {msg.timestamp
+                            ? new Date(msg.timestamp).toLocaleString()
+                            : ""}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  </motion.div>
+</TabsContent>
+
           </Tabs>
         </motion.div>
       </section>

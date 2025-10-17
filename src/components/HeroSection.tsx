@@ -14,12 +14,17 @@ const HeroSection = () => {
   const navigate = useNavigate();
 
   const chatScript = [
-    { text: "Hi! I'm looking for a 3-bedroom house under $500k in downtown area.", isUser: true, delay: 1000 },
-    { text: "Hello! I've found 8 properties matching your criteria. Would you prefer a modern condo or a traditional townhouse?", isUser: false, delay: 1500 },
-    { text: "I'm interested in townhouses with a backyard. What are the top options?", isUser: true, delay: 2000 },
-    { text: "Perfect! I have 3 excellent townhouses with private backyards. One has a newly renovated kitchen and is just 2 blocks from the park.", isUser: false, delay: 1800 },
-    { text: "That sounds great! Can you send me the floor plans?", isUser: true, delay: 1200 },
-    { text: "Absolutely! I'm sending the floor plans to your email now. I've also scheduled a virtual tour for tomorrow at 2 PM. 🏠", isUser: false, delay: 2000 }
+    { text: "Hello 👋 I'm your LEASAP Assistant. I work with property managers to help you find the perfect home.\nTell me what you're looking for, and I'll guide you step by step.", isUser: false, delay: 1500 },
+    { text: "I am moving to Chicago next month. Looking for a 1 bedroom apartment under $2400", isUser: true, delay: 2000 },
+    { text: "Got it ✅ 1-bedroom in Chicago, budget under $2400.\nTo narrow things down:\n\n1. Do you need it to be pet-friendly? 🐶🐱\n2. Any must-have amenities (gym, parking, in-unit laundry)?\n3. Do you want to be closer to downtown or suburbs?", isUser: false, delay: 2500 },
+    { text: "Yes i have a dog. Gym + in-unit Laundry are musts. Closer to downtown is preferred", isUser: true, delay: 2000 },
+    { text: "Perfect. I found 3 strong options in popular downtown buildings:\n\n🔹 Option 1: NEMA Chicago (South Loop)\nUnit: 1BR, 1BA, $2200/month\nBuilding: 76-story luxury high-rise 🏢\nAmenities: 70,000 sq ft fitness center, coworking lounge, rooftop pool, pet spa\nCommute: 12 mins walk to The Loop\nNeighborhood vibe: Active, close to Grant Park and Lake Michigan 🌳\n\n🔹 Option 2: 500 Lake Shore Drive (Streeterville)\nUnit: 1BR, 1BA, $2295/month\nBuilding: Waterfront tower with stunning skyline + lake views 🌊\nAmenities: 24/7 doorman, business center, rooftop terrace\nPet Policy: Cats + small dogs allowed\nCommute: 8 mins bus to The Loop\n\n🔹 Option 3: Landmark West Loop\nUnit: 1BR, 1BA, $2150/month\nBuilding: Trendy mid-rise, popular with young professionals\nAmenities: Fitness center, rooftop lounge, game room\nNeighborhood vibe: Foodie hotspot, walkable, lively 🍕\n\n💡 Tip: West Loop units usually rent out within 2 weeks due to high demand.\nWould you like me to:\n\n1. Compare these options side-by-side 📊\n2. Show unit & building pictures 📸\n3. Or schedule in-person/virtual tours 📅?", isUser: false, delay: 4000 },
+    { text: "Compare side by side", isUser: true, delay: 1500 },
+    { text: "| Building           | Rent  | Pets              | Commute      | Top Amenity         | Vibe                |\n| ------------------ | ----- | ----------------- | ------------ | ------------------- | ------------------- |\n| NEMA Chicago       | $2250 | Dogs + Cats       | 12 mins walk | Rooftop pool + gym  | Luxury, active      |\n| 500 Lake Shore     | $2350 | Cats + small dogs | 8 mins bus   | Lake views, doorman | Waterfront, upscale |\n| Landmark West Loop | $2180 | Dogs + Cats       | 15 mins walk | Rooftop lounge      | Trendy, foodie      |\n\n👉 Based on your dog + gym + downtown preference, I'd recommend NEMA Chicago.\n\nWould you like to book a tour for NEMA Chicago?\nIn-person visit 📍\nOr virtual video tour 💻\n\nAvailable slots this week:\nThursday 6 PM\nSaturday 11 AM\nSunday 2 PM", isUser: false, delay: 3500 },
+    { text: "Yes Saturday 11am works", isUser: true, delay: 1500 },
+    { text: "✅ Great! I've scheduled your NEMA Chicago tour for Saturday 11 AM.\nYou'll get a confirmation email + SMS reminders.\nAfter your tour, I can help you:\nStart your rental application 📝\nUpload docs (ID, pay stubs, pet vaccination papers) securely 🔐\nReview the lease contract (I'll highlight hidden fees, renewal rules, etc).\n\nWould you like me to pre-check application requirements now?", isUser: false, delay: 3000 },
+    { text: "No thanks", isUser: true, delay: 1000 },
+    { text: "End chat.", isUser: false, delay: 1000 }
   ];
 
   const scrollToBottom = () => {
@@ -178,10 +183,10 @@ const HeroSection = () => {
 
                   {/* System Welcome */}
                   <div className="flex justify-center mb-4">
-                    <div className="bg-[#182229] rounded-xl px-4 py-2 max-w-xs border border-gray-600/50">
-                      <p className="text-gray-300 text-xs text-center leading-relaxed">
-                        🤖 AI assistant connected<br/>
-                        <span className="text-gold">Ready to find your dream property!</span>
+                    <div className="bg-gradient-to-r from-[#182229] to-[#202c33] rounded-xl px-4 py-3 max-w-sm border border-gold/30 shadow-lg">
+                      <p className="text-gray-300 text-sm text-center leading-relaxed">
+                        <span className="text-gold font-semibold">🤖 LEASAP AI Assistant</span><br/>
+                        <span className="text-gold">Connected & Ready to Help!</span>
                       </p>
                     </div>
                   </div>
@@ -193,14 +198,89 @@ const HeroSection = () => {
                       className={`flex ${message.isUser ? "justify-end" : "justify-start"} animate-fade-in`}
                     >
                       <div
-                        className={`max-w-[85%] rounded-2xl px-3 py-2 shadow-lg ${
+                        className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-lg ${
                           message.isUser
                             ? "bg-[#005c4b] text-white rounded-br-md"
                             : "bg-[#202c33] text-white rounded-bl-md border border-gray-600/30"
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.text}</p>
-                        <div className={`text-xs mt-1 text-right ${
+                        <div className="text-xs leading-relaxed" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
+                          {message.text.split('\n').map((line, lineIndex) => {
+                            // Handle table formatting
+                            if (line.includes('|') && line.includes('Building')) {
+                              return (
+                                <div key={lineIndex} className="overflow-x-auto my-2 -mx-1">
+                                  <table className="w-full text-xs border-collapse min-w-full">
+                                    <thead>
+                                      <tr className="border-b border-gray-500">
+                                        {line.split('|').filter(cell => cell.trim()).map((header, headerIndex) => (
+                                          <th key={headerIndex} className="text-left py-1 px-1 font-semibold text-gold whitespace-nowrap">
+                                            {header.trim()}
+                                          </th>
+                                        ))}
+                                      </tr>
+                                    </thead>
+                                  </table>
+                                </div>
+                              );
+                            }
+                            // Handle table data rows
+                            if (line.includes('|') && !line.includes('---')) {
+                              return (
+                                <div key={lineIndex} className="overflow-x-auto my-1 -mx-1">
+                                  <table className="w-full text-xs border-collapse min-w-full">
+                                    <tbody>
+                                      <tr className="border-b border-gray-600/30">
+                                        {line.split('|').filter(cell => cell.trim()).map((cell, cellIndex) => (
+                                          <td key={cellIndex} className="py-1 px-1 text-gray-200 whitespace-nowrap">
+                                            {cell.trim()}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              );
+                            }
+                            // Handle separator lines
+                            if (line.includes('---')) {
+                              return <div key={lineIndex} className="my-2 border-b border-gray-600/30"></div>;
+                            }
+                            // Handle regular lines with emojis and formatting
+                            return (
+                              <div key={lineIndex} className={lineIndex > 0 ? "mt-2" : ""}>
+                                {line.split(' ').map((word, wordIndex) => {
+                                  // Highlight emojis and special characters
+                                  if (word.match(/[🔹💡✅👋🐶🐱🏢🌊🍕📊📸📅📍💻📝🔐]/)) {
+                                    return (
+                                      <span key={wordIndex} className="text-gold mr-1">
+                                        {word}
+                                      </span>
+                                    );
+                                  }
+                                  // Highlight prices
+                                  if (word.match(/\$\d+/)) {
+                                    return (
+                                      <span key={wordIndex} className="text-green-400 font-semibold mr-1">
+                                        {word}
+                                      </span>
+                                    );
+                                  }
+                                  // Highlight building names
+                                  if (word.match(/^(NEMA|500|Landmark)/)) {
+                                    return (
+                                      <span key={wordIndex} className="text-gold font-semibold mr-1">
+                                        {word}
+                                      </span>
+                                    );
+                                  }
+                                  return <span key={wordIndex} className="mr-1">{word}</span>;
+                                })}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className={`text-xs mt-2 text-right ${
                           message.isUser ? "text-[#99b8b1]" : "text-gray-400"
                         }`}>
                           {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

@@ -278,7 +278,7 @@ const Signup = () => {
               <Home className="h-6 w-6 text-navy" />
             </div>
             <div className="text-xl font-bold text-white">
-              Elite<span className="text-gold">Realty AI</span>
+              Leasap
             </div>
           </div>
 
@@ -337,7 +337,7 @@ const Signup = () => {
             <div className="mt-6 text-center">
               <p className="text-white/60 text-sm">
                 Already have an account?{" "}
-                <Link to="/SignIn" className="text-gold hover:underline">
+                <Link to="/signin" className="text-gold hover:underline">
                   Sign in
                 </Link>
               </p>

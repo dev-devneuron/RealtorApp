@@ -79,7 +79,7 @@ const SignIn = () => {
               <Home className="h-6 w-6 text-navy" />
             </div>
             <div className="text-xl font-bold text-white">
-              Elite<span className="text-gold">Realty AI</span>
+              Leasap
             </div>
           </div>
 

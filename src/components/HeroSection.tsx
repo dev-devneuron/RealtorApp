@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Phone, TrendingUp, Users, Award, Bot, User, MoreVertical, Search, Paperclip, Mic } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
@@ -24,7 +24,7 @@ const HeroSection = () => {
     { text: "Yes Saturday 11am works", isUser: true, delay: 1500 },
     { text: "✅ Great! I've scheduled your NEMA Chicago tour for Saturday 11 AM.\nYou'll get a confirmation email + SMS reminders.\nAfter your tour, I can help you:\nStart your rental application 📝\nUpload docs (ID, pay stubs, pet vaccination papers) securely 🔐\nReview the lease contract (I'll highlight hidden fees, renewal rules, etc).\n\nWould you like me to pre-check application requirements now?", isUser: false, delay: 3000 },
     { text: "No thanks", isUser: true, delay: 1000 },
-    { text: "End chat.", isUser: false, delay: 1000 }
+    { text: "Thank you for using LEASAP! Feel free to contact us anytime for assistance. Have a great day! 😊", isUser: false, delay: 1000 }
   ];
 
   const scrollToBottom = () => {

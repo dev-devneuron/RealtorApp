@@ -1,30 +1,46 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Phone, Menu, X, Home } from "lucide-react";
+import { MessageCircle, Phone, Menu, X, Home, LogIn, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
+    // Check if user is logged in
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("access_token");
+      setIsLoggedIn(!!token);
+    };
+
+    checkAuthStatus();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const navigation = [
     { name: "Home", href: "/", isRoute: true },
-    // { name: "Dashboard", href: "/dashboard", isRoute: true },
     { name: "Services", href: "#services", isRoute: false },
     { name: "Properties", href: "/properties", isRoute: true },
     { name: "AI Tools", href: "#ai-tools", isRoute: false },
     { name: "About", href: "/about", isRoute: true },
     { name: "Contact", href: "#contact-section", isRoute: false },
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("realtor_id");
+    localStorage.removeItem("auth_link");
+    setIsLoggedIn(false);
+    window.location.href = "/";
+  };
 
   return (
     <header
@@ -85,7 +101,48 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Action Buttons - Removed Chat Bot and Call Bot buttons */}
+          {/* Action Buttons */}
+          <div className="hidden lg:flex items-center space-x-4">
+            {isLoggedIn ? (
+              <>
+                <Link to="/dashboard">
+                  <Button 
+                    variant="outline" 
+                    className="bg-transparent border-navy text-navy hover:bg-navy hover:text-white transition-all duration-300"
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button 
+                  onClick={handleLogout}
+                  variant="outline" 
+                  className="bg-transparent border-navy text-navy hover:bg-navy hover:text-white transition-all duration-300"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/signin">
+                  <Button 
+                    variant="outline" 
+                    className="bg-transparent border-navy text-navy hover:bg-navy hover:text-white transition-all duration-300"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button 
+                    className="bg-gold hover:bg-gold/90 text-navy font-semibold transition-all duration-300"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -129,6 +186,52 @@ const Header = () => {
                   </a>
                 )
               ))}
+              
+              {/* Mobile Auth Buttons */}
+              <div className="pt-4 border-t border-gray-200 space-y-3">
+                {isLoggedIn ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button 
+                        variant="outline" 
+                        className="w-full bg-transparent border-navy text-navy hover:bg-navy hover:text-white transition-all duration-300"
+                      >
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button 
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      variant="outline" 
+                      className="w-full bg-transparent border-navy text-navy hover:bg-navy hover:text-white transition-all duration-300"
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/signin" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button 
+                        variant="outline" 
+                        className="w-full bg-transparent border-navy text-navy hover:bg-navy hover:text-white transition-all duration-300"
+                      >
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button 
+                        className="w-full bg-gold hover:bg-gold/90 text-navy font-semibold transition-all duration-300"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
             </nav>
           </div>
         )}

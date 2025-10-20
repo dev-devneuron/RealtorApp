@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -77,7 +77,8 @@ const ChatBotSection = () => {
       { text: "Perfect! Let me reserve that slot for you...", isUser: false, delay: 1500, typing: 2000 },
       { text: "Excellent! I've reserved Wednesday at 3:00 PM for you.\n\n📋 Tour Details:\n📍 Address: 123 Main St, Unit 2B\n⏰ Date: Wednesday, 3:00 PM\n👤 Agent: Sarah Johnson\n📱 Contact: (555) 123-4567\n\nYou'll receive a confirmation email and SMS reminder 24 hours before the tour.\n\nIs there anything specific you'd like to see during the tour?", isUser: false, delay: 3000 },
       { text: "Yes, I'd like to see the kitchen and check the storage space", isUser: true, delay: 2000 },
-      { text: "Great! I've noted your preferences:\n\n✅ Kitchen walkthrough\n✅ Storage space inspection\n\nSarah will make sure to highlight these areas during your tour. She'll also show you the building amenities and answer any questions about the neighborhood.\n\nIs there anything else I can help you with today?", isUser: false, delay: 2500 }
+      { text: "Great! I've noted your preferences:\n\n✅ Kitchen walkthrough\n✅ Storage space inspection\n\nSarah will make sure to highlight these areas during your tour. She'll also show you the building amenities and answer any questions about the neighborhood.\n\nIs there anything else I can help you with today?", isUser: false, delay: 2500 },
+      { text: "Thank you for choosing LEASAP! Feel free to contact us anytime for assistance. Have a great day! 😊", isUser: false, delay: 2000 }
     ],
     maintenance: [
       { text: "Hello 👋 I'm your LEASAP Assistant.\nTell me what you need, and I'll guide you step by step.", isUser: false, delay: 1500 },
@@ -89,7 +90,8 @@ const ChatBotSection = () => {
       { text: "📋 Maintenance Request Created:\n🏠 Unit: 2B, 123 Main St\n🔧 Issue: Kitchen faucet leak + low water pressure\n⚡ Priority: High (water damage risk)\n👨‍🔧 Assigned: Mike's Plumbing\n📅 Estimated: Within 24 hours\n\nI've also sent you a confirmation email with request #MT-2024-001.\n\nWould you like me to schedule a specific time window for the repair?", isUser: false, delay: 3000 },
       { text: "Yes, preferably in the morning between 9-11 AM", isUser: true, delay: 1500 },
       { text: "Perfect! Let me schedule that for you...", isUser: false, delay: 1200, typing: 2000 },
-      { text: "Excellent! I've scheduled the repair for tomorrow morning between 9-11 AM.\n\n📅 Confirmed Schedule:\n• Date: Tomorrow (Tuesday)\n• Time: 9:00 AM - 11:00 AM\n• Technician: Mike's Plumbing\n• Contact: (555) 987-6543\n\nYou'll receive a text 30 minutes before arrival. The technician will call when they're on their way.\n\nIs there anything else I can help you with?", isUser: false, delay: 2500 }
+      { text: "Excellent! I've scheduled the repair for tomorrow morning between 9-11 AM.\n\n📅 Confirmed Schedule:\n• Date: Tomorrow (Tuesday)\n• Time: 9:00 AM - 11:00 AM\n• Technician: Mike's Plumbing\n• Contact: (555) 987-6543\n\nYou'll receive a text 30 minutes before arrival. The technician will call when they're on their way.\n\nIs there anything else I can help you with?", isUser: false, delay: 2500 },
+      { text: "Thank you for using LEASAP! Feel free to contact us anytime for assistance. Have a great day! 😊", isUser: false, delay: 2000 }
     ],
     apartment: [
       { text: "Hello 👋 I'm your LEASAP Assistant.\nTell me what you need, and I'll guide you step by step.", isUser: false, delay: 1500 },
@@ -98,14 +100,16 @@ const ChatBotSection = () => {
       { text: "🏠 **Apartment Details:**\n• Unit: 2BR/2BA, 1,200 sq ft\n• Floor: 3rd floor, corner unit\n• Layout: Open concept living/dining\n• Windows: Floor-to-ceiling, south-facing\n• Parking: 1 assigned space included\n\n🐕 **Pet Policy:**\n• Dogs: Allowed (max 2, under 50 lbs each)\n• Cats: Allowed (max 2)\n• Pet deposit: $500 (refundable)\n• Pet rent: $50/month per pet\n• Breed restrictions: None\n\nWhat specific information would you like to know more about?", isUser: false, delay: 2000 },
       { text: "What amenities are available?", isUser: true, delay: 1500 },
       { text: "Great question! Let me get the complete amenities list for you...", isUser: false, delay: 1200, typing: 2000 },
-      { text: "🏢 **Building Amenities:**\n• 24/7 Fitness center with cardio & weights\n• Rooftop pool with city views\n• Co-working space with WiFi\n• Package receiving room\n• Bike storage room\n• Laundry room (coin-operated)\n• Rooftop terrace with grills\n\n🏠 **In-Unit Features:**\n• In-unit washer/dryer\n• Central AC/Heat\n• Dishwasher & garbage disposal\n• Walk-in closets\n• Private balcony\n• Hardwood floors\n\n🔒 **Security & Safety:**\n• Key fob entry system\n• Security cameras in common areas\n• Intercom system\n• Smoke detectors in each room\n\nWould you like to know about neighborhood amenities or policies?", isUser: false, delay: 2500 }
+      { text: "🏢 **Building Amenities:**\n• 24/7 Fitness center with cardio & weights\n• Rooftop pool with city views\n• Co-working space with WiFi\n• Package receiving room\n• Bike storage room\n• Laundry room (coin-operated)\n• Rooftop terrace with grills\n\n🏠 **In-Unit Features:**\n• In-unit washer/dryer\n• Central AC/Heat\n• Dishwasher & garbage disposal\n• Walk-in closets\n• Private balcony\n• Hardwood floors\n\n🔒 **Security & Safety:**\n• Key fob entry system\n• Security cameras in common areas\n• Intercom system\n• Smoke detectors in each room\n\nWould you like to know about neighborhood amenities or policies?", isUser: false, delay: 2500 },
+      { text: "Thank you for using LEASAP! Feel free to contact us anytime for assistance. Have a great day! 😊", isUser: false, delay: 2000 }
     ],
     safety: [
       { text: "Hello 👋 I'm your LEASAP Assistant.\nTell me what you need, and I'll guide you step by step.", isUser: false, delay: 1500 },
       { text: "How safe is the neighborhood around this apartment?", isUser: true, delay: 2000 },
       { text: "I'll provide you with a comprehensive safety analysis of the neighborhood.\n\n🛡️ **Safety Overview:**\n• Overall Safety Score: 8.5/10 (Very Safe)\n• Crime Rate: 15% below city average\n• Walk Score: 92/100 (Walker's Paradise)\n• Transit Score: 88/100 (Excellent)\n\n📊 **Crime Statistics (Last 6 months):**\n• Violent Crime: 2 incidents (0.3 per 1,000 residents)\n• Property Crime: 8 incidents (1.2 per 1,000 residents)\n• Theft: 5 incidents\n• Vandalism: 3 incidents\n\nWhat specific safety concerns do you have?", isUser: false, delay: 2500 },
       { text: "Is it safe to walk around at night?", isUser: true, delay: 1500 },
-      { text: "Yes, the area is generally safe for nighttime walking, but here are the details:\n\n🌙 **Nighttime Safety (6 PM - 6 AM):**\n• Safety Rating: 7.5/10\n• Well-lit streets: 95% coverage\n• Police patrol frequency: Every 2-3 hours\n• Emergency response time: 4-6 minutes\n\n✅ **Safe Areas Nearby:**\n• Main Street (0.2 miles) - Well-lit, busy\n• Central Park (0.3 miles) - Security patrols\n• Shopping district (0.4 miles) - 24/7 activity\n\n⚠️ **Areas to Avoid at Night:**\n• Industrial zone (0.8 miles away)\n• Unlit side streets after 11 PM\n\n🚨 **Safety Tips:**\n• Use main streets when possible\n• Walk with others when possible\n• Keep phone charged and accessible\n• Trust your instincts\n\nWould you like information about local emergency services?", isUser: false, delay: 3000 }
+      { text: "Yes, the area is generally safe for nighttime walking, but here are the details:\n\n🌙 **Nighttime Safety (6 PM - 6 AM):**\n• Safety Rating: 7.5/10\n• Well-lit streets: 95% coverage\n• Police patrol frequency: Every 2-3 hours\n• Emergency response time: 4-6 minutes\n\n✅ **Safe Areas Nearby:**\n• Main Street (0.2 miles) - Well-lit, busy\n• Central Park (0.3 miles) - Security patrols\n• Shopping district (0.4 miles) - 24/7 activity\n\n⚠️ **Areas to Avoid at Night:**\n• Industrial zone (0.8 miles away)\n• Unlit side streets after 11 PM\n\n🚨 **Safety Tips:**\n• Use main streets when possible\n• Walk with others when possible\n• Keep phone charged and accessible\n• Trust your instincts\n\nWould you like information about local emergency services?", isUser: false, delay: 3000 },
+      { text: "Thank you for using LEASAP! Feel free to contact us anytime for assistance. Have a great day! 😊", isUser: false, delay: 2000 }
     ],
     application: [
       { text: "Hello 👋 I'm your LEASAP Assistant.\nTell me what you need, and I'll guide you step by step.", isUser: false, delay: 1500 },
@@ -118,7 +122,8 @@ const ChatBotSection = () => {
       { text: "john.smith@email.com", isUser: true, delay: 1200 },
       { text: "Excellent! I've captured your email.\n\n📧 **Updated Contact Info:**\n✅ Name: John Smith\n✅ Phone: (555) 123-4567\n✅ Email: john.smith@email.com\n\nNow I need your current address and then we'll move on to income verification.\n\nWhat's your current address?", isUser: false, delay: 1500 },
       { text: "456 Oak Street, Apt 2B, City, State 12345", isUser: true, delay: 2000 },
-      { text: "Perfect! I've completed the personal information section.\n\n📋 **Application Progress:**\n✅ Personal Information: Complete\n⏳ Income Verification: Pending\n⏳ References: Pending\n⏳ Documentation: Pending\n\nNext, I'll help you upload your income documents. You can either:\n• Take photos of your pay stubs\n• Upload PDF files\n• Email them to applications@leasap.com\n\nWhich method would you prefer?", isUser: false, delay: 2000 }
+      { text: "Perfect! I've completed the personal information section.\n\n📋 **Application Progress:**\n✅ Personal Information: Complete\n⏳ Income Verification: Pending\n⏳ References: Pending\n⏳ Documentation: Pending\n\nNext, I'll help you upload your income documents. You can either:\n• Take photos of your pay stubs\n• Upload PDF files\n• Email them to applications@leasap.com\n\nWhich method would you prefer?", isUser: false, delay: 2000 },
+      { text: "Thank you for using LEASAP! Feel free to contact us anytime for assistance. Have a   great day! 😊", isUser: false, delay: 2000 }
     ]
   };
 

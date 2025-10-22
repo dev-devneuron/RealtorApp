@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye,Music, Phone } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings } from "lucide-react";
 import { toast } from "sonner";
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
@@ -22,13 +22,24 @@ const Dashboard = () => {
   const [apartments, setApartments] = useState<any[]>([]);
   const [loadingApartments, setLoadingApartments] = useState(false);
   const [chats, setChats] = useState<any>({});
-const [loadingChats, setLoadingChats] = useState(false);
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
+  const [realtors, setRealtors] = useState<any[]>([]);
+  const [loadingRealtors, setLoadingRealtors] = useState(false);
+  const [showAddRealtor, setShowAddRealtor] = useState(false);
+  const [newRealtor, setNewRealtor] = useState({ name: "", email: "", password: "" });
 
 
   // Basic SEO for SPA route
   useEffect(() => {
-    const title = "Dashboard | Leasap";
-    const description = "Personalized real estate dashboard with your properties and bookings.";
+    // Get user type from localStorage
+    const storedUserType = localStorage.getItem("user_type");
+    setUserType(storedUserType);
+
+    const title = storedUserType === "property_manager" ? "Property Manager Dashboard | Leasap" : "Dashboard | Leasap";
+    const description = storedUserType === "property_manager" 
+      ? "Property manager dashboard to manage realtors and properties."
+      : "Personalized real estate dashboard with your properties and bookings.";
     document.title = title;
 
     let meta = document.querySelector('meta[name="description"]');
@@ -50,15 +61,16 @@ const [loadingChats, setLoadingChats] = useState(false);
     // Trigger staggered animations after component mount
     setTimeout(() => setAnimateCards(true), 300);
     
+    fetchNumber();
+    fetchApartments();
+    fetchRecordings();
+    fetchBookings();
+    fetchChats(); 
 
-  fetchNumber();
- 
-fetchApartments();
-fetchRecordings();
-
-fetchBookings();
-fetchChats(); 
-
+    // If property manager, fetch realtors
+    if (storedUserType === "property_manager") {
+      fetchRealtors();
+    }
   }, []);
 
 const fetchNumber = async () => {
@@ -190,6 +202,60 @@ const fetchChats = async () => {
   }
 };
 
+const fetchRealtors = async () => {
+  try {
+    setLoadingRealtors(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/property-manager/realtors`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch realtors");
+
+    const data = await res.json();
+    setRealtors(data.realtors || []);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load realtors");
+  } finally {
+    setLoadingRealtors(false);
+  }
+};
+
+const addRealtor = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/property-manager/add-realtor`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify(newRealtor),
+    });
+
+    if (!res.ok) throw new Error("Failed to add realtor");
+
+    toast.success("Realtor added successfully!");
+    setNewRealtor({ name: "", email: "", password: "" });
+    setShowAddRealtor(false);
+    fetchRealtors();
+  } catch (err: any) {
+    console.error(err);
+    toast.error(err.message || "Could not add realtor");
+  }
+};
+
 
   const handleBuyNumber = async () => {
     try {
@@ -317,7 +383,7 @@ const fetchChats = async () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                Client Dashboard
+                {userType === "property_manager" ? "Property Manager Dashboard" : "Client Dashboard"}
               </motion.h1>
             </div>
             <motion.div
@@ -353,7 +419,10 @@ const fetchChats = async () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            Review your saved properties and manage your bookings.
+            {userType === "property_manager" 
+              ? "Manage your realtors, assign passwords, and oversee your property portfolio."
+              : "Review your saved properties and manage your bookings."
+            }
           </motion.p>
         </div>
       </motion.header>
@@ -366,71 +435,143 @@ const fetchChats = async () => {
         animate="visible"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Properties</p>
-                  <motion.p 
-                    className="text-2xl font-bold text-navy"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.8, type: "spring" as const }}
+          {userType === "property_manager" ? (
+            <>
+              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Realtors</p>
+                    <motion.p 
+                      className="text-2xl font-bold text-navy"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.8, type: "spring" as const }}
+                    >
+                      {realtors.length}
+                    </motion.p>
+                  </div>
+                  <motion.div 
+                    className="p-3 bg-accent/10 rounded-xl"
+                    whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                  {apartments.length}
-                </motion.p>
-              </div>
-              <motion.div 
-                className="p-3 bg-accent/10 rounded-xl"
-                whileHover={{ rotate: 15, scale: 1.1 }}
-              >
-                <TrendingUp className="h-6 w-6 text-accent" />
+                    <Users className="h-6 w-6 text-accent" />
+                  </motion.div>
+                </div>
               </motion.div>
-            </div>
-          </motion.div>
 
-          <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active Bookings</p>
-                  <motion.p 
-                    className="text-2xl font-bold text-navy"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 1.0, type: "spring" as const }}
+              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Properties</p>
+                    <motion.p 
+                      className="text-2xl font-bold text-navy"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 1.0, type: "spring" as const }}
+                    >
+                      {apartments.length}
+                    </motion.p>
+                  </div>
+                  <motion.div 
+                    className="p-3 bg-gold/10 rounded-xl"
+                    whileHover={{ rotate: -15, scale: 1.1 }}
                   >
-                  {bookings.length}
-                </motion.p>
-              </div>
-              <motion.div 
-                className="p-3 bg-gold/10 rounded-xl"
-                whileHover={{ rotate: -15, scale: 1.1 }}
-              >
-                <Calendar className="h-6 w-6 text-gold" />
+                    <TrendingUp className="h-6 w-6 text-gold" />
+                  </motion.div>
+                </div>
               </motion.div>
-            </div>
-          </motion.div>
 
-          <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Property Views</p>
-                  <motion.p 
-                    className="text-2xl font-bold text-navy"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 1.2, type: "spring" as const }}
+              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Active Bookings</p>
+                    <motion.p 
+                      className="text-2xl font-bold text-navy"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 1.2, type: "spring" as const }}
+                    >
+                      {bookings.length}
+                    </motion.p>
+                  </div>
+                  <motion.div 
+                    className="p-3 bg-navy/10 rounded-xl"
+                    whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                  1,247
-                </motion.p>
-              </div>
-              <motion.div 
-                className="p-3 bg-navy/10 rounded-xl"
-                whileHover={{ rotate: 15, scale: 1.1 }}
-              >
-                <Eye className="h-6 w-6 text-navy" />
+                    <Calendar className="h-6 w-6 text-navy" />
+                  </motion.div>
+                </div>
               </motion.div>
-            </div>
-          </motion.div>
+            </>
+          ) : (
+            <>
+              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Properties</p>
+                    <motion.p 
+                      className="text-2xl font-bold text-navy"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.8, type: "spring" as const }}
+                    >
+                      {apartments.length}
+                    </motion.p>
+                  </div>
+                  <motion.div 
+                    className="p-3 bg-accent/10 rounded-xl"
+                    whileHover={{ rotate: 15, scale: 1.1 }}
+                  >
+                    <TrendingUp className="h-6 w-6 text-accent" />
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Active Bookings</p>
+                    <motion.p 
+                      className="text-2xl font-bold text-navy"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 1.0, type: "spring" as const }}
+                    >
+                      {bookings.length}
+                    </motion.p>
+                  </div>
+                  <motion.div 
+                    className="p-3 bg-gold/10 rounded-xl"
+                    whileHover={{ rotate: -15, scale: 1.1 }}
+                  >
+                    <Calendar className="h-6 w-6 text-gold" />
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Property Views</p>
+                    <motion.p 
+                      className="text-2xl font-bold text-navy"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 1.2, type: "spring" as const }}
+                    >
+                      1,247
+                    </motion.p>
+                  </div>
+                  <motion.div 
+                    className="p-3 bg-navy/10 rounded-xl"
+                    whileHover={{ rotate: 15, scale: 1.1 }}
+                  >
+                    <Eye className="h-6 w-6 text-navy" />
+                  </motion.div>
+                </div>
+              </motion.div>
+            </>
+          )}
         </div>
       </motion.section>
 
@@ -441,13 +582,19 @@ const fetchChats = async () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <Tabs defaultValue="properties" className="w-full">
+          <Tabs defaultValue={userType === "property_manager" ? "realtors" : "properties"} className="w-full">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
               <TabsList className="mb-8 glass-card p-1">
+                {userType === "property_manager" && (
+                  <TabsTrigger value="realtors" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <Users className="h-4 w-4 mr-2" />
+                    Realtors
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="properties" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Properties
                 </TabsTrigger>
@@ -460,9 +607,151 @@ const fetchChats = async () => {
                 <TabsTrigger value="chats" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Chats
                 </TabsTrigger>
-
               </TabsList>
             </motion.div>
+
+            {/* Realtors Management - Property Manager Only */}
+            {userType === "property_manager" && (
+              <TabsContent value="realtors">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <Card className="glass-card">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-navy text-xl flex items-center gap-2">
+                            <Users className="h-5 w-5 text-accent" />
+                            Manage Realtors
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Add and manage your realtor team members.
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => setShowAddRealtor(!showAddRealtor)}
+                          className="bg-gold hover:bg-gold/90 text-navy"
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Add Realtor
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {showAddRealtor && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mb-6 p-4 border rounded-lg bg-muted/30"
+                        >
+                          <h3 className="text-lg font-semibold mb-4">Add New Realtor</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="text-sm font-medium">Name</label>
+                              <input
+                                type="text"
+                                value={newRealtor.name}
+                                onChange={(e) => setNewRealtor({...newRealtor, name: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-md"
+                                placeholder="Realtor name"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Email</label>
+                              <input
+                                type="email"
+                                value={newRealtor.email}
+                                onChange={(e) => setNewRealtor({...newRealtor, email: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-md"
+                                placeholder="realtor@example.com"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Password</label>
+                              <input
+                                type="password"
+                                value={newRealtor.password}
+                                onChange={(e) => setNewRealtor({...newRealtor, password: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-md"
+                                placeholder="Temporary password"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-4">
+                            <Button onClick={addRealtor} className="bg-accent hover:bg-accent/90">
+                              Add Realtor
+                            </Button>
+                            <Button 
+                              onClick={() => setShowAddRealtor(false)}
+                              variant="outline"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {loadingRealtors ? (
+                        <p className="text-muted-foreground">Loading realtors...</p>
+                      ) : realtors.length === 0 ? (
+                        <p className="text-muted-foreground">No realtors found. Add your first realtor above.</p>
+                      ) : (
+                        <div className="overflow-hidden rounded-lg border border-border/50">
+                          <Table>
+                            <TableHeader className="bg-muted/30">
+                              <TableRow>
+                                <TableHead className="font-semibold">Name</TableHead>
+                                <TableHead className="font-semibold">Email</TableHead>
+                                <TableHead className="font-semibold">Status</TableHead>
+                                <TableHead className="font-semibold">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {realtors.map((realtor, idx) => (
+                                <motion.tr
+                                  key={realtor.id || idx}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.4, delay: idx * 0.1 }}
+                                  className="hover:bg-accent/5 transition-all duration-200 group"
+                                >
+                                  <TableCell className="font-medium group-hover:text-accent transition-colors">
+                                    {realtor.name}
+                                  </TableCell>
+                                  <TableCell>{realtor.email}</TableCell>
+                                  <TableCell>
+                                    <Badge
+                                      variant={realtor.status === "active" ? "default" : "secondary"}
+                                      className={
+                                        realtor.status === "active"
+                                          ? "bg-accent text-accent-foreground"
+                                          : "bg-muted text-muted-foreground"
+                                      }
+                                    >
+                                      {realtor.status || "Active"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex gap-2">
+                                      <Button size="sm" variant="outline">
+                                        <Settings className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </motion.tr>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            )}
 
             {/* Properties Grid */}
             <TabsContent value="properties">

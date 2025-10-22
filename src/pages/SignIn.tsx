@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft, Home, Users, User } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
@@ -13,6 +14,7 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userType, setUserType] = useState<"property_manager" | "realtor">("realtor");
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -20,10 +22,11 @@ const SignIn = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_BASE}/login`, {
+      const endpoint = userType === "property_manager" ? "/property-manager-login" : "/login";
+      const response = await fetch(`${API_BASE}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, user_type: userType }),
         credentials: "include",
       });
 
@@ -37,16 +40,25 @@ const SignIn = () => {
       if (!response.ok) {
         throw new Error(data.detail || data.message || "Login failed");
       }
-      console.log("data fetched:",data)
-      console.log("url fetched:",data.auth_link)
+      
+      console.log("data fetched:", data);
+      console.log("url fetched:", data.auth_link);
+      
+      // Store authentication data
       if (data.auth_link) localStorage.setItem("auth_link", data.auth_link);
       if (data.access_token) localStorage.setItem("access_token", data.access_token);
       if (data.refresh_token) localStorage.setItem("refresh_token", data.refresh_token);
       if (data.realtor_id) localStorage.setItem("realtor_id", data.realtor_id);
+      if (data.property_manager_id) localStorage.setItem("property_manager_id", data.property_manager_id);
+      if (data.user_type) localStorage.setItem("user_type", data.user_type);
+
+      const userDisplayName = userType === "property_manager" 
+        ? `Property Manager: ${data.user?.name || "Unknown"}`
+        : `Realtor ID: ${data.user?.realtor_id || "Unknown"}`;
 
       toast({
         title: "Login successful",
-        description: `Welcome back, Realtor ID: ${data.user?.realtor_id || "Unknown"}`,
+        description: `Welcome back, ${userDisplayName}`,
       });
 
       navigate("/dashboard");
@@ -93,35 +105,78 @@ const SignIn = () => {
             <CardTitle className="text-white text-center">Sign In</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Your Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
-              />
-              <Input
-                type="password"
-                placeholder="Your Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
-              />
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gold hover:bg-gold/90 text-navy font-semibold py-3"
-              >
-                {isSubmitting ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
+            <Tabs value={userType} onValueChange={(value) => setUserType(value as "property_manager" | "realtor")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-white/10">
+                <TabsTrigger value="realtor" className="data-[state=active]:bg-gold data-[state=active]:text-navy">
+                  <User className="h-4 w-4 mr-2" />
+                  Realtor
+                </TabsTrigger>
+                <TabsTrigger value="property_manager" className="data-[state=active]:bg-gold data-[state=active]:text-navy">
+                  <Users className="h-4 w-4 mr-2" />
+                  Property Manager
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="realtor" className="mt-4">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <Input
+                    type="email"
+                    placeholder="Your Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Your Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-gold hover:bg-gold/90 text-navy font-semibold py-3"
+                  >
+                    {isSubmitting ? "Signing in..." : "Sign In as Realtor"}
+                  </Button>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="property_manager" className="mt-4">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <Input
+                    type="email"
+                    placeholder="Property Manager Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Property Manager Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-gold hover:bg-gold/90 text-navy font-semibold py-3"
+                  >
+                    {isSubmitting ? "Signing in..." : "Sign In as Property Manager"}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
 
             <div className="mt-6 text-center">
               <p className="text-white/60 text-sm">
-                Don’t have an account?{" "}
+                Don't have an account?{" "}
                 <Link to="/signup" className="text-gold hover:underline">
                   Create one
                 </Link>
@@ -134,10 +189,23 @@ const SignIn = () => {
         <div className="mt-8 text-center">
           <h3 className="text-white font-semibold mb-4">What you can access:</h3>
           <div className="grid grid-cols-2 gap-4 text-sm text-white/80">
-            <div>✓ AI ChatBot 24/7</div>
-            <div>✓ AI CallBot Support</div>
-            <div>✓ Lead Management</div>
-            <div>✓ Property Search AI</div>
+            {userType === "property_manager" ? (
+              <>
+                <div>✓ Manage Realtors</div>
+                <div>✓ Assign Passwords</div>
+                <div>✓ Team Analytics</div>
+                <div>✓ Property Portfolio</div>
+                <div>✓ AI ChatBot 24/7</div>
+                <div>✓ Lead Management</div>
+              </>
+            ) : (
+              <>
+                <div>✓ AI ChatBot 24/7</div>
+                <div>✓ AI CallBot Support</div>
+                <div>✓ Lead Management</div>
+                <div>✓ Property Search AI</div>
+              </>
+            )}
           </div>
         </div>
       </div>

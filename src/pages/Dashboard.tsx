@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
@@ -443,6 +445,109 @@ const fetchAssignments = async () => {
   }
 };
 
+const handleUnassignProperties = async (propertyIds: number[]) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/property-manager/unassign-properties`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({ property_ids: propertyIds }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || errorData.message || "Failed to unassign properties");
+    }
+
+    const data = await res.json();
+    toast.success(data.message || `Successfully unassigned ${propertyIds.length} properties`);
+    
+    // Refresh data
+    fetchAssignments();
+    fetchPropertiesForAssignment();
+    fetchApartments();
+  } catch (err: any) {
+    console.error("Unassignment failed:", err);
+    toast.error(err.message || "Failed to unassign properties");
+  }
+};
+
+const handleUpdatePropertyStatus = async (propertyId: number, newStatus: string) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/properties/${propertyId}/status`, {
+      method: "PATCH",
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({ listing_status: newStatus }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || errorData.message || "Failed to update status");
+    }
+
+    const data = await res.json();
+    toast.success(data.message || "Property status updated successfully");
+    
+    // Refresh data
+    fetchAssignments();
+    fetchApartments();
+  } catch (err: any) {
+    console.error("Status update failed:", err);
+    toast.error(err.message || "Failed to update property status");
+  }
+};
+
+const handleRemoveAgent = async (propertyId: number) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/properties/${propertyId}/agent`, {
+      method: "PATCH",
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({ agent: null }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || errorData.message || "Failed to remove agent");
+    }
+
+    const data = await res.json();
+    toast.success(data.message || "Agent removed successfully");
+    
+    // Refresh data
+    fetchAssignments();
+    fetchApartments();
+  } catch (err: any) {
+    console.error("Remove agent failed:", err);
+    toast.error(err.message || "Failed to remove agent");
+  }
+};
+
 
   const handleBuyNumber = async () => {
     try {
@@ -542,218 +647,284 @@ const fetchAssignments = async () => {
 
   return (
     <main className="min-h-screen dynamic-gradient">
-      {/* Animated Header */}
+      {/* Enhanced Header - Clear & User-Friendly */}
       <motion.header 
-        className="relative overflow-hidden"
+        className="relative overflow-hidden bg-gradient-to-br from-navy via-navy/95 to-navy/90 border-b border-white/10"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="container mx-auto px-6 pt-28 pb-10">
+        <div className="container mx-auto px-6 pt-8 pb-8">
           <motion.div 
-            className="flex items-center justify-between"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4 flex-1">
               <motion.div 
-                className="bg-accent-gradient p-3 rounded-xl shadow-glow float-animation pulse-glow"
-                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-white/20"
+                whileHover={{ scale: 1.05, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Home className="h-6 w-6 text-navy" />
+                <Home className="h-7 w-7 text-gold" />
               </motion.div>
-              <motion.h1 
-                className="text-4xl font-bold bg-luxury-gradient bg-clip-text text-transparent"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                {userType === "property_manager" ? "Property Manager Dashboard" : "Client Dashboard"}
-              </motion.h1>
+              <div>
+                <motion.h1 
+                  className="text-3xl lg:text-4xl font-bold text-white mb-1"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  {userType === "property_manager" ? "Property Manager" : "My"} Dashboard
+                </motion.h1>
+                <motion.p 
+                  className="text-white/80 text-sm lg:text-base"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                >
+                  {userType === "property_manager" 
+                    ? "Welcome back! Manage your properties and team from here."
+                    : "Welcome back! View your assigned properties and bookings."
+                  }
+                </motion.p>
+              </div>
             </div>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex gap-3"
+              className="flex flex-wrap gap-2 lg:gap-3"
             >
-              <Button asChild className="hover-lift bg-navy/90 text-white hover:bg-navy">
-                <Link to="/">Back to Home</Link>
+              <Button 
+                asChild 
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 backdrop-blur-sm"
+                size="sm"
+              >
+                <Link to="/">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Link>
               </Button>
-  
-              <Button asChild className="hover-lift bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link to="/uploadpage">Upload Docs</Link>
+              <Button 
+                asChild 
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 backdrop-blur-sm"
+                size="sm"
+              >
+                <Link to="/uploadpage">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Upload
+                </Link>
               </Button>
               <Button 
                 onClick={handleBuyNumber} 
                 disabled={loading} 
-                className="hover-lift bg-gold text-navy hover:bg-gold/90"
+                className="bg-gold hover:bg-gold/90 text-navy font-semibold shadow-lg hover:shadow-xl transition-all"
+                size="sm"
               >
-                {loading ? "Purchasing..." : "Get a Number for Trial\n($1.5)"}
+                {loading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Phone className="h-4 w-4 mr-2" />
+                    Get Phone Number
+                  </>
+                )}
               </Button>
-              {myNumber ? (
-                <p className="mt-2">Your Leasap Number: <b>{myNumber}</b></p>
-              ) : (
-                <p className="mt-2 text-gray-500">You don’t have a number yet.</p>
-              )}
             </motion.div>
           </motion.div>
-          <motion.p 
-            className="mt-4 text-muted-foreground max-w-2xl text-lg"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-          >
-            {userType === "property_manager" 
-              ? "Manage your realtors, assign passwords, and oversee your property portfolio."
-              : "Review your saved properties and manage your bookings."
-            }
-          </motion.p>
+          {myNumber && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.8 }}
+              className="mt-4 pt-4 border-t border-white/10"
+            >
+              <div className="flex items-center gap-2 text-white/90">
+                <CheckCircle2 className="h-4 w-4 text-gold" />
+                <span className="text-sm">Your Phone Number: <span className="font-semibold text-gold">{myNumber}</span></span>
+              </div>
+            </motion.div>
+          )}
         </div>
       </motion.header>
 
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       <motion.section 
-        className="container mx-auto px-6 -mt-8 mb-8"
+        className="container mx-auto px-6 -mt-6 mb-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
           {userType === "property_manager" ? (
             <>
-              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+              <motion.div 
+                variants={itemVariants} 
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                whileHover={{ y: -4 }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Realtors</p>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Total Realtors</p>
                     <motion.p 
-                      className="text-2xl font-bold text-navy"
+                      className="text-3xl font-bold text-navy"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
                     >
                       {realtors.length}
                     </motion.p>
+                    <p className="text-xs text-gray-500 mt-1">Active team members</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-accent/10 rounded-xl"
+                    className="p-4 bg-blue-50 rounded-xl"
                     whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Users className="h-6 w-6 text-accent" />
+                    <Users className="h-7 w-7 text-blue-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
-              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+              <motion.div 
+                variants={itemVariants} 
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                whileHover={{ y: -4 }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Properties</p>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Total Properties</p>
                     <motion.p 
-                      className="text-2xl font-bold text-navy"
+                      className="text-3xl font-bold text-navy"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
                     >
                       {apartments.length}
                     </motion.p>
+                    <p className="text-xs text-gray-500 mt-1">In your portfolio</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gold/10 rounded-xl"
+                    className="p-4 bg-amber-50 rounded-xl"
                     whileHover={{ rotate: -15, scale: 1.1 }}
                   >
-                    <TrendingUp className="h-6 w-6 text-gold" />
+                    <TrendingUp className="h-7 w-7 text-amber-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
-              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+              <motion.div 
+                variants={itemVariants} 
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                whileHover={{ y: -4 }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Active Bookings</p>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Active Bookings</p>
                     <motion.p 
-                      className="text-2xl font-bold text-navy"
+                      className="text-3xl font-bold text-navy"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
                     >
                       {bookings.length}
                     </motion.p>
+                    <p className="text-xs text-gray-500 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-navy/10 rounded-xl"
+                    className="p-4 bg-green-50 rounded-xl"
                     whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Calendar className="h-6 w-6 text-navy" />
+                    <Calendar className="h-7 w-7 text-green-600" />
                   </motion.div>
                 </div>
               </motion.div>
             </>
           ) : (
             <>
-              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+              <motion.div 
+                variants={itemVariants} 
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                whileHover={{ y: -4 }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Properties</p>
+                    <p className="text-sm font-medium text-gray-600 mb-1">My Properties</p>
                     <motion.p 
-                      className="text-2xl font-bold text-navy"
+                      className="text-3xl font-bold text-navy"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
                     >
                       {apartments.length}
                     </motion.p>
+                    <p className="text-xs text-gray-500 mt-1">Assigned to you</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-accent/10 rounded-xl"
+                    className="p-4 bg-blue-50 rounded-xl"
                     whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <TrendingUp className="h-6 w-6 text-accent" />
+                    <TrendingUp className="h-7 w-7 text-blue-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
-              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+              <motion.div 
+                variants={itemVariants} 
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                whileHover={{ y: -4 }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Active Bookings</p>
+                    <p className="text-sm font-medium text-gray-600 mb-1">My Bookings</p>
                     <motion.p 
-                      className="text-2xl font-bold text-navy"
+                      className="text-3xl font-bold text-navy"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
                     >
                       {bookings.length}
                     </motion.p>
+                    <p className="text-xs text-gray-500 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gold/10 rounded-xl"
+                    className="p-4 bg-green-50 rounded-xl"
                     whileHover={{ rotate: -15, scale: 1.1 }}
                   >
-                    <Calendar className="h-6 w-6 text-gold" />
+                    <Calendar className="h-7 w-7 text-green-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
-              <motion.div variants={itemVariants} className="glass-card hover-lift p-6">
+              <motion.div 
+                variants={itemVariants} 
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                whileHover={{ y: -4 }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Property Views</p>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Property Views</p>
                     <motion.p 
-                      className="text-2xl font-bold text-navy"
+                      className="text-3xl font-bold text-navy"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
                     >
                       1,247
                     </motion.p>
+                    <p className="text-xs text-gray-500 mt-1">Total views this month</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-navy/10 rounded-xl"
+                    className="p-4 bg-purple-50 rounded-xl"
                     whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Eye className="h-6 w-6 text-navy" />
+                    <Eye className="h-7 w-7 text-purple-600" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -775,35 +946,60 @@ const fetchAssignments = async () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              <TabsList className="mb-8 glass-card p-1">
+              <TabsList className="mb-8 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-1.5 shadow-md">
                 {userType === "property_manager" && (
-                  <TabsTrigger value="realtors" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                  <TabsTrigger 
+                    value="realtors" 
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                  >
                     <Users className="h-4 w-4 mr-2" />
                     Realtors
                   </TabsTrigger>
                 )}
                 {userType === "property_manager" && (
                   <>
-                    <TabsTrigger value="assign-properties" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <TabsTrigger 
+                      value="assign-properties" 
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                    >
                       <CheckSquare className="h-4 w-4 mr-2" />
                       Assign Properties
                     </TabsTrigger>
-                    <TabsTrigger value="view-assignments" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <TabsTrigger 
+                      value="view-assignments" 
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                    >
                       <ListChecks className="h-4 w-4 mr-2" />
                       View Assignments
                     </TabsTrigger>
                   </>
                 )}
-                <TabsTrigger value="properties" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                <TabsTrigger 
+                  value="properties" 
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
                   Properties
                 </TabsTrigger>
-                <TabsTrigger value="bookings" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                <TabsTrigger 
+                  value="bookings" 
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
                   Bookings
                 </TabsTrigger>
-                <TabsTrigger value="conversations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                <TabsTrigger 
+                  value="conversations" 
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                >
+                  <Music className="h-4 w-4 mr-2" />
                   Conversations
                 </TabsTrigger>
-                <TabsTrigger value="chats" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                <TabsTrigger 
+                  value="chats" 
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
                   Chats
                 </TabsTrigger>
               </TabsList>
@@ -817,24 +1013,26 @@ const fetchAssignments = async () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="glass-card">
-                    <CardHeader>
+                  <Card className="bg-white shadow-lg border border-gray-200 rounded-2xl">
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
-                          <CardTitle className="text-navy text-xl flex items-center gap-2">
-                            <Users className="h-5 w-5 text-accent" />
+                          <CardTitle className="text-navy text-2xl flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-600 rounded-lg text-white">
+                              <Users className="h-5 w-5" />
+                            </div>
                             Manage Realtors
                           </CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Add and manage your realtor team members.
+                          <p className="text-sm text-gray-600 ml-14">
+                            Add and manage your realtor team members. Create accounts for realtors so they can access their assigned properties.
                           </p>
                         </div>
                         <Button 
                           onClick={() => setShowAddRealtor(!showAddRealtor)}
-                          className="bg-gold hover:bg-gold/90 text-navy"
+                          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
-                          Add Realtor
+                          Add New Realtor
                         </Button>
                       </div>
                     </CardHeader>
@@ -844,49 +1042,59 @@ const fetchAssignments = async () => {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="mb-6 p-4 border rounded-lg bg-muted/30"
+                          className="mb-6 p-6 border-2 border-blue-200 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50"
                         >
-                          <h3 className="text-lg font-semibold mb-4">Add New Realtor</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="flex items-center gap-2 mb-4">
+                            <UserPlus className="h-5 w-5 text-blue-600" />
+                            <h3 className="text-xl font-bold text-navy">Add New Realtor to Your Team</h3>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-4">Fill in the details below to create a new realtor account. They'll receive login credentials.</p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
-                              <label className="text-sm font-medium">Name</label>
+                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Full Name</label>
                               <input
                                 type="text"
                                 value={newRealtor.name}
                                 onChange={(e) => setNewRealtor({...newRealtor, name: e.target.value})}
-                                className="w-full mt-1 p-2 border rounded-md"
-                                placeholder="Realtor name"
+                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                placeholder="John Doe"
                               />
                             </div>
                             <div>
-                              <label className="text-sm font-medium">Email</label>
+                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Email Address</label>
                               <input
                                 type="email"
                                 value={newRealtor.email}
                                 onChange={(e) => setNewRealtor({...newRealtor, email: e.target.value})}
-                                className="w-full mt-1 p-2 border rounded-md"
-                                placeholder="realtor@example.com"
+                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                placeholder="john.doe@company.com"
                               />
                             </div>
                             <div>
-                              <label className="text-sm font-medium">Password</label>
+                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Temporary Password</label>
                               <input
                                 type="password"
                                 value={newRealtor.password}
                                 onChange={(e) => setNewRealtor({...newRealtor, password: e.target.value})}
-                                className="w-full mt-1 p-2 border rounded-md"
-                                placeholder="Temporary password"
+                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                placeholder="Choose a secure password"
                               />
                             </div>
                           </div>
-                          <div className="flex gap-2 mt-4">
-                            <Button onClick={addRealtor} className="bg-accent hover:bg-accent/90">
-                              Add Realtor
+                          <div className="flex gap-3">
+                            <Button 
+                              onClick={addRealtor} 
+                              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6"
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Create Realtor Account
                             </Button>
                             <Button 
                               onClick={() => setShowAddRealtor(false)}
                               variant="outline"
+                              className="border-gray-300 hover:bg-gray-50"
                             >
+                              <X className="h-4 w-4 mr-2" />
                               Cancel
                             </Button>
                           </div>
@@ -898,14 +1106,14 @@ const fetchAssignments = async () => {
                       ) : realtors.length === 0 ? (
                         <p className="text-muted-foreground">No realtors found. Add your first realtor above.</p>
                       ) : (
-                        <div className="overflow-hidden rounded-lg border border-border/50">
+                        <div className="overflow-hidden rounded-xl border-2 border-gray-200 bg-white">
                           <Table>
-                            <TableHeader className="bg-muted/30">
-                              <TableRow>
-                                <TableHead className="font-semibold">Name</TableHead>
-                                <TableHead className="font-semibold">Email</TableHead>
-                                <TableHead className="font-semibold">Status</TableHead>
-                                <TableHead className="font-semibold">Actions</TableHead>
+                            <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
+                              <TableRow className="border-b-2 border-gray-200">
+                                <TableHead className="font-bold text-gray-700 py-4">Name</TableHead>
+                                <TableHead className="font-bold text-gray-700 py-4">Email</TableHead>
+                                <TableHead className="font-bold text-gray-700 py-4">Status</TableHead>
+                                <TableHead className="font-bold text-gray-700 py-4">Actions</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -915,28 +1123,37 @@ const fetchAssignments = async () => {
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ duration: 0.4, delay: idx * 0.1 }}
-                                  className="hover:bg-accent/5 transition-all duration-200 group"
+                                  className="hover:bg-blue-50 transition-all duration-200 group border-b border-gray-100"
                                 >
-                                  <TableCell className="font-medium group-hover:text-accent transition-colors">
-                                    {realtor.name}
+                                  <TableCell className="font-semibold text-gray-900 py-4 group-hover:text-blue-700 transition-colors">
+                                    <div className="flex items-center gap-2">
+                                      <User className="h-4 w-4 text-blue-600" />
+                                      {realtor.name}
+                                    </div>
                                   </TableCell>
-                                  <TableCell>{realtor.email}</TableCell>
-                                  <TableCell>
+                                  <TableCell className="text-gray-700 py-4">
+                                    <div className="flex items-center gap-2">
+                                      <Mail className="h-4 w-4 text-gray-400" />
+                                      {realtor.email}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="py-4">
                                     <Badge
                                       variant={realtor.status === "active" ? "default" : "secondary"}
                                       className={
                                         realtor.status === "active"
-                                          ? "bg-accent text-accent-foreground"
-                                          : "bg-muted text-muted-foreground"
+                                          ? "bg-green-100 text-green-800 border-green-300 font-semibold"
+                                          : "bg-gray-100 text-gray-800 border-gray-300 font-semibold"
                                       }
                                     >
                                       {realtor.status || "Active"}
                                     </Badge>
                                   </TableCell>
-                                  <TableCell>
+                                  <TableCell className="py-4">
                                     <div className="flex gap-2">
-                                      <Button size="sm" variant="outline">
-                                        <Settings className="h-4 w-4" />
+                                      <Button size="sm" variant="outline" className="border-gray-300 hover:bg-blue-50 hover:border-blue-400">
+                                        <Settings className="h-4 w-4 mr-1" />
+                                        Settings
                                       </Button>
                                     </div>
                                   </TableCell>
@@ -960,32 +1177,45 @@ const fetchAssignments = async () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="glass-card">
-                    <CardHeader>
-                      <CardTitle className="text-navy text-xl flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-accent" />
+                  <Card className="bg-white shadow-lg border border-gray-200 rounded-2xl">
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl border-b border-gray-200">
+                      <CardTitle className="text-navy text-2xl flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-blue-600 rounded-lg text-white">
+                          <CheckSquare className="h-5 w-5" />
+                        </div>
                         Assign Properties to Realtors
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-gray-600 ml-14">
                         Select properties and assign them to a realtor. Assigned properties will appear on the realtor's dashboard.
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       {/* Realtor Selection */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-navy">Select Realtor:</label>
+                      <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <User className="h-5 w-5 text-blue-600" />
+                          <label className="text-base font-semibold text-navy">Select Realtor to Assign Properties:</label>
+                        </div>
                         <select 
                           value={selectedRealtor || ''} 
                           onChange={(e) => setSelectedRealtor(e.target.value ? Number(e.target.value) : null)}
-                          className="w-full md:w-96 p-3 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                          className="w-full md:w-96 p-4 border-2 border-gray-300 rounded-xl bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium transition-all"
                         >
-                          <option value="">Choose a realtor...</option>
+                          <option value="">👉 Choose a realtor from the list...</option>
                           {realtors.map(realtor => (
                             <option key={realtor.id} value={realtor.id}>
-                              {realtor.name} ({realtor.email})
+                              {realtor.name} - {realtor.email}
                             </option>
                           ))}
                         </select>
+                        {selectedRealtor && (
+                          <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
+                            <CheckCircle2 className="h-5 w-5" />
+                            <span className="font-medium">
+                              Selected: {realtors.find(r => r.id === selectedRealtor)?.name}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Properties Section */}
@@ -1012,56 +1242,63 @@ const fetchAssignments = async () => {
                             </div>
                           </div>
                           
-                          {/* Bulk Selection Buttons */}
-                          <div className="flex flex-wrap gap-2">
-                            <Button 
-                              onClick={() => handleBulkSelect(10, true)}
-                              variant="outline"
-                              size="sm"
-                              className="text-xs"
-                            >
-                              First 10
-                            </Button>
-                            <Button 
-                              onClick={() => handleBulkSelect(20, true)}
-                              variant="outline"
-                              size="sm"
-                              className="text-xs"
-                            >
-                              First 20
-                            </Button>
-                            <Button 
-                              onClick={() => handleBulkSelect(50, true)}
-                              variant="outline"
-                              size="sm"
-                              className="text-xs"
-                            >
-                              First 50
-                            </Button>
-                            <Button 
-                              onClick={() => handleBulkSelect(10, false)}
-                              variant="outline"
-                              size="sm"
-                              className="text-xs"
-                            >
-                              Last 10
-                            </Button>
-                            <Button 
-                              onClick={() => handleBulkSelect(20, false)}
-                              variant="outline"
-                              size="sm"
-                              className="text-xs"
-                            >
-                              Last 20
-                            </Button>
-                            <Button 
-                              onClick={() => handleBulkSelect(50, false)}
-                              variant="outline"
-                              size="sm"
-                              className="text-xs"
-                            >
-                              Last 50
-                            </Button>
+                          {/* Enhanced Bulk Selection Buttons */}
+                          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                              <CheckSquare className="h-4 w-4 text-blue-600" />
+                              Quick Selection Tools:
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              <Button 
+                                onClick={() => handleBulkSelect(10, true)}
+                                variant="outline"
+                                size="sm"
+                                className="bg-white hover:bg-blue-50 hover:border-blue-400 text-blue-700 font-medium border-blue-300"
+                              >
+                                First 10
+                              </Button>
+                              <Button 
+                                onClick={() => handleBulkSelect(20, true)}
+                                variant="outline"
+                                size="sm"
+                                className="bg-white hover:bg-blue-50 hover:border-blue-400 text-blue-700 font-medium border-blue-300"
+                              >
+                                First 20
+                              </Button>
+                              <Button 
+                                onClick={() => handleBulkSelect(50, true)}
+                                variant="outline"
+                                size="sm"
+                                className="bg-white hover:bg-blue-50 hover:border-blue-400 text-blue-700 font-medium border-blue-300"
+                              >
+                                First 50
+                              </Button>
+                              <div className="w-px bg-gray-300 mx-1"></div>
+                              <Button 
+                                onClick={() => handleBulkSelect(10, false)}
+                                variant="outline"
+                                size="sm"
+                                className="bg-white hover:bg-amber-50 hover:border-amber-400 text-amber-700 font-medium border-amber-300"
+                              >
+                                Last 10
+                              </Button>
+                              <Button 
+                                onClick={() => handleBulkSelect(20, false)}
+                                variant="outline"
+                                size="sm"
+                                className="bg-white hover:bg-amber-50 hover:border-amber-400 text-amber-700 font-medium border-amber-300"
+                              >
+                                Last 20
+                              </Button>
+                              <Button 
+                                onClick={() => handleBulkSelect(50, false)}
+                                variant="outline"
+                                size="sm"
+                                className="bg-white hover:bg-amber-50 hover:border-amber-400 text-amber-700 font-medium border-amber-300"
+                              >
+                                Last 50
+                              </Button>
+                            </div>
                           </div>
                         </div>
 
@@ -1086,78 +1323,96 @@ const fetchAssignments = async () => {
                                   whileHover={{ y: -4 }}
                                 >
                                   <Card 
-                                    className={`hover-lift cursor-pointer transition-all ${
+                                    className={`cursor-pointer transition-all duration-300 rounded-xl ${
                                       selectedProperties.includes(property.id) 
-                                        ? 'border-accent border-2 bg-accent/5' 
-                                        : 'border-border'
+                                        ? 'border-blue-500 border-3 bg-blue-50 shadow-lg scale-[1.02]' 
+                                        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
                                     }`}
                                     onClick={() => handlePropertyToggle(property.id)}
                                   >
-                                    <div className="flex items-start p-4 gap-3">
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedProperties.includes(property.id)}
-                                        onChange={() => handlePropertyToggle(property.id)}
-                                        className="mt-1 h-4 w-4 cursor-pointer accent-accent flex-shrink-0"
-                                        onClick={(e) => e.stopPropagation()}
-                                      />
-                                      <div className="flex-1 min-w-0 space-y-2">
+                                    <div className="flex items-start p-5 gap-4">
+                                      <div className="flex-shrink-0 mt-1">
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedProperties.includes(property.id)}
+                                          onChange={() => handlePropertyToggle(property.id)}
+                                          className="h-5 w-5 cursor-pointer accent-blue-600 rounded border-2 border-gray-300 checked:bg-blue-600"
+                                          onClick={(e) => e.stopPropagation()}
+                                        />
+                                      </div>
+                                      <div className="flex-1 min-w-0 space-y-3">
                                         <div>
-                                          <h4 className="font-semibold text-navy truncate">
+                                          <h4 className="font-bold text-lg text-navy truncate mb-1">
                                             {meta.address || `Property #${property.id}`}
                                           </h4>
                                           {meta.listing_id && (
-                                            <p className="text-xs text-muted-foreground">MLS: {meta.listing_id}</p>
+                                            <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit">
+                                              <Info className="h-3 w-3" />
+                                              MLS: {meta.listing_id}
+                                            </div>
                                           )}
                                         </div>
-                                        <div className="space-y-1 text-sm">
-                                          <p className="font-semibold text-gold">
-                                            ${meta.price ? meta.price.toLocaleString() : 'N/A'}
-                                          </p>
-                                          <div className="flex flex-wrap gap-2 text-muted-foreground">
-                                            <span className="flex items-center gap-1">
-                                              <Bed className="h-3 w-3" /> {meta.bedrooms || 0}
+                                        <div className="space-y-2">
+                                          <div className="flex items-center justify-between">
+                                            <p className="text-2xl font-bold text-blue-600">
+                                              ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                                            </p>
+                                            {meta.listing_status && (
+                                              <Badge 
+                                                variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
+                                                className={`text-xs ${
+                                                  meta.listing_status === 'Available' 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-gray-100 text-gray-800'
+                                                }`}
+                                              >
+                                                {meta.listing_status}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <div className="flex flex-wrap gap-3 text-sm font-medium text-gray-700">
+                                            <span className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
+                                              <Bed className="h-4 w-4 text-blue-600" /> {meta.bedrooms || 0} Beds
                                             </span>
-                                            <span className="flex items-center gap-1">
-                                              <Bath className="h-3 w-3" /> {meta.bathrooms || 0}
+                                            <span className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
+                                              <Bath className="h-4 w-4 text-blue-600" /> {meta.bathrooms || 0} Baths
                                             </span>
                                             {meta.square_feet && (
-                                              <span className="flex items-center gap-1">
-                                                <Square className="h-3 w-3" /> {meta.square_feet} sqft
+                                              <span className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
+                                                <Square className="h-4 w-4 text-blue-600" /> {meta.square_feet} sqft
                                               </span>
                                             )}
                                           </div>
-                                          {meta.property_type && (
-                                            <Badge variant="outline" className="text-xs">
-                                              {meta.property_type}
-                                            </Badge>
-                                          )}
-                                          {meta.listing_status && (
-                                            <Badge 
-                                              variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                                              className="text-xs ml-1"
-                                            >
-                                              {meta.listing_status}
-                                            </Badge>
-                                          )}
+                                          <div className="flex flex-wrap gap-2">
+                                            {meta.property_type && (
+                                              <Badge variant="outline" className="text-xs font-semibold border-blue-300 text-blue-700">
+                                                {meta.property_type}
+                                              </Badge>
+                                            )}
+                                          </div>
                                           {meta.features && meta.features.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                              {meta.features.slice(0, 2).map((feature: string, fIdx: number) => (
-                                                <Badge key={fIdx} variant="outline" className="text-xs">
-                                                  {feature}
-                                                </Badge>
-                                              ))}
-                                              {meta.features.length > 2 && (
-                                                <span className="text-xs text-muted-foreground">+{meta.features.length - 2}</span>
-                                              )}
+                                            <div className="pt-2 border-t border-gray-200">
+                                              <p className="text-xs font-semibold text-gray-600 mb-2">Key Features:</p>
+                                              <div className="flex flex-wrap gap-1.5">
+                                                {meta.features.slice(0, 3).map((feature: string, fIdx: number) => (
+                                                  <Badge key={fIdx} variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
+                                                    {feature}
+                                                  </Badge>
+                                                ))}
+                                                {meta.features.length > 3 && (
+                                                  <span className="text-xs text-gray-500 font-medium">+{meta.features.length - 3} more</span>
+                                                )}
+                                              </div>
                                             </div>
                                           )}
                                           {meta.agent && (
-                                            <p className="text-xs text-muted-foreground truncate">
-                                              Agent: {meta.agent.name}
-                                            </p>
+                                            <div className="pt-2 border-t border-gray-200">
+                                              <p className="text-xs font-semibold text-gray-600 mb-1">Agent:</p>
+                                              <p className="text-sm font-medium text-gray-800 truncate">
+                                                {meta.agent.name}
+                                              </p>
+                                            </div>
                                           )}
-                                          <p className="text-xs text-muted-foreground">ID: {property.id}</p>
                                         </div>
                                       </div>
                                     </div>
@@ -1169,28 +1424,46 @@ const fetchAssignments = async () => {
                         )}
                       </div>
 
-                      {/* Assign Button */}
-                      <div className="pt-4 border-t">
-                        <Button 
-                          onClick={assignProperties} 
-                          disabled={assigningProperties || !selectedRealtor || selectedProperties.length === 0}
-                          className="w-full md:w-auto bg-gold hover:bg-gold/90 text-navy font-semibold"
-                          size="lg"
-                        >
-                          {assigningProperties 
-                            ? 'Assigning...' 
-                            : `Assign ${selectedProperties.length} ${selectedProperties.length === 1 ? 'Property' : 'Properties'}`}
-                        </Button>
-                        {!selectedRealtor && selectedProperties.length > 0 && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Please select a realtor to assign properties
-                          </p>
-                        )}
-                        {selectedRealtor && selectedProperties.length === 0 && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Please select at least one property to assign
-                          </p>
-                        )}
+                      {/* Assign Button Section */}
+                      <div className="pt-6 border-t-2 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-700 mb-1">
+                              {selectedProperties.length > 0 && selectedRealtor ? (
+                                <span className="flex items-center gap-2 text-green-700">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  Ready to assign <strong>{selectedProperties.length}</strong> {selectedProperties.length === 1 ? 'property' : 'properties'} to {realtors.find(r => r.id === selectedRealtor)?.name}
+                                </span>
+                              ) : (
+                                <span className="text-gray-600">
+                                  {!selectedRealtor && selectedProperties.length > 0 
+                                    ? "⚠️ Please select a realtor to assign properties"
+                                    : selectedRealtor && selectedProperties.length === 0
+                                    ? "⚠️ Please select at least one property to assign"
+                                    : "👉 Select a realtor and properties to begin"}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          <Button 
+                            onClick={assignProperties} 
+                            disabled={assigningProperties || !selectedRealtor || selectedProperties.length === 0}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            size="lg"
+                          >
+                            {assigningProperties ? (
+                              <>
+                                <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                                Assigning...
+                              </>
+                            ) : (
+                              <>
+                                <CheckSquare className="h-5 w-5 mr-2" />
+                                Assign {selectedProperties.length} {selectedProperties.length === 1 ? 'Property' : 'Properties'}
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -1206,25 +1479,28 @@ const fetchAssignments = async () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="glass-card">
-                    <CardHeader>
+                  <Card className="bg-white shadow-lg border border-gray-200 rounded-2xl">
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
-                          <CardTitle className="text-navy text-xl flex items-center gap-2">
-                            <ListChecks className="h-5 w-5 text-accent" />
+                          <CardTitle className="text-navy text-2xl flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-600 rounded-lg text-white">
+                              <ListChecks className="h-5 w-5" />
+                            </div>
                             Property Assignments Overview
                           </CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            View all property assignments and unassigned properties
+                          <p className="text-sm text-gray-600 ml-14">
+                            See which properties are assigned to which realtors, and manage unassigned properties
                           </p>
                         </div>
                         <Button 
                           onClick={() => { fetchAssignments(); fetchPropertiesForAssignment(); }}
                           variant="outline"
                           size="sm"
+                          className="bg-white hover:bg-gray-50 border-gray-300"
                         >
                           <RefreshCw className="h-4 w-4 mr-2" />
-                          Refresh
+                          Refresh Data
                         </Button>
                       </div>
                     </CardHeader>
@@ -1235,42 +1511,71 @@ const fetchAssignments = async () => {
                         <p className="text-muted-foreground py-8 text-center">No assignment data available</p>
                       ) : (
                         <div className="space-y-8">
-                          {/* Summary Cards */}
+                          {/* Enhanced Summary Cards */}
                           {assignmentsData.summary && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <Card className="p-4">
-                                <p className="text-sm text-muted-foreground">Total Properties</p>
-                                <p className="text-2xl font-bold text-navy mt-1">
-                                  {assignmentsData.summary.total_properties || 0}
-                                </p>
+                              <Card className="p-6 bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-xl hover:shadow-lg transition-all">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-600 mb-1">Total Properties</p>
+                                    <p className="text-3xl font-bold text-navy">
+                                      {assignmentsData.summary.total_properties || 0}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">All properties</p>
+                                  </div>
+                                  <div className="p-3 bg-blue-50 rounded-lg">
+                                    <Building2 className="h-6 w-6 text-blue-600" />
+                                  </div>
+                                </div>
                               </Card>
-                              <Card className="p-4">
-                                <p className="text-sm text-muted-foreground">Unassigned</p>
-                                <p className="text-2xl font-bold text-yellow-600 mt-1">
-                                  {assignmentsData.summary.unassigned_count || 0}
-                                </p>
+                              <Card className="p-6 bg-gradient-to-br from-amber-50 to-white border-2 border-amber-200 rounded-xl hover:shadow-lg transition-all">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-600 mb-1">Unassigned</p>
+                                    <p className="text-3xl font-bold text-amber-600">
+                                      {assignmentsData.summary.unassigned_count || 0}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">Need assignment</p>
+                                  </div>
+                                  <div className="p-3 bg-amber-50 rounded-lg">
+                                    <AlertTriangle className="h-6 w-6 text-amber-600" />
+                                  </div>
+                                </div>
                               </Card>
-                              <Card className="p-4">
-                                <p className="text-sm text-muted-foreground">Assigned</p>
-                                <p className="text-2xl font-bold text-green-600 mt-1">
-                                  {assignmentsData.summary.assigned_count || 0}
-                                </p>
+                              <Card className="p-6 bg-gradient-to-br from-green-50 to-white border-2 border-green-200 rounded-xl hover:shadow-lg transition-all">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-600 mb-1">Assigned</p>
+                                    <p className="text-3xl font-bold text-green-600">
+                                      {assignmentsData.summary.assigned_count || 0}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">To realtors</p>
+                                  </div>
+                                  <div className="p-3 bg-green-50 rounded-lg">
+                                    <CheckCircle2 className="h-6 w-6 text-green-600" />
+                                  </div>
+                                </div>
                               </Card>
                             </div>
                           )}
 
                           {/* Unassigned Properties */}
                           {assignmentsData.unassigned_properties && assignmentsData.unassigned_properties.length > 0 && (
-                            <div>
-                              <h3 className="text-lg font-semibold text-navy mb-4 flex items-center gap-2">
+                            <div className="bg-amber-50/30 rounded-xl p-6 border border-amber-200">
+                              <h3 className="text-xl font-bold text-navy mb-6 flex items-center gap-3">
+                                <div className="p-2 bg-amber-500 rounded-lg text-white">
+                                  <AlertTriangle className="h-5 w-5" />
+                                </div>
                                 Unassigned Properties
-                                <Badge>{assignmentsData.unassigned_properties.length}</Badge>
+                                <Badge className="bg-amber-500 text-white text-base px-3 py-1">
+                                  {assignmentsData.unassigned_properties.length}
+                                </Badge>
                               </h3>
                               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {assignmentsData.unassigned_properties.map((property: any, idx: number) => {
                                   const meta = getPropertyMetadata(property);
                                   return (
-                                    <Card key={property.id || idx} className="hover-lift">
+                                    <Card key={property.id || idx} className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl hover:border-amber-300">
                                       <CardHeader className="pb-2">
                                         <div className="flex items-start justify-between">
                                           <CardTitle className="text-sm text-navy">
@@ -1282,8 +1587,8 @@ const fetchAssignments = async () => {
                                           <p className="text-xs text-muted-foreground mt-1">MLS: {meta.listing_id}</p>
                                         )}
                                       </CardHeader>
-                                      <CardContent className="space-y-2 text-sm">
-                                        <p className="font-semibold text-gold">
+                                      <CardContent className="space-y-3 text-sm">
+                                        <p className="font-semibold text-gold text-lg">
                                           ${meta.price ? meta.price.toLocaleString() : 'N/A'}
                                         </p>
                                         <div className="flex flex-wrap gap-2 text-muted-foreground">
@@ -1292,12 +1597,81 @@ const fetchAssignments = async () => {
                                           {meta.square_feet && <span><Square className="h-3 w-3 inline" /> {meta.square_feet} sqft</span>}
                                         </div>
                                         {meta.property_type && <Badge variant="outline" className="text-xs">{meta.property_type}</Badge>}
+                                        
+                                        {/* Status Update */}
+                                        <div className="flex items-center gap-2 pt-2 border-t">
+                                          <span className="text-xs font-medium text-muted-foreground">Status:</span>
+                                          <Select 
+                                            value={meta.listing_status || 'Available'} 
+                                            onValueChange={(value) => handleUpdatePropertyStatus(property.id, value)}
+                                          >
+                                            <SelectTrigger className="h-8 text-xs flex-1">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Available">Available</SelectItem>
+                                              <SelectItem value="For Sale">For Sale</SelectItem>
+                                              <SelectItem value="For Rent">For Rent</SelectItem>
+                                              <SelectItem value="Sold">Sold</SelectItem>
+                                              <SelectItem value="Rented">Rented</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+
+                                        {/* Agent Section with Remove */}
+                                        {meta.agent && (
+                                          <div className="pt-2 border-t">
+                                            <div className="flex items-start justify-between mb-2">
+                                              <p className="text-xs font-semibold text-muted-foreground">Agent:</p>
+                                              <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                    <X className="h-3 w-3" />
+                                                  </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                  <AlertDialogHeader>
+                                                    <AlertDialogTitle>Remove Agent?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                      Are you sure you want to remove {meta.agent.name} from this property? This action cannot be undone.
+                                                    </AlertDialogDescription>
+                                                  </AlertDialogHeader>
+                                                  <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction 
+                                                      onClick={() => handleRemoveAgent(property.id)}
+                                                      className="bg-red-600 hover:bg-red-700"
+                                                    >
+                                                      Remove Agent
+                                                    </AlertDialogAction>
+                                                  </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                              </AlertDialog>
+                                            </div>
+                                            <div className="space-y-1 text-xs">
+                                              <p className="font-medium">{meta.agent.name}</p>
+                                              {meta.agent.email && (
+                                                <div className="flex items-center gap-1 text-muted-foreground">
+                                                  <Mail className="h-3 w-3" />
+                                                  <span className="truncate">{meta.agent.email}</span>
+                                                </div>
+                                              )}
+                                              {meta.agent.phone && (
+                                                <div className="flex items-center gap-1 text-muted-foreground">
+                                                  <Phone className="h-3 w-3" />
+                                                  <span>{meta.agent.phone}</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+
                                         {meta.features && meta.features.length > 0 && (
-                                          <div className="flex flex-wrap gap-1">
+                                          <div className="flex flex-wrap gap-1 pt-2 border-t">
                                             {meta.features.slice(0, 2).map((f: string, i: number) => (
                                               <Badge key={i} variant="outline" className="text-xs">{f}</Badge>
                                             ))}
-                                            {meta.features.length > 2 && <span className="text-xs">+{meta.features.length - 2}</span>}
+                                            {meta.features.length > 2 && <span className="text-xs text-muted-foreground">+{meta.features.length - 2}</span>}
                                           </div>
                                         )}
                                       </CardContent>
@@ -1310,18 +1684,29 @@ const fetchAssignments = async () => {
 
                           {/* Assigned Properties by Realtor */}
                           {assignmentsData.assigned_properties && Object.keys(assignmentsData.assigned_properties).length > 0 && (
-                            <div>
-                              <h3 className="text-lg font-semibold text-navy mb-4">Assigned Properties by Realtor</h3>
+                            <div className="bg-green-50/30 rounded-xl p-6 border border-green-200">
+                              <h3 className="text-xl font-bold text-navy mb-6 flex items-center gap-3">
+                                <div className="p-2 bg-green-600 rounded-lg text-white">
+                                  <Users className="h-5 w-5" />
+                                </div>
+                                Assigned Properties by Realtor
+                              </h3>
                               {Object.values(assignmentsData.assigned_properties).map((realtorGroup: any) => (
-                                <Card key={realtorGroup.realtor_id} className="mb-6">
-                                  <CardHeader>
+                                <Card key={realtorGroup.realtor_id} className="mb-6 bg-white shadow-md border border-gray-200 rounded-xl">
+                                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-xl border-b border-gray-200">
                                     <div className="flex items-center justify-between">
                                       <div>
-                                        <CardTitle className="text-navy">{realtorGroup.realtor_name}</CardTitle>
-                                        <p className="text-sm text-muted-foreground">{realtorGroup.realtor_email}</p>
+                                        <CardTitle className="text-navy text-xl flex items-center gap-2">
+                                          <User className="h-5 w-5 text-green-600" />
+                                          {realtorGroup.realtor_name}
+                                        </CardTitle>
+                                        <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                                          <Mail className="h-3 w-3" />
+                                          {realtorGroup.realtor_email}
+                                        </p>
                                       </div>
-                                      <Badge className="bg-green-600">
-                                        {realtorGroup.count} {realtorGroup.count === 1 ? 'property' : 'properties'}
+                                      <Badge className="bg-green-600 text-white text-base px-4 py-2 shadow-md">
+                                        {realtorGroup.count} {realtorGroup.count === 1 ? 'Property' : 'Properties'}
                                       </Badge>
                                     </div>
                                   </CardHeader>
@@ -1330,7 +1715,7 @@ const fetchAssignments = async () => {
                                       {realtorGroup.properties.map((property: any, idx: number) => {
                                         const meta = getPropertyMetadata(property);
                                         return (
-                                          <Card key={property.id || idx} className="hover-lift">
+                                          <Card key={property.id || idx} className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl hover:border-green-300">
                                             <CardHeader className="pb-2">
                                               <CardTitle className="text-sm text-navy">
                                                 {meta.address || `Property #${property.id}`}
@@ -1339,22 +1724,118 @@ const fetchAssignments = async () => {
                                                 <p className="text-xs text-muted-foreground mt-1">MLS: {meta.listing_id}</p>
                                               )}
                                             </CardHeader>
-                                            <CardContent className="space-y-2 text-sm">
-                                              <p className="font-semibold text-gold">
-                                                ${meta.price ? meta.price.toLocaleString() : 'N/A'}
-                                              </p>
+                                            <CardContent className="space-y-3 text-sm">
+                                              <div className="flex items-center justify-between">
+                                                <p className="font-semibold text-gold text-lg">
+                                                  ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                                                </p>
+                                                <AlertDialog>
+                                                  <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                      <Trash2 className="h-3 w-3 mr-1" />
+                                                      Unassign
+                                                    </Button>
+                                                  </AlertDialogTrigger>
+                                                  <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                      <AlertDialogTitle>Unassign Property?</AlertDialogTitle>
+                                                      <AlertDialogDescription>
+                                                        Are you sure you want to unassign this property from {realtorGroup.realtor_name}? The property will become available for reassignment.
+                                                      </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                      <AlertDialogAction 
+                                                        onClick={() => handleUnassignProperties([property.id])}
+                                                        className="bg-red-600 hover:bg-red-700"
+                                                      >
+                                                        Unassign Property
+                                                      </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                  </AlertDialogContent>
+                                                </AlertDialog>
+                                              </div>
                                               <div className="flex flex-wrap gap-2 text-muted-foreground">
                                                 <span><Bed className="h-3 w-3 inline" /> {meta.bedrooms || 0}</span>
                                                 <span><Bath className="h-3 w-3 inline" /> {meta.bathrooms || 0}</span>
                                                 {meta.square_feet && <span><Square className="h-3 w-3 inline" /> {meta.square_feet} sqft</span>}
                                               </div>
                                               {meta.property_type && <Badge variant="outline" className="text-xs">{meta.property_type}</Badge>}
+                                              
+                                              {/* Status Update */}
+                                              <div className="flex items-center gap-2 pt-2 border-t">
+                                                <span className="text-xs font-medium text-muted-foreground">Status:</span>
+                                                <Select 
+                                                  value={meta.listing_status || 'Available'} 
+                                                  onValueChange={(value) => handleUpdatePropertyStatus(property.id, value)}
+                                                >
+                                                  <SelectTrigger className="h-8 text-xs flex-1">
+                                                    <SelectValue />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    <SelectItem value="Available">Available</SelectItem>
+                                                    <SelectItem value="For Sale">For Sale</SelectItem>
+                                                    <SelectItem value="For Rent">For Rent</SelectItem>
+                                                    <SelectItem value="Sold">Sold</SelectItem>
+                                                    <SelectItem value="Rented">Rented</SelectItem>
+                                                  </SelectContent>
+                                                </Select>
+                                              </div>
+
+                                              {/* Agent Section with Remove */}
+                                              {meta.agent && (
+                                                <div className="pt-2 border-t">
+                                                  <div className="flex items-start justify-between mb-2">
+                                                    <p className="text-xs font-semibold text-muted-foreground">Agent:</p>
+                                                    <AlertDialog>
+                                                      <AlertDialogTrigger asChild>
+                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                          <X className="h-3 w-3" />
+                                                        </Button>
+                                                      </AlertDialogTrigger>
+                                                      <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                          <AlertDialogTitle>Remove Agent?</AlertDialogTitle>
+                                                          <AlertDialogDescription>
+                                                            Are you sure you want to remove {meta.agent.name} from this property? This action cannot be undone.
+                                                          </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                          <AlertDialogAction 
+                                                            onClick={() => handleRemoveAgent(property.id)}
+                                                            className="bg-red-600 hover:bg-red-700"
+                                                          >
+                                                            Remove Agent
+                                                          </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                      </AlertDialogContent>
+                                                    </AlertDialog>
+                                                  </div>
+                                                  <div className="space-y-1 text-xs">
+                                                    <p className="font-medium">{meta.agent.name}</p>
+                                                    {meta.agent.email && (
+                                                      <div className="flex items-center gap-1 text-muted-foreground">
+                                                        <Mail className="h-3 w-3" />
+                                                        <span className="truncate">{meta.agent.email}</span>
+                                                      </div>
+                                                    )}
+                                                    {meta.agent.phone && (
+                                                      <div className="flex items-center gap-1 text-muted-foreground">
+                                                        <Phone className="h-3 w-3" />
+                                                        <span>{meta.agent.phone}</span>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              )}
+
                                               {meta.features && meta.features.length > 0 && (
-                                                <div className="flex flex-wrap gap-1">
+                                                <div className="flex flex-wrap gap-1 pt-2 border-t">
                                                   {meta.features.slice(0, 2).map((f: string, i: number) => (
                                                     <Badge key={i} variant="outline" className="text-xs">{f}</Badge>
                                                   ))}
-                                                  {meta.features.length > 2 && <span className="text-xs">+{meta.features.length - 2}</span>}
+                                                  {meta.features.length > 2 && <span className="text-xs text-muted-foreground">+{meta.features.length - 2}</span>}
                                                 </div>
                                               )}
                                             </CardContent>
@@ -1400,36 +1881,45 @@ const fetchAssignments = async () => {
             }}
             whileTap={{ scale: 0.98 }}
           >
-            <Card className="glass-card hover-lift group overflow-hidden h-full">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <motion.img
-                  src={meta.image_url || "/images/properties/default.jpg"}
-                  alt={`Property at ${meta.address}`}
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.4 }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                {meta.listing_status && (
-                  <div className="absolute top-2 right-2">
-                    <Badge 
-                      variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {meta.listing_status}
-                    </Badge>
-                  </div>
-                )}
-              </div>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-navy text-base group-hover:text-accent transition-colors">
-                  {meta.address || `Property #${apt.id}`}
-                </CardTitle>
-                {meta.listing_id && (
-                  <p className="text-xs text-muted-foreground mt-1">MLS: {meta.listing_id}</p>
-                )}
-              </CardHeader>
+          <Card className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group overflow-hidden h-full border border-gray-200 hover:border-blue-400">
+            <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+              <motion.img
+                src={meta.image_url || "/images/properties/default.jpg"}
+                alt={`Property at ${meta.address}`}
+                loading="lazy"
+                className="h-full w-full object-cover"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.4 }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {meta.listing_status && (
+                <div className="absolute top-3 right-3">
+                  <Badge 
+                    variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
+                    className={`text-xs font-semibold shadow-md ${
+                      meta.listing_status === 'Available' 
+                        ? 'bg-green-500 text-white' 
+                        : meta.listing_status === 'Sold' || meta.listing_status === 'Rented'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-gray-600 text-white'
+                    }`}
+                  >
+                    {meta.listing_status}
+                  </Badge>
+                </div>
+              )}
+            </div>
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-navy text-lg font-bold group-hover:text-blue-600 transition-colors line-clamp-2">
+                {meta.address || `Property #${apt.id}`}
+              </CardTitle>
+              {meta.listing_id && (
+                <div className="flex items-center gap-1 mt-1">
+                  <Info className="h-3 w-3 text-blue-600" />
+                  <p className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">MLS: {meta.listing_id}</p>
+                </div>
+              )}
+            </CardHeader>
               <CardContent className="space-y-3">
                 {/* Price */}
                 <div className="flex items-center justify-between border-b pb-2">

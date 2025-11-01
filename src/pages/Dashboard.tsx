@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info } from "lucide-react";
 import { toast } from "sonner";
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
@@ -1431,50 +1431,142 @@ const fetchAssignments = async () => {
                 )}
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-lg font-semibold text-gold">
+                {/* Price */}
+                <div className="flex items-center justify-between border-b pb-2">
+                  <div className="text-xl font-bold text-gold">
                     ${meta.price ? meta.price.toLocaleString() : "N/A"}
                   </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Bed className="h-4 w-4" /> {meta.bedrooms || 0}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Bath className="h-4 w-4" /> {meta.bathrooms || 0}
-                  </span>
-                  {meta.square_feet && (
-                    <span className="flex items-center gap-1">
-                      <Square className="h-4 w-4" /> {meta.square_feet} sqft
-                    </span>
+                  {meta.listing_status && (
+                    <Badge 
+                      variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {meta.listing_status}
+                    </Badge>
                   )}
                 </div>
-                {meta.property_type && (
-                  <Badge variant="outline" className="text-xs">
-                    {meta.property_type}
-                  </Badge>
-                )}
-                {meta.features && meta.features.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {meta.features.slice(0, 3).map((feature: string, fIdx: number) => (
-                      <Badge key={fIdx} variant="outline" className="text-xs">
-                        {feature}
+
+                {/* Basic Specs */}
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Bed className="h-4 w-4" /> {meta.bedrooms || 0}
+                  </div>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Bath className="h-4 w-4" /> {meta.bathrooms || 0}
+                  </div>
+                  {meta.square_feet && (
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Square className="h-4 w-4" /> {meta.square_feet}
+                    </div>
+                  )}
+                </div>
+
+                {/* Property Details Grid */}
+                <div className="space-y-2 pt-2 border-t">
+                  {meta.property_type && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Type:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {meta.property_type}
                       </Badge>
-                    ))}
-                    {meta.features.length > 3 && (
-                      <span className="text-xs text-muted-foreground">+{meta.features.length - 3}</span>
+                    </div>
+                  )}
+                  
+                  {meta.year_built && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Year Built:</span>
+                      <span className="font-medium">{meta.year_built}</span>
+                    </div>
+                  )}
+
+                  {meta.lot_size_sqft && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Lot Size:</span>
+                      <span className="font-medium">{meta.lot_size_sqft.toLocaleString()} sqft</span>
+                    </div>
+                  )}
+
+                  {meta.days_on_market !== undefined && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Days on Market:</span>
+                      <span className="font-medium">{meta.days_on_market}</span>
+                    </div>
+                  )}
+
+                  {meta.listing_date && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <CalendarIcon className="h-3 w-3" /> Listed:
+                      </span>
+                      <span className="font-medium">{new Date(meta.listing_date).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Features */}
+                {meta.features && meta.features.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Features:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {meta.features.map((feature: string, fIdx: number) => (
+                        <Badge key={fIdx} variant="outline" className="text-xs">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Agent Information */}
+                {meta.agent && (
+                  <div className="pt-2 border-t space-y-1">
+                    <p className="text-xs font-semibold text-muted-foreground">Agent:</p>
+                    <div className="space-y-1 text-xs">
+                      <p className="font-medium">{meta.agent.name}</p>
+                      {meta.agent.email && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Mail className="h-3 w-3" />
+                          <span className="truncate">{meta.agent.email}</span>
+                        </div>
+                      )}
+                      {meta.agent.phone && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          <span>{meta.agent.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Assignment Status (for PM) */}
+                {userType === "property_manager" && (
+                  <div className="pt-2 border-t">
+                    {meta.is_assigned && meta.assigned_to_realtor_name ? (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Assigned to:</span>
+                        <Badge className="bg-green-600 text-xs">
+                          {meta.assigned_to_realtor_name}
+                        </Badge>
+                      </div>
+                    ) : (
+                      <Badge variant="outline" className="bg-yellow-50 text-xs">
+                        Unassigned
+                      </Badge>
                     )}
                   </div>
                 )}
-                {meta.agent && (
-                  <p className="text-xs text-muted-foreground truncate">
-                    Agent: {meta.agent.name}
-                  </p>
-                )}
-                {meta.days_on_market !== undefined && (
-                  <p className="text-xs text-muted-foreground">
-                    {meta.days_on_market} days on market
-                  </p>
+
+                {/* Description (truncated) */}
+                {meta.description && (
+                  <div className="pt-2 border-t">
+                    <div className="flex items-start gap-1">
+                      <Info className="h-3 w-3 mt-0.5 text-muted-foreground flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {meta.description}
+                      </p>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>

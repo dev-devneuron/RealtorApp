@@ -647,31 +647,31 @@ const handleRemoveAgent = async (propertyId: number) => {
 
   return (
     <main className="min-h-screen dynamic-gradient">
-      {/* Enhanced Header - Clear & User-Friendly */}
+      {/* Enhanced Header - Consistent Black/Yellow/White Theme */}
       <motion.header 
-        className="relative overflow-hidden bg-gradient-to-br from-navy via-navy/95 to-navy/90 border-b border-white/10"
+        className="relative overflow-hidden bg-black border-b-2 border-gold"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="container mx-auto px-6 pt-8 pb-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
           <motion.div 
-            className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6"
+            className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1">
               <motion.div 
-                className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-white/20"
+                className="bg-gold p-3 sm:p-4 rounded-xl shadow-lg"
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Home className="h-7 w-7 text-gold" />
+                <Home className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
               </motion.div>
               <div>
                 <motion.h1 
-                  className="text-3xl lg:text-4xl font-bold text-white mb-1"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
@@ -679,7 +679,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                   {userType === "property_manager" ? "Property Manager" : "My"} Dashboard
                 </motion.h1>
                 <motion.p 
-                  className="text-white/80 text-sm lg:text-base"
+                  className="text-white/80 text-xs sm:text-sm lg:text-base"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
@@ -695,45 +695,46 @@ const handleRemoveAgent = async (propertyId: number) => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap gap-2 lg:gap-3"
+              className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto"
             >
               <Button 
                 asChild 
                 variant="outline"
-                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 backdrop-blur-sm"
+                className="bg-transparent hover:bg-gold text-white border-white hover:border-gold hover:text-black font-medium transition-all"
                 size="sm"
               >
                 <Link to="/">
                   <Home className="h-4 w-4 mr-2" />
-                  Home
+                  <span className="hidden sm:inline">Home</span>
                 </Link>
               </Button>
               <Button 
                 asChild 
                 variant="outline"
-                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 backdrop-blur-sm"
+                className="bg-transparent hover:bg-gold text-white border-white hover:border-gold hover:text-black font-medium transition-all"
                 size="sm"
               >
                 <Link to="/uploadpage">
                   <Building2 className="h-4 w-4 mr-2" />
-                  Upload
+                  <span className="hidden sm:inline">Upload</span>
                 </Link>
               </Button>
               <Button 
                 onClick={handleBuyNumber} 
                 disabled={loading} 
-                className="bg-gold hover:bg-gold/90 text-navy font-semibold shadow-lg hover:shadow-xl transition-all"
+                className="bg-gold hover:bg-gold/90 text-black font-bold shadow-lg hover:shadow-xl transition-all"
                 size="sm"
               >
                 {loading ? (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
+                    <span className="hidden sm:inline">Processing...</span>
                   </>
                 ) : (
                   <>
                     <Phone className="h-4 w-4 mr-2" />
-                    Get Phone Number
+                    <span className="hidden sm:inline">Get Phone Number</span>
+                    <span className="sm:hidden">Phone</span>
                   </>
                 )}
               </Button>
@@ -744,104 +745,104 @@ const handleRemoveAgent = async (propertyId: number) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.8 }}
-              className="mt-4 pt-4 border-t border-white/10"
+              className="mt-4 pt-4 border-t border-white/20"
             >
-              <div className="flex items-center gap-2 text-white/90">
-                <CheckCircle2 className="h-4 w-4 text-gold" />
-                <span className="text-sm">Your Phone Number: <span className="font-semibold text-gold">{myNumber}</span></span>
+              <div className="flex items-center gap-2 text-white">
+                <CheckCircle2 className="h-4 w-4 text-gold flex-shrink-0" />
+                <span className="text-sm">Your Phone Number: <span className="font-bold text-gold">{myNumber}</span></span>
               </div>
             </motion.div>
           )}
         </div>
       </motion.header>
 
-      {/* Enhanced Stats Cards */}
+      {/* Enhanced Stats Cards - Black/Yellow/White Theme */}
       <motion.section 
-        className="container mx-auto px-6 -mt-6 mb-8"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-4 sm:-mt-6 mb-6 sm:mb-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
           {userType === "property_manager" ? (
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Total Realtors</p>
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">Total Realtors</p>
                     <motion.p 
-                      className="text-3xl font-bold text-navy"
+                      className="text-2xl sm:text-3xl font-bold text-black"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
                     >
                       {realtors.length}
                     </motion.p>
-                    <p className="text-xs text-gray-500 mt-1">Active team members</p>
+                    <p className="text-xs text-black/50 mt-1">Active team members</p>
                   </div>
                   <motion.div 
-                    className="p-4 bg-blue-50 rounded-xl"
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
                     whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Users className="h-7 w-7 text-blue-600" />
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Total Properties</p>
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">Total Properties</p>
                     <motion.p 
-                      className="text-3xl font-bold text-navy"
+                      className="text-2xl sm:text-3xl font-bold text-black"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
                     >
                       {apartments.length}
                     </motion.p>
-                    <p className="text-xs text-gray-500 mt-1">In your portfolio</p>
+                    <p className="text-xs text-black/50 mt-1">In your portfolio</p>
                   </div>
                   <motion.div 
-                    className="p-4 bg-amber-50 rounded-xl"
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
                     whileHover={{ rotate: -15, scale: 1.1 }}
                   >
-                    <TrendingUp className="h-7 w-7 text-amber-600" />
+                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold sm:col-span-2 lg:col-span-1"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Active Bookings</p>
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">Active Bookings</p>
                     <motion.p 
-                      className="text-3xl font-bold text-navy"
+                      className="text-2xl sm:text-3xl font-bold text-black"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
                     >
                       {bookings.length}
                     </motion.p>
-                    <p className="text-xs text-gray-500 mt-1">Scheduled viewings</p>
+                    <p className="text-xs text-black/50 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-4 bg-green-50 rounded-xl"
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
                     whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Calendar className="h-7 w-7 text-green-600" />
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -850,81 +851,81 @@ const handleRemoveAgent = async (propertyId: number) => {
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">My Properties</p>
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">My Properties</p>
                     <motion.p 
-                      className="text-3xl font-bold text-navy"
+                      className="text-2xl sm:text-3xl font-bold text-black"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
                     >
                       {apartments.length}
                     </motion.p>
-                    <p className="text-xs text-gray-500 mt-1">Assigned to you</p>
+                    <p className="text-xs text-black/50 mt-1">Assigned to you</p>
                   </div>
                   <motion.div 
-                    className="p-4 bg-blue-50 rounded-xl"
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
                     whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <TrendingUp className="h-7 w-7 text-blue-600" />
+                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">My Bookings</p>
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">My Bookings</p>
                     <motion.p 
-                      className="text-3xl font-bold text-navy"
+                      className="text-2xl sm:text-3xl font-bold text-black"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
                     >
                       {bookings.length}
                     </motion.p>
-                    <p className="text-xs text-gray-500 mt-1">Scheduled viewings</p>
+                    <p className="text-xs text-black/50 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-4 bg-green-50 rounded-xl"
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
                     whileHover={{ rotate: -15, scale: 1.1 }}
                   >
-                    <Calendar className="h-7 w-7 text-green-600" />
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-accent/30"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold sm:col-span-2 lg:col-span-1"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Property Views</p>
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">Property Views</p>
                     <motion.p 
-                      className="text-3xl font-bold text-navy"
+                      className="text-2xl sm:text-3xl font-bold text-black"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
                     >
                       1,247
                     </motion.p>
-                    <p className="text-xs text-gray-500 mt-1">Total views this month</p>
+                    <p className="text-xs text-black/50 mt-1">Total views this month</p>
                   </div>
                   <motion.div 
-                    className="p-4 bg-purple-50 rounded-xl"
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
                     whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Eye className="h-7 w-7 text-purple-600" />
+                    <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -934,7 +935,7 @@ const handleRemoveAgent = async (propertyId: number) => {
       </motion.section>
 
       {/* Content */}
-      <section className="container mx-auto px-6 pb-16">
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -945,62 +946,66 @@ const handleRemoveAgent = async (propertyId: number) => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
+              className="overflow-x-auto"
             >
-              <TabsList className="mb-8 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-1.5 shadow-md">
+              <TabsList className="mb-6 sm:mb-8 bg-white border-2 border-black rounded-xl p-1 sm:p-1.5 shadow-lg inline-flex min-w-full sm:min-w-0">
                 {userType === "property_manager" && (
                   <TabsTrigger 
                     value="realtors" 
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                    className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
                   >
-                    <Users className="h-4 w-4 mr-2" />
-                    Realtors
+                    <Users className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="whitespace-nowrap">Realtors</span>
                   </TabsTrigger>
                 )}
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                      className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
                     >
-                      <CheckSquare className="h-4 w-4 mr-2" />
-                      Assign Properties
+                      <CheckSquare className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="whitespace-nowrap hidden sm:inline">Assign Properties</span>
+                      <span className="whitespace-nowrap sm:hidden">Assign</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                      className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
                     >
-                      <ListChecks className="h-4 w-4 mr-2" />
-                      View Assignments
+                      <ListChecks className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="whitespace-nowrap hidden sm:inline">View Assignments</span>
+                      <span className="whitespace-nowrap sm:hidden">Assignments</span>
                     </TabsTrigger>
                   </>
                 )}
                 <TabsTrigger 
                   value="properties" 
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
                 >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Properties
+                  <Building2 className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="whitespace-nowrap">Properties</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="bookings" 
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Bookings
+                  <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="whitespace-nowrap">Bookings</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="conversations" 
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
                 >
-                  <Music className="h-4 w-4 mr-2" />
-                  Conversations
+                  <Music className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="whitespace-nowrap hidden lg:inline">Conversations</span>
+                  <span className="whitespace-nowrap lg:hidden">Chats</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="chats" 
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-4 py-2 font-medium transition-all"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
                 >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Chats
+                  <Phone className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="whitespace-nowrap">Calls</span>
                 </TabsTrigger>
               </TabsList>
             </motion.div>
@@ -1013,23 +1018,23 @@ const handleRemoveAgent = async (propertyId: number) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="bg-white shadow-lg border border-gray-200 rounded-2xl">
-                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-navy text-2xl flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-600 rounded-lg text-white">
-                              <Users className="h-5 w-5" />
+                  <Card className="bg-white shadow-lg border-2 border-black rounded-xl">
+                    <CardHeader className="bg-black rounded-t-xl border-b-2 border-gold p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <CardTitle className="text-white text-xl sm:text-2xl flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-gold rounded-lg">
+                              <Users className="h-5 w-5 text-black" />
                             </div>
                             Manage Realtors
                           </CardTitle>
-                          <p className="text-sm text-gray-600 ml-14">
+                          <p className="text-sm text-white/80 ml-0 sm:ml-14 mt-2 sm:mt-0">
                             Add and manage your realtor team members. Create accounts for realtors so they can access their assigned properties.
                           </p>
                         </div>
                         <Button 
                           onClick={() => setShowAddRealtor(!showAddRealtor)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
+                          className="bg-gold hover:bg-gold/90 text-black font-bold shadow-lg hover:shadow-xl w-full sm:w-auto"
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
                           Add New Realtor
@@ -1042,49 +1047,49 @@ const handleRemoveAgent = async (propertyId: number) => {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="mb-6 p-6 border-2 border-blue-200 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50"
+                          className="mb-6 p-4 sm:p-6 border-2 border-black rounded-xl bg-white"
                         >
                           <div className="flex items-center gap-2 mb-4">
-                            <UserPlus className="h-5 w-5 text-blue-600" />
-                            <h3 className="text-xl font-bold text-navy">Add New Realtor to Your Team</h3>
+                            <UserPlus className="h-5 w-5 text-black" />
+                            <h3 className="text-xl font-bold text-black">Add New Realtor to Your Team</h3>
                           </div>
-                          <p className="text-sm text-gray-600 mb-4">Fill in the details below to create a new realtor account. They'll receive login credentials.</p>
+                          <p className="text-sm text-black/70 mb-4">Fill in the details below to create a new realtor account. They'll receive login credentials.</p>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
-                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Full Name</label>
+                              <label className="text-sm font-semibold text-black mb-2 block">Full Name</label>
                               <input
                                 type="text"
                                 value={newRealtor.name}
                                 onChange={(e) => setNewRealtor({...newRealtor, name: e.target.value})}
-                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                className="w-full p-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold bg-white"
                                 placeholder="John Doe"
                               />
                             </div>
                             <div>
-                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Email Address</label>
+                              <label className="text-sm font-semibold text-black mb-2 block">Email Address</label>
                               <input
                                 type="email"
                                 value={newRealtor.email}
                                 onChange={(e) => setNewRealtor({...newRealtor, email: e.target.value})}
-                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                className="w-full p-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold bg-white"
                                 placeholder="john.doe@company.com"
                               />
                             </div>
                             <div>
-                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Temporary Password</label>
+                              <label className="text-sm font-semibold text-black mb-2 block">Temporary Password</label>
                               <input
                                 type="password"
                                 value={newRealtor.password}
                                 onChange={(e) => setNewRealtor({...newRealtor, password: e.target.value})}
-                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                className="w-full p-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold bg-white"
                                 placeholder="Choose a secure password"
                               />
                             </div>
                           </div>
-                          <div className="flex gap-3">
+                          <div className="flex flex-col sm:flex-row gap-3">
                             <Button 
                               onClick={addRealtor} 
-                              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6"
+                              className="bg-gold hover:bg-gold/90 text-black font-bold px-6"
                             >
                               <CheckCircle2 className="h-4 w-4 mr-2" />
                               Create Realtor Account
@@ -1092,7 +1097,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                             <Button 
                               onClick={() => setShowAddRealtor(false)}
                               variant="outline"
-                              className="border-gray-300 hover:bg-gray-50"
+                              className="border-2 border-black hover:bg-black hover:text-white"
                             >
                               <X className="h-4 w-4 mr-2" />
                               Cancel
@@ -1102,18 +1107,18 @@ const handleRemoveAgent = async (propertyId: number) => {
                       )}
 
                       {loadingRealtors ? (
-                        <p className="text-muted-foreground">Loading realtors...</p>
+                        <p className="text-black font-semibold text-center py-8">Loading realtors...</p>
                       ) : realtors.length === 0 ? (
-                        <p className="text-muted-foreground">No realtors found. Add your first realtor above.</p>
+                        <p className="text-black/70 font-semibold text-center py-8">No realtors found. Add your first realtor above.</p>
                       ) : (
-                        <div className="overflow-hidden rounded-xl border-2 border-gray-200 bg-white">
+                        <div className="overflow-x-auto rounded-xl border-2 border-black bg-white">
                           <Table>
-                            <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
-                              <TableRow className="border-b-2 border-gray-200">
-                                <TableHead className="font-bold text-gray-700 py-4">Name</TableHead>
-                                <TableHead className="font-bold text-gray-700 py-4">Email</TableHead>
-                                <TableHead className="font-bold text-gray-700 py-4">Status</TableHead>
-                                <TableHead className="font-bold text-gray-700 py-4">Actions</TableHead>
+                            <TableHeader className="bg-black">
+                              <TableRow className="border-b-2 border-gold">
+                                <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Name</TableHead>
+                                <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Email</TableHead>
+                                <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Status</TableHead>
+                                <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Actions</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -1123,37 +1128,37 @@ const handleRemoveAgent = async (propertyId: number) => {
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ duration: 0.4, delay: idx * 0.1 }}
-                                  className="hover:bg-blue-50 transition-all duration-200 group border-b border-gray-100"
+                                  className="hover:bg-gold/10 transition-all duration-200 group border-b border-black/10"
                                 >
-                                  <TableCell className="font-semibold text-gray-900 py-4 group-hover:text-blue-700 transition-colors">
+                                  <TableCell className="font-semibold text-black py-3 sm:py-4 px-2 sm:px-4 group-hover:text-black transition-colors">
                                     <div className="flex items-center gap-2">
-                                      <User className="h-4 w-4 text-blue-600" />
+                                      <User className="h-4 w-4 text-black" />
                                       {realtor.name}
                                     </div>
                                   </TableCell>
-                                  <TableCell className="text-gray-700 py-4">
+                                  <TableCell className="text-black/70 py-3 sm:py-4 px-2 sm:px-4">
                                     <div className="flex items-center gap-2">
-                                      <Mail className="h-4 w-4 text-gray-400" />
-                                      {realtor.email}
+                                      <Mail className="h-4 w-4 text-black/50" />
+                                      <span className="truncate max-w-[200px] sm:max-w-none">{realtor.email}</span>
                                     </div>
                                   </TableCell>
-                                  <TableCell className="py-4">
+                                  <TableCell className="py-3 sm:py-4 px-2 sm:px-4">
                                     <Badge
                                       variant={realtor.status === "active" ? "default" : "secondary"}
                                       className={
                                         realtor.status === "active"
-                                          ? "bg-green-100 text-green-800 border-green-300 font-semibold"
-                                          : "bg-gray-100 text-gray-800 border-gray-300 font-semibold"
+                                          ? "bg-gold text-black border-2 border-black font-bold"
+                                          : "bg-white text-black border-2 border-black font-bold"
                                       }
                                     >
                                       {realtor.status || "Active"}
                                     </Badge>
                                   </TableCell>
-                                  <TableCell className="py-4">
+                                  <TableCell className="py-3 sm:py-4 px-2 sm:px-4">
                                     <div className="flex gap-2">
-                                      <Button size="sm" variant="outline" className="border-gray-300 hover:bg-blue-50 hover:border-blue-400">
+                                      <Button size="sm" variant="outline" className="border-2 border-black hover:bg-gold hover:border-black hover:text-black">
                                         <Settings className="h-4 w-4 mr-1" />
-                                        Settings
+                                        <span className="hidden sm:inline">Settings</span>
                                       </Button>
                                     </div>
                                   </TableCell>
@@ -1177,29 +1182,29 @@ const handleRemoveAgent = async (propertyId: number) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="bg-white shadow-lg border border-gray-200 rounded-2xl">
-                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl border-b border-gray-200">
-                      <CardTitle className="text-navy text-2xl flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-600 rounded-lg text-white">
-                          <CheckSquare className="h-5 w-5" />
+                  <Card className="bg-white shadow-lg border-2 border-black rounded-xl">
+                    <CardHeader className="bg-black rounded-t-xl border-b-2 border-gold p-4 sm:p-6">
+                      <CardTitle className="text-white text-xl sm:text-2xl flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-gold rounded-lg">
+                          <CheckSquare className="h-5 w-5 text-black" />
                         </div>
                         Assign Properties to Realtors
                       </CardTitle>
-                      <p className="text-sm text-gray-600 ml-14">
+                      <p className="text-sm text-white/80 ml-0 sm:ml-14 mt-2 sm:mt-0">
                         Select properties and assign them to a realtor. Assigned properties will appear on the realtor's dashboard.
                       </p>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
                       {/* Realtor Selection */}
-                      <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <div className="space-y-3 bg-white p-4 sm:p-6 rounded-xl border-2 border-black">
                         <div className="flex items-center gap-2">
-                          <User className="h-5 w-5 text-blue-600" />
-                          <label className="text-base font-semibold text-navy">Select Realtor to Assign Properties:</label>
+                          <User className="h-5 w-5 text-black" />
+                          <label className="text-base sm:text-lg font-bold text-black">Select Realtor to Assign Properties:</label>
                         </div>
                         <select 
                           value={selectedRealtor || ''} 
                           onChange={(e) => setSelectedRealtor(e.target.value ? Number(e.target.value) : null)}
-                          className="w-full md:w-96 p-4 border-2 border-gray-300 rounded-xl bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium transition-all"
+                          className="w-full p-3 sm:p-4 border-2 border-black rounded-xl bg-white text-black focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold text-base font-medium transition-all"
                         >
                           <option value="">👉 Choose a realtor from the list...</option>
                           {realtors.map(realtor => (
@@ -1209,9 +1214,9 @@ const handleRemoveAgent = async (propertyId: number) => {
                           ))}
                         </select>
                         {selectedRealtor && (
-                          <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
+                          <div className="flex items-center gap-2 text-black bg-gold p-3 rounded-lg border-2 border-black">
                             <CheckCircle2 className="h-5 w-5" />
-                            <span className="font-medium">
+                            <span className="font-bold">
                               Selected: {realtors.find(r => r.id === selectedRealtor)?.name}
                             </span>
                           </div>
@@ -1223,19 +1228,19 @@ const handleRemoveAgent = async (propertyId: number) => {
                         <div className="flex flex-col gap-4">
                           <div className="flex items-center justify-between flex-wrap gap-4">
                             <div>
-                              <h3 className="text-lg font-semibold text-navy">
-                                Available Properties ({selectedProperties.length} selected)
+                              <h3 className="text-lg sm:text-xl font-bold text-black">
+                                Available Properties <span className="text-gold">({selectedProperties.length} selected)</span>
                               </h3>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-black/70">
                                 Properties you own that haven't been assigned to realtors yet
                               </p>
                             </div>
-                            <div className="flex gap-2 flex-wrap">
+                            <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                               <Button 
                                 onClick={handleSelectAll}
                                 variant="outline"
                                 size="sm"
-                                className="bg-accent/10 hover:bg-accent/20"
+                                className="bg-gold hover:bg-gold/90 text-black border-2 border-black font-bold w-full sm:w-auto"
                               >
                                 {selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All'}
                               </Button>
@@ -1243,9 +1248,9 @@ const handleRemoveAgent = async (propertyId: number) => {
                           </div>
                           
                           {/* Enhanced Bulk Selection Buttons */}
-                          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                              <CheckSquare className="h-4 w-4 text-blue-600" />
+                          <div className="bg-white p-4 sm:p-6 rounded-xl border-2 border-black">
+                            <p className="text-sm sm:text-base font-bold text-black mb-3 flex items-center gap-2">
+                              <CheckSquare className="h-4 w-4 text-black" />
                               Quick Selection Tools:
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -1253,7 +1258,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                                 onClick={() => handleBulkSelect(10, true)}
                                 variant="outline"
                                 size="sm"
-                                className="bg-white hover:bg-blue-50 hover:border-blue-400 text-blue-700 font-medium border-blue-300"
+                                className="bg-white hover:bg-gold hover:border-black text-black font-bold border-2 border-black"
                               >
                                 First 10
                               </Button>
@@ -1261,7 +1266,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                                 onClick={() => handleBulkSelect(20, true)}
                                 variant="outline"
                                 size="sm"
-                                className="bg-white hover:bg-blue-50 hover:border-blue-400 text-blue-700 font-medium border-blue-300"
+                                className="bg-white hover:bg-gold hover:border-black text-black font-bold border-2 border-black"
                               >
                                 First 20
                               </Button>
@@ -1269,16 +1274,16 @@ const handleRemoveAgent = async (propertyId: number) => {
                                 onClick={() => handleBulkSelect(50, true)}
                                 variant="outline"
                                 size="sm"
-                                className="bg-white hover:bg-blue-50 hover:border-blue-400 text-blue-700 font-medium border-blue-300"
+                                className="bg-white hover:bg-gold hover:border-black text-black font-bold border-2 border-black"
                               >
                                 First 50
                               </Button>
-                              <div className="w-px bg-gray-300 mx-1"></div>
+                              <div className="w-px bg-black/20 mx-1"></div>
                               <Button 
                                 onClick={() => handleBulkSelect(10, false)}
                                 variant="outline"
                                 size="sm"
-                                className="bg-white hover:bg-amber-50 hover:border-amber-400 text-amber-700 font-medium border-amber-300"
+                                className="bg-white hover:bg-gold hover:border-black text-black font-bold border-2 border-black"
                               >
                                 Last 10
                               </Button>
@@ -1286,7 +1291,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                                 onClick={() => handleBulkSelect(20, false)}
                                 variant="outline"
                                 size="sm"
-                                className="bg-white hover:bg-amber-50 hover:border-amber-400 text-amber-700 font-medium border-amber-300"
+                                className="bg-white hover:bg-gold hover:border-black text-black font-bold border-2 border-black"
                               >
                                 Last 20
                               </Button>
@@ -1294,7 +1299,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                                 onClick={() => handleBulkSelect(50, false)}
                                 variant="outline"
                                 size="sm"
-                                className="bg-white hover:bg-amber-50 hover:border-amber-400 text-amber-700 font-medium border-amber-300"
+                                className="bg-white hover:bg-gold hover:border-black text-black font-bold border-2 border-black"
                               >
                                 Last 50
                               </Button>
@@ -1303,10 +1308,10 @@ const handleRemoveAgent = async (propertyId: number) => {
                         </div>
 
                         {loadingAssignmentProperties ? (
-                          <p className="text-muted-foreground py-8 text-center">Loading properties...</p>
+                          <p className="text-black font-semibold py-8 text-center">Loading properties...</p>
                         ) : availablePropertiesForAssignment.length === 0 ? (
-                          <div className="py-8 text-center border rounded-lg bg-muted/30">
-                            <p className="text-muted-foreground">
+                          <div className="py-8 text-center border-2 border-black rounded-xl bg-white">
+                            <p className="text-black/70 font-semibold">
                               No properties available to assign. All properties may already be assigned to realtors.
                             </p>
                           </div>
@@ -1323,30 +1328,30 @@ const handleRemoveAgent = async (propertyId: number) => {
                                   whileHover={{ y: -4 }}
                                 >
                                   <Card 
-                                    className={`cursor-pointer transition-all duration-300 rounded-xl ${
+                                    className={`cursor-pointer transition-all duration-300 rounded-xl border-2 ${
                                       selectedProperties.includes(property.id) 
-                                        ? 'border-blue-500 border-3 bg-blue-50 shadow-lg scale-[1.02]' 
-                                        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                                        ? 'border-gold bg-gold/20 shadow-xl scale-[1.02]' 
+                                        : 'border-black bg-white hover:border-gold hover:shadow-lg'
                                     }`}
                                     onClick={() => handlePropertyToggle(property.id)}
                                   >
-                                    <div className="flex items-start p-5 gap-4">
+                                    <div className="flex items-start p-4 sm:p-5 gap-3 sm:gap-4">
                                       <div className="flex-shrink-0 mt-1">
                                         <input
                                           type="checkbox"
                                           checked={selectedProperties.includes(property.id)}
                                           onChange={() => handlePropertyToggle(property.id)}
-                                          className="h-5 w-5 cursor-pointer accent-blue-600 rounded border-2 border-gray-300 checked:bg-blue-600"
+                                          className="h-5 w-5 cursor-pointer accent-gold rounded border-2 border-black checked:bg-gold checked:border-black"
                                           onClick={(e) => e.stopPropagation()}
                                         />
                                       </div>
-                                      <div className="flex-1 min-w-0 space-y-3">
+                                      <div className="flex-1 min-w-0 space-y-2 sm:space-y-3">
                                         <div>
-                                          <h4 className="font-bold text-lg text-navy truncate mb-1">
+                                          <h4 className="font-bold text-base sm:text-lg text-black truncate mb-1">
                                             {meta.address || `Property #${property.id}`}
                                           </h4>
                                           {meta.listing_id && (
-                                            <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit">
+                                            <div className="flex items-center gap-1 text-xs text-black bg-gold px-2 py-1 rounded-md w-fit border border-black">
                                               <Info className="h-3 w-3" />
                                               MLS: {meta.listing_id}
                                             </div>
@@ -1354,61 +1359,61 @@ const handleRemoveAgent = async (propertyId: number) => {
                                         </div>
                                         <div className="space-y-2">
                                           <div className="flex items-center justify-between">
-                                            <p className="text-2xl font-bold text-blue-600">
+                                            <p className="text-xl sm:text-2xl font-bold text-black">
                                               ${meta.price ? meta.price.toLocaleString() : 'N/A'}
                                             </p>
                                             {meta.listing_status && (
                                               <Badge 
                                                 variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                                                className={`text-xs ${
+                                                className={`text-xs font-bold border-2 ${
                                                   meta.listing_status === 'Available' 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : 'bg-gray-100 text-gray-800'
+                                                    ? 'bg-gold text-black border-black' 
+                                                    : 'bg-white text-black border-black'
                                                 }`}
                                               >
                                                 {meta.listing_status}
                                               </Badge>
                                             )}
                                           </div>
-                                          <div className="flex flex-wrap gap-3 text-sm font-medium text-gray-700">
-                                            <span className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
-                                              <Bed className="h-4 w-4 text-blue-600" /> {meta.bedrooms || 0} Beds
+                                          <div className="flex flex-wrap gap-2 text-sm font-semibold text-black">
+                                            <span className="flex items-center gap-1.5 bg-white border border-black px-2 py-1 rounded-md">
+                                              <Bed className="h-4 w-4" /> {meta.bedrooms || 0} Beds
                                             </span>
-                                            <span className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
-                                              <Bath className="h-4 w-4 text-blue-600" /> {meta.bathrooms || 0} Baths
+                                            <span className="flex items-center gap-1.5 bg-white border border-black px-2 py-1 rounded-md">
+                                              <Bath className="h-4 w-4" /> {meta.bathrooms || 0} Baths
                                             </span>
                                             {meta.square_feet && (
-                                              <span className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
-                                                <Square className="h-4 w-4 text-blue-600" /> {meta.square_feet} sqft
+                                              <span className="flex items-center gap-1.5 bg-white border border-black px-2 py-1 rounded-md">
+                                                <Square className="h-4 w-4" /> {meta.square_feet} sqft
                                               </span>
                                             )}
                                           </div>
                                           <div className="flex flex-wrap gap-2">
                                             {meta.property_type && (
-                                              <Badge variant="outline" className="text-xs font-semibold border-blue-300 text-blue-700">
+                                              <Badge variant="outline" className="text-xs font-bold border-2 border-black text-black bg-white">
                                                 {meta.property_type}
                                               </Badge>
                                             )}
                                           </div>
                                           {meta.features && meta.features.length > 0 && (
-                                            <div className="pt-2 border-t border-gray-200">
-                                              <p className="text-xs font-semibold text-gray-600 mb-2">Key Features:</p>
+                                            <div className="pt-2 border-t border-black/20">
+                                              <p className="text-xs font-bold text-black mb-2">Key Features:</p>
                                               <div className="flex flex-wrap gap-1.5">
                                                 {meta.features.slice(0, 3).map((feature: string, fIdx: number) => (
-                                                  <Badge key={fIdx} variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
+                                                  <Badge key={fIdx} variant="outline" className="text-xs bg-gold border-black text-black font-bold">
                                                     {feature}
                                                   </Badge>
                                                 ))}
                                                 {meta.features.length > 3 && (
-                                                  <span className="text-xs text-gray-500 font-medium">+{meta.features.length - 3} more</span>
+                                                  <span className="text-xs text-black/50 font-medium">+{meta.features.length - 3} more</span>
                                                 )}
                                               </div>
                                             </div>
                                           )}
                                           {meta.agent && (
-                                            <div className="pt-2 border-t border-gray-200">
-                                              <p className="text-xs font-semibold text-gray-600 mb-1">Agent:</p>
-                                              <p className="text-sm font-medium text-gray-800 truncate">
+                                            <div className="pt-2 border-t border-black/20">
+                                              <p className="text-xs font-bold text-black mb-1">Agent:</p>
+                                              <p className="text-sm font-semibold text-black truncate">
                                                 {meta.agent.name}
                                               </p>
                                             </div>
@@ -1425,17 +1430,17 @@ const handleRemoveAgent = async (propertyId: number) => {
                       </div>
 
                       {/* Assign Button Section */}
-                      <div className="pt-6 border-t-2 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
+                      <div className="pt-4 sm:pt-6 border-t-2 border-black bg-black p-4 sm:p-6 rounded-xl">
                         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-700 mb-1">
+                            <p className="text-sm sm:text-base font-bold text-white mb-1">
                               {selectedProperties.length > 0 && selectedRealtor ? (
-                                <span className="flex items-center gap-2 text-green-700">
-                                  <CheckCircle2 className="h-4 w-4" />
-                                  Ready to assign <strong>{selectedProperties.length}</strong> {selectedProperties.length === 1 ? 'property' : 'properties'} to {realtors.find(r => r.id === selectedRealtor)?.name}
+                                <span className="flex items-center gap-2">
+                                  <CheckCircle2 className="h-4 w-4 text-gold" />
+                                  Ready to assign <strong className="text-gold">{selectedProperties.length}</strong> {selectedProperties.length === 1 ? 'property' : 'properties'} to <strong className="text-gold">{realtors.find(r => r.id === selectedRealtor)?.name}</strong>
                                 </span>
                               ) : (
-                                <span className="text-gray-600">
+                                <span className="text-white/80">
                                   {!selectedRealtor && selectedProperties.length > 0 
                                     ? "⚠️ Please select a realtor to assign properties"
                                     : selectedRealtor && selectedProperties.length === 0
@@ -1448,7 +1453,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                           <Button 
                             onClick={assignProperties} 
                             disabled={assigningProperties || !selectedRealtor || selectedProperties.length === 0}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-gold hover:bg-gold/90 text-black font-bold px-6 sm:px-8 py-3 text-base sm:text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                             size="lg"
                           >
                             {assigningProperties ? (
@@ -1479,17 +1484,17 @@ const handleRemoveAgent = async (propertyId: number) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="bg-white shadow-lg border border-gray-200 rounded-2xl">
-                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-navy text-2xl flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-600 rounded-lg text-white">
-                              <ListChecks className="h-5 w-5" />
+                  <Card className="bg-white shadow-lg border-2 border-black rounded-xl">
+                    <CardHeader className="bg-black rounded-t-xl border-b-2 border-gold p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <CardTitle className="text-white text-xl sm:text-2xl flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-gold rounded-lg">
+                              <ListChecks className="h-5 w-5 text-black" />
                             </div>
                             Property Assignments Overview
                           </CardTitle>
-                          <p className="text-sm text-gray-600 ml-14">
+                          <p className="text-sm text-white/80 ml-0 sm:ml-14 mt-2 sm:mt-0">
                             See which properties are assigned to which realtors, and manage unassigned properties
                           </p>
                         </div>
@@ -1497,62 +1502,62 @@ const handleRemoveAgent = async (propertyId: number) => {
                           onClick={() => { fetchAssignments(); fetchPropertiesForAssignment(); }}
                           variant="outline"
                           size="sm"
-                          className="bg-white hover:bg-gray-50 border-gray-300"
+                          className="bg-gold hover:bg-gold/90 text-black border-2 border-black font-bold w-full sm:w-auto"
                         >
                           <RefreshCw className="h-4 w-4 mr-2" />
                           Refresh Data
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-4 sm:p-6">
                       {loadingAssignments ? (
-                        <p className="text-muted-foreground py-8 text-center">Loading assignments...</p>
+                        <p className="text-black font-semibold py-8 text-center">Loading assignments...</p>
                       ) : !assignmentsData ? (
-                        <p className="text-muted-foreground py-8 text-center">No assignment data available</p>
+                        <p className="text-black/70 font-semibold py-8 text-center">No assignment data available</p>
                       ) : (
-                        <div className="space-y-8">
+                        <div className="space-y-6 sm:space-y-8">
                           {/* Enhanced Summary Cards */}
                           {assignmentsData.summary && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <Card className="p-6 bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-xl hover:shadow-lg transition-all">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                              <Card className="p-5 sm:p-6 bg-white border-2 border-black rounded-xl hover:shadow-xl transition-all hover:border-gold">
                                 <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Total Properties</p>
-                                    <p className="text-3xl font-bold text-navy">
+                                  <div className="flex-1">
+                                    <p className="text-xs sm:text-sm font-bold text-black/70 mb-1 uppercase tracking-wide">Total Properties</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-black">
                                       {assignmentsData.summary.total_properties || 0}
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-1">All properties</p>
+                                    <p className="text-xs text-black/50 mt-1">All properties</p>
                                   </div>
-                                  <div className="p-3 bg-blue-50 rounded-lg">
-                                    <Building2 className="h-6 w-6 text-blue-600" />
+                                  <div className="p-3 sm:p-4 bg-gold rounded-lg ml-3">
+                                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                                   </div>
                                 </div>
                               </Card>
-                              <Card className="p-6 bg-gradient-to-br from-amber-50 to-white border-2 border-amber-200 rounded-xl hover:shadow-lg transition-all">
+                              <Card className="p-5 sm:p-6 bg-white border-2 border-black rounded-xl hover:shadow-xl transition-all hover:border-gold">
                                 <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Unassigned</p>
-                                    <p className="text-3xl font-bold text-amber-600">
+                                  <div className="flex-1">
+                                    <p className="text-xs sm:text-sm font-bold text-black/70 mb-1 uppercase tracking-wide">Unassigned</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-black">
                                       {assignmentsData.summary.unassigned_count || 0}
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-1">Need assignment</p>
+                                    <p className="text-xs text-black/50 mt-1">Need assignment</p>
                                   </div>
-                                  <div className="p-3 bg-amber-50 rounded-lg">
-                                    <AlertTriangle className="h-6 w-6 text-amber-600" />
+                                  <div className="p-3 sm:p-4 bg-gold rounded-lg ml-3">
+                                    <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                                   </div>
                                 </div>
                               </Card>
-                              <Card className="p-6 bg-gradient-to-br from-green-50 to-white border-2 border-green-200 rounded-xl hover:shadow-lg transition-all">
+                              <Card className="p-5 sm:p-6 bg-white border-2 border-black rounded-xl hover:shadow-xl transition-all hover:border-gold sm:col-span-2 lg:col-span-1">
                                 <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Assigned</p>
-                                    <p className="text-3xl font-bold text-green-600">
+                                  <div className="flex-1">
+                                    <p className="text-xs sm:text-sm font-bold text-black/70 mb-1 uppercase tracking-wide">Assigned</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-black">
                                       {assignmentsData.summary.assigned_count || 0}
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-1">To realtors</p>
+                                    <p className="text-xs text-black/50 mt-1">To realtors</p>
                                   </div>
-                                  <div className="p-3 bg-green-50 rounded-lg">
-                                    <CheckCircle2 className="h-6 w-6 text-green-600" />
+                                  <div className="p-3 sm:p-4 bg-gold rounded-lg ml-3">
+                                    <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
                                   </div>
                                 </div>
                               </Card>
@@ -1561,13 +1566,13 @@ const handleRemoveAgent = async (propertyId: number) => {
 
                           {/* Unassigned Properties */}
                           {assignmentsData.unassigned_properties && assignmentsData.unassigned_properties.length > 0 && (
-                            <div className="bg-amber-50/30 rounded-xl p-6 border border-amber-200">
-                              <h3 className="text-xl font-bold text-navy mb-6 flex items-center gap-3">
-                                <div className="p-2 bg-amber-500 rounded-lg text-white">
-                                  <AlertTriangle className="h-5 w-5" />
+                            <div className="bg-white rounded-xl p-4 sm:p-6 border-2 border-black">
+                              <h3 className="text-lg sm:text-xl font-bold text-black mb-4 sm:mb-6 flex items-center gap-3 flex-wrap">
+                                <div className="p-2 bg-gold rounded-lg">
+                                  <AlertTriangle className="h-5 w-5 text-black" />
                                 </div>
                                 Unassigned Properties
-                                <Badge className="bg-amber-500 text-white text-base px-3 py-1">
+                                <Badge className="bg-gold text-black border-2 border-black text-sm sm:text-base px-3 py-1 font-bold">
                                   {assignmentsData.unassigned_properties.length}
                                 </Badge>
                               </h3>
@@ -1575,72 +1580,75 @@ const handleRemoveAgent = async (propertyId: number) => {
                                 {assignmentsData.unassigned_properties.map((property: any, idx: number) => {
                                   const meta = getPropertyMetadata(property);
                                   return (
-                                    <Card key={property.id || idx} className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl hover:border-amber-300">
-                                      <CardHeader className="pb-2">
-                                        <div className="flex items-start justify-between">
-                                          <CardTitle className="text-sm text-navy">
+                                    <Card key={property.id || idx} className="bg-white hover:shadow-xl transition-all duration-300 border-2 border-black rounded-xl hover:border-gold">
+                                      <CardHeader className="pb-2 p-3 sm:p-4">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <CardTitle className="text-sm sm:text-base font-bold text-black">
                                             {meta.address || `Property #${property.id}`}
                                           </CardTitle>
-                                          <Badge variant="outline" className="bg-yellow-50">Unassigned</Badge>
+                                          <Badge variant="outline" className="bg-gold text-black border-2 border-black font-bold whitespace-nowrap">Unassigned</Badge>
                                         </div>
                                         {meta.listing_id && (
-                                          <p className="text-xs text-muted-foreground mt-1">MLS: {meta.listing_id}</p>
+                                          <div className="flex items-center gap-1 mt-1">
+                                            <Info className="h-3 w-3 text-black" />
+                                            <p className="text-xs font-bold text-black bg-gold px-2 py-0.5 rounded-md border border-black">MLS: {meta.listing_id}</p>
+                                          </div>
                                         )}
                                       </CardHeader>
-                                      <CardContent className="space-y-3 text-sm">
-                                        <p className="font-semibold text-gold text-lg">
+                                      <CardContent className="space-y-3 text-sm p-3 sm:p-4">
+                                        <p className="font-bold text-black text-lg sm:text-xl">
                                           ${meta.price ? meta.price.toLocaleString() : 'N/A'}
                                         </p>
-                                        <div className="flex flex-wrap gap-2 text-muted-foreground">
-                                          <span><Bed className="h-3 w-3 inline" /> {meta.bedrooms || 0}</span>
-                                          <span><Bath className="h-3 w-3 inline" /> {meta.bathrooms || 0}</span>
-                                          {meta.square_feet && <span><Square className="h-3 w-3 inline" /> {meta.square_feet} sqft</span>}
+                                        <div className="flex flex-wrap gap-2 font-semibold text-black">
+                                          <span className="border border-black px-2 py-1 rounded-md bg-white"><Bed className="h-3 w-3 inline mr-1" /> {meta.bedrooms || 0}</span>
+                                          <span className="border border-black px-2 py-1 rounded-md bg-white"><Bath className="h-3 w-3 inline mr-1" /> {meta.bathrooms || 0}</span>
+                                          {meta.square_feet && <span className="border border-black px-2 py-1 rounded-md bg-white"><Square className="h-3 w-3 inline mr-1" /> {meta.square_feet} sqft</span>}
                                         </div>
-                                        {meta.property_type && <Badge variant="outline" className="text-xs">{meta.property_type}</Badge>}
+                                        {meta.property_type && <Badge variant="outline" className="text-xs font-bold border-2 border-black bg-white text-black">{meta.property_type}</Badge>}
                                         
                                         {/* Status Update */}
-                                        <div className="flex items-center gap-2 pt-2 border-t">
-                                          <span className="text-xs font-medium text-muted-foreground">Status:</span>
+                                        <div className="flex items-center gap-2 pt-2 border-t-2 border-black">
+                                          <span className="text-xs font-bold text-black">Status:</span>
                                           <Select 
                                             value={meta.listing_status || 'Available'} 
                                             onValueChange={(value) => handleUpdatePropertyStatus(property.id, value)}
                                           >
-                                            <SelectTrigger className="h-8 text-xs flex-1">
+                                            <SelectTrigger className="h-8 text-xs flex-1 border-2 border-black focus:ring-gold">
                                               <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="Available">Available</SelectItem>
-                                              <SelectItem value="For Sale">For Sale</SelectItem>
-                                              <SelectItem value="For Rent">For Rent</SelectItem>
-                                              <SelectItem value="Sold">Sold</SelectItem>
-                                              <SelectItem value="Rented">Rented</SelectItem>
+                                            <SelectContent className="bg-white border-2 border-black">
+                                              <SelectItem value="Available" className="focus:bg-gold">Available</SelectItem>
+                                              <SelectItem value="For Sale" className="focus:bg-gold">For Sale</SelectItem>
+                                              <SelectItem value="For Rent" className="focus:bg-gold">For Rent</SelectItem>
+                                              <SelectItem value="Sold" className="focus:bg-gold">Sold</SelectItem>
+                                              <SelectItem value="Rented" className="focus:bg-gold">Rented</SelectItem>
                                             </SelectContent>
                                           </Select>
                                         </div>
 
                                         {/* Agent Section with Remove */}
                                         {meta.agent && (
-                                          <div className="pt-2 border-t">
+                                          <div className="pt-2 border-t-2 border-black">
                                             <div className="flex items-start justify-between mb-2">
-                                              <p className="text-xs font-semibold text-muted-foreground">Agent:</p>
+                                              <p className="text-xs font-bold text-black">Agent:</p>
                                               <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-black hover:text-white hover:bg-black border border-black">
                                                     <X className="h-3 w-3" />
                                                   </Button>
                                                 </AlertDialogTrigger>
-                                                <AlertDialogContent>
+                                                <AlertDialogContent className="bg-white border-2 border-black">
                                                   <AlertDialogHeader>
-                                                    <AlertDialogTitle>Remove Agent?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
+                                                    <AlertDialogTitle className="text-black font-bold">Remove Agent?</AlertDialogTitle>
+                                                    <AlertDialogDescription className="text-black/70">
                                                       Are you sure you want to remove {meta.agent.name} from this property? This action cannot be undone.
                                                     </AlertDialogDescription>
                                                   </AlertDialogHeader>
                                                   <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogCancel className="border-2 border-black hover:bg-black hover:text-white">Cancel</AlertDialogCancel>
                                                     <AlertDialogAction 
                                                       onClick={() => handleRemoveAgent(property.id)}
-                                                      className="bg-red-600 hover:bg-red-700"
+                                                      className="bg-black hover:bg-black/90 text-white border-2 border-black font-bold"
                                                     >
                                                       Remove Agent
                                                     </AlertDialogAction>
@@ -1649,15 +1657,15 @@ const handleRemoveAgent = async (propertyId: number) => {
                                               </AlertDialog>
                                             </div>
                                             <div className="space-y-1 text-xs">
-                                              <p className="font-medium">{meta.agent.name}</p>
+                                              <p className="font-bold text-black">{meta.agent.name}</p>
                                               {meta.agent.email && (
-                                                <div className="flex items-center gap-1 text-muted-foreground">
+                                                <div className="flex items-center gap-1 text-black/70 font-semibold">
                                                   <Mail className="h-3 w-3" />
                                                   <span className="truncate">{meta.agent.email}</span>
                                                 </div>
                                               )}
                                               {meta.agent.phone && (
-                                                <div className="flex items-center gap-1 text-muted-foreground">
+                                                <div className="flex items-center gap-1 text-black/70 font-semibold">
                                                   <Phone className="h-3 w-3" />
                                                   <span>{meta.agent.phone}</span>
                                                 </div>
@@ -1667,11 +1675,11 @@ const handleRemoveAgent = async (propertyId: number) => {
                                         )}
 
                                         {meta.features && meta.features.length > 0 && (
-                                          <div className="flex flex-wrap gap-1 pt-2 border-t">
+                                          <div className="flex flex-wrap gap-1.5 pt-2 border-t-2 border-black">
                                             {meta.features.slice(0, 2).map((f: string, i: number) => (
-                                              <Badge key={i} variant="outline" className="text-xs">{f}</Badge>
+                                              <Badge key={i} variant="outline" className="text-xs font-bold bg-gold border-black text-black">{f}</Badge>
                                             ))}
-                                            {meta.features.length > 2 && <span className="text-xs text-muted-foreground">+{meta.features.length - 2}</span>}
+                                            {meta.features.length > 2 && <span className="text-xs text-black/50 font-medium">+{meta.features.length - 2}</span>}
                                           </div>
                                         )}
                                       </CardContent>
@@ -1684,70 +1692,73 @@ const handleRemoveAgent = async (propertyId: number) => {
 
                           {/* Assigned Properties by Realtor */}
                           {assignmentsData.assigned_properties && Object.keys(assignmentsData.assigned_properties).length > 0 && (
-                            <div className="bg-green-50/30 rounded-xl p-6 border border-green-200">
-                              <h3 className="text-xl font-bold text-navy mb-6 flex items-center gap-3">
-                                <div className="p-2 bg-green-600 rounded-lg text-white">
-                                  <Users className="h-5 w-5" />
+                            <div className="bg-white rounded-xl p-4 sm:p-6 border-2 border-black">
+                              <h3 className="text-lg sm:text-xl font-bold text-black mb-4 sm:mb-6 flex items-center gap-3">
+                                <div className="p-2 bg-gold rounded-lg">
+                                  <Users className="h-5 w-5 text-black" />
                                 </div>
                                 Assigned Properties by Realtor
                               </h3>
                               {Object.values(assignmentsData.assigned_properties).map((realtorGroup: any) => (
-                                <Card key={realtorGroup.realtor_id} className="mb-6 bg-white shadow-md border border-gray-200 rounded-xl">
-                                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-xl border-b border-gray-200">
-                                    <div className="flex items-center justify-between">
-                                      <div>
-                                        <CardTitle className="text-navy text-xl flex items-center gap-2">
-                                          <User className="h-5 w-5 text-green-600" />
+                                <Card key={realtorGroup.realtor_id} className="mb-6 bg-white shadow-md border-2 border-black rounded-xl">
+                                  <CardHeader className="bg-black rounded-t-xl border-b-2 border-gold p-4 sm:p-6">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                      <div className="flex-1">
+                                        <CardTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
+                                          <User className="h-5 w-5 text-gold" />
                                           {realtorGroup.realtor_name}
                                         </CardTitle>
-                                        <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                                        <p className="text-sm text-white/80 mt-1 flex items-center gap-1">
                                           <Mail className="h-3 w-3" />
                                           {realtorGroup.realtor_email}
                                         </p>
                                       </div>
-                                      <Badge className="bg-green-600 text-white text-base px-4 py-2 shadow-md">
+                                      <Badge className="bg-gold text-black border-2 border-black text-sm sm:text-base px-4 py-2 font-bold">
                                         {realtorGroup.count} {realtorGroup.count === 1 ? 'Property' : 'Properties'}
                                       </Badge>
                                     </div>
                                   </CardHeader>
-                                  <CardContent>
+                                  <CardContent className="p-4 sm:p-6">
                                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                       {realtorGroup.properties.map((property: any, idx: number) => {
                                         const meta = getPropertyMetadata(property);
                                         return (
-                                          <Card key={property.id || idx} className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl hover:border-green-300">
-                                            <CardHeader className="pb-2">
-                                              <CardTitle className="text-sm text-navy">
+                                          <Card key={property.id || idx} className="bg-white hover:shadow-xl transition-all duration-300 border-2 border-black rounded-xl hover:border-gold">
+                                            <CardHeader className="pb-2 p-3 sm:p-4">
+                                              <CardTitle className="text-sm sm:text-base font-bold text-black">
                                                 {meta.address || `Property #${property.id}`}
                                               </CardTitle>
                                               {meta.listing_id && (
-                                                <p className="text-xs text-muted-foreground mt-1">MLS: {meta.listing_id}</p>
+                                                <div className="flex items-center gap-1 mt-1">
+                                                  <Info className="h-3 w-3 text-black" />
+                                                  <p className="text-xs font-bold text-black bg-gold px-2 py-0.5 rounded-md border border-black">MLS: {meta.listing_id}</p>
+                                                </div>
                                               )}
                                             </CardHeader>
-                                            <CardContent className="space-y-3 text-sm">
-                                              <div className="flex items-center justify-between">
-                                                <p className="font-semibold text-gold text-lg">
+                                            <CardContent className="space-y-3 text-sm p-3 sm:p-4">
+                                              <div className="flex items-center justify-between gap-2">
+                                                <p className="font-bold text-black text-lg sm:text-xl">
                                                   ${meta.price ? meta.price.toLocaleString() : 'N/A'}
                                                 </p>
                                                 <AlertDialog>
                                                   <AlertDialogTrigger asChild>
-                                                    <Button variant="ghost" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                    <Button variant="ghost" size="sm" className="h-8 px-2 text-black hover:text-white hover:bg-black border-2 border-black font-bold">
                                                       <Trash2 className="h-3 w-3 mr-1" />
-                                                      Unassign
+                                                      <span className="hidden sm:inline">Unassign</span>
                                                     </Button>
                                                   </AlertDialogTrigger>
-                                                  <AlertDialogContent>
+                                                  <AlertDialogContent className="bg-white border-2 border-black">
                                                     <AlertDialogHeader>
-                                                      <AlertDialogTitle>Unassign Property?</AlertDialogTitle>
-                                                      <AlertDialogDescription>
+                                                      <AlertDialogTitle className="text-black font-bold">Unassign Property?</AlertDialogTitle>
+                                                      <AlertDialogDescription className="text-black/70">
                                                         Are you sure you want to unassign this property from {realtorGroup.realtor_name}? The property will become available for reassignment.
                                                       </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                      <AlertDialogCancel className="border-2 border-black hover:bg-black hover:text-white">Cancel</AlertDialogCancel>
                                                       <AlertDialogAction 
                                                         onClick={() => handleUnassignProperties([property.id])}
-                                                        className="bg-red-600 hover:bg-red-700"
+                                                        className="bg-black hover:bg-black/90 text-white border-2 border-black font-bold"
                                                       >
                                                         Unassign Property
                                                       </AlertDialogAction>
@@ -1755,56 +1766,56 @@ const handleRemoveAgent = async (propertyId: number) => {
                                                   </AlertDialogContent>
                                                 </AlertDialog>
                                               </div>
-                                              <div className="flex flex-wrap gap-2 text-muted-foreground">
-                                                <span><Bed className="h-3 w-3 inline" /> {meta.bedrooms || 0}</span>
-                                                <span><Bath className="h-3 w-3 inline" /> {meta.bathrooms || 0}</span>
-                                                {meta.square_feet && <span><Square className="h-3 w-3 inline" /> {meta.square_feet} sqft</span>}
+                                              <div className="flex flex-wrap gap-2 font-semibold text-black">
+                                                <span className="border border-black px-2 py-1 rounded-md bg-white"><Bed className="h-3 w-3 inline mr-1" /> {meta.bedrooms || 0}</span>
+                                                <span className="border border-black px-2 py-1 rounded-md bg-white"><Bath className="h-3 w-3 inline mr-1" /> {meta.bathrooms || 0}</span>
+                                                {meta.square_feet && <span className="border border-black px-2 py-1 rounded-md bg-white"><Square className="h-3 w-3 inline mr-1" /> {meta.square_feet} sqft</span>}
                                               </div>
-                                              {meta.property_type && <Badge variant="outline" className="text-xs">{meta.property_type}</Badge>}
+                                              {meta.property_type && <Badge variant="outline" className="text-xs font-bold border-2 border-black bg-white text-black">{meta.property_type}</Badge>}
                                               
                                               {/* Status Update */}
-                                              <div className="flex items-center gap-2 pt-2 border-t">
-                                                <span className="text-xs font-medium text-muted-foreground">Status:</span>
+                                              <div className="flex items-center gap-2 pt-2 border-t-2 border-black">
+                                                <span className="text-xs font-bold text-black">Status:</span>
                                                 <Select 
                                                   value={meta.listing_status || 'Available'} 
                                                   onValueChange={(value) => handleUpdatePropertyStatus(property.id, value)}
                                                 >
-                                                  <SelectTrigger className="h-8 text-xs flex-1">
+                                                  <SelectTrigger className="h-8 text-xs flex-1 border-2 border-black focus:ring-gold">
                                                     <SelectValue />
                                                   </SelectTrigger>
-                                                  <SelectContent>
-                                                    <SelectItem value="Available">Available</SelectItem>
-                                                    <SelectItem value="For Sale">For Sale</SelectItem>
-                                                    <SelectItem value="For Rent">For Rent</SelectItem>
-                                                    <SelectItem value="Sold">Sold</SelectItem>
-                                                    <SelectItem value="Rented">Rented</SelectItem>
+                                                  <SelectContent className="bg-white border-2 border-black">
+                                                    <SelectItem value="Available" className="focus:bg-gold">Available</SelectItem>
+                                                    <SelectItem value="For Sale" className="focus:bg-gold">For Sale</SelectItem>
+                                                    <SelectItem value="For Rent" className="focus:bg-gold">For Rent</SelectItem>
+                                                    <SelectItem value="Sold" className="focus:bg-gold">Sold</SelectItem>
+                                                    <SelectItem value="Rented" className="focus:bg-gold">Rented</SelectItem>
                                                   </SelectContent>
                                                 </Select>
                                               </div>
 
                                               {/* Agent Section with Remove */}
                                               {meta.agent && (
-                                                <div className="pt-2 border-t">
+                                                <div className="pt-2 border-t-2 border-black">
                                                   <div className="flex items-start justify-between mb-2">
-                                                    <p className="text-xs font-semibold text-muted-foreground">Agent:</p>
+                                                    <p className="text-xs font-bold text-black">Agent:</p>
                                                     <AlertDialog>
                                                       <AlertDialogTrigger asChild>
-                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-black hover:text-white hover:bg-black border border-black">
                                                           <X className="h-3 w-3" />
                                                         </Button>
                                                       </AlertDialogTrigger>
-                                                      <AlertDialogContent>
+                                                      <AlertDialogContent className="bg-white border-2 border-black">
                                                         <AlertDialogHeader>
-                                                          <AlertDialogTitle>Remove Agent?</AlertDialogTitle>
-                                                          <AlertDialogDescription>
+                                                          <AlertDialogTitle className="text-black font-bold">Remove Agent?</AlertDialogTitle>
+                                                          <AlertDialogDescription className="text-black/70">
                                                             Are you sure you want to remove {meta.agent.name} from this property? This action cannot be undone.
                                                           </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
-                                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                          <AlertDialogCancel className="border-2 border-black hover:bg-black hover:text-white">Cancel</AlertDialogCancel>
                                                           <AlertDialogAction 
                                                             onClick={() => handleRemoveAgent(property.id)}
-                                                            className="bg-red-600 hover:bg-red-700"
+                                                            className="bg-black hover:bg-black/90 text-white border-2 border-black font-bold"
                                                           >
                                                             Remove Agent
                                                           </AlertDialogAction>
@@ -1813,15 +1824,15 @@ const handleRemoveAgent = async (propertyId: number) => {
                                                     </AlertDialog>
                                                   </div>
                                                   <div className="space-y-1 text-xs">
-                                                    <p className="font-medium">{meta.agent.name}</p>
+                                                    <p className="font-bold text-black">{meta.agent.name}</p>
                                                     {meta.agent.email && (
-                                                      <div className="flex items-center gap-1 text-muted-foreground">
+                                                      <div className="flex items-center gap-1 text-black/70 font-semibold">
                                                         <Mail className="h-3 w-3" />
                                                         <span className="truncate">{meta.agent.email}</span>
                                                       </div>
                                                     )}
                                                     {meta.agent.phone && (
-                                                      <div className="flex items-center gap-1 text-muted-foreground">
+                                                      <div className="flex items-center gap-1 text-black/70 font-semibold">
                                                         <Phone className="h-3 w-3" />
                                                         <span>{meta.agent.phone}</span>
                                                       </div>
@@ -1831,11 +1842,11 @@ const handleRemoveAgent = async (propertyId: number) => {
                                               )}
 
                                               {meta.features && meta.features.length > 0 && (
-                                                <div className="flex flex-wrap gap-1 pt-2 border-t">
+                                                <div className="flex flex-wrap gap-1.5 pt-2 border-t-2 border-black">
                                                   {meta.features.slice(0, 2).map((f: string, i: number) => (
-                                                    <Badge key={i} variant="outline" className="text-xs">{f}</Badge>
+                                                    <Badge key={i} variant="outline" className="text-xs font-bold bg-gold border-black text-black">{f}</Badge>
                                                   ))}
-                                                  {meta.features.length > 2 && <span className="text-xs text-muted-foreground">+{meta.features.length - 2}</span>}
+                                                  {meta.features.length > 2 && <span className="text-xs text-black/50 font-medium">+{meta.features.length - 2}</span>}
                                                 </div>
                                               )}
                                             </CardContent>
@@ -1865,9 +1876,9 @@ const handleRemoveAgent = async (propertyId: number) => {
     animate="visible"
   >
     {loadingApartments ? (
-      <p className="text-muted-foreground">Loading apartments...</p>
+      <p className="text-black font-semibold text-center py-8">Loading apartments...</p>
     ) : apartments.length === 0 ? (
-      <p className="text-muted-foreground">No apartments found.</p>
+      <p className="text-black/70 font-semibold text-center py-8">No apartments found.</p>
     ) : (
       apartments.map((apt, idx) => {
         const meta = getPropertyMetadata(apt);
@@ -1881,8 +1892,8 @@ const handleRemoveAgent = async (propertyId: number) => {
             }}
             whileTap={{ scale: 0.98 }}
           >
-          <Card className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 group overflow-hidden h-full border border-gray-200 hover:border-blue-400">
-            <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+          <Card className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 group overflow-hidden h-full border-2 border-black hover:border-gold">
+            <div className="relative aspect-[4/3] overflow-hidden bg-black">
               <motion.img
                 src={meta.image_url || "/images/properties/default.jpg"}
                 alt={`Property at ${meta.address}`}
@@ -1891,17 +1902,17 @@ const handleRemoveAgent = async (propertyId: number) => {
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.4 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               {meta.listing_status && (
                 <div className="absolute top-3 right-3">
                   <Badge 
                     variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                    className={`text-xs font-semibold shadow-md ${
+                    className={`text-xs font-bold border-2 border-black shadow-md ${
                       meta.listing_status === 'Available' 
-                        ? 'bg-green-500 text-white' 
+                        ? 'bg-gold text-black' 
                         : meta.listing_status === 'Sold' || meta.listing_status === 'Rented'
-                        ? 'bg-red-500 text-white'
-                        : 'bg-gray-600 text-white'
+                        ? 'bg-white text-black'
+                        : 'bg-white text-black'
                     }`}
                   >
                     {meta.listing_status}
@@ -1909,27 +1920,31 @@ const handleRemoveAgent = async (propertyId: number) => {
                 </div>
               )}
             </div>
-            <CardHeader className="pb-3 pt-4 px-4">
-              <CardTitle className="text-navy text-lg font-bold group-hover:text-blue-600 transition-colors line-clamp-2">
+            <CardHeader className="pb-3 pt-4 px-3 sm:px-4">
+              <CardTitle className="text-black text-base sm:text-lg font-bold group-hover:text-black transition-colors line-clamp-2">
                 {meta.address || `Property #${apt.id}`}
               </CardTitle>
               {meta.listing_id && (
                 <div className="flex items-center gap-1 mt-1">
-                  <Info className="h-3 w-3 text-blue-600" />
-                  <p className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">MLS: {meta.listing_id}</p>
+                  <Info className="h-3 w-3 text-black" />
+                  <p className="text-xs font-bold text-black bg-gold px-2 py-0.5 rounded-md border border-black">MLS: {meta.listing_id}</p>
                 </div>
               )}
             </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 p-3 sm:p-4">
                 {/* Price */}
-                <div className="flex items-center justify-between border-b pb-2">
-                  <div className="text-xl font-bold text-gold">
+                <div className="flex items-center justify-between border-b-2 border-black pb-2">
+                  <div className="text-xl sm:text-2xl font-bold text-black">
                     ${meta.price ? meta.price.toLocaleString() : "N/A"}
                   </div>
                   {meta.listing_status && (
                     <Badge 
                       variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                      className="text-xs"
+                      className={`text-xs font-bold border-2 border-black ${
+                        meta.listing_status === 'Available' 
+                          ? 'bg-gold text-black' 
+                          : 'bg-white text-black'
+                      }`}
                     >
                       {meta.listing_status}
                     </Badge>
@@ -1937,26 +1952,26 @@ const handleRemoveAgent = async (propertyId: number) => {
                 </div>
 
                 {/* Basic Specs */}
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div className="flex items-center gap-1 text-muted-foreground">
+                <div className="grid grid-cols-3 gap-2 text-sm font-semibold">
+                  <div className="flex items-center gap-1 text-black border border-black px-2 py-1 rounded-md bg-white">
                     <Bed className="h-4 w-4" /> {meta.bedrooms || 0}
                   </div>
-                  <div className="flex items-center gap-1 text-muted-foreground">
+                  <div className="flex items-center gap-1 text-black border border-black px-2 py-1 rounded-md bg-white">
                     <Bath className="h-4 w-4" /> {meta.bathrooms || 0}
                   </div>
                   {meta.square_feet && (
-                    <div className="flex items-center gap-1 text-muted-foreground">
+                    <div className="flex items-center gap-1 text-black border border-black px-2 py-1 rounded-md bg-white">
                       <Square className="h-4 w-4" /> {meta.square_feet}
                     </div>
                   )}
                 </div>
 
                 {/* Property Details Grid */}
-                <div className="space-y-2 pt-2 border-t">
+                <div className="space-y-2 pt-2 border-t-2 border-black">
                   {meta.property_type && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Type:</span>
-                      <Badge variant="outline" className="text-xs">
+                      <span className="text-black/70 font-semibold">Type:</span>
+                      <Badge variant="outline" className="text-xs font-bold border-2 border-black bg-white text-black">
                         {meta.property_type}
                       </Badge>
                     </div>
@@ -1964,42 +1979,42 @@ const handleRemoveAgent = async (propertyId: number) => {
                   
                   {meta.year_built && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Year Built:</span>
-                      <span className="font-medium">{meta.year_built}</span>
+                      <span className="text-black/70 font-semibold">Year Built:</span>
+                      <span className="font-bold text-black">{meta.year_built}</span>
                     </div>
                   )}
 
                   {meta.lot_size_sqft && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Lot Size:</span>
-                      <span className="font-medium">{meta.lot_size_sqft.toLocaleString()} sqft</span>
+                      <span className="text-black/70 font-semibold">Lot Size:</span>
+                      <span className="font-bold text-black">{meta.lot_size_sqft.toLocaleString()} sqft</span>
                     </div>
                   )}
 
                   {meta.days_on_market !== undefined && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Days on Market:</span>
-                      <span className="font-medium">{meta.days_on_market}</span>
+                      <span className="text-black/70 font-semibold">Days on Market:</span>
+                      <span className="font-bold text-black">{meta.days_on_market}</span>
                     </div>
                   )}
 
                   {meta.listing_date && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center gap-1">
+                      <span className="text-black/70 font-semibold flex items-center gap-1">
                         <CalendarIcon className="h-3 w-3" /> Listed:
                       </span>
-                      <span className="font-medium">{new Date(meta.listing_date).toLocaleDateString()}</span>
+                      <span className="font-bold text-black">{new Date(meta.listing_date).toLocaleDateString()}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Features */}
                 {meta.features && meta.features.length > 0 && (
-                  <div className="pt-2 border-t">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">Features:</p>
-                    <div className="flex flex-wrap gap-1">
+                  <div className="pt-2 border-t-2 border-black">
+                    <p className="text-xs font-bold text-black mb-2">Features:</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {meta.features.map((feature: string, fIdx: number) => (
-                        <Badge key={fIdx} variant="outline" className="text-xs">
+                        <Badge key={fIdx} variant="outline" className="text-xs font-bold bg-gold border-black text-black">
                           {feature}
                         </Badge>
                       ))}
@@ -2009,18 +2024,18 @@ const handleRemoveAgent = async (propertyId: number) => {
 
                 {/* Agent Information */}
                 {meta.agent && (
-                  <div className="pt-2 border-t space-y-1">
-                    <p className="text-xs font-semibold text-muted-foreground">Agent:</p>
+                  <div className="pt-2 border-t-2 border-black space-y-2">
+                    <p className="text-xs font-bold text-black">Agent:</p>
                     <div className="space-y-1 text-xs">
-                      <p className="font-medium">{meta.agent.name}</p>
+                      <p className="font-bold text-black">{meta.agent.name}</p>
                       {meta.agent.email && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
+                        <div className="flex items-center gap-1 text-black/70 font-semibold">
                           <Mail className="h-3 w-3" />
                           <span className="truncate">{meta.agent.email}</span>
                         </div>
                       )}
                       {meta.agent.phone && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
+                        <div className="flex items-center gap-1 text-black/70 font-semibold">
                           <Phone className="h-3 w-3" />
                           <span>{meta.agent.phone}</span>
                         </div>
@@ -2031,16 +2046,16 @@ const handleRemoveAgent = async (propertyId: number) => {
 
                 {/* Assignment Status (for PM) */}
                 {userType === "property_manager" && (
-                  <div className="pt-2 border-t">
+                  <div className="pt-2 border-t-2 border-black">
                     {meta.is_assigned && meta.assigned_to_realtor_name ? (
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Assigned to:</span>
-                        <Badge className="bg-green-600 text-xs">
+                        <span className="text-black/70 font-bold">Assigned to:</span>
+                        <Badge className="bg-gold text-black border-2 border-black text-xs font-bold">
                           {meta.assigned_to_realtor_name}
                         </Badge>
                       </div>
                     ) : (
-                      <Badge variant="outline" className="bg-yellow-50 text-xs">
+                      <Badge variant="outline" className="bg-gold text-black border-2 border-black text-xs font-bold">
                         Unassigned
                       </Badge>
                     )}
@@ -2049,10 +2064,10 @@ const handleRemoveAgent = async (propertyId: number) => {
 
                 {/* Description (truncated) */}
                 {meta.description && (
-                  <div className="pt-2 border-t">
-                    <div className="flex items-start gap-1">
-                      <Info className="h-3 w-3 mt-0.5 text-muted-foreground flex-shrink-0" />
-                      <p className="text-xs text-muted-foreground line-clamp-2">
+                  <div className="pt-2 border-t-2 border-black">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-3 w-3 mt-0.5 text-black flex-shrink-0" />
+                      <p className="text-xs text-black/70 line-clamp-2 font-semibold">
                         {meta.description}
                       </p>
                     </div>
@@ -2075,34 +2090,39 @@ const handleRemoveAgent = async (propertyId: number) => {
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
   >
-    <Card className="glass-card">
-      <CardHeader>
+    <Card className="bg-white border-2 border-black rounded-xl shadow-lg">
+      <CardHeader className="bg-black rounded-t-xl border-b-2 border-gold p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <CardTitle className="text-navy text-xl">Your Bookings</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">
+          <CardTitle className="text-white text-xl sm:text-2xl font-bold flex items-center gap-3">
+            <div className="p-2 bg-gold rounded-lg">
+              <Calendar className="h-5 w-5 text-black" />
+            </div>
+            Your Bookings
+          </CardTitle>
+          <p className="text-sm text-white/80 mt-2 ml-14">
             All your active and past bookings are listed below.
           </p>
         </motion.div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6">
         {loadingBookings ? (
-          <p className="text-muted-foreground">Loading bookings...</p>
+          <p className="text-black font-semibold text-center py-8">Loading bookings...</p>
         ) : bookings.length === 0 ? (
-          <p className="text-muted-foreground">No bookings found.</p>
+          <p className="text-black/70 font-semibold text-center py-8">No bookings found.</p>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border/50">
+          <div className="overflow-x-auto rounded-xl border-2 border-black bg-white">
             <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow>
-                  <TableHead className="font-semibold">Booking ID</TableHead>
-                  <TableHead className="font-semibold">Property</TableHead>
-                  <TableHead className="font-semibold">Date</TableHead>
-                  <TableHead className="font-semibold">Time</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
+              <TableHeader className="bg-black">
+                <TableRow className="border-b-2 border-gold">
+                  <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Booking ID</TableHead>
+                  <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Property</TableHead>
+                  <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Date</TableHead>
+                  <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Time</TableHead>
+                  <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -2112,22 +2132,22 @@ const handleRemoveAgent = async (propertyId: number) => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: idx * 0.1 }}
-                    className="hover:bg-accent/5 transition-all duration-200 group"
+                    className="hover:bg-gold/10 transition-all duration-200 group border-b border-black/10"
                   >
-                    <TableCell className="font-medium group-hover:text-accent transition-colors">
+                    <TableCell className="font-semibold text-black py-3 sm:py-4 px-2 sm:px-4 group-hover:text-black transition-colors">
                       {b.id}
                     </TableCell>
-                    <TableCell>{b.property || b.property_name || b.address}</TableCell>
-                    <TableCell>{b.date}</TableCell>
-                    <TableCell>{b.time}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-black/70 py-3 sm:py-4 px-2 sm:px-4">{b.property || b.property_name || b.address}</TableCell>
+                    <TableCell className="text-black/70 py-3 sm:py-4 px-2 sm:px-4">{b.date}</TableCell>
+                    <TableCell className="text-black/70 py-3 sm:py-4 px-2 sm:px-4">{b.time}</TableCell>
+                    <TableCell className="py-3 sm:py-4 px-2 sm:px-4">
                       <Badge
                         variant={b.status === "Confirmed" ? "default" : "secondary"}
-                        className={
+                        className={`font-bold border-2 border-black ${
                           b.status === "Confirmed"
-                            ? "bg-accent text-accent-foreground"
-                            : "bg-muted text-muted-foreground"
-                        }
+                            ? "bg-gold text-black"
+                            : "bg-white text-black"
+                        }`}
                       >
                         {b.status}
                       </Badge>
@@ -2149,28 +2169,30 @@ const handleRemoveAgent = async (propertyId: number) => {
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
   >
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="text-navy text-xl flex items-center gap-2">
-          <Music className="h-5 w-5 text-accent" />
+    <Card className="bg-white border-2 border-black rounded-xl shadow-lg">
+      <CardHeader className="bg-black rounded-t-xl border-b-2 border-gold p-4 sm:p-6">
+        <CardTitle className="text-white text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <div className="p-2 bg-gold rounded-lg">
+            <Music className="h-5 w-5 text-black" />
+          </div>
           Conversations (Call Recordings)
         </CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-white/80 mt-2">
           Listen to your recorded calls with leads and clients.
         </p>
       </CardHeader>
       <CardContent>
         {loadingRecordings ? (
-          <p className="text-muted-foreground">Loading recordings...</p>
+          <p className="text-black font-semibold text-center py-8">Loading recordings...</p>
         ) : recordings.length === 0 ? (
-          <p className="text-muted-foreground">No recordings available.</p>
+          <p className="text-black/70 font-semibold text-center py-8">No recordings available.</p>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border/50">
+          <div className="overflow-x-auto rounded-xl border-2 border-black bg-white">
             <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow>
-                  <TableHead className="font-semibold">Call</TableHead>
-                  <TableHead className="font-semibold">Recording</TableHead>
+              <TableHeader className="bg-black">
+                <TableRow className="border-b-2 border-gold">
+                  <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Call</TableHead>
+                  <TableHead className="font-bold text-white py-3 sm:py-4 px-2 sm:px-4">Recording</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -2180,12 +2202,12 @@ const handleRemoveAgent = async (propertyId: number) => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: idx * 0.1 }}
-                    className="hover:bg-accent/5 transition-all duration-200 group"
+                    className="hover:bg-gold/10 transition-all duration-200 group border-b border-black/10"
                   >
-                    <TableCell className="font-medium group-hover:text-accent transition-colors">
+                    <TableCell className="font-semibold text-black py-3 sm:py-4 px-2 sm:px-4 group-hover:text-black transition-colors">
                       Call #{idx + 1}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3 sm:py-4 px-2 sm:px-4">
                       <audio controls className="w-full">
                         <source src={rec.url} type="audio/mpeg" />
                         Your browser does not support the audio element.
@@ -2207,29 +2229,31 @@ const handleRemoveAgent = async (propertyId: number) => {
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
   >
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="text-navy text-xl flex items-center gap-2">
-          <Phone className="h-5 w-5 text-accent" />
+    <Card className="bg-white border-2 border-black rounded-xl shadow-lg">
+      <CardHeader className="bg-black rounded-t-xl border-b-2 border-gold p-4 sm:p-6">
+        <CardTitle className="text-white text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <div className="p-2 bg-gold rounded-lg">
+            <Phone className="h-5 w-5 text-black" />
+          </div>
           Customer Chats
         </CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-white/80 mt-2">
           View conversations with your clients in a chat-style layout.
         </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6">
         {loadingChats ? (
-          <p className="text-muted-foreground">Loading chats...</p>
+          <p className="text-black font-semibold text-center py-8">Loading chats...</p>
         ) : Object.keys(chats).length === 0 ? (
-          <p className="text-muted-foreground">No chats available.</p>
+          <p className="text-black/70 font-semibold text-center py-8">No chats available.</p>
         ) : (
           <div className="flex flex-col items-center gap-6 overflow-x-hidden">
             {Object.entries(chats).map(([customer, messages]: any, idx) => (
               <div
                 key={idx}
-                className="border rounded-xl p-4 glass-card w-full max-w-[650px] mx-auto"
+                className="border-2 border-black rounded-xl p-4 sm:p-6 bg-white shadow-lg w-full max-w-[650px] mx-auto"
               >
-                <h3 className="text-lg font-semibold text-navy mb-3 text-center">
+                <h3 className="text-lg sm:text-xl font-bold text-black mb-4 text-center border-b-2 border-black pb-3">
                   Chat with {customer}
                 </h3>
                 <div className="h-64 overflow-y-auto space-y-3 pr-2">
@@ -2243,14 +2267,14 @@ const handleRemoveAgent = async (propertyId: number) => {
                       }`}
                     >
                       <div
-                        className={`px-4 py-2 rounded-2xl max-w-[70%] text-sm shadow ${
+                        className={`px-4 py-2 rounded-2xl max-w-[70%] text-sm shadow-lg border-2 ${
                           msg.sender === "realtor"
-                            ? "bg-accent text-accent-foreground rounded-br-none"
-                            : "bg-muted text-navy rounded-bl-none"
+                            ? "bg-gold text-black border-black rounded-br-none"
+                            : "bg-white text-black border-black rounded-bl-none"
                         }`}
                       >
-                        {msg.message}
-                        <div className="text-[10px] opacity-70 mt-1">
+                        <p className="font-medium">{msg.message}</p>
+                        <div className="text-[10px] text-black/50 mt-1 font-semibold">
                           {msg.timestamp
                             ? new Date(msg.timestamp).toLocaleString()
                             : ""}

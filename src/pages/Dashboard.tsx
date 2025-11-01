@@ -646,15 +646,22 @@ const handleRemoveAgent = async (propertyId: number) => {
   
 
   return (
-    <main className="min-h-screen dynamic-gradient">
-      {/* Enhanced Header - Consistent Black/Yellow/White Theme */}
+    <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gold/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+
+      {/* Futuristic Header with Glassmorphism */}
       <motion.header 
-        className="relative overflow-hidden bg-black border-b-2 border-gold"
+        className="relative backdrop-blur-xl bg-black/80 border-b border-gold/30 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)]"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
+        <div className="absolute inset-0 bg-gradient-to-r from-gold/5 via-transparent to-gold/5"></div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8 relative z-10">
           <motion.div 
             className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6"
             initial={{ opacity: 0, y: -20 }}
@@ -663,23 +670,25 @@ const handleRemoveAgent = async (propertyId: number) => {
           >
             <div className="flex items-center gap-3 sm:gap-4 flex-1">
               <motion.div 
-                className="bg-gold p-3 sm:p-4 rounded-xl shadow-lg"
-                whileHover={{ scale: 1.05, rotate: 5 }}
+                className="relative bg-gradient-to-br from-gold via-gold to-yellow-500 p-3 sm:p-4 rounded-2xl shadow-[0_0_30px_rgba(255,215,0,0.5)]"
+                whileHover={{ scale: 1.05, rotate: 5, boxShadow: "0 0 40px rgba(255,215,0,0.7)" }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Home className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/50 to-transparent rounded-2xl"></div>
+                <Home className="h-6 w-6 sm:h-7 sm:w-7 text-black relative z-10" />
               </motion.div>
               <div>
                 <motion.h1 
-                  className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold mb-2 tracking-tight"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
+                  style={{ textShadow: '0 0 30px rgba(255,215,0,0.5)' }}
                 >
                   {userType === "property_manager" ? "Property Manager" : "My"} Dashboard
                 </motion.h1>
                 <motion.p 
-                  className="text-white/80 text-xs sm:text-sm lg:text-base"
+                  className="text-white/70 text-xs sm:text-sm lg:text-base font-medium"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
@@ -700,7 +709,7 @@ const handleRemoveAgent = async (propertyId: number) => {
               <Button 
                 asChild 
                 variant="outline"
-                className="bg-transparent hover:bg-gold text-white border-white hover:border-gold hover:text-black font-medium transition-all"
+                className="backdrop-blur-sm bg-white/5 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)] hover:shadow-[0_8px_20px_0_rgba(255,215,0,0.3)]"
                 size="sm"
               >
                 <Link to="/">
@@ -711,7 +720,7 @@ const handleRemoveAgent = async (propertyId: number) => {
               <Button 
                 asChild 
                 variant="outline"
-                className="bg-transparent hover:bg-gold text-white border-white hover:border-gold hover:text-black font-medium transition-all"
+                className="backdrop-blur-sm bg-white/5 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)] hover:shadow-[0_8px_20px_0_rgba(255,215,0,0.3)]"
                 size="sm"
               >
                 <Link to="/uploadpage">
@@ -722,7 +731,7 @@ const handleRemoveAgent = async (propertyId: number) => {
               <Button 
                 onClick={handleBuyNumber} 
                 disabled={loading} 
-                className="bg-gold hover:bg-gold/90 text-black font-bold shadow-lg hover:shadow-xl transition-all"
+                className="bg-gradient-to-r from-gold via-yellow-400 to-gold text-black font-black shadow-[0_0_30px_rgba(255,215,0,0.5)] hover:shadow-[0_0_40px_rgba(255,215,0,0.7)] transition-all hover:scale-105"
                 size="sm"
               >
                 {loading ? (
@@ -745,20 +754,23 @@ const handleRemoveAgent = async (propertyId: number) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.8 }}
-              className="mt-4 pt-4 border-t border-white/20"
+              className="mt-4 pt-4 border-t border-gold/20 relative"
             >
-              <div className="flex items-center gap-2 text-white">
-                <CheckCircle2 className="h-4 w-4 text-gold flex-shrink-0" />
-                <span className="text-sm">Your Phone Number: <span className="font-bold text-gold">{myNumber}</span></span>
+              <div className="absolute inset-0 bg-gradient-to-r from-gold/5 via-transparent to-gold/5"></div>
+              <div className="flex items-center gap-3 text-white relative z-10">
+                <div className="p-1.5 bg-gradient-to-br from-gold to-yellow-500 rounded-lg shadow-[0_0_15px_rgba(255,215,0,0.5)]">
+                  <CheckCircle2 className="h-4 w-4 text-black" />
+                </div>
+                <span className="text-sm font-medium">Your Phone Number: <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">{myNumber}</span></span>
               </div>
             </motion.div>
           )}
         </div>
       </motion.header>
 
-      {/* Enhanced Stats Cards - Black/Yellow/White Theme */}
+      {/* Futuristic Stats Cards with Glassmorphism */}
       <motion.section 
-        className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-4 sm:-mt-6 mb-6 sm:mb-8"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-4 sm:-mt-6 mb-6 sm:mb-8 relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -768,81 +780,90 @@ const handleRemoveAgent = async (propertyId: number) => {
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold"
-                whileHover={{ y: -4 }}
+                className="relative group backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-5 sm:p-6 border border-gold/20 hover:border-gold/50 overflow-hidden"
+                whileHover={{ y: -8, scale: 1.02 }}
               >
-                <div className="flex items-center justify-between">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
+                <div className="relative z-10 flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">Total Realtors</p>
+                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Total Realtors</p>
                     <motion.p 
-                      className="text-2xl sm:text-3xl font-bold text-black"
+                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
                     >
                       {realtors.length}
                     </motion.p>
-                    <p className="text-xs text-black/50 mt-1">Active team members</p>
+                    <p className="text-xs text-white/50 mt-2 font-medium">Active team members</p>
                   </div>
                   <motion.div 
-                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
-                    whileHover={{ rotate: 15, scale: 1.1 }}
+                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    whileHover={{ rotate: 15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
                   >
-                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-black relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold"
-                whileHover={{ y: -4 }}
+                className="relative group backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-5 sm:p-6 border border-gold/20 hover:border-gold/50 overflow-hidden"
+                whileHover={{ y: -8, scale: 1.02 }}
               >
-                <div className="flex items-center justify-between">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
+                <div className="relative z-10 flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">Total Properties</p>
+                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Total Properties</p>
                     <motion.p 
-                      className="text-2xl sm:text-3xl font-bold text-black"
+                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
                     >
                       {apartments.length}
                     </motion.p>
-                    <p className="text-xs text-black/50 mt-1">In your portfolio</p>
+                    <p className="text-xs text-white/50 mt-2 font-medium">In your portfolio</p>
                   </div>
                   <motion.div 
-                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
-                    whileHover={{ rotate: -15, scale: 1.1 }}
+                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    whileHover={{ rotate: -15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
                   >
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
+                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-black relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold sm:col-span-2 lg:col-span-1"
-                whileHover={{ y: -4 }}
+                className="relative group backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-5 sm:p-6 border border-gold/20 hover:border-gold/50 overflow-hidden sm:col-span-2 lg:col-span-1"
+                whileHover={{ y: -8, scale: 1.02 }}
               >
-                <div className="flex items-center justify-between">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
+                <div className="relative z-10 flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">Active Bookings</p>
+                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Active Bookings</p>
                     <motion.p 
-                      className="text-2xl sm:text-3xl font-bold text-black"
+                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
                     >
                       {bookings.length}
                     </motion.p>
-                    <p className="text-xs text-black/50 mt-1">Scheduled viewings</p>
+                    <p className="text-xs text-white/50 mt-2 font-medium">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
-                    whileHover={{ rotate: 15, scale: 1.1 }}
+                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    whileHover={{ rotate: 15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
                   >
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-black relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
                   </motion.div>
                 </div>
               </motion.div>
@@ -851,81 +872,90 @@ const handleRemoveAgent = async (propertyId: number) => {
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold"
-                whileHover={{ y: -4 }}
+                className="relative group backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-5 sm:p-6 border border-gold/20 hover:border-gold/50 overflow-hidden"
+                whileHover={{ y: -8, scale: 1.02 }}
               >
-                <div className="flex items-center justify-between">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
+                <div className="relative z-10 flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">My Properties</p>
+                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">My Properties</p>
                     <motion.p 
-                      className="text-2xl sm:text-3xl font-bold text-black"
+                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
                     >
                       {apartments.length}
                     </motion.p>
-                    <p className="text-xs text-black/50 mt-1">Assigned to you</p>
+                    <p className="text-xs text-white/50 mt-2 font-medium">Assigned to you</p>
                   </div>
                   <motion.div 
-                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
-                    whileHover={{ rotate: 15, scale: 1.1 }}
+                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    whileHover={{ rotate: 15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
                   >
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
+                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-black relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold"
-                whileHover={{ y: -4 }}
+                className="relative group backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-5 sm:p-6 border border-gold/20 hover:border-gold/50 overflow-hidden"
+                whileHover={{ y: -8, scale: 1.02 }}
               >
-                <div className="flex items-center justify-between">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
+                <div className="relative z-10 flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">My Bookings</p>
+                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">My Bookings</p>
                     <motion.p 
-                      className="text-2xl sm:text-3xl font-bold text-black"
+                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
                     >
                       {bookings.length}
                     </motion.p>
-                    <p className="text-xs text-black/50 mt-1">Scheduled viewings</p>
+                    <p className="text-xs text-white/50 mt-2 font-medium">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
-                    whileHover={{ rotate: -15, scale: 1.1 }}
+                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    whileHover={{ rotate: -15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
                   >
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-black relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-5 sm:p-6 border-2 border-black hover:border-gold sm:col-span-2 lg:col-span-1"
-                whileHover={{ y: -4 }}
+                className="relative group backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-5 sm:p-6 border border-gold/20 hover:border-gold/50 overflow-hidden sm:col-span-2 lg:col-span-1"
+                whileHover={{ y: -8, scale: 1.02 }}
               >
-                <div className="flex items-center justify-between">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
+                <div className="relative z-10 flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-semibold text-black/70 mb-1 uppercase tracking-wide">Property Views</p>
+                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Property Views</p>
                     <motion.p 
-                      className="text-2xl sm:text-3xl font-bold text-black"
+                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
                     >
                       1,247
                     </motion.p>
-                    <p className="text-xs text-black/50 mt-1">Total views this month</p>
+                    <p className="text-xs text-white/50 mt-2 font-medium">Total views this month</p>
                   </div>
                   <motion.div 
-                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
-                    whileHover={{ rotate: 15, scale: 1.1 }}
+                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    whileHover={{ rotate: 15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
                   >
-                    <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
+                    <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-black relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
                   </motion.div>
                 </div>
               </motion.div>
@@ -948,11 +978,11 @@ const handleRemoveAgent = async (propertyId: number) => {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="overflow-x-auto"
             >
-              <TabsList className="mb-6 sm:mb-8 bg-white border-2 border-black rounded-xl p-1 sm:p-1.5 shadow-lg inline-flex min-w-full sm:min-w-0">
+              <TabsList className="mb-6 sm:mb-8 backdrop-blur-xl bg-white/5 border border-gold/20 rounded-2xl p-1.5 sm:p-2 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] inline-flex min-w-full sm:min-w-0">
                 {userType === "property_manager" && (
                   <TabsTrigger 
                     value="realtors" 
-                    className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-black data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30"
                   >
                     <Users className="h-4 w-4 mr-1 sm:mr-2" />
                     <span className="whitespace-nowrap">Realtors</span>
@@ -962,7 +992,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                   <>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-black data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30"
                     >
                       <CheckSquare className="h-4 w-4 mr-1 sm:mr-2" />
                       <span className="whitespace-nowrap hidden sm:inline">Assign Properties</span>
@@ -970,7 +1000,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-black data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30"
                     >
                       <ListChecks className="h-4 w-4 mr-1 sm:mr-2" />
                       <span className="whitespace-nowrap hidden sm:inline">View Assignments</span>
@@ -980,21 +1010,21 @@ const handleRemoveAgent = async (propertyId: number) => {
                 )}
                 <TabsTrigger 
                   value="properties" 
-                  className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-black data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30"
                 >
                   <Building2 className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="whitespace-nowrap">Properties</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="bookings" 
-                  className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-black data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30"
                 >
                   <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="whitespace-nowrap">Bookings</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="conversations" 
-                  className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-black data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30"
                 >
                   <Music className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="whitespace-nowrap hidden lg:inline">Conversations</span>
@@ -1002,7 +1032,7 @@ const handleRemoveAgent = async (propertyId: number) => {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="chats" 
-                  className="data-[state=active]:bg-gold data-[state=active]:text-black data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base border-2 data-[state=active]:border-black data-[state=inactive]:border-transparent hover:bg-black/5"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-black data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30"
                 >
                   <Phone className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="whitespace-nowrap">Calls</span>
@@ -1018,23 +1048,25 @@ const handleRemoveAgent = async (propertyId: number) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="bg-white shadow-lg border-2 border-black rounded-xl">
-                    <CardHeader className="bg-black rounded-t-xl border-b-2 border-gold p-4 sm:p-6">
+                  <Card className="relative backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] border border-gold/20 rounded-2xl overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent"></div>
+                    <CardHeader className="relative z-10 bg-gradient-to-r from-gold/10 via-gold/5 to-transparent rounded-t-2xl border-b border-gold/30 p-4 sm:p-6">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <CardTitle className="text-white text-xl sm:text-2xl flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-gold rounded-lg">
-                              <Users className="h-5 w-5 text-black" />
+                          <CardTitle className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold text-xl sm:text-2xl font-black flex items-center gap-3 mb-2">
+                            <div className="relative p-2.5 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.5)]">
+                              <Users className="h-5 w-5 text-black relative z-10" />
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
                             </div>
                             Manage Realtors
                           </CardTitle>
-                          <p className="text-sm text-white/80 ml-0 sm:ml-14 mt-2 sm:mt-0">
+                          <p className="text-sm text-white/70 ml-0 sm:ml-14 mt-2 sm:mt-0 font-medium">
                             Add and manage your realtor team members. Create accounts for realtors so they can access their assigned properties.
                           </p>
                         </div>
                         <Button 
                           onClick={() => setShowAddRealtor(!showAddRealtor)}
-                          className="bg-gold hover:bg-gold/90 text-black font-bold shadow-lg hover:shadow-xl w-full sm:w-auto"
+                          className="relative bg-gradient-to-r from-gold via-yellow-400 to-gold text-black font-black shadow-[0_0_30px_rgba(255,215,0,0.5)] hover:shadow-[0_0_40px_rgba(255,215,0,0.7)] transition-all hover:scale-105 w-full sm:w-auto"
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
                           Add New Realtor
@@ -1892,27 +1924,31 @@ const handleRemoveAgent = async (propertyId: number) => {
             }}
             whileTap={{ scale: 0.98 }}
           >
-          <Card className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 group overflow-hidden h-full border-2 border-black hover:border-gold">
-            <div className="relative aspect-[4/3] overflow-hidden bg-black">
+          <Card className="relative backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 group overflow-hidden h-full border border-gold/20 hover:border-gold/50">
+            <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gold/10 rounded-full blur-2xl -mr-20 -mt-20 group-hover:bg-gold/20 transition-all"></div>
+            
+            <div className="relative aspect-[4/3] overflow-hidden bg-black/20 rounded-t-2xl">
               <motion.img
                 src={meta.image_url || "/images/properties/default.jpg"}
                 alt={`Property at ${meta.address}`}
                 loading="lazy"
                 className="h-full w-full object-cover"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.4 }}
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.5 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-gold/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               {meta.listing_status && (
-                <div className="absolute top-3 right-3">
+                <div className="absolute top-3 right-3 z-10">
                   <Badge 
                     variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                    className={`text-xs font-bold border-2 border-black shadow-md ${
+                    className={`text-xs font-black border-2 border-gold/50 shadow-[0_0_15px_rgba(255,215,0,0.5)] backdrop-blur-sm ${
                       meta.listing_status === 'Available' 
-                        ? 'bg-gold text-black' 
+                        ? 'bg-gradient-to-r from-gold via-yellow-400 to-gold text-black' 
                         : meta.listing_status === 'Sold' || meta.listing_status === 'Rented'
-                        ? 'bg-white text-black'
-                        : 'bg-white text-black'
+                        ? 'bg-white/90 text-black'
+                        : 'bg-white/90 text-black'
                     }`}
                   >
                     {meta.listing_status}
@@ -1920,30 +1956,30 @@ const handleRemoveAgent = async (propertyId: number) => {
                 </div>
               )}
             </div>
-            <CardHeader className="pb-3 pt-4 px-3 sm:px-4">
-              <CardTitle className="text-black text-base sm:text-lg font-bold group-hover:text-black transition-colors line-clamp-2">
+            <CardHeader className="relative z-10 pb-3 pt-4 px-3 sm:px-4">
+              <CardTitle className="text-white text-base sm:text-lg font-black group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-gold group-hover:to-yellow-400 transition-all line-clamp-2">
                 {meta.address || `Property #${apt.id}`}
               </CardTitle>
               {meta.listing_id && (
-                <div className="flex items-center gap-1 mt-1">
-                  <Info className="h-3 w-3 text-black" />
-                  <p className="text-xs font-bold text-black bg-gold px-2 py-0.5 rounded-md border border-black">MLS: {meta.listing_id}</p>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <Info className="h-3 w-3 text-gold" />
+                  <p className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400 bg-gold/20 backdrop-blur-sm px-2 py-0.5 rounded-md border border-gold/30">MLS: {meta.listing_id}</p>
                 </div>
               )}
             </CardHeader>
-              <CardContent className="space-y-3 p-3 sm:p-4">
+              <CardContent className="relative z-10 space-y-3 p-3 sm:p-4">
                 {/* Price */}
-                <div className="flex items-center justify-between border-b-2 border-black pb-2">
-                  <div className="text-xl sm:text-2xl font-bold text-black">
+                <div className="flex items-center justify-between border-b border-gold/30 pb-3">
+                  <div className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold">
                     ${meta.price ? meta.price.toLocaleString() : "N/A"}
                   </div>
                   {meta.listing_status && (
                     <Badge 
                       variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                      className={`text-xs font-bold border-2 border-black ${
+                      className={`text-xs font-black border-2 border-gold/50 shadow-[0_0_10px_rgba(255,215,0,0.3)] backdrop-blur-sm ${
                         meta.listing_status === 'Available' 
-                          ? 'bg-gold text-black' 
-                          : 'bg-white text-black'
+                          ? 'bg-gradient-to-r from-gold via-yellow-400 to-gold text-black' 
+                          : 'bg-white/90 text-black'
                       }`}
                     >
                       {meta.listing_status}
@@ -1952,26 +1988,26 @@ const handleRemoveAgent = async (propertyId: number) => {
                 </div>
 
                 {/* Basic Specs */}
-                <div className="grid grid-cols-3 gap-2 text-sm font-semibold">
-                  <div className="flex items-center gap-1 text-black border border-black px-2 py-1 rounded-md bg-white">
-                    <Bed className="h-4 w-4" /> {meta.bedrooms || 0}
+                <div className="grid grid-cols-3 gap-2 text-sm font-bold">
+                  <div className="flex items-center gap-1.5 text-white bg-white/10 backdrop-blur-sm border border-gold/30 px-2.5 py-1.5 rounded-lg hover:bg-gold/20 hover:border-gold transition-all">
+                    <Bed className="h-4 w-4 text-gold" /> <span className="text-gold">{meta.bedrooms || 0}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-black border border-black px-2 py-1 rounded-md bg-white">
-                    <Bath className="h-4 w-4" /> {meta.bathrooms || 0}
+                  <div className="flex items-center gap-1.5 text-white bg-white/10 backdrop-blur-sm border border-gold/30 px-2.5 py-1.5 rounded-lg hover:bg-gold/20 hover:border-gold transition-all">
+                    <Bath className="h-4 w-4 text-gold" /> <span className="text-gold">{meta.bathrooms || 0}</span>
                   </div>
                   {meta.square_feet && (
-                    <div className="flex items-center gap-1 text-black border border-black px-2 py-1 rounded-md bg-white">
-                      <Square className="h-4 w-4" /> {meta.square_feet}
+                    <div className="flex items-center gap-1.5 text-white bg-white/10 backdrop-blur-sm border border-gold/30 px-2.5 py-1.5 rounded-lg hover:bg-gold/20 hover:border-gold transition-all">
+                      <Square className="h-4 w-4 text-gold" /> <span className="text-gold">{meta.square_feet}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Property Details Grid */}
-                <div className="space-y-2 pt-2 border-t-2 border-black">
+                <div className="space-y-2 pt-3 border-t border-gold/30">
                   {meta.property_type && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-black/70 font-semibold">Type:</span>
-                      <Badge variant="outline" className="text-xs font-bold border-2 border-black bg-white text-black">
+                      <span className="text-white/60 font-bold">Type:</span>
+                      <Badge variant="outline" className="text-xs font-black border border-gold/50 bg-gold/20 backdrop-blur-sm text-gold">
                         {meta.property_type}
                       </Badge>
                     </div>
@@ -1979,42 +2015,42 @@ const handleRemoveAgent = async (propertyId: number) => {
                   
                   {meta.year_built && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-black/70 font-semibold">Year Built:</span>
-                      <span className="font-bold text-black">{meta.year_built}</span>
+                      <span className="text-white/60 font-bold">Year Built:</span>
+                      <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">{meta.year_built}</span>
                     </div>
                   )}
 
                   {meta.lot_size_sqft && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-black/70 font-semibold">Lot Size:</span>
-                      <span className="font-bold text-black">{meta.lot_size_sqft.toLocaleString()} sqft</span>
+                      <span className="text-white/60 font-bold">Lot Size:</span>
+                      <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">{meta.lot_size_sqft.toLocaleString()} sqft</span>
                     </div>
                   )}
 
                   {meta.days_on_market !== undefined && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-black/70 font-semibold">Days on Market:</span>
-                      <span className="font-bold text-black">{meta.days_on_market}</span>
+                      <span className="text-white/60 font-bold">Days on Market:</span>
+                      <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">{meta.days_on_market}</span>
                     </div>
                   )}
 
                   {meta.listing_date && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-black/70 font-semibold flex items-center gap-1">
-                        <CalendarIcon className="h-3 w-3" /> Listed:
+                      <span className="text-white/60 font-bold flex items-center gap-1">
+                        <CalendarIcon className="h-3 w-3 text-gold" /> Listed:
                       </span>
-                      <span className="font-bold text-black">{new Date(meta.listing_date).toLocaleDateString()}</span>
+                      <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">{new Date(meta.listing_date).toLocaleDateString()}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Features */}
                 {meta.features && meta.features.length > 0 && (
-                  <div className="pt-2 border-t-2 border-black">
-                    <p className="text-xs font-bold text-black mb-2">Features:</p>
+                  <div className="pt-3 border-t border-gold/30">
+                    <p className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400 mb-2 uppercase tracking-wider">Features:</p>
                     <div className="flex flex-wrap gap-1.5">
                       {meta.features.map((feature: string, fIdx: number) => (
-                        <Badge key={fIdx} variant="outline" className="text-xs font-bold bg-gold border-black text-black">
+                        <Badge key={fIdx} variant="outline" className="text-xs font-black border border-gold/50 bg-gold/20 backdrop-blur-sm text-gold hover:bg-gold/30 hover:border-gold transition-all">
                           {feature}
                         </Badge>
                       ))}
@@ -2024,19 +2060,19 @@ const handleRemoveAgent = async (propertyId: number) => {
 
                 {/* Agent Information */}
                 {meta.agent && (
-                  <div className="pt-2 border-t-2 border-black space-y-2">
-                    <p className="text-xs font-bold text-black">Agent:</p>
-                    <div className="space-y-1 text-xs">
-                      <p className="font-bold text-black">{meta.agent.name}</p>
+                  <div className="pt-3 border-t border-gold/30 space-y-2 bg-gold/5 backdrop-blur-sm rounded-lg p-2 border border-gold/20">
+                    <p className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400 uppercase tracking-wider">Agent:</p>
+                    <div className="space-y-1.5 text-xs">
+                      <p className="font-black text-white">{meta.agent.name}</p>
                       {meta.agent.email && (
-                        <div className="flex items-center gap-1 text-black/70 font-semibold">
-                          <Mail className="h-3 w-3" />
+                        <div className="flex items-center gap-1.5 text-white/70 font-bold">
+                          <Mail className="h-3 w-3 text-gold" />
                           <span className="truncate">{meta.agent.email}</span>
                         </div>
                       )}
                       {meta.agent.phone && (
-                        <div className="flex items-center gap-1 text-black/70 font-semibold">
-                          <Phone className="h-3 w-3" />
+                        <div className="flex items-center gap-1.5 text-white/70 font-bold">
+                          <Phone className="h-3 w-3 text-gold" />
                           <span>{meta.agent.phone}</span>
                         </div>
                       )}
@@ -2046,16 +2082,16 @@ const handleRemoveAgent = async (propertyId: number) => {
 
                 {/* Assignment Status (for PM) */}
                 {userType === "property_manager" && (
-                  <div className="pt-2 border-t-2 border-black">
+                  <div className="pt-3 border-t border-gold/30">
                     {meta.is_assigned && meta.assigned_to_realtor_name ? (
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-black/70 font-bold">Assigned to:</span>
-                        <Badge className="bg-gold text-black border-2 border-black text-xs font-bold">
+                      <div className="flex items-center justify-between text-xs bg-gold/10 backdrop-blur-sm rounded-lg p-2 border border-gold/30">
+                        <span className="text-white/70 font-black">Assigned to:</span>
+                        <Badge className="bg-gradient-to-r from-gold via-yellow-400 to-gold text-black border-2 border-gold/50 text-xs font-black shadow-[0_0_10px_rgba(255,215,0,0.3)]">
                           {meta.assigned_to_realtor_name}
                         </Badge>
                       </div>
                     ) : (
-                      <Badge variant="outline" className="bg-gold text-black border-2 border-black text-xs font-bold">
+                      <Badge variant="outline" className="bg-gold/20 backdrop-blur-sm text-gold border border-gold/50 text-xs font-black w-full justify-center">
                         Unassigned
                       </Badge>
                     )}
@@ -2064,10 +2100,10 @@ const handleRemoveAgent = async (propertyId: number) => {
 
                 {/* Description (truncated) */}
                 {meta.description && (
-                  <div className="pt-2 border-t-2 border-black">
+                  <div className="pt-3 border-t border-gold/30 bg-white/5 backdrop-blur-sm rounded-lg p-2 border border-gold/20">
                     <div className="flex items-start gap-2">
-                      <Info className="h-3 w-3 mt-0.5 text-black flex-shrink-0" />
-                      <p className="text-xs text-black/70 line-clamp-2 font-semibold">
+                      <Info className="h-3 w-3 mt-0.5 text-gold flex-shrink-0" />
+                      <p className="text-xs text-white/70 line-clamp-2 font-bold">
                         {meta.description}
                       </p>
                     </div>

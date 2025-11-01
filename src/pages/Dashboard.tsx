@@ -6,9 +6,46 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
+
+// Helper function to parse and extract metadata from property
+const getPropertyMetadata = (property: any) => {
+  // Try to parse listing_metadata if it's a string
+  let metadata = property.listing_metadata;
+  if (typeof metadata === 'string') {
+    try {
+      metadata = JSON.parse(metadata);
+    } catch (e) {
+      metadata = {};
+    }
+  }
+  
+  // Extract all relevant fields with fallbacks
+  return {
+    listing_id: property.listing_id || metadata?.listing_id,
+    square_feet: property.square_feet || metadata?.square_feet,
+    lot_size_sqft: property.lot_size_sqft || metadata?.lot_size_sqft,
+    year_built: property.year_built || metadata?.year_built,
+    property_type: property.property_type || metadata?.property_type,
+    listing_status: property.listing_status || metadata?.listing_status,
+    days_on_market: property.days_on_market ?? metadata?.days_on_market,
+    listing_date: property.listing_date || metadata?.listing_date,
+    features: property.features || metadata?.features || [],
+    agent: property.agent || metadata?.agent,
+    description: property.description || metadata?.description,
+    // Keep direct properties as fallback
+    address: property.address,
+    price: property.price,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    image_url: property.image_url,
+    is_assigned: property.is_assigned,
+    assigned_to_realtor_id: property.assigned_to_realtor_id,
+    assigned_to_realtor_name: property.assigned_to_realtor_name,
+  };
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -34,6 +71,9 @@ const Dashboard = () => {
   const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
   const [selectedRealtor, setSelectedRealtor] = useState<number | null>(null);
   const [assigningProperties, setAssigningProperties] = useState(false);
+  // Assignments view state
+  const [assignmentsData, setAssignmentsData] = useState<any>(null);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
 
 
   // Basic SEO for SPA route
@@ -77,6 +117,7 @@ const Dashboard = () => {
     if (storedUserType === "property_manager") {
       fetchRealtors();
       fetchPropertiesForAssignment();
+      fetchAssignments();
     }
   }, []);
 
@@ -333,6 +374,7 @@ const assignProperties = async () => {
     // Refresh properties list (assigned ones will no longer show)
     fetchPropertiesForAssignment();
     fetchApartments(); // Also refresh the main apartments list
+    fetchAssignments(); // Refresh assignments view
     setSelectedProperties([]);
     setSelectedRealtor(null);
   } catch (err: any) {
@@ -356,6 +398,48 @@ const handleSelectAll = () => {
     setSelectedProperties([]);
   } else {
     setSelectedProperties(availablePropertiesForAssignment.map((p: any) => p.id));
+  }
+};
+
+const handleBulkSelect = (count: number, fromStart: boolean = true) => {
+  const sorted = [...availablePropertiesForAssignment];
+  const toSelect = fromStart 
+    ? sorted.slice(0, count).map((p: any) => p.id)
+    : sorted.slice(-count).map((p: any) => p.id);
+  
+  setSelectedProperties(prev => {
+    // Toggle: if all are already selected, deselect; otherwise add them
+    const allSelected = toSelect.every(id => prev.includes(id));
+    if (allSelected) {
+      return prev.filter(id => !toSelect.includes(id));
+    } else {
+      return [...new Set([...prev, ...toSelect])];
+    }
+  });
+};
+
+const fetchAssignments = async () => {
+  try {
+    setLoadingAssignments(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/property-manager/assignments`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch assignments");
+
+    const data = await res.json();
+    setAssignmentsData(data);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load assignments");
+  } finally {
+    setLoadingAssignments(false);
   }
 };
 
@@ -699,10 +783,16 @@ const handleSelectAll = () => {
                   </TabsTrigger>
                 )}
                 {userType === "property_manager" && (
-                  <TabsTrigger value="assign-properties" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                    <CheckSquare className="h-4 w-4 mr-2" />
-                    Assign Properties
-                  </TabsTrigger>
+                  <>
+                    <TabsTrigger value="assign-properties" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                      Assign Properties
+                    </TabsTrigger>
+                    <TabsTrigger value="view-assignments" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                      <ListChecks className="h-4 w-4 mr-2" />
+                      View Assignments
+                    </TabsTrigger>
+                  </>
                 )}
                 <TabsTrigger value="properties" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Properties
@@ -900,22 +990,79 @@ const handleSelectAll = () => {
 
                       {/* Properties Section */}
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-navy">
-                              Available Properties ({selectedProperties.length} selected)
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              Properties you own that haven't been assigned to realtors yet
-                            </p>
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center justify-between flex-wrap gap-4">
+                            <div>
+                              <h3 className="text-lg font-semibold text-navy">
+                                Available Properties ({selectedProperties.length} selected)
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Properties you own that haven't been assigned to realtors yet
+                              </p>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              <Button 
+                                onClick={handleSelectAll}
+                                variant="outline"
+                                size="sm"
+                                className="bg-accent/10 hover:bg-accent/20"
+                              >
+                                {selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All'}
+                              </Button>
+                            </div>
                           </div>
-                          <Button 
-                            onClick={handleSelectAll}
-                            variant="outline"
-                            className="bg-accent/10 hover:bg-accent/20"
-                          >
-                            {selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All'}
-                          </Button>
+                          
+                          {/* Bulk Selection Buttons */}
+                          <div className="flex flex-wrap gap-2">
+                            <Button 
+                              onClick={() => handleBulkSelect(10, true)}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              First 10
+                            </Button>
+                            <Button 
+                              onClick={() => handleBulkSelect(20, true)}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              First 20
+                            </Button>
+                            <Button 
+                              onClick={() => handleBulkSelect(50, true)}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              First 50
+                            </Button>
+                            <Button 
+                              onClick={() => handleBulkSelect(10, false)}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              Last 10
+                            </Button>
+                            <Button 
+                              onClick={() => handleBulkSelect(20, false)}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              Last 20
+                            </Button>
+                            <Button 
+                              onClick={() => handleBulkSelect(50, false)}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              Last 50
+                            </Button>
+                          </div>
                         </div>
 
                         {loadingAssignmentProperties ? (
@@ -928,46 +1075,96 @@ const handleSelectAll = () => {
                           </div>
                         ) : (
                           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {availablePropertiesForAssignment.map((property, idx) => (
-                              <motion.div
-                                key={property.id || idx}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: idx * 0.05 }}
-                                whileHover={{ y: -4 }}
-                              >
-                                <Card 
-                                  className={`hover-lift cursor-pointer transition-all ${
-                                    selectedProperties.includes(property.id) 
-                                      ? 'border-accent border-2 bg-accent/5' 
-                                      : 'border-border'
-                                  }`}
-                                  onClick={() => handlePropertyToggle(property.id)}
+                            {availablePropertiesForAssignment.map((property, idx) => {
+                              const meta = getPropertyMetadata(property);
+                              return (
+                                <motion.div
+                                  key={property.id || idx}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.4, delay: idx * 0.05 }}
+                                  whileHover={{ y: -4 }}
                                 >
-                                  <div className="flex items-start p-4 gap-3">
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedProperties.includes(property.id)}
-                                      onChange={() => handlePropertyToggle(property.id)}
-                                      className="mt-1 h-4 w-4 cursor-pointer accent-accent"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                      <h4 className="font-semibold text-navy truncate">
-                                        {property.address || `Property #${property.id}`}
-                                      </h4>
-                                      <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                                        <p>Price: ${property.price ? property.price.toLocaleString() : 'N/A'}</p>
-                                        <p>
-                                          {property.bedrooms || 0} Beds | {property.bathrooms || 0} Baths
-                                        </p>
-                                        <p className="text-xs">ID: {property.id}</p>
+                                  <Card 
+                                    className={`hover-lift cursor-pointer transition-all ${
+                                      selectedProperties.includes(property.id) 
+                                        ? 'border-accent border-2 bg-accent/5' 
+                                        : 'border-border'
+                                    }`}
+                                    onClick={() => handlePropertyToggle(property.id)}
+                                  >
+                                    <div className="flex items-start p-4 gap-3">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedProperties.includes(property.id)}
+                                        onChange={() => handlePropertyToggle(property.id)}
+                                        className="mt-1 h-4 w-4 cursor-pointer accent-accent flex-shrink-0"
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                      <div className="flex-1 min-w-0 space-y-2">
+                                        <div>
+                                          <h4 className="font-semibold text-navy truncate">
+                                            {meta.address || `Property #${property.id}`}
+                                          </h4>
+                                          {meta.listing_id && (
+                                            <p className="text-xs text-muted-foreground">MLS: {meta.listing_id}</p>
+                                          )}
+                                        </div>
+                                        <div className="space-y-1 text-sm">
+                                          <p className="font-semibold text-gold">
+                                            ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                                          </p>
+                                          <div className="flex flex-wrap gap-2 text-muted-foreground">
+                                            <span className="flex items-center gap-1">
+                                              <Bed className="h-3 w-3" /> {meta.bedrooms || 0}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                              <Bath className="h-3 w-3" /> {meta.bathrooms || 0}
+                                            </span>
+                                            {meta.square_feet && (
+                                              <span className="flex items-center gap-1">
+                                                <Square className="h-3 w-3" /> {meta.square_feet} sqft
+                                              </span>
+                                            )}
+                                          </div>
+                                          {meta.property_type && (
+                                            <Badge variant="outline" className="text-xs">
+                                              {meta.property_type}
+                                            </Badge>
+                                          )}
+                                          {meta.listing_status && (
+                                            <Badge 
+                                              variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
+                                              className="text-xs ml-1"
+                                            >
+                                              {meta.listing_status}
+                                            </Badge>
+                                          )}
+                                          {meta.features && meta.features.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                              {meta.features.slice(0, 2).map((feature: string, fIdx: number) => (
+                                                <Badge key={fIdx} variant="outline" className="text-xs">
+                                                  {feature}
+                                                </Badge>
+                                              ))}
+                                              {meta.features.length > 2 && (
+                                                <span className="text-xs text-muted-foreground">+{meta.features.length - 2}</span>
+                                              )}
+                                            </div>
+                                          )}
+                                          {meta.agent && (
+                                            <p className="text-xs text-muted-foreground truncate">
+                                              Agent: {meta.agent.name}
+                                            </p>
+                                          )}
+                                          <p className="text-xs text-muted-foreground">ID: {property.id}</p>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </Card>
-                              </motion.div>
-                            ))}
+                                  </Card>
+                                </motion.div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -1001,6 +1198,183 @@ const handleSelectAll = () => {
               </TabsContent>
             )}
 
+            {/* View Assignments - Property Manager Only */}
+            {userType === "property_manager" && (
+              <TabsContent value="view-assignments">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <Card className="glass-card">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-navy text-xl flex items-center gap-2">
+                            <ListChecks className="h-5 w-5 text-accent" />
+                            Property Assignments Overview
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            View all property assignments and unassigned properties
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => { fetchAssignments(); fetchPropertiesForAssignment(); }}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Refresh
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingAssignments ? (
+                        <p className="text-muted-foreground py-8 text-center">Loading assignments...</p>
+                      ) : !assignmentsData ? (
+                        <p className="text-muted-foreground py-8 text-center">No assignment data available</p>
+                      ) : (
+                        <div className="space-y-8">
+                          {/* Summary Cards */}
+                          {assignmentsData.summary && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <Card className="p-4">
+                                <p className="text-sm text-muted-foreground">Total Properties</p>
+                                <p className="text-2xl font-bold text-navy mt-1">
+                                  {assignmentsData.summary.total_properties || 0}
+                                </p>
+                              </Card>
+                              <Card className="p-4">
+                                <p className="text-sm text-muted-foreground">Unassigned</p>
+                                <p className="text-2xl font-bold text-yellow-600 mt-1">
+                                  {assignmentsData.summary.unassigned_count || 0}
+                                </p>
+                              </Card>
+                              <Card className="p-4">
+                                <p className="text-sm text-muted-foreground">Assigned</p>
+                                <p className="text-2xl font-bold text-green-600 mt-1">
+                                  {assignmentsData.summary.assigned_count || 0}
+                                </p>
+                              </Card>
+                            </div>
+                          )}
+
+                          {/* Unassigned Properties */}
+                          {assignmentsData.unassigned_properties && assignmentsData.unassigned_properties.length > 0 && (
+                            <div>
+                              <h3 className="text-lg font-semibold text-navy mb-4 flex items-center gap-2">
+                                Unassigned Properties
+                                <Badge>{assignmentsData.unassigned_properties.length}</Badge>
+                              </h3>
+                              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {assignmentsData.unassigned_properties.map((property: any, idx: number) => {
+                                  const meta = getPropertyMetadata(property);
+                                  return (
+                                    <Card key={property.id || idx} className="hover-lift">
+                                      <CardHeader className="pb-2">
+                                        <div className="flex items-start justify-between">
+                                          <CardTitle className="text-sm text-navy">
+                                            {meta.address || `Property #${property.id}`}
+                                          </CardTitle>
+                                          <Badge variant="outline" className="bg-yellow-50">Unassigned</Badge>
+                                        </div>
+                                        {meta.listing_id && (
+                                          <p className="text-xs text-muted-foreground mt-1">MLS: {meta.listing_id}</p>
+                                        )}
+                                      </CardHeader>
+                                      <CardContent className="space-y-2 text-sm">
+                                        <p className="font-semibold text-gold">
+                                          ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                                        </p>
+                                        <div className="flex flex-wrap gap-2 text-muted-foreground">
+                                          <span><Bed className="h-3 w-3 inline" /> {meta.bedrooms || 0}</span>
+                                          <span><Bath className="h-3 w-3 inline" /> {meta.bathrooms || 0}</span>
+                                          {meta.square_feet && <span><Square className="h-3 w-3 inline" /> {meta.square_feet} sqft</span>}
+                                        </div>
+                                        {meta.property_type && <Badge variant="outline" className="text-xs">{meta.property_type}</Badge>}
+                                        {meta.features && meta.features.length > 0 && (
+                                          <div className="flex flex-wrap gap-1">
+                                            {meta.features.slice(0, 2).map((f: string, i: number) => (
+                                              <Badge key={i} variant="outline" className="text-xs">{f}</Badge>
+                                            ))}
+                                            {meta.features.length > 2 && <span className="text-xs">+{meta.features.length - 2}</span>}
+                                          </div>
+                                        )}
+                                      </CardContent>
+                                    </Card>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Assigned Properties by Realtor */}
+                          {assignmentsData.assigned_properties && Object.keys(assignmentsData.assigned_properties).length > 0 && (
+                            <div>
+                              <h3 className="text-lg font-semibold text-navy mb-4">Assigned Properties by Realtor</h3>
+                              {Object.values(assignmentsData.assigned_properties).map((realtorGroup: any) => (
+                                <Card key={realtorGroup.realtor_id} className="mb-6">
+                                  <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <CardTitle className="text-navy">{realtorGroup.realtor_name}</CardTitle>
+                                        <p className="text-sm text-muted-foreground">{realtorGroup.realtor_email}</p>
+                                      </div>
+                                      <Badge className="bg-green-600">
+                                        {realtorGroup.count} {realtorGroup.count === 1 ? 'property' : 'properties'}
+                                      </Badge>
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                      {realtorGroup.properties.map((property: any, idx: number) => {
+                                        const meta = getPropertyMetadata(property);
+                                        return (
+                                          <Card key={property.id || idx} className="hover-lift">
+                                            <CardHeader className="pb-2">
+                                              <CardTitle className="text-sm text-navy">
+                                                {meta.address || `Property #${property.id}`}
+                                              </CardTitle>
+                                              {meta.listing_id && (
+                                                <p className="text-xs text-muted-foreground mt-1">MLS: {meta.listing_id}</p>
+                                              )}
+                                            </CardHeader>
+                                            <CardContent className="space-y-2 text-sm">
+                                              <p className="font-semibold text-gold">
+                                                ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                                              </p>
+                                              <div className="flex flex-wrap gap-2 text-muted-foreground">
+                                                <span><Bed className="h-3 w-3 inline" /> {meta.bedrooms || 0}</span>
+                                                <span><Bath className="h-3 w-3 inline" /> {meta.bathrooms || 0}</span>
+                                                {meta.square_feet && <span><Square className="h-3 w-3 inline" /> {meta.square_feet} sqft</span>}
+                                              </div>
+                                              {meta.property_type && <Badge variant="outline" className="text-xs">{meta.property_type}</Badge>}
+                                              {meta.features && meta.features.length > 0 && (
+                                                <div className="flex flex-wrap gap-1">
+                                                  {meta.features.slice(0, 2).map((f: string, i: number) => (
+                                                    <Badge key={i} variant="outline" className="text-xs">{f}</Badge>
+                                                  ))}
+                                                  {meta.features.length > 2 && <span className="text-xs">+{meta.features.length - 2}</span>}
+                                                </div>
+                                              )}
+                                            </CardContent>
+                                          </Card>
+                                        );
+                                      })}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            )}
+
             {/* Properties Grid */}
             <TabsContent value="properties">
   <motion.div 
@@ -1014,54 +1388,99 @@ const handleSelectAll = () => {
     ) : apartments.length === 0 ? (
       <p className="text-muted-foreground">No apartments found.</p>
     ) : (
-      apartments.map((apt, idx) => (
-        <motion.div
-          key={apt.id || idx}
-          variants={itemVariants}
-          whileHover={{ 
-            y: -8,
-            transition: { duration: 0.2 }
-          }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Card className="glass-card hover-lift group overflow-hidden h-full">
-            <div className="relative aspect-[4/3] overflow-hidden">
-              <motion.img
-                src={apt.image_url || "/images/properties/default.jpg"}
-                alt={`Apartment at ${apt.address}`}
-                loading="lazy"
-                className="h-full w-full object-cover"
-                whileHover={{ scale: 1.1 }}
-                transition={{ duration: 0.4 }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </div>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-navy text-base group-hover:text-accent transition-colors">
-                {apt.address}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center text-sm text-muted-foreground gap-2">
-                <MapPin className="h-4 w-4" /> {apt.bedrooms + "Beds" || "Unknown location"}
+      apartments.map((apt, idx) => {
+        const meta = getPropertyMetadata(apt);
+        return (
+          <motion.div
+            key={apt.id || idx}
+            variants={itemVariants}
+            whileHover={{ 
+              y: -8,
+              transition: { duration: 0.2 }
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Card className="glass-card hover-lift group overflow-hidden h-full">
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <motion.img
+                  src={meta.image_url || "/images/properties/default.jpg"}
+                  alt={`Property at ${meta.address}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.4 }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {meta.listing_status && (
+                  <div className="absolute top-2 right-2">
+                    <Badge 
+                      variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {meta.listing_status}
+                    </Badge>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center justify-between pt-1">
-                <div className="text-lg font-semibold text-navy">
-                  ${apt.price ? apt.price.toLocaleString() : "N/A"}
+              <CardHeader className="pb-2">
+                <CardTitle className="text-navy text-base group-hover:text-accent transition-colors">
+                  {meta.address || `Property #${apt.id}`}
+                </CardTitle>
+                {meta.listing_id && (
+                  <p className="text-xs text-muted-foreground mt-1">MLS: {meta.listing_id}</p>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-semibold text-gold">
+                    ${meta.price ? meta.price.toLocaleString() : "N/A"}
+                  </div>
                 </div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {/* <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground" size="sm">
-                    <Link to={`/apartments/${apt.id}`}>View</Link>
-                  </Button> */}
-                </motion.div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Bed className="h-4 w-4" /> {meta.bedrooms || 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Bath className="h-4 w-4" /> {meta.bathrooms || 0}
+                  </span>
+                  {meta.square_feet && (
+                    <span className="flex items-center gap-1">
+                      <Square className="h-4 w-4" /> {meta.square_feet} sqft
+                    </span>
+                  )}
+                </div>
+                {meta.property_type && (
+                  <Badge variant="outline" className="text-xs">
+                    {meta.property_type}
+                  </Badge>
+                )}
+                {meta.features && meta.features.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {meta.features.slice(0, 3).map((feature: string, fIdx: number) => (
+                      <Badge key={fIdx} variant="outline" className="text-xs">
+                        {feature}
+                      </Badge>
+                    ))}
+                    {meta.features.length > 3 && (
+                      <span className="text-xs text-muted-foreground">+{meta.features.length - 3}</span>
+                    )}
+                  </div>
+                )}
+                {meta.agent && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    Agent: {meta.agent.name}
+                  </p>
+                )}
+                {meta.days_on_market !== undefined && (
+                  <p className="text-xs text-muted-foreground">
+                    {meta.days_on_market} days on market
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      })
     )}
   </motion.div>
 </TabsContent>

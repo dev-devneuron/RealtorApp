@@ -702,23 +702,15 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gold/20 rounded-full blur-[120px] animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-blue-500/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '4s' }}></div>
-      </div>
-
-      {/* Futuristic Glassmorphism Header */}
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 relative">
+      {/* Professional Light Header */}
       <motion.header 
-        className="relative backdrop-blur-xl bg-gradient-to-r from-slate-800/80 via-slate-900/80 to-slate-800/80 border-b border-gold/30 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)]"
+        className="relative bg-white border-b-2 border-gold shadow-sm"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-gold/5 via-transparent to-gold/5"></div>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 pb-8 sm:pb-10 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
           <motion.div 
             className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6"
             initial={{ opacity: 0, y: -20 }}
@@ -727,26 +719,23 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
           >
             <div className="flex items-center gap-4 sm:gap-5 flex-1">
               <motion.div 
-                className="relative bg-gradient-to-br from-gold via-yellow-400 to-gold p-3 sm:p-4 rounded-2xl shadow-[0_0_30px_rgba(255,215,0,0.5)] group"
-                whileHover={{ scale: 1.1, rotate: 5, boxShadow: "0 0 50px rgba(255,215,0,0.8)" }}
+                className="bg-gold p-3 sm:p-4 rounded-xl shadow-md"
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl"></div>
-                <Home className="h-6 w-6 sm:h-7 sm:w-7 text-slate-900 relative z-10" />
-                <div className="absolute inset-0 bg-gold/50 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <Home className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
               </motion.div>
               <div>
                 <motion.h1 
-                  className="text-3xl sm:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-300 to-gold mb-2 tracking-tight"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
-                  style={{ textShadow: '0 0 40px rgba(255,215,0,0.3)' }}
                 >
                   {userType === "property_manager" ? "Property Manager" : "My"} Dashboard
                 </motion.h1>
                 <motion.p 
-                  className="text-white/80 text-sm sm:text-base font-medium"
+                  className="text-gray-600 text-xs sm:text-sm lg:text-base"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
@@ -767,7 +756,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
               <Button 
                 asChild 
                 variant="outline"
-                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)] hover:shadow-[0_8px_20px_0_rgba(255,215,0,0.3)]"
+                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gold font-medium transition-all shadow-sm"
                 size="sm"
               >
                 <Link to="/">
@@ -778,7 +767,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
               <Button 
                 asChild 
                 variant="outline"
-                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)] hover:shadow-[0_8px_20px_0_rgba(255,215,0,0.3)]"
+                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gold font-medium transition-all shadow-sm"
                 size="sm"
               >
                 <Link to="/uploadpage">
@@ -789,7 +778,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
               <Button 
                 onClick={handleBuyNumber} 
                 disabled={loading} 
-                className="bg-gradient-to-r from-gold via-yellow-400 to-gold text-slate-900 font-black shadow-[0_0_30px_rgba(255,215,0,0.5)] hover:shadow-[0_0_40px_rgba(255,215,0,0.7)] transition-all hover:scale-105"
+                className="bg-gold hover:bg-yellow-500 text-white font-semibold shadow-md hover:shadow-lg transition-all"
                 size="sm"
               >
                 {loading ? (
@@ -812,23 +801,20 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.8 }}
-              className="mt-6 pt-6 border-t border-gold/20 relative"
+              className="mt-4 pt-4 border-t border-gray-200"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-gold/5 via-transparent to-gold/5"></div>
-              <div className="flex items-center gap-3 text-white relative z-10">
-                <div className="p-1.5 bg-gradient-to-br from-gold to-yellow-400 rounded-lg shadow-[0_0_15px_rgba(255,215,0,0.5)]">
-                  <CheckCircle2 className="h-4 w-4 text-slate-900" />
-                </div>
-                <span className="text-sm font-medium">Your Phone Number: <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-300">{myNumber}</span></span>
+              <div className="flex items-center gap-2 text-gray-700">
+                <CheckCircle2 className="h-4 w-4 text-gold" />
+                <span className="text-sm">Your Phone Number: <span className="font-semibold text-gold">{myNumber}</span></span>
               </div>
             </motion.div>
           )}
         </div>
       </motion.header>
 
-      {/* Futuristic Glassmorphism Stats Cards */}
+      {/* Professional Stats Cards */}
       <motion.section 
-        className="container mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-10 mb-8 sm:mb-10 relative z-10"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 mb-6 sm:mb-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -838,90 +824,81 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-6 sm:p-7 border border-gold/20 hover:border-gold/50 overflow-hidden"
-                whileHover={{ y: -8, scale: 1.02 }}
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-5 sm:p-6 border border-gray-200 hover:border-gold"
+                whileHover={{ y: -4 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Total Realtors</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Total Realtors</p>
                     <motion.p 
-                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold"
+                      className="text-2xl sm:text-3xl font-bold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
                     >
                       {realtors.length}
                     </motion.p>
-                    <p className="text-xs text-white/50 mt-2 font-medium">Active team members</p>
+                    <p className="text-xs text-gray-400 mt-1">Active team members</p>
                   </div>
                   <motion.div 
-                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                    whileHover={{ rotate: 15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
+                    whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900 relative z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-6 sm:p-7 border border-gold/20 hover:border-gold/50 overflow-hidden"
-                whileHover={{ y: -8, scale: 1.02 }}
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-5 sm:p-6 border border-gray-200 hover:border-gold"
+                whileHover={{ y: -4 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Total Properties</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Total Properties</p>
                     <motion.p 
-                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold"
+                      className="text-2xl sm:text-3xl font-bold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
                     >
                       {apartments.length}
                     </motion.p>
-                    <p className="text-xs text-white/50 mt-2 font-medium">In your portfolio</p>
+                    <p className="text-xs text-gray-400 mt-1">In your portfolio</p>
                   </div>
                   <motion.div 
-                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                    whileHover={{ rotate: -15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
+                    whileHover={{ rotate: -15, scale: 1.1 }}
                   >
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900 relative z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
+                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-6 sm:p-7 border border-gold/20 hover:border-gold/50 overflow-hidden sm:col-span-2 lg:col-span-1"
-                whileHover={{ y: -8, scale: 1.02 }}
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-5 sm:p-6 border border-gray-200 hover:border-gold sm:col-span-2 lg:col-span-1"
+                whileHover={{ y: -4 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Active Bookings</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Active Bookings</p>
                     <motion.p 
-                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold"
+                      className="text-2xl sm:text-3xl font-bold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
                     >
                       {bookings.length}
                     </motion.p>
-                    <p className="text-xs text-white/50 mt-2 font-medium">Scheduled viewings</p>
+                    <p className="text-xs text-gray-400 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                    whileHover={{ rotate: 15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
+                    whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900 relative z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -930,90 +907,81 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-6 sm:p-7 border border-gold/20 hover:border-gold/50 overflow-hidden"
-                whileHover={{ y: -8, scale: 1.02 }}
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-5 sm:p-6 border border-gray-200 hover:border-gold"
+                whileHover={{ y: -4 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">My Properties</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">My Properties</p>
                     <motion.p 
-                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold"
+                      className="text-2xl sm:text-3xl font-bold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
                     >
                       {apartments.length}
                     </motion.p>
-                    <p className="text-xs text-white/50 mt-2 font-medium">Assigned to you</p>
+                    <p className="text-xs text-gray-400 mt-1">Assigned to you</p>
                   </div>
                   <motion.div 
-                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                    whileHover={{ rotate: 15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
+                    whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900 relative z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
+                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-6 sm:p-7 border border-gold/20 hover:border-gold/50 overflow-hidden"
-                whileHover={{ y: -8, scale: 1.02 }}
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-5 sm:p-6 border border-gray-200 hover:border-gold"
+                whileHover={{ y: -4 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">My Bookings</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">My Bookings</p>
                     <motion.p 
-                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold"
+                      className="text-2xl sm:text-3xl font-bold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
                     >
                       {bookings.length}
                     </motion.p>
-                    <p className="text-xs text-white/50 mt-2 font-medium">Scheduled viewings</p>
+                    <p className="text-xs text-gray-400 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                    whileHover={{ rotate: -15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
+                    whileHover={{ rotate: -15, scale: 1.1 }}
                   >
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900 relative z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 rounded-2xl shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all duration-300 p-6 sm:p-7 border border-gold/20 hover:border-gold/50 overflow-hidden sm:col-span-2 lg:col-span-1"
-                whileHover={{ y: -8, scale: 1.02 }}
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-5 sm:p-6 border border-gray-200 hover:border-gold sm:col-span-2 lg:col-span-1"
+                whileHover={{ y: -4 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Property Views</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Property Views</p>
                     <motion.p 
-                      className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold"
+                      className="text-2xl sm:text-3xl font-bold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
                     >
                       1,247
                     </motion.p>
-                    <p className="text-xs text-white/50 mt-2 font-medium">Total views this month</p>
+                    <p className="text-xs text-gray-400 mt-1">Total views this month</p>
                   </div>
                   <motion.div 
-                    className="relative p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                    whileHover={{ rotate: 15, scale: 1.15, boxShadow: "0 0 30px rgba(255,215,0,0.6)" }}
+                    className="p-3 sm:p-4 bg-gold rounded-lg ml-3"
+                    whileHover={{ rotate: 15, scale: 1.1 }}
                   >
-                    <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900 relative z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
+                    <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -1036,11 +1004,11 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="overflow-x-auto"
             >
-              <TabsList className="mb-6 sm:mb-8 backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 border border-gold/20 rounded-2xl p-1.5 sm:p-2 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] inline-flex min-w-full sm:min-w-0">
+              <TabsList className="mb-6 sm:mb-8 bg-white border border-gray-200 rounded-xl p-1.5 shadow-sm inline-flex min-w-full sm:min-w-0">
                 {userType === "property_manager" && (
                   <TabsTrigger 
                     value="realtors" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30 text-white"
+                    className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base"
                   >
                     <Users className="h-4 w-4 mr-1 sm:mr-2" />
                     <span className="whitespace-nowrap">Realtors</span>
@@ -1050,7 +1018,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                   <>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30 text-white"
+                      className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base"
                     >
                       <CheckSquare className="h-4 w-4 mr-1 sm:mr-2" />
                       <span className="whitespace-nowrap hidden sm:inline">Assign Properties</span>
@@ -1058,7 +1026,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold data-[state=active]:via-yellow-400 data-[state=active]:to-gold data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,215,0,0.5)] rounded-xl px-3 sm:px-5 py-2.5 font-black transition-all text-sm sm:text-base border data-[state=active]:border-gold/50 data-[state=inactive]:border-transparent hover:bg-gold/10 hover:border-gold/30 text-white"
+                      className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 py-2 font-semibold transition-all text-sm sm:text-base"
                     >
                       <ListChecks className="h-4 w-4 mr-1 sm:mr-2" />
                       <span className="whitespace-nowrap hidden sm:inline">View Assignments</span>
@@ -1106,24 +1074,23 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="relative backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] border border-gold/20 rounded-2xl overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent"></div>
-                    <CardHeader className="relative z-10 bg-gradient-to-r from-gold/10 via-gold/5 to-transparent rounded-t-2xl border-b border-gold/30 p-4 sm:p-6">
+                  <Card className="bg-white shadow-lg border border-gray-200 rounded-xl">
+                    <CardHeader className="bg-gradient-to-r from-gray-50 to-white rounded-t-xl border-b border-gray-200 p-4 sm:p-6">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <CardTitle className="text-white text-xl sm:text-2xl font-black flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)]">
-                              <Users className="h-5 w-5 text-slate-900" />
+                          <CardTitle className="text-gray-900 text-xl sm:text-2xl font-bold flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-gold rounded-lg">
+                              <Users className="h-5 w-5 text-white" />
                             </div>
                             Manage Realtors
                           </CardTitle>
-                          <p className="text-sm text-white/80 ml-0 sm:ml-14 mt-2 sm:mt-0">
+                          <p className="text-sm text-gray-600 ml-0 sm:ml-14 mt-2 sm:mt-0">
                             Add and manage your realtor team members. Create accounts for realtors so they can access their assigned properties.
                           </p>
                         </div>
                         <Button 
                           onClick={() => setShowAddRealtor(!showAddRealtor)}
-                          className="bg-gradient-to-r from-gold via-yellow-400 to-gold text-slate-900 font-black shadow-[0_0_30px_rgba(255,215,0,0.5)] hover:shadow-[0_0_40px_rgba(255,215,0,0.7)] transition-all hover:scale-105 w-full sm:w-auto"
+                          className="bg-gold hover:bg-yellow-500 text-white font-semibold shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
                           Add New Realtor
@@ -1136,41 +1103,41 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="mb-6 p-4 sm:p-6 backdrop-blur-xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-gold/20 rounded-xl"
+                          className="mb-6 p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-xl"
                         >
                           <div className="flex items-center gap-2 mb-4">
                             <UserPlus className="h-5 w-5 text-gold" />
-                            <h3 className="text-xl font-black text-white">Add New Realtor to Your Team</h3>
+                            <h3 className="text-xl font-bold text-gray-900">Add New Realtor to Your Team</h3>
                           </div>
-                          <p className="text-sm text-white/80 mb-4">Fill in the details below to create a new realtor account. They'll receive login credentials.</p>
+                          <p className="text-sm text-gray-600 mb-4">Fill in the details below to create a new realtor account. They'll receive login credentials.</p>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
-                              <label className="text-sm font-semibold text-gold/80 mb-2 block">Full Name</label>
+                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Full Name</label>
                               <input
                                 type="text"
                                 value={newRealtor.name}
                                 onChange={(e) => setNewRealtor({...newRealtor, name: e.target.value})}
-                                className="w-full p-3 backdrop-blur-sm bg-white/10 border border-gold/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold text-white placeholder-white/50"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold bg-white text-gray-900"
                                 placeholder="John Doe"
                               />
                             </div>
                             <div>
-                              <label className="text-sm font-semibold text-gold/80 mb-2 block">Email Address</label>
+                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Email Address</label>
                               <input
                                 type="email"
                                 value={newRealtor.email}
                                 onChange={(e) => setNewRealtor({...newRealtor, email: e.target.value})}
-                                className="w-full p-3 backdrop-blur-sm bg-white/10 border border-gold/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold text-white placeholder-white/50"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold bg-white text-gray-900"
                                 placeholder="john.doe@company.com"
                               />
                             </div>
                             <div>
-                              <label className="text-sm font-semibold text-gold/80 mb-2 block">Temporary Password</label>
+                              <label className="text-sm font-semibold text-gray-700 mb-2 block">Temporary Password</label>
                               <input
                                 type="password"
                                 value={newRealtor.password}
                                 onChange={(e) => setNewRealtor({...newRealtor, password: e.target.value})}
-                                className="w-full p-3 backdrop-blur-sm bg-white/10 border border-gold/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold text-white placeholder-white/50"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold bg-white text-gray-900"
                                 placeholder="Choose a secure password"
                               />
                             </div>
@@ -1178,7 +1145,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                           <div className="flex flex-col sm:flex-row gap-3">
                             <Button 
                               onClick={addRealtor} 
-                              className="bg-gradient-to-r from-gold via-yellow-400 to-gold text-slate-900 font-black shadow-[0_0_30px_rgba(255,215,0,0.5)] hover:shadow-[0_0_40px_rgba(255,215,0,0.7)] px-6"
+                              className="bg-gold hover:bg-yellow-500 text-white font-semibold shadow-md hover:shadow-lg px-6"
                             >
                               <CheckCircle2 className="h-4 w-4 mr-2" />
                               Create Realtor Account
@@ -1186,7 +1153,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                             <Button 
                               onClick={() => setShowAddRealtor(false)}
                               variant="outline"
-                              className="backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white border-gold/30 hover:border-gold"
+                              className="border border-gray-300 hover:bg-gray-100 text-gray-700"
                             >
                               <X className="h-4 w-4 mr-2" />
                               Cancel
@@ -1196,18 +1163,18 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                       )}
 
                       {loadingRealtors ? (
-                        <p className="text-white/80 font-medium text-center py-8">Loading realtors...</p>
+                        <p className="text-gray-600 font-medium text-center py-8">Loading realtors...</p>
                       ) : realtors.length === 0 ? (
-                        <p className="text-white/60 font-medium text-center py-8">No realtors found. Add your first realtor above.</p>
+                        <p className="text-gray-500 font-medium text-center py-8">No realtors found. Add your first realtor above.</p>
                       ) : (
-                        <div className="overflow-x-auto rounded-xl backdrop-blur-xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-gold/20">
+                        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
                           <Table>
-                            <TableHeader className="bg-gradient-to-r from-gold/20 via-gold/10 to-transparent border-b border-gold/30">
+                            <TableHeader className="bg-gray-100">
                               <TableRow>
-                                <TableHead className="font-black text-white py-3 sm:py-4 px-2 sm:px-4">Name</TableHead>
-                                <TableHead className="font-black text-white py-3 sm:py-4 px-2 sm:px-4">Email</TableHead>
-                                <TableHead className="font-black text-white py-3 sm:py-4 px-2 sm:px-4">Status</TableHead>
-                                <TableHead className="font-black text-white py-3 sm:py-4 px-2 sm:px-4">Actions</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 sm:py-4 px-2 sm:px-4">Name</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 sm:py-4 px-2 sm:px-4">Email</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 sm:py-4 px-2 sm:px-4">Status</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 sm:py-4 px-2 sm:px-4">Actions</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -1217,17 +1184,17 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ duration: 0.4, delay: idx * 0.1 }}
-                                  className="hover:bg-gold/10 transition-all duration-200 group border-b border-gold/10"
+                                  className="hover:bg-gray-50 transition-all duration-200 group border-b border-gray-100"
                                 >
-                                  <TableCell className="font-semibold text-white py-3 sm:py-4 px-2 sm:px-4 group-hover:text-gold transition-colors">
+                                  <TableCell className="font-medium text-gray-900 py-3 sm:py-4 px-2 sm:px-4">
                                     <div className="flex items-center gap-2">
                                       <User className="h-4 w-4 text-gold" />
                                       {realtor.name}
                                     </div>
                                   </TableCell>
-                                  <TableCell className="text-white/70 py-3 sm:py-4 px-2 sm:px-4">
+                                  <TableCell className="text-gray-600 py-3 sm:py-4 px-2 sm:px-4">
                                     <div className="flex items-center gap-2">
-                                      <Mail className="h-4 w-4 text-gold/50" />
+                                      <Mail className="h-4 w-4 text-gray-400" />
                                       <span className="truncate max-w-[200px] sm:max-w-none">{realtor.email}</span>
                                     </div>
                                   </TableCell>
@@ -1236,8 +1203,8 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                       variant={realtor.status === "active" ? "default" : "secondary"}
                                       className={
                                         realtor.status === "active"
-                                          ? "bg-gradient-to-r from-gold via-yellow-400 to-gold text-slate-900 border-2 border-gold/50 font-black shadow-[0_0_10px_rgba(255,215,0,0.3)]"
-                                          : "bg-white/10 text-white border-2 border-gold/30 font-bold backdrop-blur-sm"
+                                          ? "bg-gold text-white font-semibold"
+                                          : "bg-gray-200 text-gray-700 font-semibold"
                                       }
                                     >
                                       {realtor.status || "Active"}
@@ -1249,7 +1216,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                         size="sm" 
                                         variant="outline" 
                                         onClick={handleSettingsClick}
-                                        className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)] hover:shadow-[0_8px_20px_0_rgba(255,215,0,0.3)]"
+                                        className="bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gold font-medium transition-all"
                                       >
                                         <Settings className="h-4 w-4 mr-1" />
                                         <span className="hidden sm:inline">Settings</span>
@@ -1259,33 +1226,33 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                           <Button 
                                             size="sm" 
                                             variant="outline"
-                                            className="backdrop-blur-sm bg-red-500/20 hover:bg-red-500/30 text-white border-red-500/50 hover:border-red-500 font-semibold transition-all shadow-[0_4px_14px_0_rgba(239,68,68,0.15)] hover:shadow-[0_8px_20px_0_rgba(239,68,68,0.3)]"
+                                            className="bg-white hover:bg-red-50 text-red-600 border-red-300 hover:border-red-500 font-medium transition-all"
                                           >
                                             <Trash2 className="h-4 w-4 mr-1" />
                                             <span className="hidden sm:inline">Delete</span>
                                           </Button>
                                         </AlertDialogTrigger>
-                                        <AlertDialogContent className="backdrop-blur-xl bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 border border-gold/30 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)]">
+                                        <AlertDialogContent className="bg-white border border-gray-200 shadow-lg">
                                           <AlertDialogHeader>
-                                            <AlertDialogTitle className="text-white font-black text-xl">Delete Realtor: {realtor.name}?</AlertDialogTitle>
-                                            <AlertDialogDescription className="text-white/80 mt-4 space-y-2">
-                                              <p className="font-semibold text-gold">This will:</p>
+                                            <AlertDialogTitle className="text-gray-900 font-bold text-lg">Delete Realtor: {realtor.name}?</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-gray-600 mt-4 space-y-2">
+                                              <p className="font-semibold text-gray-900">This will:</p>
                                               <ul className="list-disc list-inside space-y-1 text-sm ml-2">
                                                 <li>Move all their properties back to you (unassigned)</li>
                                                 <li>Unassign all their bookings</li>
                                                 <li>Delete their sources and rule chunks</li>
                                                 <li>Remove them from the system</li>
                                               </ul>
-                                              <p className="mt-4 font-bold text-red-400">⚠️ This action CANNOT be undone!</p>
+                                              <p className="mt-4 font-bold text-red-600">⚠️ This action CANNOT be undone!</p>
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
-                                            <AlertDialogCancel className="backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white border-gold/30 hover:border-gold">
+                                            <AlertDialogCancel className="border border-gray-300 hover:bg-gray-100 text-gray-700">
                                               Cancel
                                             </AlertDialogCancel>
                                             <AlertDialogAction 
                                               onClick={() => handleDeleteRealtor(realtor.id, realtor.name)}
-                                              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+                                              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
                                             >
                                               Delete Realtor
                                             </AlertDialogAction>
@@ -1314,42 +1281,41 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="relative backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] border border-gold/20 rounded-2xl overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent"></div>
-                    <CardHeader className="relative z-10 bg-gradient-to-r from-gold/10 via-gold/5 to-transparent rounded-t-2xl border-b border-gold/30 p-4 sm:p-6">
-                      <CardTitle className="text-white text-xl sm:text-2xl font-black flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)]">
-                          <CheckSquare className="h-5 w-5 text-slate-900" />
+                  <Card className="bg-white shadow-lg border border-gray-200 rounded-xl">
+                    <CardHeader className="bg-gradient-to-r from-gray-50 to-white rounded-t-xl border-b border-gray-200 p-4 sm:p-6">
+                      <CardTitle className="text-gray-900 text-xl sm:text-2xl font-bold flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-gold rounded-lg">
+                          <CheckSquare className="h-5 w-5 text-white" />
                         </div>
                         Assign Properties to Realtors
                       </CardTitle>
-                      <p className="text-sm text-white/80 ml-0 sm:ml-14 mt-2 sm:mt-0">
+                      <p className="text-sm text-gray-600 ml-0 sm:ml-14 mt-2 sm:mt-0">
                         Select properties and assign them to a realtor. Assigned properties will appear on the realtor's dashboard.
                       </p>
                     </CardHeader>
                     <CardContent className="relative z-10 space-y-4 sm:space-y-6 p-4 sm:p-6">
                       {/* Realtor Selection */}
-                      <div className="space-y-3 backdrop-blur-xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 p-4 sm:p-6 rounded-xl border border-gold/20">
+                      <div className="space-y-3 bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200">
                         <div className="flex items-center gap-2">
                           <User className="h-5 w-5 text-gold" />
-                          <label className="text-base sm:text-lg font-black text-white">Select Realtor to Assign Properties:</label>
+                          <label className="text-base sm:text-lg font-semibold text-gray-900">Select Realtor to Assign Properties:</label>
                         </div>
                         <select 
                           value={selectedRealtor || ''} 
                           onChange={(e) => setSelectedRealtor(e.target.value ? Number(e.target.value) : null)}
-                          className="w-full p-3 sm:p-4 backdrop-blur-sm bg-white/10 border border-gold/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold text-base font-bold transition-all placeholder-white/50"
+                          className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold text-base font-medium transition-all"
                         >
-                          <option value="" className="bg-slate-900 text-white">Choose a realtor from the list...</option>
+                          <option value="">Choose a realtor from the list...</option>
                           {realtors.map(realtor => (
-                            <option key={realtor.id} value={realtor.id} className="bg-slate-900 text-white">
+                            <option key={realtor.id} value={realtor.id}>
                               {realtor.name} - {realtor.email}
                             </option>
                           ))}
                         </select>
                         {selectedRealtor && (
-                          <div className="flex items-center gap-2 text-white bg-gradient-to-r from-gold/20 via-gold/10 to-gold/20 border border-gold/50 p-3 rounded-lg backdrop-blur-sm">
-                            <CheckCircle2 className="h-5 w-5 text-gold" />
-                            <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">
+                          <div className="flex items-center gap-2 bg-green-50 p-3 rounded-lg border border-green-200">
+                            <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            <span className="font-semibold text-green-700">
                               Selected: {realtors.find(r => r.id === selectedRealtor)?.name}
                             </span>
                           </div>
@@ -1361,10 +1327,10 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                         <div className="flex flex-col gap-4">
                           <div className="flex items-center justify-between flex-wrap gap-4">
                             <div>
-                              <h3 className="text-lg sm:text-xl font-black text-white">
-                                Available Properties <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">({selectedProperties.length} selected)</span>
+                              <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+                                Available Properties <span className="text-gold">({selectedProperties.length} selected)</span>
                               </h3>
-                              <p className="text-sm text-white/70">
+                              <p className="text-sm text-gray-600">
                                 Properties you own that haven't been assigned to realtors yet
                               </p>
                             </div>
@@ -1373,7 +1339,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                 onClick={handleSelectAll}
                                 variant="outline"
                                 size="sm"
-                                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)] hover:shadow-[0_8px_20px_0_rgba(255,215,0,0.3)] w-full sm:w-auto"
+                                className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 hover:border-gold font-medium transition-all w-full sm:w-auto"
                               >
                                 {selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All'}
                               </Button>
@@ -1381,8 +1347,8 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                           </div>
                           
                           {/* Enhanced Bulk Selection Buttons */}
-                          <div className="backdrop-blur-xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 p-4 sm:p-6 rounded-xl border border-gold/20">
-                            <p className="text-sm sm:text-base font-black text-gold/80 mb-3 flex items-center gap-2">
+                          <div className="bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200">
+                            <p className="text-sm sm:text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
                               <CheckSquare className="h-4 w-4 text-gold" />
                               Quick Selection Tools:
                             </p>
@@ -1391,7 +1357,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                 onClick={() => handleBulkSelect(10, true)}
                                 variant="outline"
                                 size="sm"
-                                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)]"
+                                className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 hover:border-gold font-medium transition-all"
                               >
                                 First 10
                               </Button>
@@ -1399,7 +1365,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                 onClick={() => handleBulkSelect(20, true)}
                                 variant="outline"
                                 size="sm"
-                                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)]"
+                                className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 hover:border-gold font-medium transition-all"
                               >
                                 First 20
                               </Button>
@@ -1407,16 +1373,16 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                 onClick={() => handleBulkSelect(50, true)}
                                 variant="outline"
                                 size="sm"
-                                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)]"
+                                className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 hover:border-gold font-medium transition-all"
                               >
                                 First 50
                               </Button>
-                              <div className="w-px bg-gold/30 mx-1"></div>
+                              <div className="w-px bg-gray-300 mx-1"></div>
                               <Button 
                                 onClick={() => handleBulkSelect(10, false)}
                                 variant="outline"
                                 size="sm"
-                                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)]"
+                                className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 hover:border-gold font-medium transition-all"
                               >
                                 Last 10
                               </Button>
@@ -1424,7 +1390,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                 onClick={() => handleBulkSelect(20, false)}
                                 variant="outline"
                                 size="sm"
-                                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)]"
+                                className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 hover:border-gold font-medium transition-all"
                               >
                                 Last 20
                               </Button>
@@ -1432,7 +1398,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                 onClick={() => handleBulkSelect(50, false)}
                                 variant="outline"
                                 size="sm"
-                                className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)]"
+                                className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 hover:border-gold font-medium transition-all"
                               >
                                 Last 50
                               </Button>
@@ -1441,10 +1407,10 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                         </div>
 
                         {loadingAssignmentProperties ? (
-                          <p className="text-white/80 font-medium py-8 text-center">Loading properties...</p>
+                          <p className="text-gray-600 font-medium py-8 text-center">Loading properties...</p>
                         ) : availablePropertiesForAssignment.length === 0 ? (
-                          <div className="py-8 text-center backdrop-blur-xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 border border-gold/20 rounded-xl">
-                            <p className="text-white/70 font-medium">
+                          <div className="py-8 text-center bg-white border border-gray-200 rounded-xl">
+                            <p className="text-gray-600 font-medium">
                               No properties available to assign. All properties may already be assigned to realtors.
                             </p>
                           </div>
@@ -1461,21 +1427,20 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                   whileHover={{ y: -4 }}
                                 >
                                   <Card 
-                                    className={`cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 border overflow-hidden ${
+                                    className={`cursor-pointer transition-all duration-300 rounded-xl bg-white border overflow-hidden ${
                                       selectedProperties.includes(property.id) 
-                                        ? 'border-gold bg-gold/20 shadow-[0_12px_40px_0_rgba(255,215,0,0.4)] scale-[1.02]' 
-                                        : 'border-gold/20 hover:border-gold/50 hover:shadow-[0_8px_32px_0_rgba(255,215,0,0.15)]'
+                                        ? 'border-gold bg-yellow-50 shadow-lg scale-[1.02]' 
+                                        : 'border-gray-200 hover:border-gold hover:shadow-md'
                                     }`}
                                     onClick={() => handlePropertyToggle(property.id)}
                                   >
-                                    <div className={`absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent ${selectedProperties.includes(property.id) ? 'opacity-100' : 'opacity-0'} transition-opacity`}></div>
-                                    <div className="flex items-start p-4 sm:p-5 gap-3 sm:gap-4 relative z-10">
+                                    <div className="flex items-start p-4 sm:p-5 gap-3 sm:gap-4">
                                       <div className="flex-shrink-0 mt-1">
                                         <input
                                           type="checkbox"
                                           checked={selectedProperties.includes(property.id)}
                                           onChange={() => handlePropertyToggle(property.id)}
-                                          className="h-5 w-5 cursor-pointer accent-gold rounded border-gold/30 checked:bg-gold checked:border-gold"
+                                          className="h-5 w-5 cursor-pointer accent-gold rounded border-gray-300"
                                           onClick={(e) => e.stopPropagation()}
                                         />
                                       </div>
@@ -1484,7 +1449,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                           <TooltipProvider>
                                             <Tooltip>
                                               <TooltipTrigger asChild>
-                                                <h4 className="font-black text-base sm:text-lg text-white truncate mb-1">
+                                                <h4 className="font-bold text-base sm:text-lg text-gray-900 truncate mb-1">
                                                   {meta.address || `Property #${property.id}`}
                                                 </h4>
                                               </TooltipTrigger>
@@ -1496,67 +1461,67 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                                           {meta.listing_id && (
                                             <div className="flex items-center gap-1.5 mt-1.5 text-xs">
                                               <Info className="h-3 w-3 text-gold" />
-                                              <p className="text-gold bg-gold/20 backdrop-blur-sm px-2 py-0.5 rounded-md border border-gold/30 font-black">MLS: {meta.listing_id}</p>
+                                              <p className="text-gold bg-yellow-50 px-2 py-0.5 rounded-md border border-gold font-semibold">MLS: {meta.listing_id}</p>
                                             </div>
                                           )}
                                         </div>
                                         <div className="space-y-2">
                                           <div className="flex items-center justify-between">
-                                            <p className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold">
+                                            <p className="text-xl sm:text-2xl font-bold text-gray-900">
                                               ${meta.price ? meta.price.toLocaleString() : 'N/A'}
                                             </p>
                                             {meta.listing_status && (
                                               <Badge 
                                                 variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                                                className={`text-xs font-black border-2 border-gold/50 shadow-[0_0_10px_rgba(255,215,0,0.3)] backdrop-blur-sm ${
+                                                className={`text-xs font-semibold ${
                                                   meta.listing_status === 'Available' 
-                                                    ? 'bg-gradient-to-r from-gold via-yellow-400 to-gold text-slate-900' 
-                                                    : 'bg-white/90 text-slate-900'
+                                                    ? 'bg-gold text-white' 
+                                                    : 'bg-gray-200 text-gray-700'
                                                 }`}
                                               >
                                                 {meta.listing_status}
                                               </Badge>
                                             )}
                                           </div>
-                                          <div className="flex flex-wrap gap-2 text-sm font-bold">
-                                            <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-gold/30 px-2 py-1 rounded-md text-white">
+                                          <div className="flex flex-wrap gap-2 text-sm font-medium">
+                                            <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-2 py-1 rounded-md text-gray-700">
                                               <Bed className="h-4 w-4 text-gold" /> {meta.bedrooms || 0} Beds
                                             </span>
-                                            <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-gold/30 px-2 py-1 rounded-md text-white">
+                                            <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-2 py-1 rounded-md text-gray-700">
                                               <Bath className="h-4 w-4 text-gold" /> {meta.bathrooms || 0} Baths
                                             </span>
                                             {meta.square_feet && (
-                                              <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-gold/30 px-2 py-1 rounded-md text-white">
+                                              <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-2 py-1 rounded-md text-gray-700">
                                                 <Square className="h-4 w-4 text-gold" /> {meta.square_feet} sqft
                                               </span>
                                             )}
                                           </div>
                                           <div className="flex flex-wrap gap-2">
                                             {meta.property_type && (
-                                              <Badge variant="outline" className="text-xs font-medium border-gold/30 bg-gold/10 text-white">
+                                              <Badge variant="outline" className="text-xs font-medium border-gold bg-yellow-50 text-gold">
                                                 {meta.property_type}
                                               </Badge>
                                             )}
                                           </div>
                                           {meta.features && meta.features.length > 0 && (
-                                            <div className="pt-2 border-t border-gold/30">
-                                              <p className="text-xs font-bold text-gold/80 mb-2">Key Features:</p>
+                                            <div className="pt-2 border-t border-gray-200">
+                                              <p className="text-xs font-semibold text-gray-600 mb-2">Key Features:</p>
                                               <div className="flex flex-wrap gap-1.5">
                                                 {meta.features.slice(0, 3).map((feature: string, fIdx: number) => (
-                                                  <Badge key={fIdx} variant="outline" className="text-xs bg-gold/10 border-gold/30 text-white font-medium">
+                                                  <Badge key={fIdx} variant="outline" className="text-xs bg-yellow-50 border-gold text-gold font-medium">
                                                     {feature}
                                                   </Badge>
                                                 ))}
                                                 {meta.features.length > 3 && (
-                                                  <span className="text-xs text-white/50 font-medium">+{meta.features.length - 3} more</span>
+                                                  <span className="text-xs text-gray-500 font-medium">+{meta.features.length - 3} more</span>
                                                 )}
                                               </div>
                                             </div>
                                           )}
                                           {meta.agent && (
-                                            <div className="pt-2 border-t border-gold/30">
-                                              <p className="text-xs font-bold text-gold/80 mb-1">Agent:</p>
-                                              <p className="text-sm font-black text-white truncate">
+                                            <div className="pt-2 border-t border-gray-200">
+                                              <p className="text-xs font-semibold text-gray-600 mb-1">Agent:</p>
+                                              <p className="text-sm font-semibold text-gray-900 truncate">
                                                 {meta.agent.name}
                                               </p>
                                             </div>
@@ -1573,17 +1538,17 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                       </div>
 
                       {/* Assign Button Section */}
-                      <div className="pt-4 sm:pt-6 border-t border-gold/30 backdrop-blur-xl bg-gradient-to-br from-slate-800/40 via-slate-900/40 to-slate-800/40 p-4 sm:p-6 rounded-xl border border-gold/20">
+                      <div className="pt-4 sm:pt-6 border-t border-gray-200 bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200">
                         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-sm sm:text-base font-medium text-white/80 mb-1">
+                            <p className="text-sm sm:text-base font-medium text-gray-700 mb-1">
                               {selectedProperties.length > 0 && selectedRealtor ? (
                                 <span className="flex items-center gap-2">
-                                  <CheckCircle2 className="h-4 w-4 text-gold" />
-                                  Ready to assign <strong className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">{selectedProperties.length}</strong> {selectedProperties.length === 1 ? 'property' : 'properties'} to <strong className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-400">{realtors.find(r => r.id === selectedRealtor)?.name}</strong>
+                                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                  Ready to assign <strong className="text-gold">{selectedProperties.length}</strong> {selectedProperties.length === 1 ? 'property' : 'properties'} to <strong className="text-gold">{realtors.find(r => r.id === selectedRealtor)?.name}</strong>
                                 </span>
                               ) : (
-                                <span className="text-white/70">
+                                <span className="text-gray-600">
                                   {!selectedRealtor && selectedProperties.length > 0 
                                     ? "⚠️ Please select a realtor to assign properties"
                                     : selectedRealtor && selectedProperties.length === 0
@@ -1596,7 +1561,7 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                           <Button 
                             onClick={assignProperties} 
                             disabled={assigningProperties || !selectedRealtor || selectedProperties.length === 0}
-                            className="bg-gradient-to-r from-gold via-yellow-400 to-gold text-slate-900 font-black px-6 sm:px-8 py-3 text-base sm:text-lg shadow-[0_0_30px_rgba(255,215,0,0.5)] hover:shadow-[0_0_40px_rgba(255,215,0,0.7)] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 w-full md:w-auto"
+                            className="bg-gold hover:bg-yellow-500 text-white font-semibold px-6 sm:px-8 py-3 text-base sm:text-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                             size="lg"
                           >
                             {assigningProperties ? (
@@ -1627,18 +1592,17 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Card className="relative backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 shadow-[0_8px_32px_0_rgba(255,215,0,0.15)] border border-gold/20 rounded-2xl overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent"></div>
-                    <CardHeader className="relative z-10 bg-gradient-to-r from-gold/10 via-gold/5 to-transparent rounded-t-2xl border-b border-gold/30 p-4 sm:p-6">
+                  <Card className="bg-white shadow-lg border border-gray-200 rounded-xl">
+                    <CardHeader className="bg-gradient-to-r from-gray-50 to-white rounded-t-xl border-b border-gray-200 p-4 sm:p-6">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <CardTitle className="text-white text-xl sm:text-2xl font-black flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)]">
-                              <ListChecks className="h-5 w-5 text-slate-900" />
+                          <CardTitle className="text-gray-900 text-xl sm:text-2xl font-bold flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-gold rounded-lg">
+                              <ListChecks className="h-5 w-5 text-white" />
                             </div>
                             Property Assignments Overview
                           </CardTitle>
-                          <p className="text-sm text-white/80 ml-0 sm:ml-14 mt-2 sm:mt-0">
+                          <p className="text-sm text-gray-600 ml-0 sm:ml-14 mt-2 sm:mt-0">
                             See which properties are assigned to which realtors, and manage unassigned properties
                           </p>
                         </div>
@@ -1646,65 +1610,62 @@ const handleDeleteRealtor = async (realtorId: number, realtorName: string) => {
                           onClick={() => { fetchAssignments(); fetchPropertiesForAssignment(); }}
                           variant="outline"
                           size="sm"
-                          className="backdrop-blur-sm bg-white/10 hover:bg-gold/20 text-white border-gold/30 hover:border-gold font-semibold transition-all shadow-[0_4px_14px_0_rgba(255,215,0,0.15)] hover:shadow-[0_8px_20px_0_rgba(255,215,0,0.3)] w-full sm:w-auto"
+                          className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 hover:border-gold font-medium transition-all w-full sm:w-auto"
                         >
                           <RefreshCw className="h-4 w-4 mr-2" />
                           Refresh Data
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="relative z-10 p-4 sm:p-6">
+                    <CardContent className="p-4 sm:p-6">
                       {loadingAssignments ? (
-                        <p className="text-white/80 font-medium py-8 text-center">Loading assignments...</p>
+                        <p className="text-gray-600 font-medium py-8 text-center">Loading assignments...</p>
                       ) : !assignmentsData ? (
-                        <p className="text-white/60 font-medium py-8 text-center">No assignment data available</p>
+                        <p className="text-gray-500 font-medium py-8 text-center">No assignment data available</p>
                       ) : (
                         <div className="space-y-6 sm:space-y-8">
                           {/* Enhanced Summary Cards */}
                           {assignmentsData.summary && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                              <Card className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 p-5 sm:p-6 border border-gold/20 rounded-xl hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all hover:border-gold/50 overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="relative z-10 flex items-center justify-between">
+                              <Card className="bg-white p-5 sm:p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all hover:border-gold">
+                                <div className="flex items-center justify-between">
                                   <div className="flex-1">
-                                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Total Properties</p>
-                                    <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold">
+                                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Total Properties</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                                       {assignmentsData.summary.total_properties || 0}
                                     </p>
-                                    <p className="text-xs text-white/50 mt-2 font-medium">All properties</p>
+                                    <p className="text-xs text-gray-400 mt-1">All properties</p>
                                   </div>
-                                  <div className="p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-lg ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]">
-                                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900" />
+                                  <div className="p-3 sm:p-4 bg-gold rounded-lg ml-3">
+                                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                   </div>
                                 </div>
                               </Card>
-                              <Card className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 p-5 sm:p-6 border border-gold/20 rounded-xl hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all hover:border-gold/50 overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="relative z-10 flex items-center justify-between">
+                              <Card className="bg-white p-5 sm:p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all hover:border-gold">
+                                <div className="flex items-center justify-between">
                                   <div className="flex-1">
-                                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Unassigned</p>
-                                    <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold">
+                                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Unassigned</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                                       {assignmentsData.summary.unassigned_count || 0}
                                     </p>
-                                    <p className="text-xs text-white/50 mt-2 font-medium">Need assignment</p>
+                                    <p className="text-xs text-gray-400 mt-1">Need assignment</p>
                                   </div>
-                                  <div className="p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-lg ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]">
-                                    <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900" />
+                                  <div className="p-3 sm:p-4 bg-gold rounded-lg ml-3">
+                                    <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                   </div>
                                 </div>
                               </Card>
-                              <Card className="relative group backdrop-blur-xl bg-gradient-to-br from-slate-800/60 via-slate-900/60 to-slate-800/60 p-5 sm:p-6 border border-gold/20 rounded-xl hover:shadow-[0_12px_40px_0_rgba(255,215,0,0.3)] transition-all hover:border-gold/50 overflow-hidden sm:col-span-2 lg:col-span-1">
-                                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="relative z-10 flex items-center justify-between">
+                              <Card className="bg-white p-5 sm:p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all hover:border-gold sm:col-span-2 lg:col-span-1">
+                                <div className="flex items-center justify-between">
                                   <div className="flex-1">
-                                    <p className="text-xs sm:text-sm font-bold text-gold/80 mb-2 uppercase tracking-wider">Assigned</p>
-                                    <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-400 to-gold">
+                                    <p className="text-xs sm:text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Assigned</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                                       {assignmentsData.summary.assigned_count || 0}
                                     </p>
-                                    <p className="text-xs text-white/50 mt-2 font-medium">To realtors</p>
+                                    <p className="text-xs text-gray-400 mt-1">To realtors</p>
                                   </div>
-                                  <div className="p-3 sm:p-4 bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-lg ml-3 shadow-[0_0_20px_rgba(255,215,0,0.4)]">
-                                    <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900" />
+                                  <div className="p-3 sm:p-4 bg-gold rounded-lg ml-3">
+                                    <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                   </div>
                                 </div>
                               </Card>

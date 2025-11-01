@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
@@ -28,6 +28,12 @@ const Dashboard = () => {
   const [loadingRealtors, setLoadingRealtors] = useState(false);
   const [showAddRealtor, setShowAddRealtor] = useState(false);
   const [newRealtor, setNewRealtor] = useState({ name: "", email: "", password: "" });
+  // Property assignment state
+  const [availablePropertiesForAssignment, setAvailablePropertiesForAssignment] = useState<any[]>([]);
+  const [loadingAssignmentProperties, setLoadingAssignmentProperties] = useState(false);
+  const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
+  const [selectedRealtor, setSelectedRealtor] = useState<number | null>(null);
+  const [assigningProperties, setAssigningProperties] = useState(false);
 
 
   // Basic SEO for SPA route
@@ -70,6 +76,7 @@ const Dashboard = () => {
     // If property manager, fetch realtors
     if (storedUserType === "property_manager") {
       fetchRealtors();
+      fetchPropertiesForAssignment();
     }
   }, []);
 
@@ -253,6 +260,102 @@ const addRealtor = async () => {
   } catch (err: any) {
     console.error(err);
     toast.error(err.message || "Could not add realtor");
+  }
+};
+
+const fetchPropertiesForAssignment = async () => {
+  try {
+    setLoadingAssignmentProperties(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/apartments`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch properties");
+
+    const data = await res.json();
+    const allProperties = Array.isArray(data) ? data : data.apartments || [];
+    
+    // Filter to only show PM's own properties (not already assigned to realtors)
+    const pmProperties = allProperties.filter(
+      (prop: any) => prop.owner_type === "property_manager"
+    );
+    
+    setAvailablePropertiesForAssignment(pmProperties);
+  } catch (err) {
+    console.error(err);
+    toast.error("Could not load properties for assignment");
+  } finally {
+    setLoadingAssignmentProperties(false);
+  }
+};
+
+const assignProperties = async () => {
+  if (!selectedRealtor || selectedProperties.length === 0) {
+    toast.error("Please select a realtor and at least one property");
+    return;
+  }
+
+  setAssigningProperties(true);
+
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("You must be signed in");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/property-manager/assign-properties`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({
+        realtor_id: selectedRealtor,
+        property_ids: selectedProperties
+      }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || errorData.message || "Failed to assign properties");
+    }
+
+    const data = await res.json();
+    toast.success(data.message || `Successfully assigned ${selectedProperties.length} properties`);
+    
+    // Refresh properties list (assigned ones will no longer show)
+    fetchPropertiesForAssignment();
+    fetchApartments(); // Also refresh the main apartments list
+    setSelectedProperties([]);
+    setSelectedRealtor(null);
+  } catch (err: any) {
+    console.error("Assignment failed:", err);
+    toast.error(err.message || "Failed to assign properties");
+  } finally {
+    setAssigningProperties(false);
+  }
+};
+
+const handlePropertyToggle = (propertyId: number) => {
+  setSelectedProperties(prev => 
+    prev.includes(propertyId)
+      ? prev.filter(id => id !== propertyId)
+      : [...prev, propertyId]
+  );
+};
+
+const handleSelectAll = () => {
+  if (selectedProperties.length === availablePropertiesForAssignment.length) {
+    setSelectedProperties([]);
+  } else {
+    setSelectedProperties(availablePropertiesForAssignment.map((p: any) => p.id));
   }
 };
 
@@ -595,6 +698,12 @@ const addRealtor = async () => {
                     Realtors
                   </TabsTrigger>
                 )}
+                {userType === "property_manager" && (
+                  <TabsTrigger value="assign-properties" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                    <CheckSquare className="h-4 w-4 mr-2" />
+                    Assign Properties
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="properties" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                   Properties
                 </TabsTrigger>
@@ -747,6 +856,145 @@ const addRealtor = async () => {
                           </Table>
                         </div>
                       )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            )}
+
+            {/* Property Assignment - Property Manager Only */}
+            {userType === "property_manager" && (
+              <TabsContent value="assign-properties">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <Card className="glass-card">
+                    <CardHeader>
+                      <CardTitle className="text-navy text-xl flex items-center gap-2">
+                        <Building2 className="h-5 w-5 text-accent" />
+                        Assign Properties to Realtors
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Select properties and assign them to a realtor. Assigned properties will appear on the realtor's dashboard.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Realtor Selection */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-navy">Select Realtor:</label>
+                        <select 
+                          value={selectedRealtor || ''} 
+                          onChange={(e) => setSelectedRealtor(e.target.value ? Number(e.target.value) : null)}
+                          className="w-full md:w-96 p-3 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                        >
+                          <option value="">Choose a realtor...</option>
+                          {realtors.map(realtor => (
+                            <option key={realtor.id} value={realtor.id}>
+                              {realtor.name} ({realtor.email})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Properties Section */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-navy">
+                              Available Properties ({selectedProperties.length} selected)
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              Properties you own that haven't been assigned to realtors yet
+                            </p>
+                          </div>
+                          <Button 
+                            onClick={handleSelectAll}
+                            variant="outline"
+                            className="bg-accent/10 hover:bg-accent/20"
+                          >
+                            {selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All'}
+                          </Button>
+                        </div>
+
+                        {loadingAssignmentProperties ? (
+                          <p className="text-muted-foreground py-8 text-center">Loading properties...</p>
+                        ) : availablePropertiesForAssignment.length === 0 ? (
+                          <div className="py-8 text-center border rounded-lg bg-muted/30">
+                            <p className="text-muted-foreground">
+                              No properties available to assign. All properties may already be assigned to realtors.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {availablePropertiesForAssignment.map((property, idx) => (
+                              <motion.div
+                                key={property.id || idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: idx * 0.05 }}
+                                whileHover={{ y: -4 }}
+                              >
+                                <Card 
+                                  className={`hover-lift cursor-pointer transition-all ${
+                                    selectedProperties.includes(property.id) 
+                                      ? 'border-accent border-2 bg-accent/5' 
+                                      : 'border-border'
+                                  }`}
+                                  onClick={() => handlePropertyToggle(property.id)}
+                                >
+                                  <div className="flex items-start p-4 gap-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedProperties.includes(property.id)}
+                                      onChange={() => handlePropertyToggle(property.id)}
+                                      className="mt-1 h-4 w-4 cursor-pointer accent-accent"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-semibold text-navy truncate">
+                                        {property.address || `Property #${property.id}`}
+                                      </h4>
+                                      <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                                        <p>Price: ${property.price ? property.price.toLocaleString() : 'N/A'}</p>
+                                        <p>
+                                          {property.bedrooms || 0} Beds | {property.bathrooms || 0} Baths
+                                        </p>
+                                        <p className="text-xs">ID: {property.id}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </Card>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Assign Button */}
+                      <div className="pt-4 border-t">
+                        <Button 
+                          onClick={assignProperties} 
+                          disabled={assigningProperties || !selectedRealtor || selectedProperties.length === 0}
+                          className="w-full md:w-auto bg-gold hover:bg-gold/90 text-navy font-semibold"
+                          size="lg"
+                        >
+                          {assigningProperties 
+                            ? 'Assigning...' 
+                            : `Assign ${selectedProperties.length} ${selectedProperties.length === 1 ? 'Property' : 'Properties'}`}
+                        </Button>
+                        {!selectedRealtor && selectedProperties.length > 0 && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Please select a realtor to assign properties
+                          </p>
+                        )}
+                        {selectedRealtor && selectedProperties.length === 0 && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Please select at least one property to assign
+                          </p>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>

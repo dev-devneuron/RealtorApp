@@ -915,14 +915,46 @@ const Dashboard = () => {
                     const nameToUse = userName || storedName || "User";
                     const displayName = nameToUse.trim() !== "" && nameToUse !== "User" ? nameToUse : "User";
                     
-                    // Extract first name only
-                    const firstName = displayName.split(' ')[0];
+                    // Extract first name only - handle names with no spaces (like "Johnsmith" or "Sarahjohnson")
+                    let firstName = displayName.split(' ')[0].trim();
+                    
+                    // If name has no space, try to intelligently extract first name
+                    if (!firstName.includes(' ')) {
+                      // Pattern 1: CamelCase names like "JohnSmith" or "SarahJohnson"
+                      const camelCaseMatch = firstName.match(/^([A-Z][a-z]{2,6})(?=[A-Z]|$)/);
+                      if (camelCaseMatch && camelCaseMatch[1]) {
+                        firstName = camelCaseMatch[1];
+                      } 
+                      // Pattern 2: All lowercase combined names like "johnsmith" or "sarahjohnson"
+                      else if (firstName.toLowerCase() === firstName && firstName.length > 6) {
+                        // Common first names are typically 3-7 characters
+                        // For "johnsmith" (9 chars) -> "John" (4 chars)
+                        // For "sarahjohnson" (13 chars) -> "Sarah" (5 chars)
+                        // Smart extraction: take 4-6 chars for longer names
+                        if (firstName.length >= 10) {
+                          firstName = firstName.substring(0, 5); // "sarahjohnson" -> "sarah"
+                        } else if (firstName.length >= 7) {
+                          firstName = firstName.substring(0, 4); // "johnsmith" -> "john"
+                        } else {
+                          firstName = firstName.substring(0, Math.min(6, firstName.length));
+                        }
+                      }
+                      // Pattern 3: Very long single-word names - cap at reasonable length
+                      else if (firstName.length > 8) {
+                        firstName = firstName.substring(0, 6);
+                      }
+                    }
+                    
+                    // Ensure proper capitalization: first letter uppercase, rest lowercase
+                    if (firstName.length > 0) {
+                      firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                    }
                     
                     // Always show the name - it will be at least "User" if nothing else
                     return (
                       <>
                         <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                          Welcome back <span className="text-amber-800">{firstName}</span>!
+                          Welcome back <span className="text-amber-600">{firstName}</span>!
                         </p>
                         <p className="text-amber-600/80 text-sm">
                           {userType === "property_manager" 

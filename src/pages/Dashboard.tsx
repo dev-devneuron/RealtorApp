@@ -96,15 +96,15 @@ const Dashboard = () => {
       const storedUserName = localStorage.getItem("user_name");
       const storedUserGender = localStorage.getItem("user_gender");
       
-      if (storedUserName && storedUserName.trim() !== "") {
-        console.log("Found user name in localStorage:", storedUserName);
+      if (storedUserName && storedUserName.trim() !== "" && storedUserName !== "User") {
+        console.log("✅ Found valid user name in localStorage:", storedUserName);
         setUserName(storedUserName);
         if (storedUserGender) {
           setUserGender(storedUserGender);
         }
-        return;
+        // Still try API to get better name if available, but don't return early
       } else {
-        console.log("No user name in localStorage, attempting to fetch from API");
+        console.log("⚠️ No valid user name in localStorage, attempting to fetch from API");
       }
 
       // If not in localStorage, try to fetch from API
@@ -158,18 +158,26 @@ const Dashboard = () => {
 
         // If still no name found, try alternative methods
         if (!nameFound) {
-          console.log("Could not find user name in standard endpoints, trying alternative methods");
+          console.log("⚠️ Could not find user name in standard endpoints, trying alternative methods");
           
           // For property managers, we might need to get it from a different endpoint
           // Or check if we can get email and extract username from it
           const storedEmail = localStorage.getItem("user_email");
           if (storedEmail && storedEmail.includes('@')) {
             const emailName = storedEmail.split('@')[0];
-            // Capitalize first letter
-            const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
-            console.log("Using email-derived name:", formattedName);
+            // Clean and capitalize
+            const cleanedName = emailName.replace(/[._0-9]/g, '');
+            const formattedName = cleanedName.charAt(0).toUpperCase() + cleanedName.slice(1);
+            console.log("✅ Using email-derived name:", formattedName);
             setUserName(formattedName);
             localStorage.setItem("user_name", formattedName);
+          } else {
+            // Ensure we always have something
+            if (!localStorage.getItem("user_name") || localStorage.getItem("user_name") === "User") {
+              console.log("⚠️ Setting default name 'User'");
+              setUserName("User");
+              localStorage.setItem("user_name", "User");
+            }
           }
         }
       } catch (err) {
@@ -186,17 +194,30 @@ const Dashboard = () => {
     const storedUserType = localStorage.getItem("user_type");
     setUserType(storedUserType);
 
-    // Check localStorage first and set immediately for faster display
+    // ALWAYS ensure we have a user name - check localStorage first and set immediately
     const storedUserName = localStorage.getItem("user_name");
-    console.log("Checking localStorage for user_name:", storedUserName);
+    console.log("🔍 Checking localStorage for user_name:", storedUserName);
+    
     if (storedUserName && storedUserName.trim() !== "") {
-      console.log("Setting userName from localStorage immediately:", storedUserName);
+      console.log("✅ Found user_name in localStorage:", storedUserName);
       setUserName(storedUserName);
     } else {
-      console.log("No user_name found in localStorage. Checking all localStorage items:");
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        console.log(`localStorage[${key}]:`, localStorage.getItem(key));
+      console.log("⚠️ No user_name found in localStorage. Attempting to derive one...");
+      
+      // Try to get from email
+      const storedEmail = localStorage.getItem("user_email");
+      if (storedEmail && storedEmail.includes('@')) {
+        const emailName = storedEmail.split('@')[0];
+        const cleanedName = emailName.replace(/[._0-9]/g, '');
+        const formattedName = cleanedName.charAt(0).toUpperCase() + cleanedName.slice(1);
+        console.log("✅ Derived name from stored email:", formattedName);
+        setUserName(formattedName);
+        localStorage.setItem("user_name", formattedName);
+      } else {
+        // Set a default
+        console.log("⚠️ No email found either. Setting default name 'User'");
+        setUserName("User");
+        localStorage.setItem("user_name", "User");
       }
     }
 
@@ -889,45 +910,27 @@ const Dashboard = () => {
                   transition={{ duration: 0.6, delay: 0.6 }}
                 >
                   {(() => {
-                    // Debug: log current state
-                    console.log("Rendering welcome message. userName state:", userName);
+                    // ALWAYS ensure we have a name to display
                     const storedName = localStorage.getItem("user_name");
-                    console.log("localStorage user_name:", storedName);
+                    const nameToUse = userName || storedName || "User";
+                    const displayName = nameToUse.trim() !== "" && nameToUse !== "User" ? nameToUse : "User";
                     
-                    // Try multiple sources for the name
-                    const nameToUse = userName || storedName || null;
+                    // Extract first name only
+                    const firstName = displayName.split(' ')[0];
                     
-                    if (nameToUse && nameToUse.trim() !== "") {
-                      // Extract first name only
-                      const firstName = nameToUse.split(' ')[0];
-                      console.log("Using name:", firstName);
-                      return (
-                        <>
-                          <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                            Welcome back <span className="text-amber-800">{firstName}</span>!
-                          </p>
-                          <p className="text-amber-600/80 text-sm">
-                            {userType === "property_manager" 
-                              ? "Manage your properties and team from here."
-                              : "View your assigned properties and bookings."}
-                          </p>
-                        </>
-                      );
-                    } else {
-                      console.log("No name found, showing generic welcome");
-                      return (
-                        <>
-                          <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                            Welcome back!
-                          </p>
-                          <p className="text-amber-600/80 text-sm">
-                            {userType === "property_manager" 
-                              ? "Manage your properties and team from here."
-                              : "View your assigned properties and bookings."}
-                          </p>
-                        </>
-                      );
-                    }
+                    // Always show the name - it will be at least "User" if nothing else
+                    return (
+                      <>
+                        <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
+                          Welcome back <span className="text-amber-800">{firstName}</span>!
+                        </p>
+                        <p className="text-amber-600/80 text-sm">
+                          {userType === "property_manager" 
+                            ? "Manage your properties and team from here."
+                            : "View your assigned properties and bookings."}
+                        </p>
+                      </>
+                    );
                   })()}
                 </motion.div>
               </div>

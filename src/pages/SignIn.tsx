@@ -53,38 +53,53 @@ const SignIn = () => {
       if (data.property_manager_id) localStorage.setItem("property_manager_id", data.property_manager_id);
       if (data.user_type) localStorage.setItem("user_type", data.user_type);
       
-      // Store user name and gender for personalized welcome message
+      // ALWAYS store user name - this is critical for dashboard display
       // Check multiple possible locations for the name
       let userNameToStore = null;
+      
+      // Priority 1: Direct name fields
       if (data.user?.name) {
-        userNameToStore = data.user.name;
-        console.log("Found user name in data.user.name:", userNameToStore);
+        userNameToStore = data.user.name.trim();
+        console.log("✓ Found user name in data.user.name:", userNameToStore);
       } else if (data.name) {
-        userNameToStore = data.name;
-        console.log("Found user name in data.name:", userNameToStore);
-      } else if (data.user?.email) {
-        // Extract name from email as fallback
+        userNameToStore = data.name.trim();
+        console.log("✓ Found user name in data.name:", userNameToStore);
+      } 
+      // Priority 2: Property manager or realtor specific fields
+      else if (data.property_manager?.name) {
+        userNameToStore = data.property_manager.name.trim();
+        console.log("✓ Found user name in data.property_manager.name:", userNameToStore);
+      } else if (data.realtor?.name) {
+        userNameToStore = data.realtor.name.trim();
+        console.log("✓ Found user name in data.realtor.name:", userNameToStore);
+      }
+      // Priority 3: Extract from email in response
+      else if (data.user?.email) {
         const emailParts = data.user.email.split('@');
         userNameToStore = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1);
-        console.log("Extracting user name from email:", userNameToStore);
+        console.log("✓ Extracted user name from data.user.email:", userNameToStore);
       } else if (data.email) {
         const emailParts = data.email.split('@');
         userNameToStore = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1);
-        console.log("Extracting user name from data.email:", userNameToStore);
+        console.log("✓ Extracted user name from data.email:", userNameToStore);
+      }
+      // Priority 4: Use login form email as ABSOLUTE fallback
+      else if (email && email.includes('@')) {
+        const emailName = email.split('@')[0];
+        // Remove dots, underscores, and numbers for cleaner name
+        const cleanedName = emailName.replace(/[._0-9]/g, '');
+        userNameToStore = cleanedName.charAt(0).toUpperCase() + cleanedName.slice(1);
+        console.log("✓ Using login form email as fallback name:", userNameToStore);
       }
       
-      if (userNameToStore) {
-        console.log("Storing user name:", userNameToStore);
+      // ALWAYS store something - never leave it empty
+      if (userNameToStore && userNameToStore.length > 0) {
+        console.log("✓✓✓ STORING user name in localStorage:", userNameToStore);
         localStorage.setItem("user_name", userNameToStore);
       } else {
-        console.warn("Could not find user name in login response. Available keys:", Object.keys(data));
-        // Use the email that was entered as a last resort
-        if (email && email.includes('@')) {
-          const emailName = email.split('@')[0];
-          const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
-          console.log("Using login email as fallback name:", formattedName);
-          localStorage.setItem("user_name", formattedName);
-        }
+        // Last resort: use "User" as placeholder
+        console.warn("⚠️ Could not extract any name. Using 'User' as default");
+        localStorage.setItem("user_name", "User");
       }
       
       if (data.user?.gender) localStorage.setItem("user_gender", data.user.gender);

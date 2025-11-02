@@ -188,9 +188,16 @@ const Dashboard = () => {
 
     // Check localStorage first and set immediately for faster display
     const storedUserName = localStorage.getItem("user_name");
+    console.log("Checking localStorage for user_name:", storedUserName);
     if (storedUserName && storedUserName.trim() !== "") {
       console.log("Setting userName from localStorage immediately:", storedUserName);
       setUserName(storedUserName);
+    } else {
+      console.log("No user_name found in localStorage. Checking all localStorage items:");
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        console.log(`localStorage[${key}]:`, localStorage.getItem(key));
+      }
     }
 
     const title = storedUserType === "property_manager" ? "Property Manager Dashboard | Leasap" : "Dashboard | Leasap";
@@ -875,52 +882,53 @@ const Dashboard = () => {
                 <Home className="h-6 w-6 text-white" />
               </motion.div>
               <div>
-                {userType === "property_manager" && (
-                  <motion.h1 
-                    className="text-2xl sm:text-3xl font-bold bg-gradient-to-br from-amber-600 to-amber-800 bg-clip-text text-transparent"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                  >
-                    Property Manager Dashboard
-                  </motion.h1>
-                )}
                 <motion.div 
                   className="mt-2"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
                 >
-                  {userName 
-                    ? (() => {
-                        // Extract first name only
-                        const firstName = userName.split(' ')[0];
-                        return (
-                          <>
-                            <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                              Welcome back <span className="text-amber-800">{firstName}</span>!
-                            </p>
-                            <p className="text-amber-600/80 text-sm">
-                              {userType === "property_manager" 
-                                ? "Manage your properties and team from here."
-                                : "View your assigned properties and bookings."}
-                            </p>
-                          </>
-                        );
-                      })()
-                    : (
-                      <>
-                        <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                          Welcome back!
-                        </p>
-                        <p className="text-amber-600/80 text-sm">
-                          {userType === "property_manager" 
-                            ? "Manage your properties and team from here."
-                            : "View your assigned properties and bookings."}
-                        </p>
-                      </>
-                    )
-                  }
+                  {(() => {
+                    // Debug: log current state
+                    console.log("Rendering welcome message. userName state:", userName);
+                    const storedName = localStorage.getItem("user_name");
+                    console.log("localStorage user_name:", storedName);
+                    
+                    // Try multiple sources for the name
+                    const nameToUse = userName || storedName || null;
+                    
+                    if (nameToUse && nameToUse.trim() !== "") {
+                      // Extract first name only
+                      const firstName = nameToUse.split(' ')[0];
+                      console.log("Using name:", firstName);
+                      return (
+                        <>
+                          <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
+                            Welcome back <span className="text-amber-800">{firstName}</span>!
+                          </p>
+                          <p className="text-amber-600/80 text-sm">
+                            {userType === "property_manager" 
+                              ? "Manage your properties and team from here."
+                              : "View your assigned properties and bookings."}
+                          </p>
+                        </>
+                      );
+                    } else {
+                      console.log("No name found, showing generic welcome");
+                      return (
+                        <>
+                          <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
+                            Welcome back!
+                          </p>
+                          <p className="text-amber-600/80 text-sm">
+                            {userType === "property_manager" 
+                              ? "Manage your properties and team from here."
+                              : "View your assigned properties and bookings."}
+                          </p>
+                        </>
+                      );
+                    }
+                  })()}
                 </motion.div>
               </div>
             </div>

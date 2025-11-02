@@ -51,6 +51,9 @@ const SignIn = () => {
       if (data.realtor_id) localStorage.setItem("realtor_id", data.realtor_id);
       if (data.property_manager_id) localStorage.setItem("property_manager_id", data.property_manager_id);
       if (data.user_type) localStorage.setItem("user_type", data.user_type);
+      // Store user name and gender for personalized welcome message
+      if (data.user?.name) localStorage.setItem("user_name", data.user.name);
+      if (data.user?.gender) localStorage.setItem("user_gender", data.user.gender);
 
       const userDisplayName = userType === "property_manager" 
         ? `Property Manager: ${data.user?.name || "Unknown"}`

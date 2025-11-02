@@ -77,6 +77,66 @@ const Dashboard = () => {
   // Assignments view state
   const [assignmentsData, setAssignmentsData] = useState<any>(null);
   const [loadingAssignments, setLoadingAssignments] = useState(false);
+  // Expanded features state for property listings
+  const [expandedFeatures, setExpandedFeatures] = useState<{ [key: number]: boolean }>({});
+  // User information state
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userGender, setUserGender] = useState<string | null>(null);
+
+  // Fetch current user information
+  const fetchUserInfo = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const storedUserType = localStorage.getItem("user_type");
+      if (!token) {
+        return;
+      }
+
+      // Try to get from localStorage first (stored during login)
+      const storedUserName = localStorage.getItem("user_name");
+      const storedUserGender = localStorage.getItem("user_gender");
+      
+      if (storedUserName) {
+        setUserName(storedUserName);
+        if (storedUserGender) {
+          setUserGender(storedUserGender);
+        }
+      } else {
+        // If not in localStorage, try to fetch from API
+        try {
+          let endpoint = "";
+          if (storedUserType === "property_manager") {
+            endpoint = `${API_BASE}/property-manager/me`;
+          } else {
+            endpoint = `${API_BASE}/realtor/me`;
+          }
+
+          const res = await fetch(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const name = data.name || data.user?.name || null;
+            const gender = data.gender || data.user?.gender || null;
+            if (name) {
+              setUserName(name);
+              localStorage.setItem("user_name", name);
+            }
+            if (gender) {
+              setUserGender(gender);
+              localStorage.setItem("user_gender", gender);
+            }
+          }
+        } catch (err) {
+          console.error("Could not fetch user info:", err);
+          // If API fails, check if we can get from email or use a default
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+    }
+  };
 
   // Basic SEO for SPA route
   useEffect(() => {
@@ -109,6 +169,8 @@ const Dashboard = () => {
     // Trigger staggered animations after component mount
     setTimeout(() => setAnimateCards(true), 300);
     
+    // Fetch user information
+    fetchUserInfo();
     fetchNumber();
     fetchApartments();
     fetchRecordings();
@@ -507,7 +569,70 @@ const Dashboard = () => {
       const data = await res.json();
       toast.success(data.message || "Property status updated successfully");
       
-      // Refresh data
+      // Update local state immediately for better UX
+      setApartments(prevApartments => 
+        prevApartments.map(apt => {
+          if (apt.id === propertyId) {
+            const updatedApt = { ...apt, listing_status: newStatus };
+            // Also update listing_metadata if it exists
+            if (apt.listing_metadata) {
+              try {
+                const metadata = typeof apt.listing_metadata === 'string' 
+                  ? JSON.parse(apt.listing_metadata) 
+                  : apt.listing_metadata;
+                metadata.listing_status = newStatus;
+                updatedApt.listing_metadata = typeof apt.listing_metadata === 'string'
+                  ? JSON.stringify(metadata)
+                  : metadata;
+              } catch (e) {
+                // If parsing fails, just keep the direct update
+              }
+            }
+            return updatedApt;
+          }
+          return apt;
+        })
+      );
+      
+      // Update assignments data if it exists
+      if (assignmentsData) {
+        const updatedAssignmentsData = JSON.parse(JSON.stringify(assignmentsData));
+        
+        const updatePropertyInObject = (prop: any) => {
+          if (prop.id === propertyId) {
+            const updated = { ...prop, listing_status: newStatus };
+            // Also update listing_metadata if it exists
+            if (prop.listing_metadata) {
+              try {
+                const metadata = typeof prop.listing_metadata === 'string' 
+                  ? JSON.parse(prop.listing_metadata) 
+                  : prop.listing_metadata;
+                metadata.listing_status = newStatus;
+                updated.listing_metadata = typeof prop.listing_metadata === 'string'
+                  ? JSON.stringify(metadata)
+                  : metadata;
+              } catch (e) {
+                // If parsing fails, just keep the direct update
+              }
+            }
+            return updated;
+          }
+          return prop;
+        };
+        
+        if (updatedAssignmentsData.unassigned_properties) {
+          updatedAssignmentsData.unassigned_properties = updatedAssignmentsData.unassigned_properties.map(updatePropertyInObject);
+        }
+        if (updatedAssignmentsData.assigned_properties) {
+          Object.keys(updatedAssignmentsData.assigned_properties).forEach(key => {
+            updatedAssignmentsData.assigned_properties[key].properties = 
+              updatedAssignmentsData.assigned_properties[key].properties.map(updatePropertyInObject);
+          });
+        }
+        setAssignmentsData(updatedAssignmentsData);
+      }
+      
+      // Refresh data from server
       fetchAssignments();
       fetchApartments();
     } catch (err: any) {
@@ -715,9 +840,17 @@ const Dashboard = () => {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
                 >
-                  {userType === "property_manager" 
-                    ? "Welcome back! Manage your properties and team from here."
-                    : "Welcome back! View your assigned properties and bookings."
+                  {userName 
+                    ? (() => {
+                        // Extract first name only
+                        const firstName = userName.split(' ')[0];
+                        return `Welcome back ${firstName}! ${userType === "property_manager" 
+                          ? "Manage your properties and team from here."
+                          : "View your assigned properties and bookings."}`;
+                      })()
+                    : (userType === "property_manager" 
+                      ? "Welcome back! Manage your properties and team from here."
+                      : "Welcome back! View your assigned properties and bookings.")
                   }
                 </motion.p>
               </div>
@@ -1040,7 +1173,7 @@ const Dashboard = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="mb-8"
             >
-              <TabsList className="bg-white border border-amber-200 rounded-2xl p-2 shadow-lg inline-flex min-w-full overflow-x-auto">
+              <TabsList className="bg-white border border-amber-200 rounded-2xl p-2 shadow-lg inline-flex min-w-full overflow-x-auto overflow-y-hidden">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
@@ -1717,7 +1850,7 @@ const Dashboard = () => {
                                           <CardTitle className="text-lg font-bold text-gray-900">
                                             {meta.address || `Property #${property.id}`}
                                           </CardTitle>
-                                          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 font-semibold">Unassigned</Badge>
+                                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 font-semibold">Unassigned</Badge>
                                         </div>
                                         {meta.listing_id && (
                                           <div className="flex items-center gap-2 mt-3">
@@ -2090,18 +2223,6 @@ const Dashboard = () => {
                               <div className="text-2xl font-bold text-amber-600">
                                 ${meta.price ? meta.price.toLocaleString() : "N/A"}
                               </div>
-                              {meta.listing_status && (
-                                <Badge 
-                                  variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                                  className={`text-sm font-bold border-2 ${
-                                    meta.listing_status === 'Available' 
-                                      ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white border-amber-400' 
-                                      : 'bg-white text-gray-900 border-gray-300'
-                                  }`}
-                                >
-                                  {meta.listing_status}
-                                </Badge>
-                              )}
                             </div>
 
                             {/* Basic Specs */}
@@ -2166,15 +2287,25 @@ const Dashboard = () => {
                               <div className="pt-4 border-t border-gray-200">
                                 <p className="text-sm font-semibold text-gray-600 mb-3">Features:</p>
                                 <div className="flex flex-wrap gap-2">
-                                  {meta.features.slice(0, 4).map((feature: string, fIdx: number) => (
+                                  {(expandedFeatures[apt.id] ? meta.features : meta.features.slice(0, 4)).map((feature: string, fIdx: number) => (
                                     <Badge key={fIdx} variant="outline" className="text-xs font-medium border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-400 transition-all">
                                       {feature}
                                     </Badge>
                                   ))}
                                   {meta.features.length > 4 && (
-                                    <span className="text-xs text-gray-500 font-medium">+{meta.features.length - 4} more</span>
+                                    <button
+                                      onClick={() => setExpandedFeatures(prev => ({ ...prev, [apt.id]: !prev[apt.id] }))}
+                                      className="text-xs text-amber-600 font-medium hover:text-amber-700 hover:underline transition-colors cursor-pointer"
+                                    >
+                                      {expandedFeatures[apt.id] ? 'Show less' : `+${meta.features.length - 4} more`}
+                                    </button>
                                   )}
                                 </div>
+                                {expandedFeatures[apt.id] && (
+                                  <div className="mt-3 pt-3 border-t border-amber-200">
+                                    <p className="text-xs font-semibold text-amber-700 mb-2">Property: {meta.address || `Property #${apt.id}`}</p>
+                                  </div>
+                                )}
                               </div>
                             )}
 

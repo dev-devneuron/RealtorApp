@@ -52,8 +52,18 @@ const SignIn = () => {
       if (data.property_manager_id) localStorage.setItem("property_manager_id", data.property_manager_id);
       if (data.user_type) localStorage.setItem("user_type", data.user_type);
       // Store user name and gender for personalized welcome message
-      if (data.user?.name) localStorage.setItem("user_name", data.user.name);
+      if (data.user?.name) {
+        console.log("Storing user name from login:", data.user.name);
+        localStorage.setItem("user_name", data.user.name);
+      } else if (data.name) {
+        console.log("Storing user name from data.name:", data.name);
+        localStorage.setItem("user_name", data.name);
+      }
       if (data.user?.gender) localStorage.setItem("user_gender", data.user.gender);
+      // Also store email if available for fallback
+      if (data.user?.email || data.email) {
+        localStorage.setItem("user_email", data.user?.email || data.email);
+      }
 
       const userDisplayName = userType === "property_manager" 
         ? `Property Manager: ${data.user?.name || "Unknown"}`

@@ -96,42 +96,84 @@ const Dashboard = () => {
       const storedUserName = localStorage.getItem("user_name");
       const storedUserGender = localStorage.getItem("user_gender");
       
-      if (storedUserName) {
+      if (storedUserName && storedUserName.trim() !== "") {
+        console.log("Found user name in localStorage:", storedUserName);
         setUserName(storedUserName);
         if (storedUserGender) {
           setUserGender(storedUserGender);
         }
+        return;
       } else {
-        // If not in localStorage, try to fetch from API
-        try {
-          let endpoint = "";
-          if (storedUserType === "property_manager") {
-            endpoint = `${API_BASE}/property-manager/me`;
-          } else {
-            endpoint = `${API_BASE}/realtor/me`;
-          }
+        console.log("No user name in localStorage, attempting to fetch from API");
+      }
 
-          const res = await fetch(endpoint, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+      // If not in localStorage, try to fetch from API
+      try {
+        // Try different possible endpoints
+        const endpoints = storedUserType === "property_manager" 
+          ? [
+              `${API_BASE}/property-manager/me`,
+              `${API_BASE}/property-manager/profile`,
+              `${API_BASE}/property-manager/info`
+            ]
+          : [
+              `${API_BASE}/realtor/me`,
+              `${API_BASE}/realtor/profile`,
+              `${API_BASE}/realtor/info`
+            ];
 
-          if (res.ok) {
-            const data = await res.json();
-            const name = data.name || data.user?.name || null;
-            const gender = data.gender || data.user?.gender || null;
-            if (name) {
-              setUserName(name);
-              localStorage.setItem("user_name", name);
+        let nameFound = false;
+        for (const endpoint of endpoints) {
+          try {
+            const res = await fetch(endpoint, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              console.log("API response from", endpoint, ":", data);
+              const name = data.name || data.user?.name || data.property_manager?.name || data.realtor?.name || data.email?.split('@')[0] || null;
+              const gender = data.gender || data.user?.gender || data.property_manager?.gender || data.realtor?.gender || null;
+              
+              if (name && name.trim() !== "") {
+                console.log("Setting user name:", name);
+                setUserName(name);
+                localStorage.setItem("user_name", name);
+                nameFound = true;
+                
+                if (gender) {
+                  setUserGender(gender);
+                  localStorage.setItem("user_gender", gender);
+                }
+                break;
+              } else {
+                console.log("No valid name found in response");
+              }
             }
-            if (gender) {
-              setUserGender(gender);
-              localStorage.setItem("user_gender", gender);
-            }
+          } catch (endpointErr) {
+            // Try next endpoint
+            continue;
           }
-        } catch (err) {
-          console.error("Could not fetch user info:", err);
-          // If API fails, check if we can get from email or use a default
         }
+
+        // If still no name found, try alternative methods
+        if (!nameFound) {
+          console.log("Could not find user name in standard endpoints, trying alternative methods");
+          
+          // For property managers, we might need to get it from a different endpoint
+          // Or check if we can get email and extract username from it
+          const storedEmail = localStorage.getItem("user_email");
+          if (storedEmail && storedEmail.includes('@')) {
+            const emailName = storedEmail.split('@')[0];
+            // Capitalize first letter
+            const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+            console.log("Using email-derived name:", formattedName);
+            setUserName(formattedName);
+            localStorage.setItem("user_name", formattedName);
+          }
+        }
+      } catch (err) {
+        console.error("Could not fetch user info:", err);
       }
     } catch (err) {
       console.error("Error fetching user info:", err);
@@ -834,8 +876,8 @@ const Dashboard = () => {
                 >
                   {userType === "property_manager" ? "Property Manager" : "My"} Dashboard
                 </motion.h1>
-                <motion.p 
-                  className="text-amber-600/80 text-sm"
+                <motion.div 
+                  className="mt-2"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
@@ -844,15 +886,33 @@ const Dashboard = () => {
                     ? (() => {
                         // Extract first name only
                         const firstName = userName.split(' ')[0];
-                        return `Welcome back ${firstName}! ${userType === "property_manager" 
-                          ? "Manage your properties and team from here."
-                          : "View your assigned properties and bookings."}`;
+                        return (
+                          <>
+                            <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
+                              Welcome back <span className="text-amber-800">{firstName}</span>!
+                            </p>
+                            <p className="text-amber-600/80 text-sm">
+                              {userType === "property_manager" 
+                                ? "Manage your properties and team from here."
+                                : "View your assigned properties and bookings."}
+                            </p>
+                          </>
+                        );
                       })()
-                    : (userType === "property_manager" 
-                      ? "Welcome back! Manage your properties and team from here."
-                      : "Welcome back! View your assigned properties and bookings.")
+                    : (
+                      <>
+                        <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
+                          Welcome back!
+                        </p>
+                        <p className="text-amber-600/80 text-sm">
+                          {userType === "property_manager" 
+                            ? "Manage your properties and team from here."
+                            : "View your assigned properties and bookings."}
+                        </p>
+                      </>
+                    )
                   }
-                </motion.p>
+                </motion.div>
               </div>
             </div>
             

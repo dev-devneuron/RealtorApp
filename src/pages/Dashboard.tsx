@@ -915,46 +915,70 @@ const Dashboard = () => {
                     const nameToUse = userName || storedName || "User";
                     const displayName = nameToUse.trim() !== "" && nameToUse !== "User" ? nameToUse : "User";
                     
-                    // Extract first name only - handle names with no spaces (like "Johnsmith" or "Sarahjohnson")
-                    let firstName = displayName.split(' ')[0].trim();
-                    
-                    // If name has no space, try to intelligently extract first name
-                    if (!firstName.includes(' ')) {
-                      // Pattern 1: CamelCase names like "JohnSmith" or "SarahJohnson"
-                      const camelCaseMatch = firstName.match(/^([A-Z][a-z]{2,6})(?=[A-Z]|$)/);
-                      if (camelCaseMatch && camelCaseMatch[1]) {
-                        firstName = camelCaseMatch[1];
-                      } 
-                      // Pattern 2: All lowercase combined names like "johnsmith" or "sarahjohnson"
-                      else if (firstName.toLowerCase() === firstName && firstName.length > 6) {
-                        // Common first names are typically 3-7 characters
-                        // For "johnsmith" (9 chars) -> "John" (4 chars)
-                        // For "sarahjohnson" (13 chars) -> "Sarah" (5 chars)
-                        // Smart extraction: take 4-6 chars for longer names
-                        if (firstName.length >= 10) {
-                          firstName = firstName.substring(0, 5); // "sarahjohnson" -> "sarah"
-                        } else if (firstName.length >= 7) {
-                          firstName = firstName.substring(0, 4); // "johnsmith" -> "john"
-                        } else {
-                          firstName = firstName.substring(0, Math.min(6, firstName.length));
+                    // Function to detect if we have first and last name
+                    const detectFirstName = (fullName: string): string => {
+                      // Strategy 1: Check if name has space (clear first/last separation)
+                      const nameParts = fullName.trim().split(/\s+/);
+                      if (nameParts.length > 1) {
+                        // Has multiple parts - return first part as first name
+                        return nameParts[0];
+                      }
+                      
+                      // Strategy 2: Check for CamelCase (e.g., "JohnSmith", "SarahJohnson")
+                      // Look for capital letter in the middle of the word
+                      const camelCaseMatch = fullName.match(/^([A-Z][a-z]+)([A-Z][a-z]+)/);
+                      if (camelCaseMatch && camelCaseMatch[1] && camelCaseMatch[2]) {
+                        // Found clear CamelCase pattern - first part is likely first name
+                        return camelCaseMatch[1];
+                      }
+                      
+                      // Strategy 3: Try to detect common first names in combined lowercase names
+                      // Only if we're confident it's a first name
+                      const lowerName = fullName.toLowerCase();
+                      
+                      // Common first names that are commonly followed by last names
+                      const commonFirstNames = [
+                        'john', 'jane', 'mike', 'sarah', 'bob', 'tom', 'ann', 'dan', 'sam', 'ben',
+                        'andrew', 'christian', 'alex', 'david', 'james', 'robert', 'william', 'michael',
+                        'chris', 'jennifer', 'jessica', 'emily', 'emma', 'olivia', 'sophia', 'isabella',
+                        'matthew', 'daniel', 'joshua', 'ryan', 'tyler', 'ethan', 'noah', 'mason',
+                        'alexander', 'nicholas', 'christopher', 'joseph', 'anthony', 'mark', 'paul',
+                        'steven', 'kevin', 'brian', 'edward', 'donald', 'richard', 'charles', 'kenneth'
+                      ];
+                      
+                      // Check if beginning matches a common first name (only if name is longer than the first name)
+                      for (const firstName of commonFirstNames) {
+                        if (lowerName.startsWith(firstName) && lowerName.length > firstName.length + 2) {
+                          // Found a match and there's enough remaining chars for a last name
+                          return fullName.substring(0, firstName.length);
                         }
                       }
-                      // Pattern 3: Very long single-word names - cap at reasonable length
-                      else if (firstName.length > 8) {
-                        firstName = firstName.substring(0, 6);
-                      }
-                    }
+                      
+                      // Strategy 4: If we can't confidently detect first/last, return full name
+                      return fullName;
+                    };
+                    
+                    // Detect first name or use full name if can't detect separation
+                    let displayNameFinal = detectFirstName(displayName);
                     
                     // Ensure proper capitalization: first letter uppercase, rest lowercase
-                    if (firstName.length > 0) {
-                      firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                    if (displayNameFinal.length > 0) {
+                      // Capitalize first letter of each word if it has spaces
+                      if (displayNameFinal.includes(' ')) {
+                        displayNameFinal = displayNameFinal
+                          .split(' ')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                          .join(' ');
+                      } else {
+                        displayNameFinal = displayNameFinal.charAt(0).toUpperCase() + displayNameFinal.slice(1).toLowerCase();
+                      }
                     }
                     
                     // Always show the name - it will be at least "User" if nothing else
                     return (
                       <>
                         <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                          Welcome back <span className="text-amber-600">{firstName}</span>!
+                          Welcome back <span className="text-amber-600">{displayNameFinal}</span>!
                         </p>
                         <p className="text-amber-600/80 text-sm">
                           {userType === "property_manager" 

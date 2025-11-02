@@ -41,7 +41,8 @@ const SignIn = () => {
         throw new Error(data.detail || data.message || "Login failed");
       }
       
-      console.log("data fetched:", data);
+      console.log("Full login response data:", JSON.stringify(data, null, 2));
+      console.log("data.user:", data.user);
       console.log("url fetched:", data.auth_link);
       
       // Store authentication data
@@ -51,18 +52,47 @@ const SignIn = () => {
       if (data.realtor_id) localStorage.setItem("realtor_id", data.realtor_id);
       if (data.property_manager_id) localStorage.setItem("property_manager_id", data.property_manager_id);
       if (data.user_type) localStorage.setItem("user_type", data.user_type);
+      
       // Store user name and gender for personalized welcome message
+      // Check multiple possible locations for the name
+      let userNameToStore = null;
       if (data.user?.name) {
-        console.log("Storing user name from login:", data.user.name);
-        localStorage.setItem("user_name", data.user.name);
+        userNameToStore = data.user.name;
+        console.log("Found user name in data.user.name:", userNameToStore);
       } else if (data.name) {
-        console.log("Storing user name from data.name:", data.name);
-        localStorage.setItem("user_name", data.name);
+        userNameToStore = data.name;
+        console.log("Found user name in data.name:", userNameToStore);
+      } else if (data.user?.email) {
+        // Extract name from email as fallback
+        const emailParts = data.user.email.split('@');
+        userNameToStore = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1);
+        console.log("Extracting user name from email:", userNameToStore);
+      } else if (data.email) {
+        const emailParts = data.email.split('@');
+        userNameToStore = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1);
+        console.log("Extracting user name from data.email:", userNameToStore);
       }
+      
+      if (userNameToStore) {
+        console.log("Storing user name:", userNameToStore);
+        localStorage.setItem("user_name", userNameToStore);
+      } else {
+        console.warn("Could not find user name in login response. Available keys:", Object.keys(data));
+        // Use the email that was entered as a last resort
+        if (email && email.includes('@')) {
+          const emailName = email.split('@')[0];
+          const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+          console.log("Using login email as fallback name:", formattedName);
+          localStorage.setItem("user_name", formattedName);
+        }
+      }
+      
       if (data.user?.gender) localStorage.setItem("user_gender", data.user.gender);
       // Also store email if available for fallback
       if (data.user?.email || data.email) {
         localStorage.setItem("user_email", data.user?.email || data.email);
+      } else if (email) {
+        localStorage.setItem("user_email", email);
       }
 
       const userDisplayName = userType === "property_manager" 

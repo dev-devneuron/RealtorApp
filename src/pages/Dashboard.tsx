@@ -186,6 +186,13 @@ const Dashboard = () => {
     const storedUserType = localStorage.getItem("user_type");
     setUserType(storedUserType);
 
+    // Check localStorage first and set immediately for faster display
+    const storedUserName = localStorage.getItem("user_name");
+    if (storedUserName && storedUserName.trim() !== "") {
+      console.log("Setting userName from localStorage immediately:", storedUserName);
+      setUserName(storedUserName);
+    }
+
     const title = storedUserType === "property_manager" ? "Property Manager Dashboard | Leasap" : "Dashboard | Leasap";
     const description = storedUserType === "property_manager" 
       ? "Property manager dashboard to manage realtors and properties."
@@ -868,14 +875,16 @@ const Dashboard = () => {
                 <Home className="h-6 w-6 text-white" />
               </motion.div>
               <div>
-                <motion.h1 
-                  className="text-2xl sm:text-3xl font-bold bg-gradient-to-br from-amber-600 to-amber-800 bg-clip-text text-transparent"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                >
-                  {userType === "property_manager" ? "Property Manager" : "My"} Dashboard
-                </motion.h1>
+                {userType === "property_manager" && (
+                  <motion.h1 
+                    className="text-2xl sm:text-3xl font-bold bg-gradient-to-br from-amber-600 to-amber-800 bg-clip-text text-transparent"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                  >
+                    Property Manager Dashboard
+                  </motion.h1>
+                )}
                 <motion.div 
                   className="mt-2"
                   initial={{ opacity: 0 }}

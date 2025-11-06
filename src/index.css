@@ -182,4 +182,31 @@ All colors MUST be HSL.
     0%, 100% { box-shadow: 0 0 20px hsl(var(--gold) / 0.2); }
     50% { box-shadow: 0 0 40px hsl(var(--gold) / 0.4); }
   }
+
+  /* Custom scrollbar for filter dropdown */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(45 85% 55% / 0.5) hsl(45 85% 55% / 0.1);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(45 85% 55% / 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(45 85% 55% / 0.5);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(45 85% 55% / 0.7);
+    background-clip: padding-box;
+  }
 }

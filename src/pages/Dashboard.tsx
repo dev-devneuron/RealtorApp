@@ -2530,78 +2530,83 @@ const Dashboard = () => {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent 
                                 align="end" 
-                                className="w-80 bg-white border border-amber-200 shadow-2xl rounded-2xl p-4 max-h-[500px] overflow-y-auto"
+                                className="w-80 bg-white border border-amber-200 shadow-2xl rounded-2xl p-0 overflow-hidden"
                               >
-                                <DropdownMenuLabel className="text-gray-900 font-bold text-lg mb-3 px-2">
-                                  Filter Assignments
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-amber-200 my-3" />
-                                
-                                {/* Select All / Deselect All */}
-                                <div className="flex gap-2 mb-3 px-2">
-                                  <Button
-                                    onClick={handleSelectAllRealtors}
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300 font-medium rounded-xl"
-                                  >
-                                    Select All
-                                  </Button>
-                                  <Button
-                                    onClick={handleDeselectAllRealtors}
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300 font-medium rounded-xl"
-                                  >
-                                    Clear All
-                                  </Button>
+                                {/* Fixed Header */}
+                                <div className="sticky top-0 bg-white z-10 p-4 pb-3 border-b border-amber-200">
+                                  <DropdownMenuLabel className="text-gray-900 font-bold text-lg mb-0 px-0">
+                                    Filter Assignments
+                                  </DropdownMenuLabel>
                                 </div>
                                 
-                                <DropdownMenuSeparator className="bg-amber-200 my-3" />
-                                
-                                {/* Unassigned Properties Option */}
-                                <DropdownMenuCheckboxItem
-                                  checked={selectedRealtorFilters.has('unassigned')}
-                                  onCheckedChange={() => handleRealtorFilterToggle('unassigned')}
-                                  className="px-3 py-3 rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-2"
-                                >
-                                  <div className="flex items-center gap-3 w-full">
-                                    <div className="p-2 bg-amber-100 rounded-lg">
-                                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="font-semibold text-gray-900">Unassigned Properties</p>
-                                      <p className="text-xs text-gray-500">
-                                        {assignmentsData.unassigned_properties?.length || 0} properties
-                                      </p>
-                                    </div>
+                                {/* Scrollable Content */}
+                                <div className="max-h-[400px] overflow-y-auto overflow-x-hidden px-4 py-2 custom-scrollbar">
+                                  {/* Select All / Deselect All */}
+                                  <div className="flex gap-2 mb-3">
+                                    <Button
+                                      onClick={handleSelectAllRealtors}
+                                      variant="outline"
+                                      size="sm"
+                                      className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300 font-medium rounded-xl text-xs py-2"
+                                    >
+                                      Select All
+                                    </Button>
+                                    <Button
+                                      onClick={handleDeselectAllRealtors}
+                                      variant="outline"
+                                      size="sm"
+                                      className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300 font-medium rounded-xl text-xs py-2"
+                                    >
+                                      Clear All
+                                    </Button>
                                   </div>
-                                </DropdownMenuCheckboxItem>
-                                
-                                <DropdownMenuSeparator className="bg-amber-200 my-3" />
-                                
-                                {/* Realtor Options */}
-                                {Object.values(assignmentsData.assigned_properties).map((realtorGroup: any) => (
+                                  
+                                  <DropdownMenuSeparator className="bg-amber-200 my-2" />
+                                  
+                                  {/* Unassigned Properties Option */}
                                   <DropdownMenuCheckboxItem
-                                    key={realtorGroup.realtor_id}
-                                    checked={selectedRealtorFilters.has(realtorGroup.realtor_id)}
-                                    onCheckedChange={() => handleRealtorFilterToggle(realtorGroup.realtor_id)}
-                                    className="px-3 py-3 rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-2"
+                                    checked={selectedRealtorFilters.has('unassigned')}
+                                    onCheckedChange={() => handleRealtorFilterToggle('unassigned')}
+                                    className="px-2 py-2 rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-1.5"
                                   >
-                                    <div className="flex items-center gap-3 w-full">
-                                      <div className="p-2 bg-amber-100 rounded-lg">
-                                        <User className="h-4 w-4 text-amber-600" />
+                                    <div className="flex items-center gap-2.5 w-full">
+                                      <div className="p-1.5 bg-amber-100 rounded-lg flex-shrink-0">
+                                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-gray-900 truncate">{realtorGroup.realtor_name}</p>
-                                        <p className="text-xs text-gray-500 truncate">{realtorGroup.realtor_email}</p>
-                                        <p className="text-xs font-medium text-amber-600 mt-1">
-                                          {realtorGroup.count} {realtorGroup.count === 1 ? 'property' : 'properties'}
+                                        <p className="font-semibold text-gray-900 text-sm truncate">Unassigned Properties</p>
+                                        <p className="text-xs text-gray-500">
+                                          {assignmentsData.unassigned_properties?.length || 0} properties
                                         </p>
                                       </div>
                                     </div>
                                   </DropdownMenuCheckboxItem>
-                                ))}
+                                  
+                                  <DropdownMenuSeparator className="bg-amber-200 my-2" />
+                                  
+                                  {/* Realtor Options */}
+                                  {Object.values(assignmentsData.assigned_properties || {}).map((realtorGroup: any) => (
+                                    <DropdownMenuCheckboxItem
+                                      key={realtorGroup.realtor_id}
+                                      checked={selectedRealtorFilters.has(realtorGroup.realtor_id)}
+                                      onCheckedChange={() => handleRealtorFilterToggle(realtorGroup.realtor_id)}
+                                      className="px-2 py-2 rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-1.5"
+                                    >
+                                      <div className="flex items-center gap-2.5 w-full">
+                                        <div className="p-1.5 bg-amber-100 rounded-lg flex-shrink-0">
+                                          <User className="h-3.5 w-3.5 text-amber-600" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-semibold text-gray-900 text-sm truncate">{realtorGroup.realtor_name}</p>
+                                          <p className="text-xs text-gray-500 truncate">{realtorGroup.realtor_email}</p>
+                                          <p className="text-xs font-medium text-amber-600 mt-0.5">
+                                            {realtorGroup.count} {realtorGroup.count === 1 ? 'property' : 'properties'}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </DropdownMenuCheckboxItem>
+                                  ))}
+                                </div>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
@@ -3225,13 +3230,13 @@ const Dashboard = () => {
 
       {/* Property Detail Modal */}
       <Dialog open={showPropertyDetailModal} onOpenChange={setShowPropertyDetailModal}>
-        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-6xl max-h-[95vh] overflow-y-auto p-0">
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-6xl max-h-[95vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
           {selectedPropertyForDetail && (() => {
             const meta = getPropertyMetadata(selectedPropertyForDetail);
             return (
-              <div className="flex flex-col lg:flex-row">
+              <div className="flex flex-col lg:flex-row h-full max-h-[95vh] overflow-hidden">
                 {/* Image Section */}
-                <div className="w-full lg:w-1/2 bg-gray-100 rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none overflow-hidden order-2 lg:order-1">
+                <div className="w-full lg:w-1/2 bg-gray-100 rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none overflow-hidden order-2 lg:order-1 flex-shrink-0">
                   <div className="relative aspect-[4/3] lg:h-full lg:min-h-[600px] max-h-[400px] lg:max-h-none">
                     <img
                       src={meta.image_url || "/images/properties/default.jpg"}
@@ -3257,7 +3262,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Details Section */}
-                <div className="w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 overflow-y-auto max-h-[95vh] order-1 lg:order-2">
+                <div className="w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 overflow-y-auto overflow-x-hidden order-1 lg:order-2 flex-1 min-h-0">
                   {/* Header */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-gray-200">
                     <div className="flex-1 min-w-0">

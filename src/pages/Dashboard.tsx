@@ -6,10 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
@@ -68,17 +71,33 @@ const Dashboard = () => {
   const [loadingRealtors, setLoadingRealtors] = useState(false);
   const [showAddRealtor, setShowAddRealtor] = useState(false);
   const [newRealtor, setNewRealtor] = useState({ name: "", email: "", password: "" });
+  const [showEditRealtor, setShowEditRealtor] = useState(false);
+  const [editingRealtor, setEditingRealtor] = useState<any>(null);
+  const [editRealtorForm, setEditRealtorForm] = useState({ name: "", email: "", password: "", contact: "" });
+  const [updatingRealtor, setUpdatingRealtor] = useState(false);
   // Property assignment state
   const [availablePropertiesForAssignment, setAvailablePropertiesForAssignment] = useState<any[]>([]);
   const [loadingAssignmentProperties, setLoadingAssignmentProperties] = useState(false);
   const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
   const [selectedRealtor, setSelectedRealtor] = useState<number | null>(null);
   const [assigningProperties, setAssigningProperties] = useState(false);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [pageJumpValue, setPageJumpValue] = useState("");
   // Assignments view state
   const [assignmentsData, setAssignmentsData] = useState<any>(null);
   const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [selectedRealtorFilters, setSelectedRealtorFilters] = useState<Set<number | string>>(new Set());
   // Expanded features state for property listings
   const [expandedFeatures, setExpandedFeatures] = useState<{ [key: number]: boolean }>({});
+  // Property detail modal state
+  const [selectedPropertyForDetail, setSelectedPropertyForDetail] = useState<any>(null);
+  const [showPropertyDetailModal, setShowPropertyDetailModal] = useState(false);
+  const [showPropertyUpdateModal, setShowPropertyUpdateModal] = useState(false);
+  const [updatingProperty, setUpdatingProperty] = useState(false);
+  const [deletingProperty, setDeletingProperty] = useState(false);
+  const [propertyUpdateForm, setPropertyUpdateForm] = useState<any>({});
   // User information state
   const [userName, setUserName] = useState<string | null>(null);
   const [userGender, setUserGender] = useState<string | null>(null);
@@ -447,6 +466,79 @@ const Dashboard = () => {
     }
   };
 
+  const handleEditRealtor = (realtor: any) => {
+    setEditingRealtor(realtor);
+    setEditRealtorForm({
+      name: realtor.name || "",
+      email: realtor.email || "",
+      password: "",
+      contact: realtor.contact || "",
+    });
+    setShowEditRealtor(true);
+  };
+
+  const updateRealtor = async () => {
+    if (!editingRealtor) return;
+
+    setUpdatingRealtor(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      // Build update payload - only include fields that have values
+      const updatePayload: any = {};
+      if (editRealtorForm.name && editRealtorForm.name !== editingRealtor.name) {
+        updatePayload.name = editRealtorForm.name;
+      }
+      if (editRealtorForm.email && editRealtorForm.email !== editingRealtor.email) {
+        updatePayload.email = editRealtorForm.email;
+      }
+      if (editRealtorForm.contact && editRealtorForm.contact !== editingRealtor.contact) {
+        updatePayload.contact = editRealtorForm.contact;
+      }
+      if (editRealtorForm.password && editRealtorForm.password.trim() !== "") {
+        updatePayload.password = editRealtorForm.password;
+      }
+
+      // Don't send request if nothing changed
+      if (Object.keys(updatePayload).length === 0) {
+        toast.info("No changes to save");
+        setShowEditRealtor(false);
+        setUpdatingRealtor(false);
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/property-manager/realtors/${editingRealtor.id}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || "Failed to update realtor");
+      }
+
+      const data = await res.json();
+      toast.success("Realtor updated successfully!");
+      setShowEditRealtor(false);
+      setEditingRealtor(null);
+      setEditRealtorForm({ name: "", email: "", password: "", contact: "" });
+      fetchRealtors();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not update realtor");
+    } finally {
+      setUpdatingRealtor(false);
+    }
+  };
+
   const fetchPropertiesForAssignment = async () => {
     try {
       setLoadingAssignmentProperties(true);
@@ -536,7 +628,35 @@ const Dashboard = () => {
     );
   };
 
+  // Pagination calculations
+  const totalPages = Math.ceil(availablePropertiesForAssignment.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProperties = useMemo(() => {
+    return availablePropertiesForAssignment.slice(startIndex, endIndex);
+  }, [availablePropertiesForAssignment, startIndex, endIndex]);
+
+  // Reset to page 1 when items per page changes or properties change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage, availablePropertiesForAssignment.length]);
+
   const handleSelectAll = () => {
+    // Select all properties on current page
+    const currentPageIds = paginatedProperties.map((p: any) => p.id);
+    const allCurrentPageSelected = currentPageIds.every(id => selectedProperties.includes(id));
+    
+    if (allCurrentPageSelected) {
+      // Deselect all on current page
+      setSelectedProperties(prev => prev.filter(id => !currentPageIds.includes(id)));
+    } else {
+      // Select all on current page
+      setSelectedProperties(prev => [...new Set([...prev, ...currentPageIds])]);
+    }
+  };
+
+  const handleSelectAllProperties = () => {
+    // Select all properties across all pages
     if (selectedProperties.length === availablePropertiesForAssignment.length) {
       setSelectedProperties([]);
     } else {
@@ -561,6 +681,51 @@ const Dashboard = () => {
     });
   };
 
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      setPageJumpValue("");
+      // Scroll to top of properties section
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 7;
+    
+    if (totalPages <= maxVisible) {
+      // Show all pages
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first page
+      pages.push(1);
+      
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+      
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+      
+      // Show last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+
   const fetchAssignments = async () => {
     try {
       setLoadingAssignments(true);
@@ -578,12 +743,61 @@ const Dashboard = () => {
 
       const data = await res.json();
       setAssignmentsData(data);
+      
+      // Initialize filters to show all realtors and unassigned by default
+      if (data && data.assigned_properties) {
+        const allRealtorIds = Object.keys(data.assigned_properties).map(id => Number(id));
+        const initialFilters = new Set([...allRealtorIds, 'unassigned']);
+        setSelectedRealtorFilters(initialFilters);
+      } else {
+        setSelectedRealtorFilters(new Set(['unassigned']));
+      }
     } catch (err) {
       console.error(err);
       toast.error("Could not load assignments");
     } finally {
       setLoadingAssignments(false);
     }
+  };
+
+  const handleRealtorFilterToggle = (realtorId: number | string) => {
+    setSelectedRealtorFilters(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(realtorId)) {
+        newSet.delete(realtorId);
+      } else {
+        newSet.add(realtorId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAllRealtors = () => {
+    if (!assignmentsData) return;
+    
+    const allRealtorIds = assignmentsData.assigned_properties 
+      ? Object.keys(assignmentsData.assigned_properties).map(id => Number(id))
+      : [];
+    const allFilters = new Set([...allRealtorIds, 'unassigned']);
+    setSelectedRealtorFilters(allFilters);
+  };
+
+  const handleDeselectAllRealtors = () => {
+    setSelectedRealtorFilters(new Set());
+  };
+
+  const getFilteredAssignedProperties = () => {
+    if (!assignmentsData || !assignmentsData.assigned_properties) return {};
+    
+    const filtered: any = {};
+    Object.keys(assignmentsData.assigned_properties).forEach(key => {
+      const realtorId = Number(key);
+      if (selectedRealtorFilters.has(realtorId)) {
+        filtered[key] = assignmentsData.assigned_properties[key];
+      }
+    });
+    
+    return filtered;
   };
 
   const handleUnassignProperties = async (propertyIds: number[]) => {
@@ -718,7 +932,36 @@ const Dashboard = () => {
     }
   };
 
-  const handleRemoveAgent = async (propertyId: number) => {
+  const handleOpenPropertyDetail = (property: any) => {
+    setSelectedPropertyForDetail(property);
+    setShowPropertyDetailModal(true);
+  };
+
+  const handleOpenPropertyUpdate = (property: any) => {
+    const meta = getPropertyMetadata(property);
+    setPropertyUpdateForm({
+      address: meta.address || "",
+      price: meta.price || "",
+      bedrooms: meta.bedrooms || "",
+      bathrooms: meta.bathrooms || "",
+      square_feet: meta.square_feet || "",
+      lot_size_sqft: meta.lot_size_sqft || "",
+      year_built: meta.year_built || "",
+      property_type: meta.property_type || "",
+      listing_status: meta.listing_status || "Available",
+      days_on_market: meta.days_on_market || "",
+      listing_date: meta.listing_date || "",
+      features: meta.features ? meta.features.join(", ") : "",
+      description: meta.description || "",
+      image_url: meta.image_url || "",
+    });
+    setShowPropertyUpdateModal(true);
+  };
+
+  const handleUpdateProperty = async () => {
+    if (!selectedPropertyForDetail) return;
+
+    setUpdatingProperty(true);
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
@@ -726,29 +969,116 @@ const Dashboard = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/properties/${propertyId}/agent`, {
+      // Build update payload
+      const updatePayload: any = {};
+      
+      if (propertyUpdateForm.address) updatePayload.address = propertyUpdateForm.address;
+      if (propertyUpdateForm.price) updatePayload.price = Number(propertyUpdateForm.price);
+      if (propertyUpdateForm.bedrooms) updatePayload.bedrooms = Number(propertyUpdateForm.bedrooms);
+      if (propertyUpdateForm.bathrooms) updatePayload.bathrooms = Number(propertyUpdateForm.bathrooms);
+      if (propertyUpdateForm.square_feet) updatePayload.square_feet = Number(propertyUpdateForm.square_feet);
+      if (propertyUpdateForm.lot_size_sqft) updatePayload.lot_size_sqft = Number(propertyUpdateForm.lot_size_sqft);
+      if (propertyUpdateForm.year_built) updatePayload.year_built = Number(propertyUpdateForm.year_built);
+      if (propertyUpdateForm.property_type) updatePayload.property_type = propertyUpdateForm.property_type;
+      if (propertyUpdateForm.listing_status) updatePayload.listing_status = propertyUpdateForm.listing_status;
+      if (propertyUpdateForm.days_on_market) updatePayload.days_on_market = Number(propertyUpdateForm.days_on_market);
+      if (propertyUpdateForm.listing_date) updatePayload.listing_date = propertyUpdateForm.listing_date;
+      if (propertyUpdateForm.features) {
+        updatePayload.features = propertyUpdateForm.features.split(",").map((f: string) => f.trim()).filter((f: string) => f);
+      }
+      if (propertyUpdateForm.description) updatePayload.description = propertyUpdateForm.description;
+      if (propertyUpdateForm.image_url) updatePayload.image_url = propertyUpdateForm.image_url;
+
+      const res = await fetch(`${API_BASE}/properties/${selectedPropertyForDetail.id}`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify({ agent: null }),
+        body: JSON.stringify(updatePayload),
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || errorData.message || "Failed to remove agent");
+        throw new Error(errorData.detail || errorData.message || "Failed to update property");
       }
 
       const data = await res.json();
-      toast.success(data.message || "Agent removed successfully");
+      toast.success("Property updated successfully!");
+      setShowPropertyUpdateModal(false);
       
       // Refresh data
-      fetchAssignments();
-      fetchApartments();
+      await Promise.all([
+        fetchApartments(),
+        fetchAssignments(),
+        fetchPropertiesForAssignment()
+      ]);
+      
+      // Refresh the selected property by fetching updated data
+      if (selectedPropertyForDetail) {
+        try {
+          const propertyRes = await fetch(`${API_BASE}/apartments`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (propertyRes.ok) {
+            const propertyData = await propertyRes.json();
+            const allProperties = Array.isArray(propertyData) ? propertyData : propertyData.apartments || [];
+            const updatedProperty = allProperties.find((p: any) => p.id === selectedPropertyForDetail.id);
+            if (updatedProperty) {
+              setSelectedPropertyForDetail(updatedProperty);
+              setShowPropertyDetailModal(true);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to refresh property:", err);
+        }
+      }
     } catch (err: any) {
-      console.error("Remove agent failed:", err);
-      toast.error(err.message || "Failed to remove agent");
+      console.error(err);
+      toast.error(err.message || "Could not update property");
+    } finally {
+      setUpdatingProperty(false);
+    }
+  };
+
+  const handleDeleteProperty = async () => {
+    if (!selectedPropertyForDetail) return;
+
+    setDeletingProperty(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/properties/${selectedPropertyForDetail.id}`, {
+        method: "DELETE",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || "Failed to delete property");
+      }
+
+      const data = await res.json();
+      toast.success(data.message || "Property deleted successfully!");
+      setShowPropertyDetailModal(false);
+      setSelectedPropertyForDetail(null);
+      
+      // Refresh data
+      fetchApartments();
+      fetchAssignments();
+      fetchPropertiesForAssignment();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not delete property");
+    } finally {
+      setDeletingProperty(false);
     }
   };
 
@@ -833,6 +1163,25 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSignOut = () => {
+    // Clear all authentication data
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("realtor_id");
+    localStorage.removeItem("property_manager_id");
+    localStorage.removeItem("user_type");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_gender");
+    localStorage.removeItem("auth_link");
+    
+    // Show success message
+    toast.success("Signed out successfully");
+    
+    // Redirect to home page
+    navigate("/");
   };
 
   // Animation variants
@@ -1037,6 +1386,15 @@ const Dashboard = () => {
                     Get Phone Number
                   </>
                 )}
+              </Button>
+              <Button 
+                onClick={handleSignOut}
+                variant="outline"
+                className="bg-white hover:bg-red-50 text-red-600 border-red-300 hover:border-red-400 font-medium transition-all shadow-sm rounded-xl"
+                size="sm"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
               </Button>
             </motion.div>
           </div>
@@ -1309,26 +1667,26 @@ const Dashboard = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="mb-8"
             >
-              <TabsList className="bg-white border border-amber-200 rounded-2xl p-2 shadow-lg inline-flex min-w-full overflow-x-auto overflow-y-hidden">
+              <TabsList className="bg-white border border-amber-200 rounded-2xl p-2 shadow-lg inline-flex w-full overflow-x-auto overflow-y-hidden scrollbar-hide">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
                       value="realtors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                     >
                       <Users className="h-4 w-4 mr-2" />
                       Realtors
                     </TabsTrigger>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                     >
                       <CheckSquare className="h-4 w-4 mr-2" />
                       Assign Properties
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                     >
                       <ListChecks className="h-4 w-4 mr-2" />
                       View Assignments
@@ -1479,7 +1837,7 @@ const Dashboard = () => {
                               <TableRow className="border-b border-amber-200">
                                 <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Name</TableHead>
                                 <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Email</TableHead>
-                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Status</TableHead>
+                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Contact Number</TableHead>
                                 <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -1506,29 +1864,131 @@ const Dashboard = () => {
                                       <span className="truncate">{realtor.email}</span>
                                     </div>
                                   </TableCell>
-                                  <TableCell className="py-5 px-6">
-                                    <Badge
-                                      variant={realtor.status === "active" ? "default" : "secondary"}
-                                      className={
-                                        realtor.status === "active"
-                                          ? "bg-gradient-to-br from-amber-500 to-amber-600 text-white font-semibold px-3 py-1 rounded-lg"
-                                          : "bg-gray-200 text-gray-700 font-semibold px-3 py-1 rounded-lg"
-                                      }
-                                    >
-                                      {realtor.status || "Active"}
-                                    </Badge>
+                                  <TableCell className="text-gray-600 py-5 px-6">
+                                    <div className="flex items-center gap-3">
+                                      <Phone className="h-4 w-4 text-gray-400" />
+                                      <span className="truncate">{realtor.contact || "N/A"}</span>
+                                    </div>
                                   </TableCell>
                                   <TableCell className="py-5 px-6">
                                     <div className="flex gap-2">
                                       <Button 
                                         size="sm" 
                                         variant="outline" 
-                                        onClick={handleSettingsClick}
-                                        className="bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-amber-300 font-medium transition-all rounded-lg"
+                                        onClick={() => handleEditRealtor(realtor)}
+                                        className="bg-white hover:bg-amber-50 text-amber-600 border-amber-300 hover:border-amber-400 font-medium transition-all rounded-lg"
                                       >
-                                        <Settings className="h-4 w-4 mr-2" />
-                                        Settings
+                                        <Edit2 className="h-4 w-4 mr-2" />
+                                        Edit
                                       </Button>
+                                      <Dialog open={showEditRealtor && editingRealtor?.id === realtor.id} onOpenChange={(open) => {
+                                        if (!open) {
+                                          setShowEditRealtor(false);
+                                          setEditingRealtor(null);
+                                          setEditRealtorForm({ name: "", email: "", password: "", contact: "" });
+                                        }
+                                      }}>
+                                        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl max-h-[90vh] overflow-y-auto">
+                                          <DialogHeader className="p-6 pb-4 border-b border-gray-200">
+                                            <DialogTitle className="text-gray-900 font-bold text-2xl flex items-center gap-3">
+                                              <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
+                                                <Edit2 className="h-5 w-5 text-white" />
+                                              </div>
+                                              Edit Realtor: {editingRealtor?.name}
+                                            </DialogTitle>
+                                            <DialogDescription className="text-gray-600 mt-2 text-base">
+                                              Update the realtor's information. Leave password blank if you don't want to change it.
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                          <div className="p-6 space-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                              <div>
+                                                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                                                  Full Name <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                  type="text"
+                                                  value={editRealtorForm.name}
+                                                  onChange={(e) => setEditRealtorForm({...editRealtorForm, name: e.target.value})}
+                                                  className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                                                  placeholder="John Doe"
+                                                  required
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                                                  Email Address <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                  type="email"
+                                                  value={editRealtorForm.email}
+                                                  onChange={(e) => setEditRealtorForm({...editRealtorForm, email: e.target.value})}
+                                                  className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                                                  placeholder="john.doe@company.com"
+                                                  required
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                                                  Contact Number
+                                                </label>
+                                                <input
+                                                  type="tel"
+                                                  value={editRealtorForm.contact}
+                                                  onChange={(e) => setEditRealtorForm({...editRealtorForm, contact: e.target.value})}
+                                                  className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                                                  placeholder="555-0123"
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                                                  New Password
+                                                </label>
+                                                <input
+                                                  type="password"
+                                                  value={editRealtorForm.password}
+                                                  onChange={(e) => setEditRealtorForm({...editRealtorForm, password: e.target.value})}
+                                                  className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                                                  placeholder="Leave blank to keep current password"
+                                                />
+                                                <p className="text-xs text-gray-500 mt-2">Leave blank if you don't want to change the password</p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <DialogFooter className="p-6 pt-0 border-t border-gray-200">
+                                            <Button 
+                                              onClick={() => {
+                                                setShowEditRealtor(false);
+                                                setEditingRealtor(null);
+                                                setEditRealtorForm({ name: "", email: "", password: "", contact: "" });
+                                              }}
+                                              variant="outline"
+                                              className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3"
+                                              disabled={updatingRealtor}
+                                            >
+                                              <X className="h-4 w-4 mr-2" />
+                                              Cancel
+                                            </Button>
+                                            <Button 
+                                              onClick={updateRealtor}
+                                              disabled={updatingRealtor || !editRealtorForm.name || !editRealtorForm.email}
+                                              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl px-6 py-3"
+                                            >
+                                              {updatingRealtor ? (
+                                                <>
+                                                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                                  Updating...
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                                  Update Realtor
+                                                </>
+                                              )}
+                                            </Button>
+                                          </DialogFooter>
+                                        </DialogContent>
+                                      </Dialog>
                                       <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                           <Button 
@@ -1642,15 +2102,37 @@ const Dashboard = () => {
                                 Properties you own that haven't been assigned to realtors yet
                               </p>
                             </div>
-                            <div className="flex gap-3 flex-wrap">
+                            <div className="flex gap-3 flex-wrap items-center">
                               <Button 
                                 onClick={handleSelectAll}
                                 variant="outline"
                                 size="lg"
                                 className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-amber-300 font-medium transition-all rounded-xl"
                               >
-                                {selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All'}
+                                {paginatedProperties.every((p: any) => selectedProperties.includes(p.id)) ? 'Deselect Page' : 'Select Page'}
                               </Button>
+                              <Button 
+                                onClick={handleSelectAllProperties}
+                                variant="outline"
+                                size="lg"
+                                className="bg-white hover:bg-amber-50 text-amber-700 border-amber-300 hover:border-amber-400 font-medium transition-all rounded-xl"
+                              >
+                                {selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All Properties'}
+                              </Button>
+                              <div className="flex items-center gap-2 ml-auto">
+                                <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Items per page:</label>
+                                <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
+                                  <SelectTrigger className="w-24 bg-white border-gray-300 rounded-xl">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="12">12</SelectItem>
+                                    <SelectItem value="24">24</SelectItem>
+                                    <SelectItem value="48">48</SelectItem>
+                                    <SelectItem value="96">96</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
                           </div>
                           
@@ -1701,8 +2183,9 @@ const Dashboard = () => {
                             </p>
                           </div>
                         ) : (
+                          <>
                           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {availablePropertiesForAssignment.map((property, idx) => {
+                            {paginatedProperties.map((property, idx) => {
                               const meta = getPropertyMetadata(property);
                               return (
                                 <motion.div
@@ -1713,53 +2196,42 @@ const Dashboard = () => {
                                   whileHover={{ y: -8 }}
                                 >
                                   <Card 
-                                    className={`cursor-pointer transition-all duration-300 rounded-2xl bg-white border-2 overflow-hidden ${
+                                    className={`transition-all duration-300 rounded-2xl bg-white border-2 overflow-hidden ${
                                       selectedProperties.includes(property.id) 
-                                        ? 'border-amber-500 bg-amber-50 shadow-xl scale-105' 
+                                        ? 'border-amber-500 bg-amber-50 shadow-xl' 
                                         : 'border-gray-200 hover:border-amber-300 hover:shadow-lg'
                                     }`}
-                                    onClick={() => handlePropertyToggle(property.id)}
                                   >
-                                    <div className="flex items-start p-5 gap-4">
-                                      <div className="flex-shrink-0 mt-1">
+                                    <div className="flex items-start p-4 sm:p-5 gap-3 sm:gap-4">
+                                      <div className="flex-shrink-0 mt-1" onClick={(e) => e.stopPropagation()}>
                                         <input
                                           type="checkbox"
                                           checked={selectedProperties.includes(property.id)}
                                           onChange={() => handlePropertyToggle(property.id)}
-                                          className="h-6 w-6 cursor-pointer accent-amber-500 rounded-lg border-gray-300"
-                                          onClick={(e) => e.stopPropagation()}
+                                          className="h-5 w-5 sm:h-6 sm:w-6 cursor-pointer accent-amber-500 rounded-lg border-gray-300"
                                         />
                                       </div>
-                                      <div className="flex-1 min-w-0 space-y-4">
+                                      <div 
+                                        className="flex-1 min-w-0 cursor-pointer"
+                                        onClick={() => handleOpenPropertyDetail(property)}
+                                      >
+                                        <div className="space-y-3">
                                         <div>
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <h4 className="font-bold text-lg text-gray-900 truncate mb-2">
+                                            <h4 className="font-bold text-base sm:text-lg text-gray-900 truncate mb-1">
                                                   {meta.address || `Property #${property.id}`}
                                                 </h4>
-                                              </TooltipTrigger>
-                                              <TooltipContent className="max-w-md">
-                                                <p className="font-medium">{meta.address || `Property #${property.id}`}</p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
                                           {meta.listing_id && (
-                                            <div className="flex items-center gap-2 mt-3">
-                                              <Info className="h-4 w-4 text-amber-600" />
-                                              <p className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg border border-amber-200 font-semibold text-sm">MLS: {meta.listing_id}</p>
-                                            </div>
+                                              <p className="text-xs sm:text-sm text-amber-600 font-medium">MLS: {meta.listing_id}</p>
                                           )}
                                         </div>
-                                        <div className="space-y-3">
-                                          <div className="flex items-center justify-between">
-                                            <p className="text-2xl font-bold text-gray-900">
+                                          <div className="flex items-center justify-between flex-wrap gap-2">
+                                            <p className="text-xl sm:text-2xl font-bold text-gray-900">
                                               ${meta.price ? meta.price.toLocaleString() : 'N/A'}
                                             </p>
                                             {meta.listing_status && (
                                               <Badge 
                                                 variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                                                className={`text-sm font-semibold px-3 py-1 rounded-lg ${
+                                                className={`text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-lg ${
                                                   meta.listing_status === 'Available' 
                                                     ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white' 
                                                     : 'bg-gray-200 text-gray-700'
@@ -1769,49 +2241,22 @@ const Dashboard = () => {
                                               </Badge>
                                             )}
                                           </div>
-                                          <div className="flex flex-wrap gap-2 text-sm font-medium">
-                                            <span className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg text-gray-700">
-                                              <Bed className="h-4 w-4 text-amber-600" /> {meta.bedrooms || 0} Beds
+                                          <div className="flex flex-wrap gap-2 text-xs sm:text-sm font-medium">
+                                            <span className="flex items-center gap-1 sm:gap-2 bg-gray-50 border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-gray-700">
+                                              <Bed className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" /> {meta.bedrooms || 0} Beds
                                             </span>
-                                            <span className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg text-gray-700">
-                                              <Bath className="h-4 w-4 text-amber-600" /> {meta.bathrooms || 0} Baths
+                                            <span className="flex items-center gap-1 sm:gap-2 bg-gray-50 border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-gray-700">
+                                              <Bath className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" /> {meta.bathrooms || 0} Baths
                                             </span>
                                             {meta.square_feet && (
-                                              <span className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg text-gray-700">
-                                                <Square className="h-4 w-4 text-amber-600" /> {meta.square_feet} sqft
+                                              <span className="flex items-center gap-1 sm:gap-2 bg-gray-50 border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-gray-700">
+                                                <Square className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" /> {meta.square_feet} sqft
                                               </span>
                                             )}
                                           </div>
-                                          <div className="flex flex-wrap gap-2">
-                                            {meta.property_type && (
-                                              <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-amber-50 text-amber-700">
-                                                {meta.property_type}
-                                              </Badge>
-                                            )}
-                                          </div>
-                                          {meta.features && meta.features.length > 0 && (
-                                            <div className="pt-3 border-t border-gray-200">
-                                              <p className="text-sm font-semibold text-gray-600 mb-2">Key Features:</p>
-                                              <div className="flex flex-wrap gap-2">
-                                                {meta.features.slice(0, 3).map((feature: string, fIdx: number) => (
-                                                  <Badge key={fIdx} variant="outline" className="text-xs bg-amber-50 border-amber-300 text-amber-700 font-medium">
-                                                    {feature}
-                                                  </Badge>
-                                                ))}
-                                                {meta.features.length > 3 && (
-                                                  <span className="text-xs text-gray-500 font-medium">+{meta.features.length - 3} more</span>
-                                                )}
-                                              </div>
-                                            </div>
-                                          )}
-                                          {meta.agent && (
-                                            <div className="pt-3 border-t border-gray-200">
-                                              <p className="text-sm font-semibold text-gray-600 mb-2">Agent:</p>
-                                              <p className="text-sm font-semibold text-gray-900 truncate">
-                                                {meta.agent.name}
-                                              </p>
-                                            </div>
-                                          )}
+                                          <p className="text-xs sm:text-sm text-amber-600 font-medium pt-2 border-t border-gray-200">
+                                            Click to view details →
+                                          </p>
                                         </div>
                                       </div>
                                     </div>
@@ -1820,6 +2265,133 @@ const Dashboard = () => {
                               );
                             })}
                           </div>
+                          
+                          {/* Modern Pagination Component */}
+                          {totalPages > 1 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.4 }}
+                              className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-200 bg-gradient-to-r from-amber-50 to-white p-6 rounded-2xl border border-amber-200"
+                            >
+                              {/* Page Info */}
+                              <div className="flex items-center gap-2 text-gray-700">
+                                <span className="text-sm font-medium">
+                                  Showing <span className="font-bold text-amber-600">{startIndex + 1}</span> to{' '}
+                                  <span className="font-bold text-amber-600">
+                                    {Math.min(endIndex, availablePropertiesForAssignment.length)}
+                                  </span>{' '}
+                                  of <span className="font-bold text-amber-600">{availablePropertiesForAssignment.length}</span> properties
+                                </span>
+                              </div>
+
+                              {/* Pagination Controls */}
+                              <div className="flex items-center gap-2">
+                                {/* First Page Button */}
+                                <Button
+                                  onClick={() => goToPage(1)}
+                                  disabled={currentPage === 1}
+                                  variant="outline"
+                                  size="sm"
+                                  className="bg-white hover:bg-amber-50 text-gray-700 border-gray-300 hover:border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all rounded-xl"
+                                >
+                                  <ChevronsLeft className="h-4 w-4" />
+                                </Button>
+
+                                {/* Previous Page Button */}
+                                <Button
+                                  onClick={() => goToPage(currentPage - 1)}
+                                  disabled={currentPage === 1}
+                                  variant="outline"
+                                  size="sm"
+                                  className="bg-white hover:bg-amber-50 text-gray-700 border-gray-300 hover:border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all rounded-xl"
+                                >
+                                  <ChevronLeft className="h-4 w-4 mr-1" />
+                                  <span className="hidden sm:inline">Prev</span>
+                                </Button>
+
+                                {/* Page Numbers */}
+                                <div className="flex items-center gap-1">
+                                  {getPageNumbers().map((page, idx) => {
+                                    if (page === '...') {
+                                      return (
+                                        <span key={`ellipsis-${idx}`} className="px-2 text-gray-400 font-semibold">
+                                          ...
+                                        </span>
+                                      );
+                                    }
+                                    const pageNum = page as number;
+                                    return (
+                                      <Button
+                                        key={pageNum}
+                                        onClick={() => goToPage(pageNum)}
+                                        variant={currentPage === pageNum ? "default" : "outline"}
+                                        size="sm"
+                                        className={`min-w-[40px] transition-all rounded-xl ${
+                                          currentPage === pageNum
+                                            ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white border-amber-500 shadow-lg scale-105 font-bold'
+                                            : 'bg-white hover:bg-amber-50 text-gray-700 border-gray-300 hover:border-amber-400 font-medium'
+                                        }`}
+                                      >
+                                        {pageNum}
+                                      </Button>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Next Page Button */}
+                                <Button
+                                  onClick={() => goToPage(currentPage + 1)}
+                                  disabled={currentPage === totalPages}
+                                  variant="outline"
+                                  size="sm"
+                                  className="bg-white hover:bg-amber-50 text-gray-700 border-gray-300 hover:border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all rounded-xl"
+                                >
+                                  <span className="hidden sm:inline">Next</span>
+                                  <ChevronRight className="h-4 w-4 ml-1" />
+                                </Button>
+
+                                {/* Last Page Button */}
+                                <Button
+                                  onClick={() => goToPage(totalPages)}
+                                  disabled={currentPage === totalPages}
+                                  variant="outline"
+                                  size="sm"
+                                  className="bg-white hover:bg-amber-50 text-gray-700 border-gray-300 hover:border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all rounded-xl"
+                                >
+                                  <ChevronsRight className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              {/* Page Jump (Optional - for larger datasets) */}
+                              {totalPages > 10 && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-600 font-medium">Go to:</span>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={totalPages}
+                                    value={pageJumpValue || currentPage}
+                                    onChange={(e) => setPageJumpValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        const page = parseInt(pageJumpValue || currentPage.toString());
+                                        if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                                          goToPage(page);
+                                        } else {
+                                          setPageJumpValue("");
+                                        }
+                                      }
+                                    }}
+                                    onBlur={() => setPageJumpValue("")}
+                                    className="w-20 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 text-center font-medium"
+                                    placeholder="Page"
+                                  />
+                          </div>
+                              )}
+                            </motion.div>
+                          )}
+                          </>
                         )}
                       </div>
 
@@ -1892,6 +2464,103 @@ const Dashboard = () => {
                             See which properties are assigned to which realtors, and manage unassigned properties
                           </p>
                         </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          {/* Filter Dropdown */}
+                          {assignmentsData && assignmentsData.assigned_properties && Object.keys(assignmentsData.assigned_properties).length > 0 && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button 
+                                  variant="outline"
+                                  size="lg"
+                                  className="bg-white hover:bg-amber-50 text-amber-700 border-amber-300 hover:border-amber-400 font-medium transition-all rounded-xl"
+                                >
+                                  <Filter className="h-5 w-5 mr-2" />
+                                  Filter by Realtor
+                                  {selectedRealtorFilters.size > 0 && (
+                                    <Badge className="ml-2 bg-gradient-to-br from-amber-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                                      {selectedRealtorFilters.size}
+                                    </Badge>
+                                  )}
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent 
+                                align="end" 
+                                className="w-80 bg-white border border-amber-200 shadow-2xl rounded-2xl p-4 max-h-[500px] overflow-y-auto"
+                              >
+                                <DropdownMenuLabel className="text-gray-900 font-bold text-lg mb-3 px-2">
+                                  Filter Assignments
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-amber-200 my-3" />
+                                
+                                {/* Select All / Deselect All */}
+                                <div className="flex gap-2 mb-3 px-2">
+                                  <Button
+                                    onClick={handleSelectAllRealtors}
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300 font-medium rounded-xl"
+                                  >
+                                    Select All
+                                  </Button>
+                                  <Button
+                                    onClick={handleDeselectAllRealtors}
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300 font-medium rounded-xl"
+                                  >
+                                    Clear All
+                                  </Button>
+                                </div>
+                                
+                                <DropdownMenuSeparator className="bg-amber-200 my-3" />
+                                
+                                {/* Unassigned Properties Option */}
+                                <DropdownMenuCheckboxItem
+                                  checked={selectedRealtorFilters.has('unassigned')}
+                                  onCheckedChange={() => handleRealtorFilterToggle('unassigned')}
+                                  className="px-3 py-3 rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-2"
+                                >
+                                  <div className="flex items-center gap-3 w-full">
+                                    <div className="p-2 bg-amber-100 rounded-lg">
+                                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-semibold text-gray-900">Unassigned Properties</p>
+                                      <p className="text-xs text-gray-500">
+                                        {assignmentsData.unassigned_properties?.length || 0} properties
+                                      </p>
+                                    </div>
+                                  </div>
+                                </DropdownMenuCheckboxItem>
+                                
+                                <DropdownMenuSeparator className="bg-amber-200 my-3" />
+                                
+                                {/* Realtor Options */}
+                                {Object.values(assignmentsData.assigned_properties).map((realtorGroup: any) => (
+                                  <DropdownMenuCheckboxItem
+                                    key={realtorGroup.realtor_id}
+                                    checked={selectedRealtorFilters.has(realtorGroup.realtor_id)}
+                                    onCheckedChange={() => handleRealtorFilterToggle(realtorGroup.realtor_id)}
+                                    className="px-3 py-3 rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-2"
+                                  >
+                                    <div className="flex items-center gap-3 w-full">
+                                      <div className="p-2 bg-amber-100 rounded-lg">
+                                        <User className="h-4 w-4 text-amber-600" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-gray-900 truncate">{realtorGroup.realtor_name}</p>
+                                        <p className="text-xs text-gray-500 truncate">{realtorGroup.realtor_email}</p>
+                                        <p className="text-xs font-medium text-amber-600 mt-1">
+                                          {realtorGroup.count} {realtorGroup.count === 1 ? 'property' : 'properties'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </DropdownMenuCheckboxItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                          
                         <Button 
                           onClick={() => { fetchAssignments(); fetchPropertiesForAssignment(); }}
                           variant="outline"
@@ -1901,6 +2570,7 @@ const Dashboard = () => {
                           <RefreshCw className="h-5 w-5 mr-2" />
                           Refresh Data
                         </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent className="p-8">
@@ -1965,7 +2635,7 @@ const Dashboard = () => {
                           )}
 
                           {/* Unassigned Properties */}
-                          {assignmentsData.unassigned_properties && assignmentsData.unassigned_properties.length > 0 && (
+                          {assignmentsData.unassigned_properties && assignmentsData.unassigned_properties.length > 0 && selectedRealtorFilters.has('unassigned') && (
                             <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
                               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-4 flex-wrap">
                                 <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
@@ -1980,110 +2650,52 @@ const Dashboard = () => {
                                 {assignmentsData.unassigned_properties.map((property: any, idx: number) => {
                                   const meta = getPropertyMetadata(property);
                                   return (
-                                    <Card key={property.id || idx} className="bg-white hover:shadow-lg transition-all duration-300 border border-amber-200 rounded-2xl hover:border-amber-300 overflow-hidden">
-                                      <CardHeader className="pb-4 p-6">
+                                    <Card 
+                                      key={property.id || idx} 
+                                      className="bg-white hover:shadow-lg transition-all duration-300 border border-amber-200 rounded-2xl hover:border-amber-300 overflow-hidden cursor-pointer"
+                                      onClick={() => handleOpenPropertyDetail(property)}
+                                    >
+                                      <CardHeader className="pb-4 p-4 sm:p-6">
                                         <div className="flex items-start justify-between gap-3">
-                                          <CardTitle className="text-lg font-bold text-gray-900">
+                                          <CardTitle className="text-base sm:text-lg font-bold text-gray-900">
                                             {meta.address || `Property #${property.id}`}
                                           </CardTitle>
-                                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 font-semibold">Unassigned</Badge>
+                                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 font-semibold text-xs sm:text-sm">Unassigned</Badge>
                                         </div>
                                         {meta.listing_id && (
-                                          <div className="flex items-center gap-2 mt-3">
-                                            <Info className="h-4 w-4 text-amber-600" />
-                                            <p className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg border border-amber-200 font-semibold text-sm">MLS: {meta.listing_id}</p>
+                                          <div className="flex items-center gap-2 mt-2 sm:mt-3">
+                                            <Info className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+                                            <p className="text-amber-600 bg-amber-50 px-2 sm:px-3 py-1 rounded-lg border border-amber-200 font-semibold text-xs sm:text-sm">MLS: {meta.listing_id}</p>
                                           </div>
                                         )}
                                       </CardHeader>
-                                      <CardContent className="space-y-4 text-sm p-6 pt-0">
-                                        <p className="font-bold text-amber-600 text-xl">
+                                      <CardContent className="space-y-3 sm:space-y-4 text-sm p-4 sm:p-6 pt-0">
+                                        <div className="flex items-center justify-between">
+                                          <p className="font-bold text-amber-600 text-lg sm:text-xl">
                                           ${meta.price ? meta.price.toLocaleString() : 'N/A'}
                                         </p>
-                                        <div className="flex flex-wrap gap-2 font-semibold">
-                                          <span className="border border-amber-300 px-3 py-2 rounded-lg bg-amber-50 text-amber-700"><Bed className="h-4 w-4 inline mr-1" /> {meta.bedrooms || 0}</span>
-                                          <span className="border border-amber-300 px-3 py-2 rounded-lg bg-amber-50 text-amber-700"><Bath className="h-4 w-4 inline mr-1" /> {meta.bathrooms || 0}</span>
-                                          {meta.square_feet && <span className="border border-amber-300 px-3 py-2 rounded-lg bg-amber-50 text-amber-700"><Square className="h-4 w-4 inline mr-1" /> {meta.square_feet} sqft</span>}
-                                        </div>
-                                        {meta.property_type && <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-amber-50 text-amber-700">{meta.property_type}</Badge>}
-                                        
-                                        {/* Status Update */}
-                                        <div className="flex items-center gap-3 pt-4 border-t border-amber-200">
-                                          <span className="text-sm font-semibold text-gray-700">Status:</span>
-                                          <Select 
-                                            value={meta.listing_status || 'Available'} 
-                                            onValueChange={(value) => handleUpdatePropertyStatus(property.id, value)}
-                                          >
-                                            <SelectTrigger className="h-9 text-sm flex-1 bg-white border-amber-300 hover:border-amber-400 focus:ring-amber-500">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white border border-amber-300">
-                                              <SelectItem value="Available" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">Available</SelectItem>
-                                              <SelectItem value="For Sale" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">For Sale</SelectItem>
-                                              <SelectItem value="For Rent" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">For Rent</SelectItem>
-                                              <SelectItem value="Sold" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">Sold</SelectItem>
-                                              <SelectItem value="Rented" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">Rented</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-
-                                        {/* Agent Section with Remove */}
-                                        {meta.agent && (
-                                          <div className="pt-4 border-t border-amber-200 space-y-3 bg-amber-50 rounded-lg p-4 border border-amber-200">
-                                            <div className="flex items-start justify-between mb-2">
-                                              <p className="text-sm font-semibold text-amber-700 uppercase tracking-wider">Agent:</p>
-                                              <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50 border border-red-300 hover:border-red-400 rounded-lg">
-                                                    <X className="h-4 w-4" />
-                                                  </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl">
-                                                  <AlertDialogHeader className="p-6">
-                                                    <AlertDialogTitle className="text-gray-900 font-bold text-2xl">Remove Agent?</AlertDialogTitle>
-                                                    <AlertDialogDescription className="text-gray-600 text-lg">
-                                                      Are you sure you want to remove <span className="font-semibold text-amber-600">{meta.agent.name}</span> from this property? This action cannot be undone.
-                                                    </AlertDialogDescription>
-                                                  </AlertDialogHeader>
-                                                  <AlertDialogFooter className="p-6 pt-0">
-                                                    <AlertDialogCancel className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3">
-                                                      Cancel
-                                                    </AlertDialogCancel>
-                                                    <AlertDialogAction 
-                                                      onClick={() => handleRemoveAgent(property.id)}
-                                                      className="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl px-6 py-3"
-                                                    >
-                                                      Remove Agent
-                                                    </AlertDialogAction>
-                                                  </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                              </AlertDialog>
-                                            </div>
-                                            <div className="space-y-2 text-sm">
-                                              <p className="font-bold text-gray-900">{meta.agent.name}</p>
-                                              {meta.agent.email && (
-                                                <div className="flex items-center gap-2 text-gray-600 font-medium">
-                                                  <Mail className="h-4 w-4 text-amber-600" />
-                                                  <span className="truncate">{meta.agent.email}</span>
+                                          {meta.listing_status && (
+                                            <Badge 
+                                              variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
+                                              className={`text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-lg ${
+                                                meta.listing_status === 'Available' 
+                                                  ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white' 
+                                                  : 'bg-gray-200 text-gray-700'
+                                              }`}
+                                            >
+                                              {meta.listing_status}
+                                            </Badge>
+                                          )}
                                                 </div>
-                                              )}
-                                              {meta.agent.phone && (
-                                                <div className="flex items-center gap-2 text-gray-600 font-medium">
-                                                  <Phone className="h-4 w-4 text-amber-600" />
-                                                  <span>{meta.agent.phone}</span>
-                                                </div>
-                                              )}
+                                        <div className="flex flex-wrap gap-2 font-semibold text-xs sm:text-sm">
+                                          <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700"><Bed className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.bedrooms || 0}</span>
+                                          <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700"><Bath className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.bathrooms || 0}</span>
+                                          {meta.square_feet && <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700"><Square className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.square_feet} sqft</span>}
                                             </div>
-                                          </div>
-                                        )}
-
-                                        {meta.features && meta.features.length > 0 && (
-                                          <div className="flex flex-wrap gap-2 pt-4 border-t border-amber-200">
-                                            {meta.features.slice(0, 2).map((f: string, i: number) => (
-                                              <Badge key={i} variant="outline" className="text-xs font-medium border-amber-300 bg-amber-50 text-amber-700">{f}</Badge>
-                                            ))}
-                                            {meta.features.length > 2 && <span className="text-xs text-gray-500 font-medium">+{meta.features.length - 2}</span>}
-                                          </div>
-                                        )}
+                                        {meta.property_type && <Badge variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-amber-50 text-amber-700">{meta.property_type}</Badge>}
+                                        <p className="text-xs sm:text-sm text-amber-600 font-medium pt-2 border-t border-amber-200">
+                                          Click to view details →
+                                        </p>
                                       </CardContent>
                                     </Card>
                                   );
@@ -2093,15 +2705,24 @@ const Dashboard = () => {
                           )}
 
                           {/* Assigned Properties by Realtor */}
-                          {assignmentsData.assigned_properties && Object.keys(assignmentsData.assigned_properties).length > 0 && (
+                          {useMemo(() => {
+                            const filteredProperties = getFilteredAssignedProperties();
+                            if (Object.keys(filteredProperties).length === 0) return null;
+                            
+                            return (
                             <div className="bg-white rounded-2xl p-6 border border-amber-200">
                               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-4">
                                 <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
                                   <Users className="h-6 w-6 text-white" />
                                 </div>
                                 Assigned Properties by Realtor
+                                  {selectedRealtorFilters.size > 0 && selectedRealtorFilters.size < (assignmentsData?.assigned_properties ? Object.keys(assignmentsData.assigned_properties).length + 1 : 1) && (
+                                    <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-sm font-semibold">
+                                      Filtered ({selectedRealtorFilters.size} {selectedRealtorFilters.size === 1 ? 'filter' : 'filters'})
+                                    </Badge>
+                                  )}
                               </h3>
-                              {Object.values(assignmentsData.assigned_properties).map((realtorGroup: any) => (
+                                {Object.values(filteredProperties).map((realtorGroup: any) => (
                                 <Card key={realtorGroup.realtor_id} className="mb-8 bg-white shadow-lg border border-amber-200 rounded-2xl overflow-hidden">
                                   <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-t-2xl border-b border-amber-200 p-6">
                                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -2127,134 +2748,49 @@ const Dashboard = () => {
                                       {realtorGroup.properties.map((property: any, idx: number) => {
                                         const meta = getPropertyMetadata(property);
                                         return (
-                                          <Card key={property.id || idx} className="bg-white hover:shadow-lg transition-all duration-300 border border-amber-200 rounded-2xl hover:border-amber-300 overflow-hidden">
-                                            <CardHeader className="pb-4 p-6">
-                                              <CardTitle className="text-lg font-bold text-gray-900">
+                                          <Card 
+                                            key={property.id || idx} 
+                                            className="bg-white hover:shadow-lg transition-all duration-300 border border-amber-200 rounded-2xl hover:border-amber-300 overflow-hidden cursor-pointer"
+                                            onClick={() => handleOpenPropertyDetail(property)}
+                                          >
+                                            <CardHeader className="pb-4 p-4 sm:p-6">
+                                              <CardTitle className="text-base sm:text-lg font-bold text-gray-900">
                                                 {meta.address || `Property #${property.id}`}
                                               </CardTitle>
                                               {meta.listing_id && (
-                                                <div className="flex items-center gap-2 mt-3">
-                                                  <Info className="h-4 w-4 text-amber-600" />
-                                                  <p className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg border border-amber-200 font-semibold text-sm">MLS: {meta.listing_id}</p>
+                                                <div className="flex items-center gap-2 mt-2 sm:mt-3">
+                                                  <Info className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+                                                  <p className="text-amber-600 bg-amber-50 px-2 sm:px-3 py-1 rounded-lg border border-amber-200 font-semibold text-xs sm:text-sm">MLS: {meta.listing_id}</p>
                                                 </div>
                                               )}
                                             </CardHeader>
-                                            <CardContent className="space-y-4 text-sm p-6 pt-0">
-                                              <div className="flex items-center justify-between gap-3">
-                                                <p className="font-bold text-amber-600 text-xl">
+                                            <CardContent className="space-y-3 sm:space-y-4 text-sm p-4 sm:p-6 pt-0">
+                                              <div className="flex items-center justify-between">
+                                                <p className="font-bold text-amber-600 text-lg sm:text-xl">
                                                   ${meta.price ? meta.price.toLocaleString() : 'N/A'}
                                                 </p>
-                                                <AlertDialog>
-                                                  <AlertDialogTrigger asChild>
-                                                    <Button variant="ghost" size="sm" className="h-9 px-3 bg-red-50 hover:bg-red-100 text-red-600 border-red-300 hover:border-red-400 font-semibold transition-all rounded-lg">
-                                                      <Trash2 className="h-4 w-4 mr-1" />
-                                                      Unassign
-                                                    </Button>
-                                                  </AlertDialogTrigger>
-                                                  <AlertDialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl">
-                                                    <AlertDialogHeader className="p-6">
-                                                      <AlertDialogTitle className="text-gray-900 font-bold text-2xl">Unassign Property?</AlertDialogTitle>
-                                                      <AlertDialogDescription className="text-gray-600 text-lg">
-                                                        Are you sure you want to unassign this property from <span className="font-semibold text-amber-600">{realtorGroup.realtor_name}</span>? The property will become available for reassignment.
-                                                      </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter className="p-6 pt-0">
-                                                      <AlertDialogCancel className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3">Cancel</AlertDialogCancel>
-                                                      <AlertDialogAction 
-                                                        onClick={() => handleUnassignProperties([property.id])}
-                                                        className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl px-6 py-3"
-                                                      >
-                                                        Unassign Property
-                                                      </AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                  </AlertDialogContent>
-                                                </AlertDialog>
-                                              </div>
-                                              <div className="flex flex-wrap gap-2 font-semibold">
-                                                <span className="border border-amber-300 px-3 py-2 rounded-lg bg-amber-50 text-amber-700"><Bed className="h-4 w-4 inline mr-1" /> {meta.bedrooms || 0}</span>
-                                                <span className="border border-amber-300 px-3 py-2 rounded-lg bg-amber-50 text-amber-700"><Bath className="h-4 w-4 inline mr-1" /> {meta.bathrooms || 0}</span>
-                                                {meta.square_feet && <span className="border border-amber-300 px-3 py-2 rounded-lg bg-amber-50 text-amber-700"><Square className="h-4 w-4 inline mr-1" /> {meta.square_feet} sqft</span>}
-                                              </div>
-                                              {meta.property_type && <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-amber-50 text-amber-700">{meta.property_type}</Badge>}
-                                              
-                                              {/* Status Update */}
-                                              <div className="flex items-center gap-3 pt-4 border-t border-amber-200">
-                                                <span className="text-sm font-semibold text-gray-700">Status:</span>
-                                                <Select 
-                                                  value={meta.listing_status || 'Available'} 
-                                                  onValueChange={(value) => handleUpdatePropertyStatus(property.id, value)}
-                                                >
-                                                  <SelectTrigger className="h-9 text-sm flex-1 bg-white border-amber-300 hover:border-amber-400 focus:ring-amber-500">
-                                                    <SelectValue />
-                                                  </SelectTrigger>
-                                                  <SelectContent className="bg-white border border-amber-300">
-                                                    <SelectItem value="Available" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">Available</SelectItem>
-                                                    <SelectItem value="For Sale" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">For Sale</SelectItem>
-                                                    <SelectItem value="For Rent" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">For Rent</SelectItem>
-                                                    <SelectItem value="Sold" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">Sold</SelectItem>
-                                                    <SelectItem value="Rented" className="text-gray-700 focus:bg-amber-50 focus:text-amber-700">Rented</SelectItem>
-                                                  </SelectContent>
-                                                </Select>
-                                              </div>
-
-                                              {/* Agent Section with Remove */}
-                                              {meta.agent && (
-                                                <div className="pt-4 border-t border-amber-200 space-y-3 bg-amber-50 rounded-lg p-4 border border-amber-200">
-                                                  <div className="flex items-start justify-between mb-2">
-                                                    <p className="text-sm font-semibold text-amber-700 uppercase tracking-wider">Agent:</p>
-                                                    <AlertDialog>
-                                                      <AlertDialogTrigger asChild>
-                                                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50 border border-red-300 hover:border-red-400 rounded-lg">
-                                                          <X className="h-4 w-4" />
-                                                        </Button>
-                                                      </AlertDialogTrigger>
-                                                      <AlertDialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl">
-                                                        <AlertDialogHeader className="p-6">
-                                                          <AlertDialogTitle className="text-gray-900 font-bold text-2xl">Remove Agent?</AlertDialogTitle>
-                                                          <AlertDialogDescription className="text-gray-600 text-lg">
-                                                            Are you sure you want to remove <span className="font-semibold text-amber-600">{meta.agent.name}</span> from this property? This action cannot be undone.
-                                                          </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter className="p-6 pt-0">
-                                                          <AlertDialogCancel className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3">
-                                                            Cancel
-                                                          </AlertDialogCancel>
-                                                          <AlertDialogAction 
-                                                            onClick={() => handleRemoveAgent(property.id)}
-                                                            className="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl px-6 py-3"
-                                                          >
-                                                            Remove Agent
-                                                          </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                      </AlertDialogContent>
-                                                    </AlertDialog>
-                                                  </div>
-                                                  <div className="space-y-2 text-sm">
-                                                    <p className="font-bold text-gray-900">{meta.agent.name}</p>
-                                                    {meta.agent.email && (
-                                                      <div className="flex items-center gap-2 text-gray-600 font-medium">
-                                                        <Mail className="h-4 w-4 text-amber-600" />
-                                                        <span className="truncate">{meta.agent.email}</span>
+                                                {meta.listing_status && (
+                                                  <Badge 
+                                                    variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
+                                                    className={`text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-lg ${
+                                                      meta.listing_status === 'Available' 
+                                                        ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white' 
+                                                        : 'bg-gray-200 text-gray-700'
+                                                    }`}
+                                                  >
+                                                    {meta.listing_status}
+                                                  </Badge>
+                                                )}
                                                       </div>
-                                                    )}
-                                                    {meta.agent.phone && (
-                                                      <div className="flex items-center gap-2 text-gray-600 font-medium">
-                                                        <Phone className="h-4 w-4 text-amber-600" />
-                                                        <span>{meta.agent.phone}</span>
-                                                      </div>
-                                                    )}
+                                              <div className="flex flex-wrap gap-2 font-semibold text-xs sm:text-sm">
+                                                <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700"><Bed className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.bedrooms || 0}</span>
+                                                <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700"><Bath className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.bathrooms || 0}</span>
+                                                {meta.square_feet && <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700"><Square className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.square_feet} sqft</span>}
                                                   </div>
-                                                </div>
-                                              )}
-
-                                              {meta.features && meta.features.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 pt-4 border-t border-amber-200">
-                                                  {meta.features.slice(0, 2).map((f: string, i: number) => (
-                                                    <Badge key={i} variant="outline" className="text-xs font-medium border-amber-300 bg-amber-50 text-amber-700">{f}</Badge>
-                                                  ))}
-                                                  {meta.features.length > 2 && <span className="text-xs text-gray-500 font-medium">+{meta.features.length - 2}</span>}
-                                                </div>
-                                              )}
+                                              {meta.property_type && <Badge variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-amber-50 text-amber-700">{meta.property_type}</Badge>}
+                                              <p className="text-xs sm:text-sm text-amber-600 font-medium pt-2 border-t border-amber-200">
+                                                Click to view details →
+                                              </p>
                                             </CardContent>
                                           </Card>
                                         );
@@ -2264,7 +2800,8 @@ const Dashboard = () => {
                                 </Card>
                               ))}
                             </div>
-                          )}
+                            );
+                          }, [assignmentsData, selectedRealtorFilters])}
                         </div>
                       )}
                     </CardContent>
@@ -2304,7 +2841,10 @@ const Dashboard = () => {
                         }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <Card className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden h-full border border-amber-100 hover:border-amber-200">
+                        <Card 
+                          className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden h-full border border-amber-100 hover:border-amber-200 cursor-pointer"
+                          onClick={() => handleOpenPropertyDetail(apt)}
+                        >
                           <div className="relative aspect-[4/3] overflow-hidden bg-gray-200 rounded-t-2xl">
                             <motion.img
                               src={meta.image_url || "/images/properties/default.jpg"}
@@ -2317,10 +2857,10 @@ const Dashboard = () => {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                             <div className="absolute inset-0 bg-gradient-to-t from-amber-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             {meta.listing_status && (
-                              <div className="absolute top-4 right-4 z-10">
+                              <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10">
                                 <Badge 
                                   variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                                  className={`text-sm font-bold border-2 ${
+                                  className={`text-xs sm:text-sm font-bold border-2 ${
                                     meta.listing_status === 'Available' 
                                       ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white border-amber-400' 
                                       : meta.listing_status === 'Sold' || meta.listing_status === 'Rented'
@@ -2333,169 +2873,71 @@ const Dashboard = () => {
                               </div>
                             )}
                           </div>
-                          <CardHeader className="pb-4 pt-6 px-6">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <CardTitle className="text-gray-900 text-xl font-bold group-hover:text-amber-700 transition-colors line-clamp-1">
-                                    {meta.address || `Property #${apt.id}`}
-                                  </CardTitle>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-md">
-                                  <p className="font-medium">{meta.address || `Property #${apt.id}`}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                          <CardHeader className="pb-4 pt-4 sm:pt-6 px-4 sm:px-6">
+                            <CardTitle className="text-gray-900 text-lg sm:text-xl font-bold group-hover:text-amber-700 transition-colors line-clamp-1">
+                              {meta.address || `Property #${apt.id}`}
+                            </CardTitle>
                             {meta.listing_id && (
-                              <div className="flex items-center gap-2 mt-3">
-                                <Info className="h-4 w-4 text-amber-600" />
-                                <p className="text-amber-600 bg-amber-50 px-3 py-1 rounded-lg border border-amber-200 font-semibold text-sm">MLS: {meta.listing_id}</p>
+                              <div className="flex items-center gap-2 mt-2 sm:mt-3">
+                                <Info className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+                                <p className="text-amber-600 bg-amber-50 px-2 sm:px-3 py-1 rounded-lg border border-amber-200 font-semibold text-xs sm:text-sm">MLS: {meta.listing_id}</p>
                               </div>
                             )}
                           </CardHeader>
-                          <CardContent className="space-y-4 p-6 pt-0">
+                          <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
                             {/* Price */}
-                            <div className="flex items-center justify-between border-b border-amber-200 pb-4">
-                              <div className="text-2xl font-bold text-amber-600">
+                            <div className="flex items-center justify-between border-b border-amber-200 pb-3 sm:pb-4">
+                              <div className="text-xl sm:text-2xl font-bold text-amber-600">
                                 ${meta.price ? meta.price.toLocaleString() : "N/A"}
                               </div>
                             </div>
 
                             {/* Basic Specs */}
-                            <div className="grid grid-cols-3 gap-3 text-sm font-semibold">
-                              <div className="flex items-center gap-2 text-gray-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 hover:border-amber-300 transition-all">
-                                <Bed className="h-4 w-4 text-amber-600" /> <span>{meta.bedrooms || 0}</span>
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm font-semibold">
+                              <div className="flex items-center gap-1 sm:gap-2 text-gray-700 bg-amber-50 border border-amber-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg">
+                                <Bed className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" /> <span>{meta.bedrooms || 0}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-gray-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 hover:border-amber-300 transition-all">
-                                <Bath className="h-4 w-4 text-amber-600" /> <span>{meta.bathrooms || 0}</span>
+                              <div className="flex items-center gap-1 sm:gap-2 text-gray-700 bg-amber-50 border border-amber-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg">
+                                <Bath className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" /> <span>{meta.bathrooms || 0}</span>
                               </div>
-                              {meta.square_feet && (
-                                <div className="flex items-center gap-2 text-gray-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 hover:border-amber-300 transition-all">
-                                  <Square className="h-4 w-4 text-amber-600" /> <span>{meta.square_feet}</span>
+                              {meta.square_feet ? (
+                                <div className="flex items-center gap-1 sm:gap-2 text-gray-700 bg-amber-50 border border-amber-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg">
+                                  <Square className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" /> <span className="truncate">{meta.square_feet}</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 sm:gap-2 text-gray-700 bg-amber-50 border border-amber-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg">
+                                  <Square className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" /> <span>-</span>
                                 </div>
                               )}
                             </div>
 
-                            {/* Property Details Grid */}
-                            <div className="space-y-3 pt-4 border-t border-gray-200">
-                              {meta.property_type && (
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600 font-medium">Type:</span>
-                                  <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-amber-50 text-amber-700">
-                                    {meta.property_type}
-                                  </Badge>
-                                </div>
-                              )}
-                              
-                              {meta.year_built && (
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600 font-medium">Year Built:</span>
-                                  <span className="font-semibold text-gray-900">{meta.year_built}</span>
-                                </div>
-                              )}
-
-                              {meta.lot_size_sqft && (
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600 font-medium">Lot Size:</span>
-                                  <span className="font-semibold text-gray-900">{meta.lot_size_sqft.toLocaleString()} sqft</span>
-                                </div>
-                              )}
-
-                              {meta.days_on_market !== undefined && (
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600 font-medium">Days on Market:</span>
-                                  <span className="font-semibold text-gray-900">{meta.days_on_market}</span>
-                                </div>
-                              )}
-
-                              {meta.listing_date && (
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600 font-medium flex items-center gap-1">
-                                    <CalendarIcon className="h-4 w-4" /> Listed:
-                                  </span>
-                                  <span className="font-semibold text-gray-900">{new Date(meta.listing_date).toLocaleDateString()}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Features */}
-                            {meta.features && meta.features.length > 0 && (
-                              <div className="pt-4 border-t border-gray-200">
-                                <p className="text-sm font-semibold text-gray-600 mb-3">Features:</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {(expandedFeatures[apt.id] ? meta.features : meta.features.slice(0, 4)).map((feature: string, fIdx: number) => (
-                                    <Badge key={fIdx} variant="outline" className="text-xs font-medium border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-400 transition-all">
-                                      {feature}
-                                    </Badge>
-                                  ))}
-                                  {meta.features.length > 4 && (
-                                    <button
-                                      onClick={() => setExpandedFeatures(prev => ({ ...prev, [apt.id]: !prev[apt.id] }))}
-                                      className="text-xs text-amber-600 font-medium hover:text-amber-700 hover:underline transition-colors cursor-pointer"
-                                    >
-                                      {expandedFeatures[apt.id] ? 'Show less' : `+${meta.features.length - 4} more`}
-                                    </button>
-                                  )}
-                                </div>
-                                {expandedFeatures[apt.id] && (
-                                  <div className="mt-3 pt-3 border-t border-amber-200">
-                                    <p className="text-xs font-semibold text-amber-700 mb-2">Property: {meta.address || `Property #${apt.id}`}</p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Agent Information */}
-                            {meta.agent && (
-                              <div className="pt-4 border-t border-gray-200 space-y-2 bg-amber-50 rounded-lg p-4 border border-amber-200">
-                                <p className="text-sm font-semibold text-amber-700">Agent:</p>
-                                <div className="space-y-2 text-sm">
-                                  <p className="font-semibold text-gray-900">{meta.agent.name}</p>
-                                  {meta.agent.email && (
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                      <Mail className="h-4 w-4 text-amber-600" />
-                                      <span className="truncate">{meta.agent.email}</span>
-                                    </div>
-                                  )}
-                                  {meta.agent.phone && (
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                      <Phone className="h-4 w-4 text-amber-600" />
-                                      <span>{meta.agent.phone}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+                            {meta.property_type && (
+                              <Badge variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-amber-50 text-amber-700 w-full justify-center py-1.5 sm:py-2">
+                                {meta.property_type}
+                              </Badge>
                             )}
 
                             {/* Assignment Status (for PM) */}
                             {userType === "property_manager" && (
-                              <div className="pt-4 border-t border-gray-200">
+                              <div className="pt-2 sm:pt-3 border-t border-gray-200">
                                 {meta.is_assigned && meta.assigned_to_realtor_name ? (
-                                  <div className="flex items-center justify-between text-sm bg-amber-50 rounded-lg p-3 border border-amber-200">
+                                  <div className="flex items-center justify-between text-xs sm:text-sm bg-amber-50 rounded-lg p-2 sm:p-3 border border-amber-200">
                                     <span className="text-amber-700 font-medium">Assigned to:</span>
-                                    <Badge className="bg-gradient-to-br from-amber-500 to-amber-600 text-white text-sm font-semibold">
+                                    <Badge className="bg-gradient-to-br from-amber-500 to-amber-600 text-white text-xs sm:text-sm font-semibold">
                                       {meta.assigned_to_realtor_name}
                                     </Badge>
                                   </div>
                                 ) : (
-                                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-sm font-medium w-full justify-center py-2">
+                                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs sm:text-sm font-medium w-full justify-center py-1.5 sm:py-2">
                                     Unassigned
                                   </Badge>
                                 )}
                               </div>
                             )}
 
-                            {/* Description (truncated) */}
-                            {meta.description && (
-                              <div className="pt-4 border-t border-gray-200 bg-amber-50 rounded-lg p-4 border border-amber-200">
-                                <div className="flex items-start gap-3">
-                                  <Info className="h-4 w-4 mt-0.5 text-amber-600 flex-shrink-0" />
-                                  <p className="text-sm text-gray-600 line-clamp-2 font-medium">
-                                    {meta.description}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
+                            <p className="text-xs sm:text-sm text-amber-600 font-medium pt-2 border-t border-amber-200 text-center">
+                              Click to view details →
+                            </p>
                           </CardContent>
                         </Card>
                       </motion.div>
@@ -2737,6 +3179,436 @@ const Dashboard = () => {
           </Tabs>
         </motion.div>
       </section>
+
+      {/* Property Detail Modal */}
+      <Dialog open={showPropertyDetailModal} onOpenChange={setShowPropertyDetailModal}>
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-6xl max-h-[95vh] overflow-y-auto p-0">
+          {selectedPropertyForDetail && (() => {
+            const meta = getPropertyMetadata(selectedPropertyForDetail);
+            return (
+              <div className="flex flex-col lg:flex-row">
+                {/* Image Section */}
+                <div className="w-full lg:w-1/2 bg-gray-100 rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none overflow-hidden order-2 lg:order-1">
+                  <div className="relative aspect-[4/3] lg:h-full lg:min-h-[600px] max-h-[400px] lg:max-h-none">
+                    <img
+                      src={meta.image_url || "/images/properties/default.jpg"}
+                      alt={meta.address || `Property #${selectedPropertyForDetail.id}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                    {meta.listing_status && (
+                      <div className="absolute top-4 right-4 z-10">
+                        <Badge 
+                          variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
+                          className={`text-sm sm:text-base font-bold border-2 ${
+                            meta.listing_status === 'Available' 
+                              ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white border-amber-400' 
+                              : 'bg-white/90 text-gray-900 border-gray-300'
+                          }`}
+                        >
+                          {meta.listing_status}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Details Section */}
+                <div className="w-full lg:w-1/2 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 overflow-y-auto max-h-[95vh] order-1 lg:order-2">
+                  {/* Header */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-gray-200">
+                    <div className="flex-1 min-w-0">
+                      <DialogTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2">
+                        {meta.address || `Property #${selectedPropertyForDetail.id}`}
+                      </DialogTitle>
+                      {meta.listing_id && (
+                        <p className="text-xs sm:text-sm lg:text-base text-amber-600 font-semibold">MLS: {meta.listing_id}</p>
+                      )}
+                    </div>
+                    {userType === "property_manager" && (
+                      <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto">
+                        <Button
+                          onClick={() => {
+                            handleOpenPropertyUpdate(selectedPropertyForDetail);
+                            setShowPropertyDetailModal(false);
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="bg-white hover:bg-amber-50 text-amber-600 border-amber-300 hover:border-amber-400 font-medium transition-all rounded-xl flex-1 sm:flex-none"
+                        >
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          <span className="text-xs sm:text-sm">Edit</span>
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white hover:bg-red-50 text-red-600 border-red-300 hover:border-red-400 font-medium transition-all rounded-xl flex-1 sm:flex-none"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              <span className="text-xs sm:text-sm">Delete</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl">
+                            <AlertDialogHeader className="p-6">
+                              <AlertDialogTitle className="text-gray-900 font-bold text-2xl">Delete Property?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-600 text-lg mt-4">
+                                Are you sure you want to delete <span className="font-semibold text-amber-600">{meta.address || `Property #${selectedPropertyForDetail.id}`}</span>? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="p-6 pt-0">
+                              <AlertDialogCancel className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={handleDeleteProperty}
+                                disabled={deletingProperty}
+                                className="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl px-6 py-3"
+                              >
+                                {deletingProperty ? (
+                                  <>
+                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Property
+                                  </>
+                                )}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price */}
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-4 sm:p-6 border border-amber-200">
+                    <p className="text-3xl sm:text-4xl font-bold text-amber-600 mb-2">
+                      ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                    </p>
+                    {meta.property_type && (
+                      <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-white text-amber-700 mt-2">
+                        {meta.property_type}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Basic Info Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-gray-600 font-medium">Bedrooms</span>
+                      </div>
+                      <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.bedrooms || 0}</p>
+                    </div>
+                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bath className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-gray-600 font-medium">Bathrooms</span>
+                      </div>
+                      <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.bathrooms || 0}</p>
+                    </div>
+                    {meta.square_feet && (
+                      <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Square className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                          <span className="text-xs sm:text-sm text-gray-600 font-medium">Square Feet</span>
+                        </div>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.square_feet.toLocaleString()}</p>
+                      </div>
+                    )}
+                    {meta.lot_size_sqft && (
+                      <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Ruler className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                          <span className="text-xs sm:text-sm text-gray-600 font-medium">Lot Size</span>
+                        </div>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.lot_size_sqft.toLocaleString()} sqft</p>
+                      </div>
+                    )}
+                    {meta.year_built && (
+                      <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                          <span className="text-xs sm:text-sm text-gray-600 font-medium">Year Built</span>
+                        </div>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.year_built}</p>
+                      </div>
+                    )}
+                    {meta.days_on_market !== undefined && (
+                      <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                          <span className="text-xs sm:text-sm text-gray-600 font-medium">Days on Market</span>
+                        </div>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.days_on_market}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Additional Details */}
+                  <div className="space-y-4">
+                    {meta.listing_date && (
+                      <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <span className="text-sm sm:text-base text-gray-600 font-medium">Listing Date:</span>
+                        <span className="text-sm sm:text-base font-semibold text-gray-900">{new Date(meta.listing_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+
+                    {/* Features */}
+                    {meta.features && meta.features.length > 0 && (
+                      <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Features</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {meta.features.map((feature: string, idx: number) => (
+                            <Badge key={idx} variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-white text-amber-700 px-3 py-1.5">
+                              {feature}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    {meta.description && (
+                      <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Description</h3>
+                        <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{meta.description}</p>
+                      </div>
+                    )}
+
+                    {/* Assignment Status (for PM) */}
+                    {userType === "property_manager" && (
+                      <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Assignment Status</h3>
+                        {meta.is_assigned && meta.assigned_to_realtor_name ? (
+                          <div className="flex items-center gap-3">
+                            <User className="h-5 w-5 text-amber-600" />
+                            <div>
+                              <p className="text-sm text-gray-600 font-medium">Assigned to:</p>
+                              <p className="text-base sm:text-lg font-bold text-amber-700">{meta.assigned_to_realtor_name}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="bg-white text-amber-700 border-amber-300 text-sm font-medium px-4 py-2">
+                            Unassigned
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Property Update Modal */}
+      <Dialog open={showPropertyUpdateModal} onOpenChange={setShowPropertyUpdateModal}>
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-4xl max-h-[95vh] overflow-y-auto">
+          <DialogHeader className="p-6 pb-4 border-b border-gray-200">
+            <DialogTitle className="text-gray-900 font-bold text-2xl flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
+                <Edit2 className="h-5 w-5 text-white" />
+              </div>
+              Update Property
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2 text-base">
+              Update the property details below. All fields are optional.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Address</label>
+                <input
+                  type="text"
+                  value={propertyUpdateForm.address || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, address: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="123 Main St, City, State"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Price</label>
+                <input
+                  type="number"
+                  value={propertyUpdateForm.price || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, price: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="2500"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Bedrooms</label>
+                <input
+                  type="number"
+                  value={propertyUpdateForm.bedrooms || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, bedrooms: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="3"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Bathrooms</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={propertyUpdateForm.bathrooms || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, bathrooms: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="2.5"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Square Feet</label>
+                <input
+                  type="number"
+                  value={propertyUpdateForm.square_feet || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, square_feet: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="1200"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Lot Size (sqft)</label>
+                <input
+                  type="number"
+                  value={propertyUpdateForm.lot_size_sqft || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, lot_size_sqft: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="5000"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Year Built</label>
+                <input
+                  type="number"
+                  value={propertyUpdateForm.year_built || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, year_built: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="2020"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Property Type</label>
+                <input
+                  type="text"
+                  value={propertyUpdateForm.property_type || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, property_type: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="Apartment"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Listing Status</label>
+                <Select 
+                  value={propertyUpdateForm.listing_status || "Available"} 
+                  onValueChange={(value) => setPropertyUpdateForm({...propertyUpdateForm, listing_status: value})}
+                >
+                  <SelectTrigger className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl bg-white text-gray-900 text-sm sm:text-base">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Available">Available</SelectItem>
+                    <SelectItem value="For Sale">For Sale</SelectItem>
+                    <SelectItem value="For Rent">For Rent</SelectItem>
+                    <SelectItem value="Sold">Sold</SelectItem>
+                    <SelectItem value="Rented">Rented</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Days on Market</label>
+                <input
+                  type="number"
+                  value={propertyUpdateForm.days_on_market || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, days_on_market: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="25"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Listing Date</label>
+                <input
+                  type="date"
+                  value={propertyUpdateForm.listing_date || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, listing_date: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Image URL</label>
+                <input
+                  type="url"
+                  value={propertyUpdateForm.image_url || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, image_url: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Features (comma-separated)</label>
+                <input
+                  type="text"
+                  value={propertyUpdateForm.features || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, features: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="Pool, Gym, Parking, Elevator"
+                />
+                <p className="text-xs text-gray-500 mt-2">Separate multiple features with commas</p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Description</label>
+                <textarea
+                  value={propertyUpdateForm.description || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, description: e.target.value})}
+                  rows={4}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base resize-none"
+                  placeholder="Beautiful property description..."
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="p-6 pt-0 border-t border-gray-200">
+            <Button 
+              onClick={() => {
+                setShowPropertyUpdateModal(false);
+                setPropertyUpdateForm({});
+              }}
+              variant="outline"
+              className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3"
+              disabled={updatingProperty}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateProperty}
+              disabled={updatingProperty}
+              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl px-6 py-3"
+            >
+              {updatingProperty ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Update Property
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };

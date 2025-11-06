@@ -3230,18 +3230,18 @@ const Dashboard = () => {
 
       {/* Property Detail Modal */}
       <Dialog open={showPropertyDetailModal} onOpenChange={setShowPropertyDetailModal}>
-        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-6xl max-h-[95vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-6xl max-h-[95vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
           {selectedPropertyForDetail && (() => {
             const meta = getPropertyMetadata(selectedPropertyForDetail);
             return (
               <div className="flex flex-col lg:flex-row h-full max-h-[95vh] overflow-hidden">
                 {/* Image Section */}
                 <div className="w-full lg:w-1/2 bg-gray-100 rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none overflow-hidden order-2 lg:order-1 flex-shrink-0">
-                  <div className="relative aspect-[4/3] lg:h-full lg:min-h-[600px] max-h-[400px] lg:max-h-none">
+                  <div className="relative aspect-[4/3] lg:h-full lg:min-h-[600px] max-h-[400px] lg:max-h-none flex items-center justify-center bg-gray-100">
                     <img
                       src={meta.image_url || "/images/properties/default.jpg"}
                       alt={meta.address || `Property #${selectedPropertyForDetail.id}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                     {meta.listing_status && (

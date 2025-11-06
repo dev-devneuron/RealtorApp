@@ -1003,7 +1003,17 @@ const Dashboard = () => {
   };
 
   const handleUpdateProperty = async () => {
-    if (!selectedPropertyForDetail) return;
+    if (!selectedPropertyForDetail) {
+      toast.error("No property selected for update");
+      console.error("❌ handleUpdateProperty: selectedPropertyForDetail is null/undefined");
+      return;
+    }
+
+    if (!selectedPropertyForDetail.id) {
+      toast.error("Property ID is missing");
+      console.error("❌ handleUpdateProperty: Property ID is missing", selectedPropertyForDetail);
+      return;
+    }
 
     setUpdatingProperty(true);
     try {
@@ -1013,27 +1023,44 @@ const Dashboard = () => {
         return;
       }
 
-      // Build update payload
+      // Build update payload - only include fields that have values
       const updatePayload: any = {};
       
-      if (propertyUpdateForm.address) updatePayload.address = propertyUpdateForm.address;
-      if (propertyUpdateForm.price) updatePayload.price = Number(propertyUpdateForm.price);
-      if (propertyUpdateForm.bedrooms) updatePayload.bedrooms = Number(propertyUpdateForm.bedrooms);
-      if (propertyUpdateForm.bathrooms) updatePayload.bathrooms = Number(propertyUpdateForm.bathrooms);
-      if (propertyUpdateForm.square_feet) updatePayload.square_feet = Number(propertyUpdateForm.square_feet);
-      if (propertyUpdateForm.lot_size_sqft) updatePayload.lot_size_sqft = Number(propertyUpdateForm.lot_size_sqft);
-      if (propertyUpdateForm.year_built) updatePayload.year_built = Number(propertyUpdateForm.year_built);
-      if (propertyUpdateForm.property_type) updatePayload.property_type = propertyUpdateForm.property_type;
-      if (propertyUpdateForm.listing_status) updatePayload.listing_status = propertyUpdateForm.listing_status;
-      if (propertyUpdateForm.days_on_market) updatePayload.days_on_market = Number(propertyUpdateForm.days_on_market);
-      if (propertyUpdateForm.listing_date) updatePayload.listing_date = propertyUpdateForm.listing_date;
-      if (propertyUpdateForm.features) {
+      if (propertyUpdateForm.address && propertyUpdateForm.address.trim()) updatePayload.address = propertyUpdateForm.address.trim();
+      if (propertyUpdateForm.price && propertyUpdateForm.price !== "") updatePayload.price = Number(propertyUpdateForm.price);
+      if (propertyUpdateForm.bedrooms && propertyUpdateForm.bedrooms !== "") updatePayload.bedrooms = Number(propertyUpdateForm.bedrooms);
+      if (propertyUpdateForm.bathrooms && propertyUpdateForm.bathrooms !== "") updatePayload.bathrooms = Number(propertyUpdateForm.bathrooms);
+      if (propertyUpdateForm.square_feet && propertyUpdateForm.square_feet !== "") updatePayload.square_feet = Number(propertyUpdateForm.square_feet);
+      if (propertyUpdateForm.lot_size_sqft && propertyUpdateForm.lot_size_sqft !== "") updatePayload.lot_size_sqft = Number(propertyUpdateForm.lot_size_sqft);
+      if (propertyUpdateForm.year_built && propertyUpdateForm.year_built !== "") updatePayload.year_built = Number(propertyUpdateForm.year_built);
+      if (propertyUpdateForm.property_type && propertyUpdateForm.property_type.trim()) updatePayload.property_type = propertyUpdateForm.property_type.trim();
+      if (propertyUpdateForm.listing_status && propertyUpdateForm.listing_status.trim()) updatePayload.listing_status = propertyUpdateForm.listing_status.trim();
+      if (propertyUpdateForm.days_on_market && propertyUpdateForm.days_on_market !== "") updatePayload.days_on_market = Number(propertyUpdateForm.days_on_market);
+      if (propertyUpdateForm.listing_date && propertyUpdateForm.listing_date.trim()) updatePayload.listing_date = propertyUpdateForm.listing_date.trim();
+      if (propertyUpdateForm.features && propertyUpdateForm.features.trim()) {
         updatePayload.features = propertyUpdateForm.features.split(",").map((f: string) => f.trim()).filter((f: string) => f);
       }
-      if (propertyUpdateForm.description) updatePayload.description = propertyUpdateForm.description;
-      if (propertyUpdateForm.image_url) updatePayload.image_url = propertyUpdateForm.image_url;
+      if (propertyUpdateForm.description && propertyUpdateForm.description.trim()) updatePayload.description = propertyUpdateForm.description.trim();
+      if (propertyUpdateForm.image_url && propertyUpdateForm.image_url.trim()) updatePayload.image_url = propertyUpdateForm.image_url.trim();
 
-      const res = await fetch(`${API_BASE}/properties/${selectedPropertyForDetail.id}`, {
+      // Check if payload is empty
+      if (Object.keys(updatePayload).length === 0) {
+        toast.error("Please update at least one field");
+        setUpdatingProperty(false);
+        return;
+      }
+
+      const propertyId = selectedPropertyForDetail.id;
+      const apiUrl = `${API_BASE}/properties/${propertyId}`;
+      
+      console.log("🔄 Updating property:", {
+        propertyId,
+        apiUrl,
+        payload: updatePayload,
+        payloadKeys: Object.keys(updatePayload)
+      });
+
+      const res = await fetch(apiUrl, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
@@ -1042,12 +1069,42 @@ const Dashboard = () => {
         body: JSON.stringify(updatePayload),
       });
 
+      console.log("📡 API Response:", {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        headers: Object.fromEntries(res.headers.entries())
+      });
+
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || errorData.message || "Failed to update property");
+        let errorData: any = {};
+        try {
+          const errorText = await res.text();
+          console.error("❌ Error response body:", errorText);
+          errorData = errorText ? JSON.parse(errorText) : {};
+        } catch (parseError) {
+          console.error("❌ Failed to parse error response:", parseError);
+        }
+        
+        const errorMessage = errorData.detail || errorData.message || errorData.error || `HTTP ${res.status}: ${res.statusText}`;
+        console.error("❌ Update failed:", {
+          status: res.status,
+          statusText: res.statusText,
+          errorData,
+          errorMessage
+        });
+        throw new Error(errorMessage);
       }
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        const responseText = await res.text();
+        data = responseText ? JSON.parse(responseText) : {};
+        console.log("✅ Update successful:", data);
+      } catch (parseError) {
+        console.warn("⚠️ Response is not JSON, treating as success");
+      }
+
       toast.success("Property updated successfully!");
       setShowPropertyUpdateModal(false);
       
@@ -1078,8 +1135,18 @@ const Dashboard = () => {
         }
       }
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Could not update property");
+      console.error("❌ handleUpdateProperty error:", err);
+      const errorMessage = err.message || "Could not update property";
+      toast.error(errorMessage);
+      
+      // Log detailed error for debugging
+      if (err.message) {
+        console.error("Error details:", {
+          message: err.message,
+          stack: err.stack,
+          name: err.name
+        });
+      }
     } finally {
       setUpdatingProperty(false);
     }

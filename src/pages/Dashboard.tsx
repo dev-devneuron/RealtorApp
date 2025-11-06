@@ -18,6 +18,31 @@ const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 // Helper function to parse and extract metadata from property
 const getPropertyMetadata = (property: any) => {
+  // Safety check: return empty object if property is null/undefined
+  if (!property) {
+    return {
+      listing_id: null,
+      square_feet: null,
+      lot_size_sqft: null,
+      year_built: null,
+      property_type: null,
+      listing_status: null,
+      days_on_market: null,
+      listing_date: null,
+      features: [],
+      agent: null,
+      description: null,
+      address: null,
+      price: null,
+      bedrooms: null,
+      bathrooms: null,
+      image_url: null,
+      is_assigned: false,
+      assigned_to_realtor_id: null,
+      assigned_to_realtor_name: null,
+    };
+  }
+
   // Try to parse listing_metadata if it's a string
   let metadata = property.listing_metadata;
   if (typeof metadata === 'string') {
@@ -629,22 +654,26 @@ const Dashboard = () => {
   };
 
   // Pagination calculations
-  const totalPages = Math.ceil(availablePropertiesForAssignment.length / itemsPerPage);
+  const totalPages = Math.ceil((availablePropertiesForAssignment?.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedProperties = useMemo(() => {
+    if (!Array.isArray(availablePropertiesForAssignment) || availablePropertiesForAssignment.length === 0) {
+      return [];
+    }
     return availablePropertiesForAssignment.slice(startIndex, endIndex);
   }, [availablePropertiesForAssignment, startIndex, endIndex]);
 
   // Reset to page 1 when items per page changes or properties change
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage, availablePropertiesForAssignment.length]);
+  }, [itemsPerPage, Array.isArray(availablePropertiesForAssignment) ? availablePropertiesForAssignment.length : 0]);
 
   const handleSelectAll = () => {
     // Select all properties on current page
-    const currentPageIds = paginatedProperties.map((p: any) => p.id);
-    const allCurrentPageSelected = currentPageIds.every(id => selectedProperties.includes(id));
+    if (!Array.isArray(paginatedProperties) || paginatedProperties.length === 0) return;
+    const currentPageIds = paginatedProperties.map((p: any) => p?.id).filter(id => id !== undefined);
+    const allCurrentPageSelected = currentPageIds.length > 0 && currentPageIds.every(id => selectedProperties.includes(id));
     
     if (allCurrentPageSelected) {
       // Deselect all on current page
@@ -657,18 +686,21 @@ const Dashboard = () => {
 
   const handleSelectAllProperties = () => {
     // Select all properties across all pages
+    if (!Array.isArray(availablePropertiesForAssignment) || availablePropertiesForAssignment.length === 0) return;
     if (selectedProperties.length === availablePropertiesForAssignment.length) {
       setSelectedProperties([]);
     } else {
-      setSelectedProperties(availablePropertiesForAssignment.map((p: any) => p.id));
+      const allIds = availablePropertiesForAssignment.map((p: any) => p?.id).filter(id => id !== undefined);
+      setSelectedProperties(allIds);
     }
   };
 
   const handleBulkSelect = (count: number, fromStart: boolean = true) => {
+    if (!Array.isArray(availablePropertiesForAssignment) || availablePropertiesForAssignment.length === 0) return;
     const sorted = [...availablePropertiesForAssignment];
     const toSelect = fromStart 
-      ? sorted.slice(0, count).map((p: any) => p.id)
-      : sorted.slice(-count).map((p: any) => p.id);
+      ? sorted.slice(0, count).map((p: any) => p?.id).filter(id => id !== undefined)
+      : sorted.slice(-count).map((p: any) => p?.id).filter(id => id !== undefined);
     
     setSelectedProperties(prev => {
       // Toggle: if all are already selected, deselect; otherwise add them
@@ -789,6 +821,11 @@ const Dashboard = () => {
   const getFilteredAssignedProperties = () => {
     if (!assignmentsData || !assignmentsData.assigned_properties) return {};
     
+    // If no filters selected, show all assigned properties
+    if (selectedRealtorFilters.size === 0) {
+      return assignmentsData.assigned_properties;
+    }
+    
     const filtered: any = {};
     Object.keys(assignmentsData.assigned_properties).forEach(key => {
       const realtorId = Number(key);
@@ -799,6 +836,13 @@ const Dashboard = () => {
     
     return filtered;
   };
+
+  // Memoize filtered assigned properties to avoid using useMemo inside JSX
+  const filteredAssignedProperties = useMemo(() => {
+    const filtered = getFilteredAssignedProperties();
+    if (Object.keys(filtered).length === 0) return null;
+    return filtered;
+  }, [assignmentsData, selectedRealtorFilters]);
 
   const handleUnassignProperties = async (propertyIds: number[]) => {
     try {
@@ -2109,7 +2153,7 @@ const Dashboard = () => {
                                 size="lg"
                                 className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-amber-300 font-medium transition-all rounded-xl"
                               >
-                                {paginatedProperties.every((p: any) => selectedProperties.includes(p.id)) ? 'Deselect Page' : 'Select Page'}
+                                {Array.isArray(paginatedProperties) && paginatedProperties.length > 0 && paginatedProperties.every((p: any) => p?.id && selectedProperties.includes(p.id)) ? 'Deselect Page' : 'Select Page'}
                               </Button>
                               <Button 
                                 onClick={handleSelectAllProperties}
@@ -2117,7 +2161,7 @@ const Dashboard = () => {
                                 size="lg"
                                 className="bg-white hover:bg-amber-50 text-amber-700 border-amber-300 hover:border-amber-400 font-medium transition-all rounded-xl"
                               >
-                                {selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All Properties'}
+                                {Array.isArray(availablePropertiesForAssignment) && selectedProperties.length === availablePropertiesForAssignment.length ? 'Deselect All' : 'Select All Properties'}
                               </Button>
                               <div className="flex items-center gap-2 ml-auto">
                                 <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Items per page:</label>
@@ -2175,7 +2219,7 @@ const Dashboard = () => {
                             <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mx-auto mb-4" />
                             <p className="text-gray-600 font-medium text-lg">Loading properties...</p>
                           </div>
-                        ) : availablePropertiesForAssignment.length === 0 ? (
+                        ) : !Array.isArray(availablePropertiesForAssignment) || availablePropertiesForAssignment.length === 0 ? (
                           <div className="text-center py-12 bg-white border border-gray-200 rounded-2xl">
                             <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                             <p className="text-gray-600 font-medium text-lg">
@@ -2185,7 +2229,8 @@ const Dashboard = () => {
                         ) : (
                           <>
                           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {paginatedProperties.map((property, idx) => {
+                            {Array.isArray(paginatedProperties) && paginatedProperties.map((property, idx) => {
+                              if (!property) return null;
                               const meta = getPropertyMetadata(property);
                               return (
                                 <motion.div
@@ -2279,9 +2324,9 @@ const Dashboard = () => {
                                 <span className="text-sm font-medium">
                                   Showing <span className="font-bold text-amber-600">{startIndex + 1}</span> to{' '}
                                   <span className="font-bold text-amber-600">
-                                    {Math.min(endIndex, availablePropertiesForAssignment.length)}
+                                    {Math.min(endIndex, Array.isArray(availablePropertiesForAssignment) ? availablePropertiesForAssignment.length : 0)}
                                   </span>{' '}
-                                  of <span className="font-bold text-amber-600">{availablePropertiesForAssignment.length}</span> properties
+                                  of <span className="font-bold text-amber-600">{Array.isArray(availablePropertiesForAssignment) ? availablePropertiesForAssignment.length : 0}</span> properties
                                 </span>
                               </div>
 
@@ -2647,7 +2692,8 @@ const Dashboard = () => {
                                 </Badge>
                               </h3>
                               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                {assignmentsData.unassigned_properties.map((property: any, idx: number) => {
+                                {Array.isArray(assignmentsData.unassigned_properties) && assignmentsData.unassigned_properties.map((property: any, idx: number) => {
+                                  if (!property) return null;
                                   const meta = getPropertyMetadata(property);
                                   return (
                                     <Card 
@@ -2705,11 +2751,7 @@ const Dashboard = () => {
                           )}
 
                           {/* Assigned Properties by Realtor */}
-                          {useMemo(() => {
-                            const filteredProperties = getFilteredAssignedProperties();
-                            if (Object.keys(filteredProperties).length === 0) return null;
-                            
-                            return (
+                          {filteredAssignedProperties && (
                             <div className="bg-white rounded-2xl p-6 border border-amber-200">
                               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-4">
                                 <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
@@ -2722,7 +2764,7 @@ const Dashboard = () => {
                                     </Badge>
                                   )}
                               </h3>
-                                {Object.values(filteredProperties).map((realtorGroup: any) => (
+                                {Object.values(filteredAssignedProperties).map((realtorGroup: any) => (
                                 <Card key={realtorGroup.realtor_id} className="mb-8 bg-white shadow-lg border border-amber-200 rounded-2xl overflow-hidden">
                                   <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-t-2xl border-b border-amber-200 p-6">
                                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -2745,7 +2787,8 @@ const Dashboard = () => {
                                   </CardHeader>
                                   <CardContent className="p-6">
                                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                      {realtorGroup.properties.map((property: any, idx: number) => {
+                                      {Array.isArray(realtorGroup.properties) && realtorGroup.properties.map((property: any, idx: number) => {
+                                        if (!property) return null;
                                         const meta = getPropertyMetadata(property);
                                         return (
                                           <Card 
@@ -2800,8 +2843,7 @@ const Dashboard = () => {
                                 </Card>
                               ))}
                             </div>
-                            );
-                          }, [assignmentsData, selectedRealtorFilters])}
+                          )}
                         </div>
                       )}
                     </CardContent>
@@ -2829,7 +2871,8 @@ const Dashboard = () => {
                     <p className="text-gray-500 font-medium text-lg">No apartments found.</p>
                   </div>
                 ) : (
-                  apartments.map((apt, idx) => {
+                  Array.isArray(apartments) && apartments.map((apt, idx) => {
+                    if (!apt) return null;
                     const meta = getPropertyMetadata(apt);
                     return (
                       <motion.div

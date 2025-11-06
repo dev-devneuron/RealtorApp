@@ -995,6 +995,7 @@ const Dashboard = () => {
       listing_status: meta.listing_status || "Available",
       days_on_market: meta.days_on_market || "",
       listing_date: meta.listing_date || "",
+      listing_id: meta.listing_id || "",
       features: meta.features ? meta.features.join(", ") : "",
       description: meta.description || "",
       image_url: meta.image_url || "",
@@ -1037,6 +1038,11 @@ const Dashboard = () => {
       if (propertyUpdateForm.listing_status && propertyUpdateForm.listing_status.trim()) updatePayload.listing_status = propertyUpdateForm.listing_status.trim();
       if (propertyUpdateForm.days_on_market && propertyUpdateForm.days_on_market !== "") updatePayload.days_on_market = Number(propertyUpdateForm.days_on_market);
       if (propertyUpdateForm.listing_date && propertyUpdateForm.listing_date.trim()) updatePayload.listing_date = propertyUpdateForm.listing_date.trim();
+      if (propertyUpdateForm.listing_id !== undefined) {
+        if (propertyUpdateForm.listing_id && propertyUpdateForm.listing_id.trim()) {
+          updatePayload.listing_id = propertyUpdateForm.listing_id.trim();
+        }
+      }
       if (propertyUpdateForm.features && propertyUpdateForm.features.trim()) {
         updatePayload.features = propertyUpdateForm.features.split(",").map((f: string) => f.trim()).filter((f: string) => f);
       }
@@ -1105,35 +1111,24 @@ const Dashboard = () => {
         console.warn("⚠️ Response is not JSON, treating as success");
       }
 
-      toast.success("Property updated successfully!");
+      toast.success(data.message || "Property updated successfully!");
       setShowPropertyUpdateModal(false);
       
-      // Refresh data
-      await Promise.all([
+      // Use the returned property object from API response for immediate UI update
+      if (data.property) {
+        console.log("📦 Using API response property:", data.property);
+        setSelectedPropertyForDetail(data.property);
+        setShowPropertyDetailModal(true);
+      }
+      
+      // Refresh all data in background
+      Promise.all([
         fetchApartments(),
         fetchAssignments(),
         fetchPropertiesForAssignment()
-      ]);
-      
-      // Refresh the selected property by fetching updated data
-      if (selectedPropertyForDetail) {
-        try {
-          const propertyRes = await fetch(`${API_BASE}/apartments`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (propertyRes.ok) {
-            const propertyData = await propertyRes.json();
-            const allProperties = Array.isArray(propertyData) ? propertyData : propertyData.apartments || [];
-            const updatedProperty = allProperties.find((p: any) => p.id === selectedPropertyForDetail.id);
-            if (updatedProperty) {
-              setSelectedPropertyForDetail(updatedProperty);
-              setShowPropertyDetailModal(true);
-            }
-          }
-        } catch (err) {
-          console.error("Failed to refresh property:", err);
-        }
-      }
+      ]).catch(err => {
+        console.error("Background refresh error:", err);
+      });
     } catch (err: any) {
       console.error("❌ handleUpdateProperty error:", err);
       const errorMessage = err.message || "Could not update property";
@@ -3656,6 +3651,16 @@ const Dashboard = () => {
                   value={propertyUpdateForm.listing_date || ""}
                   onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, listing_date: e.target.value})}
                   className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Listing ID (MLS)</label>
+                <input
+                  type="text"
+                  value={propertyUpdateForm.listing_id || ""}
+                  onChange={(e) => setPropertyUpdateForm({...propertyUpdateForm, listing_id: e.target.value})}
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all text-sm sm:text-base"
+                  placeholder="MLS000123"
                 />
               </div>
               <div className="md:col-span-2">

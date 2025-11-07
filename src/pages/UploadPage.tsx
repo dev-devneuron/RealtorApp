@@ -18,6 +18,7 @@ export default function UploadPage() {
   const [realtors, setRealtors] = useState<any[]>([]);
   const [loadingRealtors, setLoadingRealtors] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
   const [uploadHistory, setUploadHistory] = useState<Array<{
     id: number;
     method: string;
@@ -29,7 +30,14 @@ export default function UploadPage() {
   const getToken = () => localStorage.getItem("access_token");
 
   useEffect(() => {
-    fetchRealtors();
+    // Check user type first
+    const storedUserType = localStorage.getItem("user_type");
+    setUserType(storedUserType);
+    
+    // Only fetch realtors if user is property manager
+    if (storedUserType === "property_manager") {
+      fetchRealtors();
+    }
   }, []);
 
   const fetchRealtors = async () => {
@@ -48,8 +56,8 @@ export default function UploadPage() {
 
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
-          toast.error("Access denied. Property Manager access required.");
-          navigate("/");
+          // Don't redirect, just don't show realtor assignment
+          console.log("Cannot fetch realtors - not a property manager or access denied");
           return;
         }
         throw new Error("Failed to fetch realtors");
@@ -59,7 +67,11 @@ export default function UploadPage() {
       setRealtors(data.realtors || []);
     } catch (err: any) {
       console.error(err);
-      toast.error("Could not load realtors");
+      // Don't show error for realtors, just silently fail
+      const currentUserType = localStorage.getItem("user_type");
+      if (currentUserType === "property_manager") {
+        toast.error("Could not load realtors");
+      }
     } finally {
       setLoadingRealtors(false);
     }
@@ -110,12 +122,17 @@ export default function UploadPage() {
         formData.append("listing_api_url", apiUrl.trim());
       }
 
-      // Optionally assign to realtor
-      if (selectedRealtorId && selectedRealtorId !== "none") {
+      // Optionally assign to realtor (only for PMs)
+      if (userType === "property_manager" && selectedRealtorId && selectedRealtorId !== "none") {
         formData.append("assign_to_realtor_id", selectedRealtorId);
       }
 
-      const res = await fetch(`${API_BASE}/property-manager/upload-listings`, {
+      // Use different endpoint based on user type
+      const endpoint = userType === "property_manager" 
+        ? `${API_BASE}/property-manager/upload-listings`
+        : `${API_BASE}/UploadListings`;
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -126,14 +143,25 @@ export default function UploadPage() {
       const data = await res.json();
 
       if (res.ok) {
-        const assignedTo = data.assigned_to === "property_manager" 
-          ? "Property Manager" 
-          : data.realtor_name || `Realtor #${data.realtor_id}`;
+        let assignedTo = "Your account";
+        let count = 0;
+        
+        if (userType === "property_manager") {
+          assignedTo = data.assigned_to === "property_manager" 
+            ? "Property Manager" 
+            : data.realtor_name || `Realtor #${data.realtor_id}`;
+          count = data.count || 0;
+        } else {
+          // For realtors, the response might not have count
+          count = data.count || (uploadMethod === "file" ? listingFiles.length : 1);
+        }
 
         toast.success(
-          `Successfully uploaded ${data.count || 0} listing${data.count !== 1 ? "s" : ""}!`,
+          `Successfully uploaded listing${count !== 1 ? "s" : ""}!`,
           {
-            description: `Assigned to: ${assignedTo}`,
+            description: userType === "property_manager" 
+              ? `Assigned to: ${assignedTo}${count > 0 ? ` (${count} listing${count !== 1 ? "s" : ""})` : ""}` 
+              : "Listings added to your account",
           }
         );
 
@@ -142,7 +170,7 @@ export default function UploadPage() {
           {
             id: Date.now(),
             method: uploadMethod === "file" ? `${listingFiles.length} file(s)` : "API URL",
-            count: data.count || 0,
+            count: count,
             assignedTo,
             timestamp: new Date(),
           },
@@ -393,32 +421,34 @@ export default function UploadPage() {
                 </div>
               )}
 
-              {/* Realtor Assignment (Optional) */}
-              <div>
-                <label className="text-sm font-semibold text-gray-700 mb-3 block">
-                  Assign to Realtor (Optional)
-                </label>
-                <Select
-                  value={selectedRealtorId}
-                  onValueChange={setSelectedRealtorId}
-                  disabled={loadingRealtors}
-                >
-                  <SelectTrigger className="w-full border-2 border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 rounded-xl">
-                    <SelectValue placeholder={loadingRealtors ? "Loading realtors..." : "Keep in Property Manager (default)"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Keep in Property Manager (default)</SelectItem>
-                    {realtors.map((realtor) => (
-                      <SelectItem key={realtor.id} value={String(realtor.id)}>
-                        {realtor.name} {realtor.email ? `(${realtor.email})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500 mt-2">
-                  Leave as default to store in your source. You can assign to realtors later from the dashboard.
-                </p>
-              </div>
+              {/* Realtor Assignment (Optional) - Only for Property Managers */}
+              {userType === "property_manager" && (
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                    Assign to Realtor (Optional)
+                  </label>
+                  <Select
+                    value={selectedRealtorId}
+                    onValueChange={setSelectedRealtorId}
+                    disabled={loadingRealtors}
+                  >
+                    <SelectTrigger className="w-full border-2 border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 rounded-xl">
+                      <SelectValue placeholder={loadingRealtors ? "Loading realtors..." : "Keep in Property Manager (default)"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Keep in Property Manager (default)</SelectItem>
+                      {realtors.map((realtor) => (
+                        <SelectItem key={realtor.id} value={String(realtor.id)}>
+                          {realtor.name} {realtor.email ? `(${realtor.email})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Leave as default to store in your source. You can assign to realtors later from the dashboard.
+                  </p>
+                </div>
+              )}
 
               {/* Upload Button */}
               <Button

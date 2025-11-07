@@ -2921,6 +2921,40 @@ const Dashboard = () => {
 
             {/* Properties Grid */}
             <TabsContent value="properties">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="mb-6"
+              >
+                <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <CardTitle className="text-gray-900 text-xl sm:text-2xl font-bold flex items-center gap-4 mb-2">
+                          <div className="p-2 sm:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                            <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                          </div>
+                          Properties
+                        </CardTitle>
+                        <p className="text-gray-600 text-sm sm:text-lg">
+                          {apartments.length > 0 
+                            ? `Viewing ${apartments.length} propert${apartments.length !== 1 ? "ies" : "y"}`
+                            : "No properties available"}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={fetchApartments}
+                        disabled={loadingApartments}
+                        className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl px-4 sm:px-6 py-2 sm:py-3"
+                      >
+                        <RefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 mr-2 ${loadingApartments ? "animate-spin" : ""}`} />
+                        Refresh
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </motion.div>
               <motion.div 
                 className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                 variants={containerVariants}

@@ -1552,6 +1552,85 @@ const Dashboard = () => {
   };
 
   /**
+   * Helper function to safely extract a string error message from various error formats
+   * Prevents "[object Object]" by ensuring we always return a string
+   */
+  const extractErrorMessage = (error: any): string => {
+    // If it's already a string, return it
+    if (typeof error === 'string') {
+      return error;
+    }
+    
+    // If it's null or undefined, return default message
+    if (!error) {
+      return "An unknown error occurred";
+    }
+    
+    // If it's an Error object with a message property
+    if (error instanceof Error && error.message) {
+      // Double-check the message is a string (not an object)
+      if (typeof error.message === 'string') {
+        return error.message;
+      }
+    }
+    
+    // If it's an object with a message property
+    if (typeof error === 'object' && error !== null) {
+      // Try detail first (FastAPI standard)
+      if (error.detail) {
+        if (typeof error.detail === 'string') {
+          return error.detail;
+        }
+        // If detail is an object, try to stringify it safely
+        if (typeof error.detail === 'object') {
+          try {
+            return JSON.stringify(error.detail);
+          } catch {
+            return "An error occurred (unable to parse error details)";
+          }
+        }
+      }
+      
+      // Try message property
+      if (error.message) {
+        if (typeof error.message === 'string') {
+          return error.message;
+        }
+        // If message is an object, try to stringify it
+        if (typeof error.message === 'object') {
+          try {
+            return JSON.stringify(error.message);
+          } catch {
+            return "An error occurred (unable to parse error message)";
+          }
+        }
+      }
+      
+      // Try error property
+      if (error.error) {
+        if (typeof error.error === 'string') {
+          return error.error;
+        }
+      }
+      
+      // Last resort: try to stringify the whole object
+      try {
+        const stringified = JSON.stringify(error);
+        // If it's just "{}", return a generic message
+        if (stringified === '{}') {
+          return "An unknown error occurred";
+        }
+        return stringified;
+      } catch {
+        return "An unknown error occurred (unable to parse error)";
+      }
+    }
+    
+    // Fallback
+    return "An unknown error occurred";
+  };
+
+  /**
    * Unassigns a phone number, making it available for reassignment
    * 
    * @param purchasedPhoneNumberId - ID of the purchased phone number to unassign
@@ -1595,14 +1674,18 @@ const Dashboard = () => {
       } catch (parseError) {
         // If response is not JSON, handle it
         const text = await response.text();
-        throw new Error(`Server error: ${text || response.statusText}`);
+        const errorMsg = extractErrorMessage(`Server error: ${text || response.statusText}`);
+        toast.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
       // Check if response was successful
       if (!response.ok) {
         // Error response - FastAPI returns {detail: "error message"}
-        const errorMsg = data.detail || data.message || "Unknown error";
+        // Use helper function to safely extract error message
+        const errorMsg = extractErrorMessage(data);
         console.error("Error response:", data);
+        console.error("Extracted error message:", errorMsg);
         toast.error(`Error: ${errorMsg}`);
         throw new Error(errorMsg);
       }
@@ -1611,8 +1694,19 @@ const Dashboard = () => {
       console.log("Success:", data);
       console.log("Message:", data.message); // This will show the actual message
       
-      // Display the message properly (should be a string according to API docs)
-      toast.success(data.message || "Phone number unassigned successfully!");
+      // Safely extract success message - ensure it's a string
+      let successMessage = "Phone number unassigned successfully!";
+      if (data.message) {
+        if (typeof data.message === 'string') {
+          successMessage = data.message;
+        } else {
+          // If message is not a string, use default
+          console.warn("Success message is not a string:", data.message);
+        }
+      }
+      
+      // Display the message properly (always a string)
+      toast.success(successMessage);
       
       // Log additional info for debugging
       if (data.phone_number) {
@@ -1633,32 +1727,14 @@ const Dashboard = () => {
     } catch (error: any) {
       // Handle network errors or other exceptions
       console.error("Fetch error:", error);
+      console.error("Error type:", typeof error);
+      console.error("Error constructor:", error?.constructor?.name);
       
-      // Safely extract error message - prevent [object Object]
-      let errorMessage = "Failed to unassign phone number";
+      // Use helper function to safely extract error message
+      const errorMessage = extractErrorMessage(error);
+      console.error("Extracted error message:", errorMessage);
       
-      if (error) {
-        // If error has a message property that's a string, use it
-        if (error.message && typeof error.message === 'string') {
-          errorMessage = error.message;
-        }
-        // If error is a string, use it directly
-        else if (typeof error === 'string') {
-          errorMessage = error;
-        }
-        // If error is an object without a message, log it and show generic message
-        else if (typeof error === 'object' && error !== null) {
-          console.error("Full error object:", error);
-          // Try to extract detail or message from nested structure
-          if (error.detail && typeof error.detail === 'string') {
-            errorMessage = error.detail;
-          } else {
-            errorMessage = "Failed to unassign phone number. Please check the console for details.";
-          }
-        }
-      }
-      
-      toast.error(errorMessage);
+      toast.error(`Failed to unassign phone number: ${errorMessage}`);
     } finally {
       setAssigningPhone(false);
     }

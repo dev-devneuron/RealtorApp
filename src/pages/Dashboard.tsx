@@ -1588,14 +1588,14 @@ const Dashboard = () => {
         }),
       });
 
-      // IMPORTANT: Always parse JSON response first (before checking response.ok)
-      // This matches the documentation pattern and ensures proper parsing
+      // IMPORTANT: Always parse JSON response - even for errors!
       let data;
       try {
         data = await response.json();
       } catch (parseError) {
-        console.error("Failed to parse response as JSON:", parseError);
-        throw new Error("Invalid response from server - response is not valid JSON");
+        // If response is not JSON, handle it
+        const text = await response.text();
+        throw new Error(`Server error: ${text || response.statusText}`);
       }
 
       // Check if response was successful
@@ -1604,30 +1604,8 @@ const Dashboard = () => {
         console.log("Success:", data);
         console.log("Message:", data.message); // This will show the actual message
         
-        // Extract message safely - ensure it's always a string
-        let successMessage = "Phone number unassigned successfully!";
-        if (data.message) {
-          if (typeof data.message === 'string') {
-            successMessage = data.message;
-          } else if (typeof data.message === 'object') {
-            // If message is an object, try to extract a string from it
-            successMessage = data.message.message || data.message.text || JSON.stringify(data.message);
-          } else {
-            successMessage = String(data.message);
-          }
-        } else if (data.phone_number) {
-          // Fallback: create message from phone number
-          successMessage = `Phone number ${data.phone_number} has been unassigned and is now available`;
-        }
-        
-        // Ensure successMessage is definitely a string before displaying
-        if (typeof successMessage !== 'string') {
-          console.warn("Success message is not a string, converting:", successMessage);
-          successMessage = String(successMessage);
-        }
-        
-        // Display the message properly (always a string)
-        toast.success(successMessage);
+        // Display the message properly (should be a string according to API docs)
+        toast.success(data.message || "Phone number unassigned successfully!");
         
         // Log additional info for debugging
         if (data.phone_number) {
@@ -1646,41 +1624,28 @@ const Dashboard = () => {
         // Return the parsed data
         return data;
       } else {
-        // Error response - data is already parsed
+        // Error response - data.detail contains the error message (not data.message)
+        const errorMessage = data.detail || data.message || "Unknown error";
         console.error("Error response:", data);
-        
-        // Extract error message safely - handle both string and object cases
-        let errorMessage = "Unknown error";
-        if (data.detail) {
-          errorMessage = typeof data.detail === 'string' ? data.detail : String(data.detail);
-        } else if (data.message) {
-          errorMessage = typeof data.message === 'string' ? data.message : String(data.message);
-        } else if (data.error) {
-          errorMessage = typeof data.error === 'string' ? data.error : String(data.error);
-        }
-        
-        toast.error(`Error: ${errorMessage}`);
+        toast.error(`Error: ${errorMessage}`); // Show the actual error message
         throw new Error(errorMessage);
       }
-    } catch (err: any) {
-      console.error("Error unassigning phone number:", err);
+    } catch (error: any) {
+      // Handle network errors or other exceptions
+      console.error("Fetch error:", error);
       
-      // Safely extract error message - handle various error formats
-      let errorMessage = "Failed to unassign phone number";
-      if (err) {
-        if (typeof err === 'string') {
-          errorMessage = err;
-        } else if (err.message && typeof err.message === 'string') {
-          errorMessage = err.message;
-        } else if (err.detail && typeof err.detail === 'string') {
-          errorMessage = err.detail;
-        } else if (typeof err === 'object') {
-          // Try to stringify if it's an object, but prefer message/detail
-          errorMessage = err.message || err.detail || err.error || JSON.stringify(err);
-        }
+      // If error is already a string or has a message, use it
+      const errorMessage = error.message || String(error);
+      
+      // Don't show [object Object] - check if it's an object
+      if (typeof error === 'object' && error !== null && !error.message) {
+        toast.error("Failed to unassign phone number. Please check the console for details.");
+        console.error("Full error object:", error);
+      } else {
+        toast.error(`Failed to unassign phone number: ${errorMessage}`);
       }
       
-      toast.error(errorMessage);
+      throw error;
     } finally {
       setAssigningPhone(false);
     }

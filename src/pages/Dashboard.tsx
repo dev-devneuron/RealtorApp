@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -1435,6 +1435,47 @@ const Dashboard = () => {
     } catch (err: any) {
       console.error("Error assigning phone number:", err);
       toast.error(err.message || "Failed to assign phone number");
+    } finally {
+      setAssigningPhone(false);
+    }
+  };
+
+  const handleUnassignPhoneNumber = async (purchasedPhoneNumberId: number) => {
+    if (!window.confirm("Are you sure you want to unassign this phone number? It will become available for reassignment.")) {
+      return;
+    }
+
+    try {
+      setAssigningPhone(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/unassign-phone-number`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          purchased_phone_number_id: purchasedPhoneNumberId,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to unassign phone number");
+      }
+
+      const data = await res.json();
+      toast.success(data.message || "Phone number unassigned successfully!");
+      fetchPurchasedPhoneNumbers();
+      fetchNumber(); // Refresh current user's number
+    } catch (err: any) {
+      console.error("Error unassigning phone number:", err);
+      toast.error(err.message || "Failed to unassign phone number");
     } finally {
       setAssigningPhone(false);
     }
@@ -3351,27 +3392,47 @@ const Dashboard = () => {
                                             Assigned
                                           </Badge>
                                         </div>
-                                        <div className="space-y-2 text-sm">
-                                          <p className="text-gray-600">
-                                            <span className="font-semibold">Assigned to:</span>{' '}
-                                            {number.assigned_to_type === 'property_manager' ? (
-                                              <span className="font-semibold text-amber-700">Property Manager (You)</span>
-                                            ) : number.assigned_to_type === 'realtor' && number.assigned_to_id ? (
-                                              <span className="font-semibold text-blue-700">
-                                                {realtors.find(r => r.id === number.assigned_to_id)?.name || `Realtor #${number.assigned_to_id}`}
-                                              </span>
-                                            ) : (
-                                              <span className="text-gray-500">NA</span>
-                                            )}
-                                          </p>
-                                          {number.assigned_to_type === 'realtor' && number.assigned_to_id && (
-                                            <p className="text-gray-500 text-xs">
-                                              {realtors.find(r => r.id === number.assigned_to_id)?.email || 'NA'}
+                                        <div className="space-y-3 text-sm">
+                                          <div className="space-y-2">
+                                            <p className="text-gray-600">
+                                              <span className="font-semibold">Assigned to:</span>{' '}
+                                              {number.assigned_to_type === 'property_manager' ? (
+                                                <span className="font-semibold text-amber-700">Property Manager (You)</span>
+                                              ) : number.assigned_to_type === 'realtor' && number.assigned_to_id ? (
+                                                <span className="font-semibold text-blue-700">
+                                                  {realtors.find(r => r.id === number.assigned_to_id)?.name || `Realtor #${number.assigned_to_id}`}
+                                                </span>
+                                              ) : (
+                                                <span className="text-gray-500">NA</span>
+                                              )}
                                             </p>
-                                          )}
-                                          <p className="text-xs text-gray-500">
-                                            Assigned: {number.assigned_at ? new Date(number.assigned_at).toLocaleDateString() : 'NA'}
-                                          </p>
+                                            {number.assigned_to_type === 'realtor' && number.assigned_to_id && (
+                                              <p className="text-gray-500 text-xs">
+                                                {realtors.find(r => r.id === number.assigned_to_id)?.email || 'NA'}
+                                              </p>
+                                            )}
+                                            <p className="text-xs text-gray-500">
+                                              Assigned: {number.assigned_at ? new Date(number.assigned_at).toLocaleDateString() : 'NA'}
+                                            </p>
+                                          </div>
+                                          <Button
+                                            onClick={() => handleUnassignPhoneNumber(number.purchased_phone_number_id)}
+                                            disabled={assigningPhone}
+                                            variant="outline"
+                                            className="w-full border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 font-semibold rounded-xl"
+                                          >
+                                            {assigningPhone ? (
+                                              <>
+                                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                                Unassigning...
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Unlink className="h-4 w-4 mr-2" />
+                                                Unassign
+                                              </>
+                                            )}
+                                          </Button>
                                         </div>
                                       </CardContent>
                                     </Card>

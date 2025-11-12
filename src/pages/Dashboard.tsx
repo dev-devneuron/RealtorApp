@@ -126,6 +126,18 @@ const Dashboard = () => {
   // User information state
   const [userName, setUserName] = useState<string | null>(null);
   const [userGender, setUserGender] = useState<string | null>(null);
+  // Phone number management state (Property Manager only)
+  const [phoneNumberRequests, setPhoneNumberRequests] = useState<any[]>([]);
+  const [loadingPhoneRequests, setLoadingPhoneRequests] = useState(false);
+  const [purchasedPhoneNumbers, setPurchasedPhoneNumbers] = useState<any[]>([]);
+  const [availablePhoneNumbers, setAvailablePhoneNumbers] = useState<any[]>([]);
+  const [loadingPurchasedNumbers, setLoadingPurchasedNumbers] = useState(false);
+  const [showRequestPhoneDialog, setShowRequestPhoneDialog] = useState(false);
+  const [requestingPhone, setRequestingPhone] = useState(false);
+  const [phoneRequestForm, setPhoneRequestForm] = useState({ area_code: "", notes: "" });
+  const [assigningPhone, setAssigningPhone] = useState(false);
+  const [selectedPhoneForAssignment, setSelectedPhoneForAssignment] = useState<number | null>(null);
+  const [selectedRealtorForPhone, setSelectedRealtorForPhone] = useState<{ [key: number]: number }>({});
 
   // Fetch current user information
   const fetchUserInfo = async () => {
@@ -298,11 +310,13 @@ const Dashboard = () => {
     fetchBookings();
     fetchChats(); 
 
-    // If property manager, fetch realtors
+    // If property manager, fetch realtors and phone numbers
     if (storedUserType === "property_manager") {
       fetchRealtors();
       fetchPropertiesForAssignment();
       fetchAssignments();
+      fetchPhoneNumberRequests();
+      fetchPurchasedPhoneNumbers();
     }
   }, []);
 
@@ -311,7 +325,6 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
-        toast.error("You must be signed in");
         return;
       }
 
@@ -319,14 +332,23 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch number");
+      if (!res.ok) {
+        // If 404 or error, user doesn't have a number assigned yet - this is normal
+        const errorData = await res.json().catch(() => ({}));
+        if (res.status === 404 || errorData.detail?.includes("haven't purchased")) {
+          setMyNumber(null);
+          return;
+        }
+        throw new Error("Failed to fetch number");
+      }
 
       const data = await res.json();
       console.log("Fetched number:", data);
       setMyNumber(data.twilio_number || null);
     } catch (err: any) {
-      console.error(err);
-      toast.error("Could not load your number");
+      console.error("Error fetching number:", err);
+      // Don't show error toast - not having a number is a valid state
+      setMyNumber(null);
     } finally {
       setLoading(false);
     }
@@ -1271,6 +1293,145 @@ const Dashboard = () => {
     }
   };
 
+  // Phone Number Management Functions (Property Manager Only)
+  const fetchPhoneNumberRequests = async () => {
+    try {
+      setLoadingPhoneRequests(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/my-phone-number-requests`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch phone number requests");
+      }
+
+      const data = await res.json();
+      setPhoneNumberRequests(data.requests || []);
+    } catch (err: any) {
+      console.error("Error fetching phone requests:", err);
+      // Don't show error toast - this is optional data
+    } finally {
+      setLoadingPhoneRequests(false);
+    }
+  };
+
+  const fetchPurchasedPhoneNumbers = async () => {
+    try {
+      setLoadingPurchasedNumbers(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/purchased-phone-numbers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch purchased phone numbers");
+      }
+
+      const data = await res.json();
+      setPurchasedPhoneNumbers(data.purchased_numbers || []);
+      setAvailablePhoneNumbers(data.available_for_assignment || []);
+    } catch (err: any) {
+      console.error("Error fetching purchased numbers:", err);
+      toast.error("Could not load purchased phone numbers");
+    } finally {
+      setLoadingPurchasedNumbers(false);
+    }
+  };
+
+  const handleRequestPhoneNumber = async () => {
+    try {
+      setRequestingPhone(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/request-phone-number`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          area_code: phoneRequestForm.area_code || null,
+          notes: phoneRequestForm.notes || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to request phone number");
+      }
+
+      const data = await res.json();
+      toast.success(data.message || "Phone number request submitted successfully!");
+      setShowRequestPhoneDialog(false);
+      setPhoneRequestForm({ area_code: "", notes: "" });
+      fetchPhoneNumberRequests();
+    } catch (err: any) {
+      console.error("Error requesting phone number:", err);
+      toast.error(err.message || "Failed to request phone number");
+    } finally {
+      setRequestingPhone(false);
+    }
+  };
+
+  const handleAssignPhoneNumber = async (purchasedPhoneNumberId: number, assignToType: "property_manager" | "realtor", assignToId?: number) => {
+    try {
+      setAssigningPhone(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const body: any = {
+        purchased_phone_number_id: purchasedPhoneNumberId,
+        assign_to_type: assignToType,
+      };
+
+      if (assignToType === "realtor" && assignToId) {
+        body.assign_to_id = assignToId;
+      }
+
+      const res = await fetch(`${API_BASE}/assign-phone-number`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to assign phone number");
+      }
+
+      const data = await res.json();
+      toast.success(data.message || "Phone number assigned successfully!");
+      setSelectedPhoneForAssignment(null);
+      setSelectedRealtorForPhone({});
+      fetchPurchasedPhoneNumbers();
+      fetchNumber(); // Refresh current user's number
+    } catch (err: any) {
+      console.error("Error assigning phone number:", err);
+      toast.error(err.message || "Failed to assign phone number");
+    } finally {
+      setAssigningPhone(false);
+    }
+  };
+
   const handleSignOut = () => {
     // Clear all authentication data
     localStorage.removeItem("access_token");
@@ -1796,6 +1957,13 @@ const Dashboard = () => {
                     >
                       <ListChecks className="h-4 w-4 mr-2" />
                       View Assignments
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="phone-numbers" 
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Phone Numbers
                     </TabsTrigger>
                   </>
                 )}
@@ -2919,6 +3087,312 @@ const Dashboard = () => {
               </TabsContent>
             )}
 
+            {/* Phone Numbers Management - Property Manager Only */}
+            {userType === "property_manager" && (
+              <TabsContent value="phone-numbers">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="space-y-6"
+                >
+                  {/* Current Phone Number Display */}
+                  <Card className="bg-gradient-to-br from-amber-50 to-white shadow-xl border border-amber-200 rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-amber-500 to-amber-600 p-6 sm:p-8">
+                      <CardTitle className="text-white text-2xl font-bold flex items-center gap-4 mb-2">
+                        <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                          <Phone className="h-6 w-6 text-white" />
+                        </div>
+                        Your Current Phone Number
+                      </CardTitle>
+                      <p className="text-amber-50 text-lg">
+                        This is the phone number currently assigned to your account
+                      </p>
+                    </CardHeader>
+                    <CardContent className="p-6 sm:p-8">
+                      {myNumber ? (
+                        <div className="flex items-center justify-between flex-wrap gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="p-4 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg">
+                              <CheckCircle2 className="h-8 w-8 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-gray-600 text-sm font-medium mb-1">Assigned Number</p>
+                              <p className="text-3xl font-bold text-gray-900">{myNumber}</p>
+                            </div>
+                          </div>
+                          <Badge className="bg-gradient-to-br from-green-500 to-green-600 text-white text-lg px-4 py-2 font-semibold">
+                            Active
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between flex-wrap gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="p-4 bg-gray-200 rounded-xl">
+                              <Phone className="h-8 w-8 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="text-gray-600 text-sm font-medium mb-1">No Number Assigned</p>
+                              <p className="text-xl font-semibold text-gray-500">Request a phone number to get started</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Request Phone Number Section */}
+                  <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+                      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                        <div className="flex-1">
+                          <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
+                            <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                              <Phone className="h-6 w-6 text-white" />
+                            </div>
+                            Request New Phone Number
+                          </CardTitle>
+                          <p className="text-gray-600 text-lg">
+                            Request a new phone number. A new number will be available in your portal within 24 hours.
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => setShowRequestPhoneDialog(true)}
+                          className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl px-6 py-3"
+                        >
+                          <Phone className="h-5 w-5 mr-2" />
+                          Request Number
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6 sm:p-8">
+                      {/* Phone Number Requests List */}
+                      {loadingPhoneRequests ? (
+                        <div className="text-center py-8">
+                          <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mx-auto mb-4" />
+                          <p className="text-gray-600 font-medium">Loading requests...</p>
+                        </div>
+                      ) : phoneNumberRequests.length === 0 ? (
+                        <div className="text-center py-8 bg-amber-50 rounded-xl border border-amber-200">
+                          <Phone className="h-12 w-12 text-amber-400 mx-auto mb-4" />
+                          <p className="text-gray-600 font-medium text-lg">No phone number requests yet</p>
+                          <p className="text-gray-500 text-sm mt-2">Click "Request Number" to submit your first request</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <h3 className="text-xl font-bold text-gray-900 mb-4">Your Requests</h3>
+                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {phoneNumberRequests.map((request: any) => (
+                              <Card key={request.request_id} className="bg-white border border-amber-200 rounded-xl hover:shadow-lg transition-all">
+                                <CardContent className="p-5">
+                                  <div className="flex items-start justify-between mb-3">
+                                    <Badge 
+                                      className={`text-sm font-semibold px-3 py-1 ${
+                                        request.status === 'fulfilled' 
+                                          ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
+                                          : request.status === 'pending'
+                                          ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white'
+                                          : 'bg-gray-200 text-gray-700'
+                                      }`}
+                                    >
+                                      {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+                                    </Badge>
+                                    <span className="text-xs text-gray-500">
+                                      {new Date(request.requested_at).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  {request.area_code && (
+                                    <p className="text-sm text-gray-600 mb-2">
+                                      <span className="font-semibold">Area Code:</span> {request.area_code}
+                                    </p>
+                                  )}
+                                  {request.notes && (
+                                    <p className="text-sm text-gray-600 mb-2">
+                                      <span className="font-semibold">Notes:</span> {request.notes}
+                                    </p>
+                                  )}
+                                  {request.fulfilled_at && (
+                                    <p className="text-xs text-green-600 font-medium mt-2">
+                                      Fulfilled: {new Date(request.fulfilled_at).toLocaleDateString()}
+                                    </p>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Purchased Phone Numbers & Assignment Section */}
+                  <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+                      <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
+                        <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                          <CheckSquare className="h-6 w-6 text-white" />
+                        </div>
+                        Manage Phone Numbers
+                      </CardTitle>
+                      <p className="text-gray-600 text-lg">
+                        Assign purchased phone numbers to yourself or your realtors
+                      </p>
+                    </CardHeader>
+                    <CardContent className="p-6 sm:p-8">
+                      {loadingPurchasedNumbers ? (
+                        <div className="text-center py-8">
+                          <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mx-auto mb-4" />
+                          <p className="text-gray-600 font-medium">Loading phone numbers...</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {/* Available Numbers */}
+                          {availablePhoneNumbers.length > 0 && (
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <div className="p-2 bg-green-100 rounded-lg">
+                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                </div>
+                                Available for Assignment ({availablePhoneNumbers.length})
+                              </h3>
+                              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {availablePhoneNumbers.map((number: any) => (
+                                  <Card key={number.purchased_phone_number_id} className="bg-green-50 border-2 border-green-200 rounded-xl hover:shadow-lg transition-all">
+                                    <CardContent className="p-5">
+                                      <div className="flex items-center justify-between mb-4">
+                                        <p className="text-2xl font-bold text-gray-900">{number.phone_number}</p>
+                                        <Badge className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                                          Available
+                                        </Badge>
+                                      </div>
+                                      <div className="space-y-3">
+                                        <Button
+                                          onClick={() => handleAssignPhoneNumber(number.purchased_phone_number_id, "property_manager")}
+                                          disabled={assigningPhone}
+                                          className="w-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl"
+                                        >
+                                          {assigningPhone ? (
+                                            <>
+                                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                              Assigning...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <User className="h-4 w-4 mr-2" />
+                                              Assign to Me
+                                            </>
+                                          )}
+                                        </Button>
+                                        <div className="flex gap-2">
+                                          <Select
+                                            value={selectedRealtorForPhone[number.purchased_phone_number_id]?.toString() || ""}
+                                            onValueChange={(value) => setSelectedRealtorForPhone({
+                                              ...selectedRealtorForPhone,
+                                              [number.purchased_phone_number_id]: Number(value)
+                                            })}
+                                          >
+                                            <SelectTrigger className="flex-1 bg-white border-amber-300 rounded-xl">
+                                              <SelectValue placeholder="Select Realtor" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {realtors.map((realtor) => (
+                                                <SelectItem key={realtor.id} value={realtor.id.toString()}>
+                                                  {realtor.name}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                          <Button
+                                            onClick={() => {
+                                              const realtorId = selectedRealtorForPhone[number.purchased_phone_number_id];
+                                              if (realtorId) {
+                                                handleAssignPhoneNumber(number.purchased_phone_number_id, "realtor", realtorId);
+                                              }
+                                            }}
+                                            disabled={assigningPhone || !selectedRealtorForPhone[number.purchased_phone_number_id]}
+                                            className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl"
+                                          >
+                                            {assigningPhone ? (
+                                              <RefreshCw className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                              <Users className="h-4 w-4" />
+                                            )}
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Assigned Numbers */}
+                          {purchasedPhoneNumbers.filter((n: any) => n.status === 'assigned').length > 0 && (
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <div className="p-2 bg-blue-100 rounded-lg">
+                                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                                </div>
+                                Assigned Numbers ({purchasedPhoneNumbers.filter((n: any) => n.status === 'assigned').length})
+                              </h3>
+                              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {purchasedPhoneNumbers
+                                  .filter((n: any) => n.status === 'assigned')
+                                  .map((number: any) => (
+                                    <Card key={number.purchased_phone_number_id} className="bg-blue-50 border-2 border-blue-200 rounded-xl">
+                                      <CardContent className="p-5">
+                                        <div className="flex items-center justify-between mb-3">
+                                          <p className="text-2xl font-bold text-gray-900">{number.phone_number}</p>
+                                          <Badge className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                                            Assigned
+                                          </Badge>
+                                        </div>
+                                        <div className="space-y-2 text-sm">
+                                          <p className="text-gray-600">
+                                            <span className="font-semibold">Assigned to:</span>{' '}
+                                            {number.assigned_to_type === 'property_manager' ? (
+                                              <span className="font-semibold text-amber-700">Property Manager (You)</span>
+                                            ) : (
+                                              <span className="font-semibold text-blue-700">
+                                                {realtors.find(r => r.id === number.assigned_to_id)?.name || `Realtor #${number.assigned_to_id}`}
+                                              </span>
+                                            )}
+                                          </p>
+                                          {number.assigned_to_type === 'realtor' && number.assigned_to_id && (
+                                            <p className="text-gray-500 text-xs">
+                                              {realtors.find(r => r.id === number.assigned_to_id)?.email || ''}
+                                            </p>
+                                          )}
+                                          {number.assigned_at && (
+                                            <p className="text-xs text-gray-500">
+                                              Assigned: {new Date(number.assigned_at).toLocaleDateString()}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* All Numbers Empty State */}
+                          {availablePhoneNumbers.length === 0 && purchasedPhoneNumbers.filter((n: any) => n.status === 'assigned').length === 0 && (
+                            <div className="text-center py-12 bg-amber-50 rounded-xl border border-amber-200">
+                              <Phone className="h-16 w-16 text-amber-400 mx-auto mb-4" />
+                              <p className="text-gray-600 font-medium text-xl mb-2">No phone numbers available</p>
+                              <p className="text-gray-500 text-sm">Request a phone number to get started</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            )}
+
             {/* Properties Grid */}
             <TabsContent value="properties">
               <motion.div
@@ -3757,6 +4231,98 @@ const Dashboard = () => {
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   Update Property
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Request Phone Number Dialog */}
+      <Dialog open={showRequestPhoneDialog} onOpenChange={setShowRequestPhoneDialog}>
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl p-0 overflow-hidden">
+          <DialogHeader className="p-6 sm:p-8 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-white">
+            <DialogTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                <Phone className="h-6 w-6 text-white" />
+              </div>
+              Request New Phone Number
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2 text-base">
+              Submit a request for a new phone number. A new number will be available in your portal within 24 hours.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-6 sm:p-8 space-y-6">
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                Preferred Area Code (Optional)
+              </label>
+              <input
+                type="text"
+                value={phoneRequestForm.area_code}
+                onChange={(e) => setPhoneRequestForm({...phoneRequestForm, area_code: e.target.value})}
+                className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                placeholder="e.g., 412, 415, 206"
+                maxLength={3}
+                pattern="[0-9]{3}"
+              />
+              <p className="text-xs text-gray-500 mt-2">Enter a 3-digit area code if you have a preference</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                Additional Notes (Optional)
+              </label>
+              <textarea
+                value={phoneRequestForm.notes}
+                onChange={(e) => setPhoneRequestForm({...phoneRequestForm, notes: e.target.value})}
+                className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all min-h-[100px] resize-y"
+                placeholder="Any additional information about your phone number request..."
+                maxLength={500}
+              />
+              <p className="text-xs text-gray-500 mt-2">{phoneRequestForm.notes.length}/500 characters</p>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-gray-700">
+                  <p className="font-semibold text-gray-900 mb-1">What happens next?</p>
+                  <ul className="list-disc list-inside space-y-1 text-gray-600">
+                    <li>Your request will be submitted to the tech team</li>
+                    <li>A new phone number will be purchased and configured</li>
+                    <li>The number will appear in your portal within 24 hours</li>
+                    <li>You can then assign it to yourself or your realtors</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="p-6 sm:p-8 pt-0 border-t border-gray-200">
+            <Button 
+              onClick={() => {
+                setShowRequestPhoneDialog(false);
+                setPhoneRequestForm({ area_code: "", notes: "" });
+              }}
+              variant="outline"
+              className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3"
+              disabled={requestingPhone}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRequestPhoneNumber}
+              disabled={requestingPhone}
+              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl px-6 py-3"
+            >
+              {requestingPhone ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Phone className="h-4 w-4 mr-2" />
+                  Submit Request
                 </>
               )}
             </Button>

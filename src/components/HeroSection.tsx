@@ -2,16 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Phone, TrendingUp, Users, Award, Bot, User, MoreVertical, Search, Paperclip, Mic } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
-import DemoScheduleModal from "./DemoScheduleModal";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
-  const navigate = useNavigate();
 
   const chatScript = [
     { text: "Hello 👋 I'm your LEASAP Assistant. I work with property managers to help you find the perfect home.\nTell me what you're looking for, and I'll guide you step by step.", isUser: false, delay: 1500 },
@@ -105,19 +102,24 @@ const HeroSection = () => {
                 variant="gold" 
                 size="lg" 
                 className="text-lg px-6 py-3 font-semibold hover:scale-105 transition-transform duration-200"
-                onClick={() => navigate('/book-demo')}
+                onClick={() => {
+                  const element = document.getElementById('ai-tools');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
               >
-                Start Free Trial
+                Experience the Results
               </Button>
-              <DemoScheduleModal>
+              <Link to="/book-demo">
                 <Button 
                   variant="premium" 
                   size="lg" 
-                  className="text-lg px-6 py-3 font-semibold border-2 border-gold hover:scale-105 transition-transform duration-200"
+                  className="text-lg px-6 py-3 font-semibold border-2 border-gold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
                 >
                   Schedule Demo
                 </Button>
-              </DemoScheduleModal>
+              </Link>
             </div>
 
             {/* Stats */}
@@ -366,10 +368,15 @@ const HeroSection = () => {
               {/* Enhanced Action Button */}
               <Button 
                 className="w-full mt-3 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-gold text-[#111b21] font-bold py-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl border-2 border-gold/50 text-sm"
-                onClick={() => navigate('/book-demo')}
+                onClick={() => {
+                  const element = document.getElementById('ai-tools');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
-                Start Your AI Journey Today
+                Experience the Results
               </Button>
             </div>
           </div>
@@ -381,7 +388,6 @@ const HeroSection = () => {
       <div className="absolute bottom-32 left-8 w-12 h-12 bg-white/10 rounded-full animate-float delay-2000 backdrop-blur-sm"></div>
       <div className="absolute top-36 left-16 w-10 h-10 bg-gold/30 rounded-full animate-float delay-1500 backdrop-blur-sm"></div>
       
-      <DemoScheduleModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </section>
   );
 };

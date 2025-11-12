@@ -1558,6 +1558,9 @@ const Dashboard = () => {
    * 
    * Shows a confirmation dialog before unassigning. On success, refreshes the
    * purchased numbers list and the current user's number.
+   * 
+   * Important: Always parses the JSON response using await response.json() to
+   * properly extract the message and other response data.
    */
   const handleUnassignPhoneNumber = async (purchasedPhoneNumberId: number) => {
     // Confirm action with user before proceeding
@@ -1573,6 +1576,7 @@ const Dashboard = () => {
         return;
       }
 
+      // Send unassign request to backend
       const res = await fetch(`${API_BASE}/unassign-phone-number`, {
         method: "POST",
         headers: {
@@ -1584,15 +1588,27 @@ const Dashboard = () => {
         }),
       });
 
+      // Handle error responses
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.detail || "Failed to unassign phone number");
       }
 
+      // Parse JSON response - important: always parse the response!
       const data = await res.json();
+      
+      // Log success for debugging
+      console.log("Success:", data.message);
+      console.log("Unassigned phone number:", data.phone_number);
+      
+      // Display success message from API response
       toast.success(data.message || "Phone number unassigned successfully!");
+      
+      // Refresh the phone numbers list to show updated status
       fetchPurchasedPhoneNumbers();
-      fetchNumber(); // Refresh current user's number
+      
+      // Refresh current user's number in case it was unassigned from them
+      fetchNumber();
     } catch (err: any) {
       console.error("Error unassigning phone number:", err);
       toast.error(err.message || "Failed to unassign phone number");

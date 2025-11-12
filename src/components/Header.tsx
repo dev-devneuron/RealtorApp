@@ -132,12 +132,12 @@ const Header = () => {
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/signup">
+                <Link to="/book-demo">
                   <Button 
                     className="bg-gold hover:bg-gold/90 text-navy font-semibold transition-all duration-300"
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Sign Up
+                    Book a Demo
                   </Button>
                 </Link>
               </>
@@ -221,12 +221,12 @@ const Header = () => {
                         Sign In
                       </Button>
                     </Link>
-                    <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link to="/book-demo" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button 
                         className="w-full bg-gold hover:bg-gold/90 text-navy font-semibold transition-all duration-300"
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
-                        Sign Up
+                        Book a Demo
                       </Button>
                     </Link>
                   </>

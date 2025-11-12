@@ -8,6 +8,7 @@ import Properties from "./pages/Properties";
 import About from "./pages/About";
 import Signup from "./pages/Signup";
 import SignIn from "./pages/SignIn";
+import BookDemo from "./pages/BookDemo";
 import Upload from "./pages/UploadPage";
 import Dashboard from "./pages/Dashboard";
 import ConfirmationPage from "./pages/ConfirmationPage"
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/properties/:id" element={<PropertyDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/book-demo" element={<BookDemo />} />
           <Route path="/signin" element={<SignIn />} />
           <Route
           path="/dashboard"

@@ -38,7 +38,7 @@ const About = () => {
                At Leasap, we empower realtors with cutting-edge AI and real estate expertise to simplify their daily challenges. Our platform automates client chats, calls, and bookings, helping agents close deals faster, boost leads, and focus on what they do best: selling homes.</p>
               <p className="text-navy/70 mb-6 leading-relaxed font-semibold">
                 Since our founding, Leasap has evolved from a small real estate venture into a powerful AI-driven platform built for realtors. What started as a vision to simplify property transactions has grown into a mission to empower agents with tools that handle client inquiries, schedule visits, and generate actionable market insights. Today, we partner with realtors across the region, helping them save time, win more clients, and close deals with confidence.</p>
-              <Link to="/signup">
+              <Link to="/book-demo">
                 <Button variant="luxury" size="lg">
                   Schedule Consultation
                 </Button>

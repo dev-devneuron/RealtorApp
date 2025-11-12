@@ -237,7 +237,7 @@ const CallBotSection = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/signup">   
+              <Link to="/book-demo">   
               <Button variant="luxury" size="lg" className="flex-1">
                 <Phone className="mr-2 h-5 w-5" />
                 Get Your CallBot Companion

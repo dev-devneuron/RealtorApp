@@ -262,7 +262,7 @@ const ChatBotSection = () => {
             </div>
 
             {/* CTA Button */}
-            <Link to="/signup">
+            <Link to="/book-demo">
               <Button variant="luxury" size="lg" className="w-full text-lg py-4">
                 <MessageCircle className="mr-2 h-5 w-5" />
                 Get Your ChatBot Today

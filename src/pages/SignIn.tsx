@@ -264,8 +264,8 @@ const SignIn = () => {
             <div className="mt-6 text-center">
               <p className="text-white/60 text-sm">
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-gold hover:underline">
-                  Create one
+                <Link to="/book-demo" className="text-gold hover:underline">
+                  Book a Demo
                 </Link>
               </p>
             </div>

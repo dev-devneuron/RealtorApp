@@ -105,7 +105,7 @@ const HeroSection = () => {
                 variant="gold" 
                 size="lg" 
                 className="text-lg px-6 py-3 font-semibold hover:scale-105 transition-transform duration-200"
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate('/book-demo')}
               >
                 Start Free Trial
               </Button>
@@ -366,7 +366,7 @@ const HeroSection = () => {
               {/* Enhanced Action Button */}
               <Button 
                 className="w-full mt-3 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-gold text-[#111b21] font-bold py-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl border-2 border-gold/50 text-sm"
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate('/book-demo')}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
                 Start Your AI Journey Today

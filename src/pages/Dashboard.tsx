@@ -138,6 +138,7 @@ const Dashboard = () => {
   const [assigningPhone, setAssigningPhone] = useState(false);
   const [selectedPhoneForAssignment, setSelectedPhoneForAssignment] = useState<number | null>(null);
   const [selectedRealtorForPhone, setSelectedRealtorForPhone] = useState<{ [key: number]: number }>({});
+  const [activeTab, setActiveTab] = useState<string>("properties");
 
   // Fetch current user information
   const fetchUserInfo = async () => {
@@ -249,6 +250,12 @@ const Dashboard = () => {
     // Get user type from localStorage
     const storedUserType = localStorage.getItem("user_type");
     setUserType(storedUserType);
+    // Set initial active tab based on user type
+    if (storedUserType === "property_manager") {
+      setActiveTab("realtors");
+    } else {
+      setActiveTab("properties");
+    }
 
     // ALWAYS ensure we have a user name - check localStorage first and set immediately
     const storedUserName = localStorage.getItem("user_name");
@@ -1636,24 +1643,16 @@ const Dashboard = () => {
                   Upload
                 </Link>
               </Button>
-              <Button 
-                onClick={handleBuyNumber} 
-                disabled={loading} 
-                className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl"
-                size="sm"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Phone className="h-4 w-4 mr-2" />
-                    Get Phone Number
-                  </>
-                )}
-              </Button>
+              {userType === "property_manager" && (
+                <Button 
+                  onClick={() => setActiveTab("phone-numbers")} 
+                  className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl"
+                  size="sm"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Request a Phone Number
+                </Button>
+              )}
               <Button 
                 onClick={handleSignOut}
                 variant="outline"
@@ -1926,7 +1925,7 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <Tabs defaultValue={userType === "property_manager" ? "realtors" : "properties"} className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Enhanced Tabs Navigation */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}

@@ -1604,8 +1604,27 @@ const Dashboard = () => {
         console.log("Success:", data);
         console.log("Message:", data.message); // This will show the actual message
         
-        // Extract message - should be a string according to API docs
-        const successMessage = data.message || `Phone number ${data.phone_number || ''} has been unassigned and is now available`;
+        // Extract message safely - ensure it's always a string
+        let successMessage = "Phone number unassigned successfully!";
+        if (data.message) {
+          if (typeof data.message === 'string') {
+            successMessage = data.message;
+          } else if (typeof data.message === 'object') {
+            // If message is an object, try to extract a string from it
+            successMessage = data.message.message || data.message.text || JSON.stringify(data.message);
+          } else {
+            successMessage = String(data.message);
+          }
+        } else if (data.phone_number) {
+          // Fallback: create message from phone number
+          successMessage = `Phone number ${data.phone_number} has been unassigned and is now available`;
+        }
+        
+        // Ensure successMessage is definitely a string before displaying
+        if (typeof successMessage !== 'string') {
+          console.warn("Success message is not a string, converting:", successMessage);
+          successMessage = String(successMessage);
+        }
         
         // Display the message properly (always a string)
         toast.success(successMessage);
@@ -1629,13 +1648,39 @@ const Dashboard = () => {
       } else {
         // Error response - data is already parsed
         console.error("Error response:", data);
-        const errorMessage = data.detail || data.message || "Unknown error";
+        
+        // Extract error message safely - handle both string and object cases
+        let errorMessage = "Unknown error";
+        if (data.detail) {
+          errorMessage = typeof data.detail === 'string' ? data.detail : String(data.detail);
+        } else if (data.message) {
+          errorMessage = typeof data.message === 'string' ? data.message : String(data.message);
+        } else if (data.error) {
+          errorMessage = typeof data.error === 'string' ? data.error : String(data.error);
+        }
+        
         toast.error(`Error: ${errorMessage}`);
         throw new Error(errorMessage);
       }
     } catch (err: any) {
       console.error("Error unassigning phone number:", err);
-      toast.error(err.message || "Failed to unassign phone number");
+      
+      // Safely extract error message - handle various error formats
+      let errorMessage = "Failed to unassign phone number";
+      if (err) {
+        if (typeof err === 'string') {
+          errorMessage = err;
+        } else if (err.message && typeof err.message === 'string') {
+          errorMessage = err.message;
+        } else if (err.detail && typeof err.detail === 'string') {
+          errorMessage = err.detail;
+        } else if (typeof err === 'object') {
+          // Try to stringify if it's an object, but prefer message/detail
+          errorMessage = err.message || err.detail || err.error || JSON.stringify(err);
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setAssigningPhone(false);
     }

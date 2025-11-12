@@ -1,3 +1,16 @@
+/**
+ * SignIn Page Component
+ * 
+ * Authentication page that allows both Property Managers and Realtors to sign in.
+ * Features:
+ * - Tab-based user type selection (Property Manager vs Realtor)
+ * - Password visibility toggle
+ * - Comprehensive user data extraction and storage from login response
+ * - Automatic redirect to dashboard on successful login
+ * 
+ * @module pages/SignIn
+ */
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,10 +20,13 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Home, Users, User, Eye, EyeOff } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Backend API base URL
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  
+  // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,6 +34,15 @@ const SignIn = () => {
   const [userType, setUserType] = useState<"property_manager" | "realtor">("realtor");
   const { toast } = useToast();
 
+  /**
+   * Handles login form submission
+   * 
+   * Authenticates the user with the backend API based on selected user type.
+   * Extracts and stores user information from the response, including name,
+   * tokens, and user type. Redirects to dashboard on success.
+   * 
+   * @param e - Form submission event
+   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -54,11 +79,11 @@ const SignIn = () => {
       if (data.property_manager_id) localStorage.setItem("property_manager_id", data.property_manager_id);
       if (data.user_type) localStorage.setItem("user_type", data.user_type);
       
-      // ALWAYS store user name - this is critical for dashboard display
-      // Check multiple possible locations for the name
+      // Extract and store user name with multiple fallback strategies
+      // This is critical for dashboard display - we always want to show a name
       let userNameToStore = null;
       
-      // Priority 1: Direct name fields
+      // Priority 1: Direct name fields from API response
       if (data.user?.name) {
         userNameToStore = data.user.name.trim();
         console.log("✓ Found user name in data.user.name:", userNameToStore);
@@ -66,7 +91,7 @@ const SignIn = () => {
         userNameToStore = data.name.trim();
         console.log("✓ Found user name in data.name:", userNameToStore);
       } 
-      // Priority 2: Property manager or realtor specific fields
+      // Priority 2: User type-specific name fields
       else if (data.property_manager?.name) {
         userNameToStore = data.property_manager.name.trim();
         console.log("✓ Found user name in data.property_manager.name:", userNameToStore);
@@ -74,7 +99,7 @@ const SignIn = () => {
         userNameToStore = data.realtor.name.trim();
         console.log("✓ Found user name in data.realtor.name:", userNameToStore);
       }
-      // Priority 3: Extract from email in response
+      // Priority 3: Extract from email in API response
       else if (data.user?.email) {
         const emailParts = data.user.email.split('@');
         userNameToStore = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1);
@@ -84,16 +109,16 @@ const SignIn = () => {
         userNameToStore = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1);
         console.log("✓ Extracted user name from data.email:", userNameToStore);
       }
-      // Priority 4: Use login form email as ABSOLUTE fallback
+      // Priority 4: Use login form email as absolute fallback
       else if (email && email.includes('@')) {
         const emailName = email.split('@')[0];
-        // Remove dots, underscores, and numbers for cleaner name
+        // Clean up email prefix (remove dots, underscores, numbers)
         const cleanedName = emailName.replace(/[._0-9]/g, '');
         userNameToStore = cleanedName.charAt(0).toUpperCase() + cleanedName.slice(1);
         console.log("✓ Using login form email as fallback name:", userNameToStore);
       }
       
-      // ALWAYS store something - never leave it empty
+      // Store the extracted name if we found one
       if (userNameToStore && userNameToStore.length > 0) {
         console.log("✓✓✓ STORING user name in localStorage:", userNameToStore);
         localStorage.setItem("user_name", userNameToStore);

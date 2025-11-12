@@ -1,3 +1,18 @@
+/**
+ * HeroSection Component
+ * 
+ * Main hero section for the landing page. Features:
+ * - Animated chatbot conversation demonstration
+ * - Call-to-action buttons
+ * - Key feature highlights
+ * - Responsive design with gradient backgrounds
+ * 
+ * The chatbot conversation auto-plays to demonstrate the platform's
+ * AI capabilities in a realistic scenario.
+ * 
+ * @module components/HeroSection
+ */
+
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Phone, TrendingUp, Users, Award, Bot, User, MoreVertical, Search, Paperclip, Mic } from "lucide-react";
@@ -5,11 +20,18 @@ import heroBg from "@/assets/hero-bg.jpg";
 import { Link } from "react-router-dom";
 
 const HeroSection = () => {
+  // Chat animation state
   const [messages, setMessages] = useState([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
+  /**
+   * Predefined chat script for demonstration
+   * 
+   * Simulates a realistic conversation between a user and the AI assistant,
+   * showcasing the platform's property search and booking capabilities.
+   */
   const chatScript = [
     { text: "Hello 👋 I'm your LEASAP Assistant. I work with property managers to help you find the perfect home.\nTell me what you're looking for, and I'll guide you step by step.", isUser: false, delay: 1500 },
     { text: "I am moving to Chicago next month. Looking for a 1 bedroom apartment under $2400", isUser: true, delay: 2000 },
@@ -24,6 +46,11 @@ const HeroSection = () => {
     { text: "Thank you for using LEASAP! Feel free to contact us anytime for assistance. Have a great day! 😊", isUser: false, delay: 1000 }
   ];
 
+  /**
+   * Scrolls the chat container to the bottom
+   * 
+   * Ensures the latest message is always visible when new messages are added.
+   */
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
       const scrollHeight = chatContainerRef.current.scrollHeight;
@@ -33,10 +60,21 @@ const HeroSection = () => {
     }
   };
 
+  /**
+   * Effect: Auto-scroll when messages change
+   * 
+   * Automatically scrolls to bottom whenever new messages are added to the chat.
+   */
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  /**
+   * Effect: Animate chat messages
+   * 
+   * Sequentially adds messages from the chat script with delays to create
+   * a realistic conversation flow. Cleans up timers on unmount.
+   */
   useEffect(() => {
     if (currentMessageIndex < chatScript.length) {
       const currentMessage = chatScript[currentMessageIndex];
@@ -45,10 +83,17 @@ const HeroSection = () => {
         setCurrentMessageIndex(prev => prev + 1);
       }, currentMessage.delay);
 
+      // Cleanup timer on unmount or when message index changes
       return () => clearTimeout(timer);
     }
   }, [currentMessageIndex]);
 
+  /**
+   * Resets the chat animation
+   * 
+   * Clears all messages and resets to the beginning of the script.
+   * Useful for replaying the demonstration.
+   */
   const resetChat = () => {
     setMessages([]);
     setCurrentMessageIndex(0);

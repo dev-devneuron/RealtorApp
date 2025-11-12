@@ -1,3 +1,20 @@
+/**
+ * Footer Component
+ * 
+ * Main footer component for the application. Displays:
+ * - Company information and branding
+ * - Quick navigation links
+ * - Service links
+ * - Contact information
+ * - Social media links
+ * - Copyright information
+ * 
+ * Note: Newsletter subscription functionality is currently commented out
+ * but can be re-enabled when needed.
+ * 
+ * @module components/Footer
+ */
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +33,18 @@ import {
 } from "lucide-react";
 
 const Footer = () => {
+  // Newsletter subscription state (currently unused)
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  /**
+   * Newsletter subscription handler (currently disabled)
+   * 
+   * This function would handle newsletter subscriptions by sending the email
+   * to a Supabase Edge Function. Currently commented out but can be re-enabled
+   * when newsletter functionality is needed.
+   */
   // const handleSubscribe = async () => {
   //   if (!email) {
   //     toast({
@@ -60,6 +85,11 @@ const Footer = () => {
   //     setIsSubmitting(false);
   //   }
   // };
+
+  /**
+   * Footer navigation links
+   * Quick links to main sections of the website
+   */
   const quickLinks = [
     { name: "Home", href: "#home" },
     { name: "Services", href: "#services" },
@@ -68,6 +98,10 @@ const Footer = () => {
     { name: "Contact", href: "#contact" },
   ];
 
+  /**
+   * Service links
+   * Links to various AI services offered by the platform
+   */
   const services = [
     { name: "AI ChatBot", href: "#" },
     { name: "AI CallBot", href: "#" },
@@ -76,6 +110,10 @@ const Footer = () => {
     { name: "Analytics", href: "#" },
   ];
 
+  /**
+   * Legal links (currently disabled)
+   * Can be re-enabled when legal pages are created
+   */
   // const legal = [
   //   { name: "Privacy Policy", href: "#" },
   //   { name: "Terms of Service", href: "#" },
@@ -83,6 +121,10 @@ const Footer = () => {
   //   { name: "GDPR Compliance", href: "#" },
   // ];
 
+  /**
+   * Social media links
+   * Configuration for social media platform links with icons
+   */
   const socialLinks = [
     { icon: Facebook, href: "#", name: "Facebook" },
     { icon: Twitter, href: "#", name: "Twitter" },

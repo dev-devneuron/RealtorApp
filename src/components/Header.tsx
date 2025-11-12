@@ -1,29 +1,65 @@
+/**
+ * Header Component
+ * 
+ * Main navigation header for the application. Features:
+ * - Responsive design with mobile menu
+ * - Scroll-based styling changes
+ * - Authentication-aware navigation (shows different buttons for logged in/out users)
+ * - Smooth scrolling for anchor links
+ * 
+ * @module components/Header
+ */
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Phone, Menu, X, Home, LogIn, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Header = () => {
+  // State for scroll-based styling
   const [isScrolled, setIsScrolled] = useState(false);
+  
+  // State for mobile menu visibility
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // State for authentication status
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  /**
+   * Effect hook for scroll detection and auth status checking
+   * 
+   * Sets up scroll listener to change header styling when scrolled past 50px.
+   * Checks authentication status on mount and updates login state accordingly.
+   */
   useEffect(() => {
+    // Handle scroll event to update header styling
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
-    // Check if user is logged in
+    // Check if user is logged in by looking for access token
     const checkAuthStatus = () => {
       const token = localStorage.getItem("access_token");
       setIsLoggedIn(!!token);
     };
 
+    // Initial auth check
     checkAuthStatus();
+    
+    // Add scroll listener
     window.addEventListener("scroll", handleScroll);
+    
+    // Cleanup: remove scroll listener on unmount
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  /**
+   * Navigation items configuration
+   * 
+   * Defines the main navigation links. Items with isRoute: true use React Router
+   * Link components, while items with isRoute: false use anchor tags for smooth
+   * scrolling to page sections.
+   */
   const navigation = [
     { name: "Home", href: "/", isRoute: true },
     { name: "Services", href: "#services", isRoute: false },
@@ -33,12 +69,23 @@ const Header = () => {
     { name: "Contact", href: "#contact-section", isRoute: false },
   ];
 
+  /**
+   * Handles user logout
+   * 
+   * Clears all authentication-related data from localStorage and redirects
+   * to the home page. Updates the logged-in state to reflect logout.
+   */
   const handleLogout = () => {
+    // Clear all authentication tokens and user data
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("realtor_id");
     localStorage.removeItem("auth_link");
+    
+    // Update state
     setIsLoggedIn(false);
+    
+    // Redirect to home page
     window.location.href = "/";
   };
 

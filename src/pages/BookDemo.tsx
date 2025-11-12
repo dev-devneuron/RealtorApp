@@ -1,3 +1,14 @@
+/**
+ * BookDemo Page Component
+ * 
+ * Public-facing page that allows potential customers to book a demo of the platform.
+ * Features a comprehensive form for collecting contact information, preferred scheduling
+ * details, and optional notes. Includes form validation, error handling, and a success
+ * confirmation screen.
+ * 
+ * @module pages/BookDemo
+ */
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +21,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Home, Calendar, Clock, Phone, Mail, User, Building2, CheckCircle2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
+// Backend API base URL
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
-// Common timezones
+/**
+ * List of common timezones for the timezone selector
+ * Includes major US, Canadian, European, and Asia-Pacific timezones
+ */
 const TIMEZONES = [
   "America/New_York",
   "America/Chicago",
@@ -29,8 +44,16 @@ const TIMEZONES = [
   "Australia/Sydney",
 ];
 
+/**
+ * BookDemo Component
+ * 
+ * Main component for the demo booking page. Manages form state, submission,
+ * and displays either the booking form or success confirmation screen.
+ */
 const BookDemo = () => {
   const navigate = useNavigate();
+  
+  // Form state management
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -41,14 +64,25 @@ const BookDemo = () => {
     timezone: "",
     notes: "",
   });
+  
+  // UI state management
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  /**
+   * Handles form submission
+   * 
+   * Validates the form, sends the demo request to the backend API,
+   * and handles success/error responses with appropriate user feedback.
+   * 
+   * @param e - Form submission event
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      // Prepare payload - convert empty strings to null for optional fields
       const payload = {
         name: formData.name,
         email: formData.email,
@@ -60,9 +94,11 @@ const BookDemo = () => {
         notes: formData.notes || null,
       };
 
+      // Log request details for debugging
       console.log("🔄 Submitting demo request to:", `${API_BASE}/book-demo`);
       console.log("📦 Payload:", payload);
 
+      // Send POST request to backend API
       const response = await fetch(`${API_BASE}/book-demo`, {
         method: "POST",
         headers: {
@@ -71,13 +107,16 @@ const BookDemo = () => {
         body: JSON.stringify(payload),
       });
 
+      // Log response details for debugging
       console.log("📡 Response status:", response.status);
       console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
 
+      // Handle error responses
       if (!response.ok) {
         const responseText = await response.text();
         console.error("❌ Error response text:", responseText);
         
+        // Try to parse error response as JSON, fallback to plain text
         let errorData;
         try {
           errorData = JSON.parse(responseText);
@@ -87,7 +126,7 @@ const BookDemo = () => {
         
         console.error("❌ Error data:", errorData);
         
-        // If 404, suggest checking if endpoint exists
+        // Special handling for 404 errors (endpoint not found)
         if (response.status === 404) {
           throw new Error(
             `Endpoint not found (404). The /book-demo endpoint may not be implemented on the backend yet. ` +
@@ -95,24 +134,30 @@ const BookDemo = () => {
           );
         }
         
+        // Throw error with message from API or default message
         throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: Failed to submit demo request`);
       }
 
+      // Handle successful response
       const responseText = await response.text();
       console.log("✅ Success response text:", responseText);
       
+      // Parse response data
       let data;
       try {
         data = JSON.parse(responseText);
       } catch {
+        // If parsing fails, use default success message
         data = { message: "Demo request submitted successfully!" };
       }
       
       console.log("✅ Success data:", data);
+      
+      // Show success state and notification
       setIsSuccess(true);
       toast.success(data.message || "Thank you! We've received your demo request and will contact you soon.");
 
-      // Reset form
+      // Reset form to initial state
       setFormData({
         name: "",
         email: "",
@@ -124,13 +169,23 @@ const BookDemo = () => {
         notes: "",
       });
     } catch (error: any) {
+      // Handle any errors during submission
       console.error("Error booking demo:", error);
       toast.error(error.message || "Failed to submit demo request. Please try again.");
     } finally {
+      // Always reset submitting state
       setIsSubmitting(false);
     }
   };
 
+  /**
+   * Success Screen
+   * 
+   * Displays a confirmation message after successful demo request submission.
+   * Provides options to return home or book another demo.
+   */
+
+  // Render success screen if submission was successful
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-navy via-navy/95 to-navy/90 flex items-center justify-center px-4 py-12">
@@ -195,10 +250,16 @@ const BookDemo = () => {
     );
   }
 
+  /**
+   * Main Booking Form
+   * 
+   * Renders the demo booking form with all input fields, validation,
+   * and submission handling. Includes a features preview section at the bottom.
+   */
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy via-navy/95 to-navy/90 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-4xl">
-        {/* Header */}
+        {/* Page Header with Navigation */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

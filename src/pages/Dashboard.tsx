@@ -1,3 +1,22 @@
+/**
+ * Dashboard Page Component
+ * 
+ * Main dashboard component for Property Managers and Realtors. Provides comprehensive
+ * management interfaces for:
+ * - Property listings and details
+ * - Realtor management (Property Managers only)
+ * - Property assignments to realtors
+ * - Phone number requests and assignments
+ * - Bookings and appointments
+ * - Chat and call recordings
+ * - User profile information
+ * 
+ * Features role-based UI rendering based on user type (property_manager vs realtor).
+ * Includes pagination, filtering, search, and CRUD operations for all entities.
+ * 
+ * @module pages/Dashboard
+ */
+
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
@@ -14,9 +33,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+
+// Backend API base URL
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
-// Helper function to parse and extract metadata from property
+/**
+ * Helper function to parse and extract metadata from property objects
+ * 
+ * Handles properties that may have metadata stored as JSON strings or objects.
+ * Provides safe fallbacks for all fields and ensures consistent data structure.
+ * 
+ * @param property - Property object that may contain listing_metadata
+ * @returns Normalized property object with all metadata fields extracted
+ */
 const getPropertyMetadata = (property: any) => {
   // Safety check: return empty object if property is null/undefined
   if (!property) {
@@ -78,55 +107,33 @@ const getPropertyMetadata = (property: any) => {
   };
 };
 
+/**
+ * Dashboard Component
+ * 
+ * Main dashboard component that renders different interfaces based on user type.
+ * Property Managers see additional management features for realtors and phone numbers.
+ */
 const Dashboard = () => {
   const navigate = useNavigate();
+  
+  // ============================================================================
+  // UI State Management
+  // ============================================================================
   const [animateCards, setAnimateCards] = useState(false);
-  const [loading, setLoading] = useState(false)
-  const [myNumber, setMyNumber] = useState<string | null>(null);
-  const [recordings, setRecordings] = useState<{ url: string }[]>([]);
-  const [loadingRecordings, setLoadingRecordings] = useState(false);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [loadingBookings, setLoadingBookings] = useState(false);
-  const [apartments, setApartments] = useState<any[]>([]);
-  const [loadingApartments, setLoadingApartments] = useState(false);
-  const [chats, setChats] = useState<any>({});
-  const [loadingChats, setLoadingChats] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("properties");
+  
+  // ============================================================================
+  // User Information State
+  // ============================================================================
   const [userType, setUserType] = useState<string | null>(null);
-  const [realtors, setRealtors] = useState<any[]>([]);
-  const [loadingRealtors, setLoadingRealtors] = useState(false);
-  const [showAddRealtor, setShowAddRealtor] = useState(false);
-  const [newRealtor, setNewRealtor] = useState({ name: "", email: "", password: "" });
-  const [showEditRealtor, setShowEditRealtor] = useState(false);
-  const [editingRealtor, setEditingRealtor] = useState<any>(null);
-  const [editRealtorForm, setEditRealtorForm] = useState({ name: "", email: "", password: "", contact: "" });
-  const [updatingRealtor, setUpdatingRealtor] = useState(false);
-  // Property assignment state
-  const [availablePropertiesForAssignment, setAvailablePropertiesForAssignment] = useState<any[]>([]);
-  const [loadingAssignmentProperties, setLoadingAssignmentProperties] = useState(false);
-  const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
-  const [selectedRealtor, setSelectedRealtor] = useState<number | null>(null);
-  const [assigningProperties, setAssigningProperties] = useState(false);
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12);
-  const [pageJumpValue, setPageJumpValue] = useState("");
-  // Assignments view state
-  const [assignmentsData, setAssignmentsData] = useState<any>(null);
-  const [loadingAssignments, setLoadingAssignments] = useState(false);
-  const [selectedRealtorFilters, setSelectedRealtorFilters] = useState<Set<number | string>>(new Set());
-  // Expanded features state for property listings
-  const [expandedFeatures, setExpandedFeatures] = useState<{ [key: number]: boolean }>({});
-  // Property detail modal state
-  const [selectedPropertyForDetail, setSelectedPropertyForDetail] = useState<any>(null);
-  const [showPropertyDetailModal, setShowPropertyDetailModal] = useState(false);
-  const [showPropertyUpdateModal, setShowPropertyUpdateModal] = useState(false);
-  const [updatingProperty, setUpdatingProperty] = useState(false);
-  const [deletingProperty, setDeletingProperty] = useState(false);
-  const [propertyUpdateForm, setPropertyUpdateForm] = useState<any>({});
-  // User information state
   const [userName, setUserName] = useState<string | null>(null);
   const [userGender, setUserGender] = useState<string | null>(null);
-  // Phone number management state (Property Manager only)
+  
+  // ============================================================================
+  // Phone Number State (Property Manager only)
+  // ============================================================================
+  const [myNumber, setMyNumber] = useState<string | null>(null);
   const [phoneNumberRequests, setPhoneNumberRequests] = useState<any[]>([]);
   const [loadingPhoneRequests, setLoadingPhoneRequests] = useState(false);
   const [purchasedPhoneNumbers, setPurchasedPhoneNumbers] = useState<any[]>([]);
@@ -138,9 +145,80 @@ const Dashboard = () => {
   const [assigningPhone, setAssigningPhone] = useState(false);
   const [selectedPhoneForAssignment, setSelectedPhoneForAssignment] = useState<number | null>(null);
   const [selectedRealtorForPhone, setSelectedRealtorForPhone] = useState<{ [key: number]: number }>({});
-  const [activeTab, setActiveTab] = useState<string>("properties");
+  
+  // ============================================================================
+  // Recordings and Media State
+  // ============================================================================
+  const [recordings, setRecordings] = useState<{ url: string }[]>([]);
+  const [loadingRecordings, setLoadingRecordings] = useState(false);
+  
+  // ============================================================================
+  // Bookings State
+  // ============================================================================
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  
+  // ============================================================================
+  // Properties State
+  // ============================================================================
+  const [apartments, setApartments] = useState<any[]>([]);
+  const [loadingApartments, setLoadingApartments] = useState(false);
+  const [expandedFeatures, setExpandedFeatures] = useState<{ [key: number]: boolean }>({});
+  const [selectedPropertyForDetail, setSelectedPropertyForDetail] = useState<any>(null);
+  const [showPropertyDetailModal, setShowPropertyDetailModal] = useState(false);
+  const [showPropertyUpdateModal, setShowPropertyUpdateModal] = useState(false);
+  const [updatingProperty, setUpdatingProperty] = useState(false);
+  const [deletingProperty, setDeletingProperty] = useState(false);
+  const [propertyUpdateForm, setPropertyUpdateForm] = useState<any>({});
+  
+  // ============================================================================
+  // Chats State
+  // ============================================================================
+  const [chats, setChats] = useState<any>({});
+  const [loadingChats, setLoadingChats] = useState(false);
+  
+  // ============================================================================
+  // Realtor Management State (Property Manager only)
+  // ============================================================================
+  const [realtors, setRealtors] = useState<any[]>([]);
+  const [loadingRealtors, setLoadingRealtors] = useState(false);
+  const [showAddRealtor, setShowAddRealtor] = useState(false);
+  const [newRealtor, setNewRealtor] = useState({ name: "", email: "", password: "" });
+  const [showEditRealtor, setShowEditRealtor] = useState(false);
+  const [editingRealtor, setEditingRealtor] = useState<any>(null);
+  const [editRealtorForm, setEditRealtorForm] = useState({ name: "", email: "", password: "", contact: "" });
+  const [updatingRealtor, setUpdatingRealtor] = useState(false);
+  
+  // ============================================================================
+  // Property Assignment State (Property Manager only)
+  // ============================================================================
+  const [availablePropertiesForAssignment, setAvailablePropertiesForAssignment] = useState<any[]>([]);
+  const [loadingAssignmentProperties, setLoadingAssignmentProperties] = useState(false);
+  const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
+  const [selectedRealtor, setSelectedRealtor] = useState<number | null>(null);
+  const [assigningProperties, setAssigningProperties] = useState(false);
+  const [assignmentsData, setAssignmentsData] = useState<any>(null);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [selectedRealtorFilters, setSelectedRealtorFilters] = useState<Set<number | string>>(new Set());
+  
+  // ============================================================================
+  // Pagination State
+  // ============================================================================
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [pageJumpValue, setPageJumpValue] = useState("");
 
-  // Fetch current user information
+  // ============================================================================
+  // API Functions - User Information
+  // ============================================================================
+  
+  /**
+   * Fetches current user information from the API
+   * 
+   * Attempts to retrieve user name and gender from multiple possible endpoints.
+   * Falls back to localStorage if API calls fail. Updates user state and stores
+   * information in localStorage for future use.
+   */
   const fetchUserInfo = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -1300,7 +1378,17 @@ const Dashboard = () => {
     }
   };
 
-  // Phone Number Management Functions (Property Manager Only)
+  // ============================================================================
+  // API Functions - Phone Number Management (Property Manager Only)
+  // ============================================================================
+  
+  /**
+   * Fetches all phone number requests made by the current Property Manager
+   * 
+   * Retrieves the list of phone number requests with their status (pending, fulfilled, etc.)
+   * and updates the phoneNumberRequests state. Silently fails if the request fails
+   * since this is optional data.
+   */
   const fetchPhoneNumberRequests = async () => {
     try {
       setLoadingPhoneRequests(true);
@@ -1327,6 +1415,13 @@ const Dashboard = () => {
     }
   };
 
+  /**
+   * Fetches all purchased phone numbers available to the Property Manager
+   * 
+   * Retrieves both all purchased numbers and specifically those available for assignment.
+   * Updates purchasedPhoneNumbers and availablePhoneNumbers state. Also fetches
+   * the list of realtors for assignment purposes.
+   */
   const fetchPurchasedPhoneNumbers = async () => {
     try {
       setLoadingPurchasedNumbers(true);
@@ -1354,6 +1449,13 @@ const Dashboard = () => {
     }
   };
 
+  /**
+   * Submits a new phone number request to the backend
+   * 
+   * Sends a request for a new phone number with optional country code, area code,
+   * and notes. On success, closes the dialog, resets the form, and refreshes
+   * the requests list.
+   */
   const handleRequestPhoneNumber = async () => {
     try {
       setRequestingPhone(true);
@@ -1394,6 +1496,15 @@ const Dashboard = () => {
     }
   };
 
+  /**
+   * Assigns a purchased phone number to a Property Manager or Realtor
+   * 
+   * @param purchasedPhoneNumberId - ID of the purchased phone number to assign
+   * @param assignToType - Type of user to assign to: "property_manager" or "realtor"
+   * @param assignToId - Optional realtor ID if assigning to a realtor
+   * 
+   * On success, refreshes the purchased numbers list and the current user's number.
+   */
   const handleAssignPhoneNumber = async (purchasedPhoneNumberId: number, assignToType: "property_manager" | "realtor", assignToId?: number) => {
     try {
       setAssigningPhone(true);
@@ -1440,7 +1551,16 @@ const Dashboard = () => {
     }
   };
 
+  /**
+   * Unassigns a phone number, making it available for reassignment
+   * 
+   * @param purchasedPhoneNumberId - ID of the purchased phone number to unassign
+   * 
+   * Shows a confirmation dialog before unassigning. On success, refreshes the
+   * purchased numbers list and the current user's number.
+   */
   const handleUnassignPhoneNumber = async (purchasedPhoneNumberId: number) => {
+    // Confirm action with user before proceeding
     if (!window.confirm("Are you sure you want to unassign this phone number? It will become available for reassignment.")) {
       return;
     }

@@ -1599,53 +1599,66 @@ const Dashboard = () => {
       }
 
       // Check if response was successful
-      if (response.ok) {
-        // Success - data is already parsed
-        console.log("Success:", data);
-        console.log("Message:", data.message); // This will show the actual message
-        
-        // Display the message properly (should be a string according to API docs)
-        toast.success(data.message || "Phone number unassigned successfully!");
-        
-        // Log additional info for debugging
-        if (data.phone_number) {
-          console.log("Unassigned phone number:", data.phone_number);
-        }
-        if (data.purchased_phone_number_id) {
-          console.log("Purchased phone number ID:", data.purchased_phone_number_id);
-        }
-        
-        // Refresh the phone numbers list to show updated status
-        fetchPurchasedPhoneNumbers();
-        
-        // Refresh current user's number in case it was unassigned from them
-        fetchNumber();
-        
-        // Return the parsed data
-        return data;
-      } else {
-        // Error response - data.detail contains the error message (not data.message)
-        const errorMessage = data.detail || data.message || "Unknown error";
+      if (!response.ok) {
+        // Error response - FastAPI returns {detail: "error message"}
+        const errorMsg = data.detail || data.message || "Unknown error";
         console.error("Error response:", data);
-        toast.error(`Error: ${errorMessage}`); // Show the actual error message
-        throw new Error(errorMessage);
+        toast.error(`Error: ${errorMsg}`);
+        throw new Error(errorMsg);
       }
+
+      // Success - data is already parsed
+      console.log("Success:", data);
+      console.log("Message:", data.message); // This will show the actual message
+      
+      // Display the message properly (should be a string according to API docs)
+      toast.success(data.message || "Phone number unassigned successfully!");
+      
+      // Log additional info for debugging
+      if (data.phone_number) {
+        console.log("Unassigned phone number:", data.phone_number);
+      }
+      if (data.purchased_phone_number_id) {
+        console.log("Purchased phone number ID:", data.purchased_phone_number_id);
+      }
+      
+      // Refresh the phone numbers list to show updated status
+      fetchPurchasedPhoneNumbers();
+      
+      // Refresh current user's number in case it was unassigned from them
+      fetchNumber();
+      
+      // Return the parsed data
+      return data;
     } catch (error: any) {
       // Handle network errors or other exceptions
       console.error("Fetch error:", error);
       
-      // If error is already a string or has a message, use it
-      const errorMessage = error.message || String(error);
+      // Safely extract error message - prevent [object Object]
+      let errorMessage = "Failed to unassign phone number";
       
-      // Don't show [object Object] - check if it's an object
-      if (typeof error === 'object' && error !== null && !error.message) {
-        toast.error("Failed to unassign phone number. Please check the console for details.");
-        console.error("Full error object:", error);
-      } else {
-        toast.error(`Failed to unassign phone number: ${errorMessage}`);
+      if (error) {
+        // If error has a message property that's a string, use it
+        if (error.message && typeof error.message === 'string') {
+          errorMessage = error.message;
+        }
+        // If error is a string, use it directly
+        else if (typeof error === 'string') {
+          errorMessage = error;
+        }
+        // If error is an object without a message, log it and show generic message
+        else if (typeof error === 'object' && error !== null) {
+          console.error("Full error object:", error);
+          // Try to extract detail or message from nested structure
+          if (error.detail && typeof error.detail === 'string') {
+            errorMessage = error.detail;
+          } else {
+            errorMessage = "Failed to unassign phone number. Please check the console for details.";
+          }
+        }
       }
       
-      throw error;
+      toast.error(errorMessage);
     } finally {
       setAssigningPhone(false);
     }

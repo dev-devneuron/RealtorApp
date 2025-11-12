@@ -134,7 +134,7 @@ const Dashboard = () => {
   const [loadingPurchasedNumbers, setLoadingPurchasedNumbers] = useState(false);
   const [showRequestPhoneDialog, setShowRequestPhoneDialog] = useState(false);
   const [requestingPhone, setRequestingPhone] = useState(false);
-  const [phoneRequestForm, setPhoneRequestForm] = useState({ area_code: "", notes: "" });
+  const [phoneRequestForm, setPhoneRequestForm] = useState({ country_code: "", area_code: "", notes: "" });
   const [assigningPhone, setAssigningPhone] = useState(false);
   const [selectedPhoneForAssignment, setSelectedPhoneForAssignment] = useState<number | null>(null);
   const [selectedRealtorForPhone, setSelectedRealtorForPhone] = useState<{ [key: number]: number }>({});
@@ -1370,6 +1370,7 @@ const Dashboard = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          country_code: phoneRequestForm.country_code || null,
           area_code: phoneRequestForm.area_code || null,
           notes: phoneRequestForm.notes || null,
         }),
@@ -1383,7 +1384,7 @@ const Dashboard = () => {
       const data = await res.json();
       toast.success(data.message || "Phone number request submitted successfully!");
       setShowRequestPhoneDialog(false);
-      setPhoneRequestForm({ area_code: "", notes: "" });
+      setPhoneRequestForm({ country_code: "", area_code: "", notes: "" });
       fetchPhoneNumberRequests();
     } catch (err: any) {
       console.error("Error requesting phone number:", err);
@@ -3200,9 +3201,16 @@ const Dashboard = () => {
                                       {request.requested_at ? new Date(request.requested_at).toLocaleDateString() : 'NA'}
                                     </span>
                                   </div>
-                                  <p className="text-sm text-gray-600 mb-2">
-                                    <span className="font-semibold">Area Code:</span> {request.area_code || 'NA'}
-                                  </p>
+                                  {request.country_code && (
+                                    <p className="text-sm text-gray-600 mb-2">
+                                      <span className="font-semibold">Country Code:</span> {request.country_code}
+                                    </p>
+                                  )}
+                                  {request.area_code && (
+                                    <p className="text-sm text-gray-600 mb-2">
+                                      <span className="font-semibold">Area Code:</span> {request.area_code}
+                                    </p>
+                                  )}
                                   <p className="text-sm text-gray-600 mb-2">
                                     <span className="font-semibold">Notes:</span> {request.notes || 'NA'}
                                   </p>
@@ -4248,20 +4256,36 @@ const Dashboard = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
-            <div>
-              <label className="text-sm font-semibold text-gray-700 mb-3 block">
-                Preferred Area Code (Optional)
-              </label>
-              <input
-                type="text"
-                value={phoneRequestForm.area_code}
-                onChange={(e) => setPhoneRequestForm({...phoneRequestForm, area_code: e.target.value})}
-                className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
-                placeholder="e.g., 412, 415, 206"
-                maxLength={3}
-                pattern="[0-9]{3}"
-              />
-              <p className="text-xs text-gray-500 mt-2">Enter a 3-digit area code if you have a preference</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                  Country Code (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={phoneRequestForm.country_code}
+                  onChange={(e) => setPhoneRequestForm({...phoneRequestForm, country_code: e.target.value})}
+                  className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                  placeholder="e.g., +1, +44, +61"
+                  maxLength={5}
+                />
+                <p className="text-xs text-gray-500 mt-2">Enter country code with or without + (e.g., +1, 1, +44)</p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                  Preferred Area Code (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={phoneRequestForm.area_code}
+                  onChange={(e) => setPhoneRequestForm({...phoneRequestForm, area_code: e.target.value})}
+                  className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                  placeholder="e.g., 412, 415, 206"
+                  maxLength={3}
+                  pattern="[0-9]{3}"
+                />
+                <p className="text-xs text-gray-500 mt-2">Enter a 3-digit area code if you have a preference</p>
+              </div>
             </div>
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-3 block">
@@ -4295,7 +4319,7 @@ const Dashboard = () => {
             <Button 
               onClick={() => {
                 setShowRequestPhoneDialog(false);
-                setPhoneRequestForm({ area_code: "", notes: "" });
+                setPhoneRequestForm({ country_code: "", area_code: "", notes: "" });
               }}
               variant="outline"
               className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3"

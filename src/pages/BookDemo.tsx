@@ -60,6 +60,9 @@ const BookDemo = () => {
         notes: formData.notes || null,
       };
 
+      console.log("🔄 Submitting demo request to:", `${API_BASE}/book-demo`);
+      console.log("📦 Payload:", payload);
+
       const response = await fetch(`${API_BASE}/book-demo`, {
         method: "POST",
         headers: {
@@ -68,12 +71,44 @@ const BookDemo = () => {
         body: JSON.stringify(payload),
       });
 
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}: Failed to submit demo request`);
+        const responseText = await response.text();
+        console.error("❌ Error response text:", responseText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { detail: responseText || `HTTP ${response.status}: ${response.statusText}` };
+        }
+        
+        console.error("❌ Error data:", errorData);
+        
+        // If 404, suggest checking if endpoint exists
+        if (response.status === 404) {
+          throw new Error(
+            `Endpoint not found (404). The /book-demo endpoint may not be implemented on the backend yet. ` +
+            `Please check with your backend developer. Error: ${errorData.detail || responseText}`
+          );
+        }
+        
+        throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: Failed to submit demo request`);
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log("✅ Success response text:", responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        data = { message: "Demo request submitted successfully!" };
+      }
+      
+      console.log("✅ Success data:", data);
       setIsSuccess(true);
       toast.success(data.message || "Thank you! We've received your demo request and will contact you soon.");
 

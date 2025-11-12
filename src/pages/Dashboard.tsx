@@ -1577,7 +1577,7 @@ const Dashboard = () => {
       }
 
       // Send unassign request to backend
-      const res = await fetch(`${API_BASE}/unassign-phone-number`, {
+      const response = await fetch(`${API_BASE}/unassign-phone-number`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1588,65 +1588,51 @@ const Dashboard = () => {
         }),
       });
 
-      // Read response text first (can only be read once)
-      const responseText = await res.text();
-      
-      // Handle error responses
-      if (!res.ok) {
-        let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch {
-          errorData = { detail: responseText || `HTTP ${res.status}: ${res.statusText}` };
-        }
-        throw new Error(errorData.detail || errorData.message || "Failed to unassign phone number");
-      }
-
-      // Parse JSON response - important: always parse the response!
+      // IMPORTANT: Always parse JSON response first (before checking response.ok)
+      // This matches the documentation pattern and ensures proper parsing
       let data;
       try {
-        data = JSON.parse(responseText);
+        data = await response.json();
       } catch (parseError) {
-        console.error("Failed to parse response as JSON:", responseText);
-        throw new Error("Invalid response from server");
+        console.error("Failed to parse response as JSON:", parseError);
+        throw new Error("Invalid response from server - response is not valid JSON");
       }
-      
-      // Log full response for debugging
-      console.log("Unassign response:", data);
-      
-      // Extract message safely - handle both string and object cases
-      let successMessage = "Phone number unassigned successfully!";
-      if (data.message) {
-        // If message is a string, use it directly
-        if (typeof data.message === 'string') {
-          successMessage = data.message;
-        } 
-        // If message is an object, try to extract a meaningful message
-        else if (typeof data.message === 'object') {
-          // Try common message property names
-          successMessage = data.message.message || 
-                          data.message.text || 
-                          `Phone number ${data.phone_number || ''} has been unassigned`;
+
+      // Check if response was successful
+      if (response.ok) {
+        // Success - data is already parsed
+        console.log("Success:", data);
+        console.log("Message:", data.message); // This will show the actual message
+        
+        // Extract message - should be a string according to API docs
+        const successMessage = data.message || `Phone number ${data.phone_number || ''} has been unassigned and is now available`;
+        
+        // Display the message properly (always a string)
+        toast.success(successMessage);
+        
+        // Log additional info for debugging
+        if (data.phone_number) {
+          console.log("Unassigned phone number:", data.phone_number);
         }
-      } else if (data.phone_number) {
-        // Fallback: create message from phone number if available
-        successMessage = `Phone number ${data.phone_number} has been unassigned and is now available`;
+        if (data.purchased_phone_number_id) {
+          console.log("Purchased phone number ID:", data.purchased_phone_number_id);
+        }
+        
+        // Refresh the phone numbers list to show updated status
+        fetchPurchasedPhoneNumbers();
+        
+        // Refresh current user's number in case it was unassigned from them
+        fetchNumber();
+        
+        // Return the parsed data
+        return data;
+      } else {
+        // Error response - data is already parsed
+        console.error("Error response:", data);
+        const errorMessage = data.detail || data.message || "Unknown error";
+        toast.error(`Error: ${errorMessage}`);
+        throw new Error(errorMessage);
       }
-      
-      // Log success for debugging
-      console.log("Success message:", successMessage);
-      if (data.phone_number) {
-        console.log("Unassigned phone number:", data.phone_number);
-      }
-      
-      // Display success message from API response (always a string now)
-      toast.success(successMessage);
-      
-      // Refresh the phone numbers list to show updated status
-      fetchPurchasedPhoneNumbers();
-      
-      // Refresh current user's number in case it was unassigned from them
-      fetchNumber();
     } catch (err: any) {
       console.error("Error unassigning phone number:", err);
       toast.error(err.message || "Failed to unassign phone number");

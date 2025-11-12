@@ -3110,7 +3110,7 @@ const Dashboard = () => {
                       </p>
                     </CardHeader>
                     <CardContent className="p-6 sm:p-8">
-                      {myNumber ? (
+                      {myNumber && myNumber.trim() !== '' ? (
                         <div className="flex items-center justify-between flex-wrap gap-4">
                           <div className="flex items-center gap-4">
                             <div className="p-4 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg">
@@ -3161,7 +3161,7 @@ const Dashboard = () => {
                           className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl px-6 py-3"
                         >
                           <Phone className="h-5 w-5 mr-2" />
-                          Request Number
+                          Request
                         </Button>
                       </div>
                     </CardHeader>
@@ -3176,7 +3176,7 @@ const Dashboard = () => {
                         <div className="text-center py-8 bg-amber-50 rounded-xl border border-amber-200">
                           <Phone className="h-12 w-12 text-amber-400 mx-auto mb-4" />
                           <p className="text-gray-600 font-medium text-lg">No phone number requests yet</p>
-                          <p className="text-gray-500 text-sm mt-2">Click "Request Number" to submit your first request</p>
+                          <p className="text-gray-500 text-sm mt-2">Click "Request" to submit your first request</p>
                         </div>
                       ) : (
                         <div className="space-y-4">
@@ -3195,22 +3195,18 @@ const Dashboard = () => {
                                           : 'bg-gray-200 text-gray-700'
                                       }`}
                                     >
-                                      {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+                                      {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : 'NA'}
                                     </Badge>
                                     <span className="text-xs text-gray-500">
-                                      {new Date(request.requested_at).toLocaleDateString()}
+                                      {request.requested_at ? new Date(request.requested_at).toLocaleDateString() : 'NA'}
                                     </span>
                                   </div>
-                                  {request.area_code && (
-                                    <p className="text-sm text-gray-600 mb-2">
-                                      <span className="font-semibold">Area Code:</span> {request.area_code}
-                                    </p>
-                                  )}
-                                  {request.notes && (
-                                    <p className="text-sm text-gray-600 mb-2">
-                                      <span className="font-semibold">Notes:</span> {request.notes}
-                                    </p>
-                                  )}
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    <span className="font-semibold">Area Code:</span> {request.area_code || 'NA'}
+                                  </p>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    <span className="font-semibold">Notes:</span> {request.notes || 'NA'}
+                                  </p>
                                   {request.fulfilled_at && (
                                     <p className="text-xs text-green-600 font-medium mt-2">
                                       Fulfilled: {new Date(request.fulfilled_at).toLocaleDateString()}
@@ -3253,14 +3249,14 @@ const Dashboard = () => {
                                 <div className="p-2 bg-green-100 rounded-lg">
                                   <CheckCircle2 className="h-5 w-5 text-green-600" />
                                 </div>
-                                Available for Assignment ({availablePhoneNumbers.length})
+                                Available for Assignment ({availablePhoneNumbers.length || 0})
                               </h3>
                               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {availablePhoneNumbers.map((number: any) => (
                                   <Card key={number.purchased_phone_number_id} className="bg-green-50 border-2 border-green-200 rounded-xl hover:shadow-lg transition-all">
                                     <CardContent className="p-5">
                                       <div className="flex items-center justify-between mb-4">
-                                        <p className="text-2xl font-bold text-gray-900">{number.phone_number}</p>
+                                        <p className="text-2xl font-bold text-gray-900">{number.phone_number || 'NA'}</p>
                                         <Badge className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                                           Available
                                         </Badge>
@@ -3334,7 +3330,7 @@ const Dashboard = () => {
                                 <div className="p-2 bg-blue-100 rounded-lg">
                                   <CheckCircle2 className="h-5 w-5 text-blue-600" />
                                 </div>
-                                Assigned Numbers ({purchasedPhoneNumbers.filter((n: any) => n.status === 'assigned').length})
+                                Assigned Numbers ({purchasedPhoneNumbers.filter((n: any) => n.status === 'assigned').length || 0})
                               </h3>
                               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {purchasedPhoneNumbers
@@ -3343,7 +3339,7 @@ const Dashboard = () => {
                                     <Card key={number.purchased_phone_number_id} className="bg-blue-50 border-2 border-blue-200 rounded-xl">
                                       <CardContent className="p-5">
                                         <div className="flex items-center justify-between mb-3">
-                                          <p className="text-2xl font-bold text-gray-900">{number.phone_number}</p>
+                                          <p className="text-2xl font-bold text-gray-900">{number.phone_number || 'NA'}</p>
                                           <Badge className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                                             Assigned
                                           </Badge>
@@ -3353,22 +3349,22 @@ const Dashboard = () => {
                                             <span className="font-semibold">Assigned to:</span>{' '}
                                             {number.assigned_to_type === 'property_manager' ? (
                                               <span className="font-semibold text-amber-700">Property Manager (You)</span>
-                                            ) : (
+                                            ) : number.assigned_to_type === 'realtor' && number.assigned_to_id ? (
                                               <span className="font-semibold text-blue-700">
                                                 {realtors.find(r => r.id === number.assigned_to_id)?.name || `Realtor #${number.assigned_to_id}`}
                                               </span>
+                                            ) : (
+                                              <span className="text-gray-500">NA</span>
                                             )}
                                           </p>
                                           {number.assigned_to_type === 'realtor' && number.assigned_to_id && (
                                             <p className="text-gray-500 text-xs">
-                                              {realtors.find(r => r.id === number.assigned_to_id)?.email || ''}
+                                              {realtors.find(r => r.id === number.assigned_to_id)?.email || 'NA'}
                                             </p>
                                           )}
-                                          {number.assigned_at && (
-                                            <p className="text-xs text-gray-500">
-                                              Assigned: {new Date(number.assigned_at).toLocaleDateString()}
-                                            </p>
-                                          )}
+                                          <p className="text-xs text-gray-500">
+                                            Assigned: {number.assigned_at ? new Date(number.assigned_at).toLocaleDateString() : 'NA'}
+                                          </p>
                                         </div>
                                       </CardContent>
                                     </Card>
@@ -4240,8 +4236,8 @@ const Dashboard = () => {
 
       {/* Request Phone Number Dialog */}
       <Dialog open={showRequestPhoneDialog} onOpenChange={setShowRequestPhoneDialog}>
-        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl p-0 overflow-hidden">
-          <DialogHeader className="p-6 sm:p-8 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-white">
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="p-6 sm:p-8 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-white flex-shrink-0">
             <DialogTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4">
               <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
                 <Phone className="h-6 w-6 text-white" />
@@ -4252,7 +4248,7 @@ const Dashboard = () => {
               Submit a request for a new phone number. A new number will be available in your portal within 24 hours.
             </DialogDescription>
           </DialogHeader>
-          <div className="p-6 sm:p-8 space-y-6">
+          <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-3 block">
                 Preferred Area Code (Optional)
@@ -4296,7 +4292,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          <DialogFooter className="p-6 sm:p-8 pt-0 border-t border-gray-200">
+          <DialogFooter className="p-6 sm:p-8 pt-0 border-t border-gray-200 flex-shrink-0">
             <Button 
               onClick={() => {
                 setShowRequestPhoneDialog(false);

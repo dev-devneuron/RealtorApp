@@ -26,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink, PhoneForwarded, PhoneOff, ShieldCheck, Sun, Moon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -1864,7 +1863,7 @@ const Dashboard = () => {
   /**
    * Returns the user's bot number formatted for dial codes (Twilio DID)
    */
-  const getBotNumberForForwarding = () => {
+  function getBotNumberForForwarding() {
     if (callForwardingState?.twilio_number) {
       return callForwardingState.twilio_number;
     }
@@ -1872,12 +1871,12 @@ const Dashboard = () => {
       return myNumber;
     }
     return "";
-  };
+  }
 
   /**
    * Generates dial codes using GSM sequences expected by carriers
    */
-  const buildForwardingDialCode = (mode: "business" | "after-hours-on" | "after-hours-off") => {
+  function buildForwardingDialCode(mode: "business" | "after-hours-on" | "after-hours-off") {
     const botNumber = getBotNumberForForwarding();
     if (!botNumber) {
       return "";
@@ -1898,7 +1897,7 @@ const Dashboard = () => {
       default:
         return "";
     }
-  };
+  }
 
   /**
    * Opens the system dialer with the provided GSM/USSD code
@@ -2034,6 +2033,13 @@ const Dashboard = () => {
       "Forwarding issue submitted to support"
     );
   };
+
+  // Derived values for simplified rendering
+  const botNumberDisplay = getBotNumberForForwarding();
+  const hasBotNumber = Boolean(botNumberDisplay);
+  const businessDialCode = hasBotNumber ? buildForwardingDialCode("business") : "";
+  const afterHoursEnableDialCode = hasBotNumber ? buildForwardingDialCode("after-hours-on") : "";
+  const afterHoursDisableDialCode = hasBotNumber ? buildForwardingDialCode("after-hours-off") : "";
 
   const handleSignOut = () => {
     // Clear all authentication data
@@ -3732,49 +3738,83 @@ const Dashboard = () => {
                         )}
                       </div>
                     </CardHeader>
-                    <CardContent className="p-6 sm:p-8 space-y-6">
+                    <CardContent className="p-6 sm:p-8">
                       {loadingCallForwarding ? (
                         <div className="text-center py-12">
                           <RefreshCw className="h-10 w-10 animate-spin text-amber-500 mx-auto mb-4" />
                           <p className="text-gray-600 font-semibold text-lg">Loading forwarding state...</p>
                         </div>
                       ) : callForwardingState ? (
-                        <div className="space-y-8">
-                          <div className="grid gap-4 md:grid-cols-3">
-                            <div className="p-4 sm:p-5 bg-gradient-to-br from-amber-50 to-white border border-amber-200 rounded-2xl shadow-sm">
-                              <p className="text-sm text-gray-500 font-semibold mb-1">Bot Number</p>
-                              <p className="text-2xl font-bold text-gray-900">
-                                {callForwardingState.twilio_number || myNumber || "Not assigned"}
+                        <div className="space-y-6">
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            <div className="rounded-xl border border-gray-200 p-4 sm:p-5 bg-white">
+                              <p className="text-sm font-semibold text-gray-500">Bot Number</p>
+                              <p className="text-2xl font-bold text-gray-900 mt-1">
+                                {botNumberDisplay || "Not assigned"}
                               </p>
                               <p className="text-xs text-gray-500 mt-2">
-                                User: {callForwardingState.user_type === "realtor" ? "Realtor" : "Property Manager"} #{callForwardingState.user_id || "N/A"}
+                                {callForwardingState.user_type === "realtor" ? "Realtor" : "Property Manager"} #{callForwardingState.user_id || "N/A"}
                               </p>
                             </div>
-                            <div className={`p-4 sm:p-5 rounded-2xl border ${businessForwardingEnabled ? "border-green-200 bg-green-50" : "border-amber-200 bg-white"}`}>
+                            <div className="rounded-xl border border-gray-200 p-4 sm:p-5 bg-white">
                               <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <ShieldCheck className={`h-6 w-6 ${businessForwardingEnabled ? "text-green-600" : "text-amber-500"}`} />
-                                  <div>
-                                    <p className="text-base font-semibold text-gray-900">Business Hours Forwarding</p>
-                                    <p className="text-sm text-gray-500">One-time "no-answer" setup via carrier</p>
-                                  </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-500">Business Hours Forwarding</p>
+                                  <p className="text-base font-bold text-gray-900">
+                                    {businessForwardingEnabled ? "Configured" : "Not Set"}
+                                  </p>
                                 </div>
-                                <Badge className={businessForwardingEnabled ? "bg-gradient-to-br from-green-500 to-green-600 text-white" : "bg-gradient-to-br from-amber-500 to-amber-600 text-white"}>
-                                  {businessForwardingEnabled ? "Enabled" : "Action Needed"}
+                                <ShieldCheck className={`h-6 w-6 ${businessForwardingEnabled ? "text-green-600" : "text-amber-500"}`} />
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">
+                                One-time “no answer” failover via carrier code.
+                              </p>
+                            </div>
+                            <div className="rounded-xl border border-gray-200 p-4 sm:p-5 bg-white">
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-500">After-Hours Mode</p>
+                                  <p className="text-base font-bold text-gray-900">
+                                    {afterHoursEnabled ? "Forwarding All Calls" : "Normal Carrier Routing"}
+                                  </p>
+                                </div>
+                                {afterHoursEnabled ? <Moon className="h-6 w-6 text-indigo-600" /> : <Sun className="h-6 w-6 text-amber-500" />}
+                              </div>
+                              {lastAfterHoursUpdate && (
+                                <p className="text-xs text-gray-500 mt-2">
+                                  Last updated {new Date(lastAfterHoursUpdate).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid gap-4 lg:grid-cols-2">
+                            <div className="rounded-xl border border-gray-200 p-5 space-y-3 bg-white">
+                              <div className="flex items-center justify-between">
+                                <p className="text-lg font-semibold text-gray-900">One-Time Business Setup</p>
+                                <Badge variant="outline" className={businessForwardingEnabled ? "border-green-200 text-green-700" : "border-amber-200 text-amber-700"}>
+                                  {businessForwardingEnabled ? "Complete" : "Action Needed"}
                                 </Badge>
                               </div>
-                              <div className="mt-4 flex flex-wrap gap-3">
+                              <p className="text-sm text-gray-600">
+                                Dial the carrier code, wait for the confirmation tone, then mark the setup as done.
+                              </p>
+                              <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                Dial: {businessDialCode || "Assign a phone number to view code"}
+                              </p>
+                              <div className="flex flex-wrap gap-3">
                                 <Button
                                   onClick={handleBusinessForwardingDial}
-                                  variant="secondary"
-                                  className="rounded-xl"
+                                  variant="outline"
+                                  disabled={!hasBotNumber}
+                                  className="rounded-lg"
                                 >
-                                  Launch Dial Code
+                                  Run Dial Code
                                 </Button>
                                 <Button
                                   onClick={handleBusinessForwardingConfirmation}
-                                  disabled={updatingCallForwarding}
-                                  className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl"
+                                  disabled={!hasBotNumber || updatingCallForwarding}
+                                  className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
                                 >
                                   {updatingCallForwarding ? (
                                     <>
@@ -3787,95 +3827,96 @@ const Dashboard = () => {
                                 </Button>
                               </div>
                             </div>
-                            <div className="p-4 sm:p-5 rounded-2xl border border-blue-200 bg-blue-50">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    {afterHoursEnabled ? <Moon className="h-5 w-5 text-indigo-600" /> : <Sun className="h-5 w-5 text-amber-500" />}
-                                    <p className="text-base font-semibold text-gray-900">After-Hours Mode</p>
-                                  </div>
-                                  <p className="text-sm text-gray-600">
-                                    Forwards every call directly to the AI agent when enabled.
-                                  </p>
-                                  {lastAfterHoursUpdate && (
-                                    <p className="text-xs text-gray-500">
-                                      Last update: {new Date(lastAfterHoursUpdate).toLocaleString()}
-                                    </p>
-                                  )}
-                                </div>
-                                <Switch
-                                  checked={afterHoursEnabled}
-                                  onCheckedChange={(checked) => handleAfterHoursToggle(Boolean(checked))}
-                                  disabled={updatingCallForwarding}
-                                  className="scale-110"
-                                />
-                              </div>
-                              <p className="text-xs text-indigo-700 font-semibold mt-3">
-                                {afterHoursEnabled ? "Currently forwarding all calls." : "Calls ring the carrier first, then fail over to the bot."}
+
+                            <div className="rounded-xl border border-gray-200 p-5 space-y-3 bg-white">
+                              <p className="text-lg font-semibold text-gray-900">After-Hours Actions</p>
+                              <p className="text-sm text-gray-600">
+                                Use the carrier codes below whenever you switch between full forwarding and normal routing.
                               </p>
-                            </div>
-                          </div>
-
-                          {forwardingFailure && (
-                            <div className="p-4 sm:p-5 border border-red-200 bg-red-50 rounded-2xl">
-                              <div className="flex items-start gap-3">
-                                <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-1" />
-                                <div>
-                                  <p className="text-sm font-semibold text-red-700">Carrier reported an issue</p>
-                                  <p className="text-sm text-red-600 mt-1">{forwardingFailure}</p>
-                                  <p className="text-xs text-red-500 mt-2">
-                                    Re-run the dial code above, then mark the result so our support team knows it’s resolved.
-                                  </p>
-                                </div>
+                              <div className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2 space-y-1">
+                                <p>Enable: {afterHoursEnableDialCode || "Assign a phone number to view code"}</p>
+                                <p>Disable: {afterHoursDisableDialCode || "Assign a phone number to view code"}</p>
                               </div>
-                            </div>
-                          )}
-
-                          <div className="grid gap-6 lg:grid-cols-2">
-                            <div className="space-y-2">
-                              <p className="text-sm font-semibold text-gray-700">Internal Notes (optional)</p>
-                              <Textarea
-                                value={forwardingNotes}
-                                onChange={(event) => setForwardingNotes(event.target.value)}
-                                placeholder="Example: Confirmed AT&T setup with Sarah on 5/10. Carrier responded with success tone."
-                                className="min-h-[120px] rounded-2xl border-amber-200"
-                              />
-                            </div>
-                            <div className="space-y-3">
-                              <p className="text-sm font-semibold text-gray-700">Carrier Failure Details</p>
-                              <Textarea
-                                value={forwardingFailureReason}
-                                onChange={(event) => setForwardingFailureReason(event.target.value)}
-                                placeholder="Tell us what you heard. Example: 'Call ended with busy tone' or 'Carrier said feature unavailable'."
-                                className="min-h-[120px] rounded-2xl border-red-200"
-                              />
-                              <div className="flex justify-end">
+                              <div className="flex flex-wrap gap-3">
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => handleAfterHoursToggle(true)}
+                                  disabled={!hasBotNumber || updatingCallForwarding || afterHoursEnabled}
+                                  className="rounded-lg"
+                                >
+                                  Enable After-Hours
+                                </Button>
                                 <Button
                                   variant="outline"
-                                  onClick={handleForwardingFailureReport}
-                                  disabled={updatingCallForwarding}
-                                  className="rounded-xl border-red-300 text-red-600 hover:bg-red-50"
+                                  onClick={() => handleAfterHoursToggle(false)}
+                                  disabled={!hasBotNumber || updatingCallForwarding || !afterHoursEnabled}
+                                  className="rounded-lg"
                                 >
-                                  Report Issue to Support
+                                  Disable After-Hours
                                 </Button>
                               </div>
                             </div>
                           </div>
 
-                          {forwardingCarriers.length > 0 && (
-                            <div className="border border-amber-100 rounded-2xl p-5 bg-amber-50/50">
-                              <p className="text-sm font-semibold text-amber-800 mb-3">
-                                Carrier QA Checklist
+                          {forwardingFailure && (
+                            <div className="rounded-xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+                              <AlertTriangle className="h-5 w-5 text-red-500 mt-1" />
+                              <div>
+                                <p className="text-sm font-semibold text-red-700">Carrier reported an issue</p>
+                                <p className="text-sm text-red-600 mt-1">{forwardingFailure}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="rounded-xl border border-gray-200 p-5 space-y-4 bg-white">
+                            <p className="text-lg font-semibold text-gray-900">Notes & Support</p>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-gray-600">Internal notes (optional)</p>
+                                <Textarea
+                                  value={forwardingNotes}
+                                  onChange={(event) => setForwardingNotes(event.target.value)}
+                                  placeholder="Example: Confirmed AT&T setup with Sarah on 5/10."
+                                  className="min-h-[110px] rounded-lg"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-gray-600">Carrier issue details</p>
+                                <Textarea
+                                  value={forwardingFailureReason}
+                                  onChange={(event) => setForwardingFailureReason(event.target.value)}
+                                  placeholder="Tell us what you heard (busy tone, feature unavailable, etc.)."
+                                  className="min-h-[110px] rounded-lg"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <p className="text-xs text-gray-500">
+                                Notes are included automatically the next time you update forwarding state.
                               </p>
+                              <Button
+                                variant="outline"
+                                onClick={handleForwardingFailureReport}
+                                disabled={updatingCallForwarding || !forwardingFailureReason.trim()}
+                                className="rounded-lg border-red-300 text-red-600 hover:bg-red-50"
+                              >
+                                Send Issue to Support
+                              </Button>
+                            </div>
+                          </div>
+
+                          {forwardingCarriers.length > 0 && (
+                            <div className="rounded-xl border border-gray-200 p-5 bg-white">
+                              <p className="text-sm font-semibold text-gray-900 mb-3">Carrier QA checklist</p>
                               <div className="flex flex-wrap gap-2">
                                 {forwardingCarriers.map((carrier) => (
-                                  <Badge key={carrier} className="bg-white text-amber-700 border border-amber-200 rounded-full px-4 py-1">
+                                  <Badge key={carrier} variant="outline" className="rounded-full px-4 py-1 text-gray-700">
                                     {carrier}
                                   </Badge>
                                 ))}
                               </div>
-                              <p className="text-xs text-amber-700 mt-3">
-                                Use this list to confirm the dial codes with each carrier your team uses. Log issues so Support can coach onboarding teams.
+                              <p className="text-xs text-gray-500 mt-3">
+                                Run the dial codes with each carrier your team uses and log any differences for Support.
                               </p>
                             </div>
                           )}

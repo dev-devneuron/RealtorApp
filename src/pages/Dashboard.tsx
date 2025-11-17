@@ -456,6 +456,17 @@ const Dashboard = () => {
   }, [userType, forwardingTarget]);
 
   // All your existing API functions remain exactly the same
+  /**
+   * Fetches the current user's assigned Twilio bot number
+   * 
+   * The backend automatically finds assigned bot numbers by:
+   * 1. Checking the user's `purchased_phone_number_id` field
+   * 2. Searching `purchased_phone_numbers` for entries where `assigned_to_type`/`assigned_to_id` matches the user
+   * 3. For PMs only: Auto-promoting the oldest unassigned number from their inventory if none is explicitly assigned
+   * 
+   * If no number is found (404), this is a valid state - the user simply hasn't been assigned a number yet.
+   * The backend handles case-insensitive matching for `assigned_to_type` variations.
+   */
   const fetchNumber = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -468,21 +479,29 @@ const Dashboard = () => {
       });
 
       if (!res.ok) {
-        // If 404 or error, user doesn't have a number assigned yet - this is normal
+        // If 404, user doesn't have a number assigned yet - this is normal
+        // The backend will auto-promote numbers for PMs on first load if available
         const errorData = await res.json().catch(() => ({}));
-        if (res.status === 404 || errorData.detail?.includes("haven't purchased")) {
+        if (res.status === 404 || errorData.detail?.includes("haven't purchased") || errorData.detail?.includes("No number assigned")) {
+          console.log("No phone number assigned yet - this is a valid state");
           setMyNumber(null);
           return;
         }
-        throw new Error("Failed to fetch number");
+        // For other errors, log for debugging but don't show toast (not having a number is valid)
+        console.warn("Error fetching number:", res.status, errorData);
+        setMyNumber(null);
+        return;
       }
 
       const data = await res.json();
-      console.log("Fetched number:", data);
+      console.log("✅ Fetched number:", data);
+      // Backend returns twilio_number from purchased_phone_numbers (official callbot pool)
+      // This is always the bot number we provisioned, never a legacy/historical value
       setMyNumber(data.twilio_number || null);
     } catch (err: any) {
       console.error("Error fetching number:", err);
       // Don't show error toast - not having a number is a valid state
+      // The backend handles auto-promotion and case-insensitive matching transparently
       setMyNumber(null);
     } finally {
       setLoading(false);
@@ -1796,6 +1815,22 @@ const Dashboard = () => {
 
   /**
    * Fetches the call forwarding state for the authenticated user or a selected realtor
+   * 
+   * @param realtorId - Optional realtor ID (PMs only) to fetch forwarding state for a managed realtor.
+   *                    Must belong to the authenticated PM.
+   * 
+   * The backend returns the Twilio bot number and forwarding flags. The bot number is derived
+   * strictly from `purchased_phone_numbers` (the official callbot pool)—it never falls back to
+   * whatever Twilio number was stored historically on the profile—so we can trust it's the bot
+   * we provisioned.
+   * 
+   * The backend automatically finds assigned bot numbers by:
+   * 1. Checking the user's `purchased_phone_number_id` field
+   * 2. Searching `purchased_phone_numbers` for entries where `assigned_to_type`/`assigned_to_id` matches
+   * 3. For PMs only: Auto-promoting the oldest unassigned number from their inventory if available
+   * 
+   * Case-insensitive matching handles variations in `assigned_to_type` (e.g., "Property Manager",
+   * "property_manager", "PROPERTY_MANAGER").
    */
   const fetchCallForwardingState = async (realtorId?: number) => {
     try {
@@ -1862,11 +1897,19 @@ const Dashboard = () => {
 
   /**
    * Returns the user's bot number formatted for dial codes (Twilio DID)
+   * 
+   * The backend derives this strictly from `purchased_phone_numbers` (the official callbot pool).
+   * It never falls back to whatever Twilio number was stored historically on the profile,
+   * so we can trust it's the bot we provisioned.
+   * 
+   * @returns The Twilio DID (E.164 format, e.g., "+18885551234") or empty string if not assigned
    */
   function getBotNumberForForwarding() {
+    // Prefer the forwarding state's twilio_number (most up-to-date)
     if (callForwardingState?.twilio_number) {
       return callForwardingState.twilio_number;
     }
+    // Fallback to myNumber (from GET /my-number, also from purchased_phone_numbers)
     if (myNumber) {
       return myNumber;
     }

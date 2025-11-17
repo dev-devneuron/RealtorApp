@@ -25,7 +25,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink, PhoneForwarded, PhoneOff, ShieldCheck, Sun, Moon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -126,7 +128,7 @@ const Dashboard = () => {
   // ============================================================================
   // User Information State
   // ============================================================================
-  const [userType, setUserType] = useState<string | null>(null);
+  const [userType, setUserType] = useState<string | null>(null); // Determines which role-specific UI chunks render
   const [userName, setUserName] = useState<string | null>(null);
   const [userGender, setUserGender] = useState<string | null>(null);
   
@@ -145,6 +147,40 @@ const Dashboard = () => {
   const [assigningPhone, setAssigningPhone] = useState(false);
   const [selectedPhoneForAssignment, setSelectedPhoneForAssignment] = useState<number | null>(null);
   const [selectedRealtorForPhone, setSelectedRealtorForPhone] = useState<{ [key: number]: number }>({});
+
+  // ============================================================================
+  // Call Forwarding State (Property Managers & Realtors)
+  // ============================================================================
+  const [callForwardingState, setCallForwardingState] = useState<any | null>(null);
+  const [loadingCallForwarding, setLoadingCallForwarding] = useState(false);
+  const [updatingCallForwarding, setUpdatingCallForwarding] = useState(false);
+  const [forwardingTarget, setForwardingTarget] = useState<string>("self");
+  const [forwardingNotes, setForwardingNotes] = useState("");
+  const [forwardingFailureReason, setForwardingFailureReason] = useState("");
+  const [forwardingCarriers, setForwardingCarriers] = useState<string[]>([]);
+  const forwardingState = callForwardingState?.forwarding_state || {};
+  const businessForwardingEnabled = Boolean(forwardingState?.business_forwarding_enabled);
+  const afterHoursEnabled = Boolean(forwardingState?.after_hours_enabled);
+  const forwardingFailure = forwardingState?.forwarding_failure_reason;
+  const lastAfterHoursUpdate = forwardingState?.last_after_hours_update;
+
+  /**
+   * Derives the currently selected realtor ID for call forwarding management
+   * Returns undefined when managing the currently authenticated user
+   */
+  const getSelectedForwardingRealtorId = () => {
+    if (!forwardingTarget || forwardingTarget === "self") {
+      return undefined;
+    }
+
+    if (forwardingTarget.startsWith("realtor-")) {
+      const id = Number(forwardingTarget.replace("realtor-", ""));
+      return Number.isNaN(id) ? undefined : id;
+    }
+
+    const parsed = Number(forwardingTarget);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  };
   
   // ============================================================================
   // Recordings and Media State
@@ -403,7 +439,22 @@ const Dashboard = () => {
       fetchPhoneNumberRequests();
       fetchPurchasedPhoneNumbers();
     }
+
+    // Prefetch carriers for call forwarding QA checklist
+    fetchForwardingCarriers();
   }, []);
+
+  // Refresh forwarding controls whenever auth role changes or PM selects a different realtor target
+  useEffect(() => {
+    if (!userType) {
+      return;
+    }
+
+    setForwardingNotes("");
+    setForwardingFailureReason("");
+    const realtorId = getSelectedForwardingRealtorId();
+    fetchCallForwardingState(realtorId);
+  }, [userType, forwardingTarget]);
 
   // All your existing API functions remain exactly the same
   const fetchNumber = async () => {
@@ -1740,6 +1791,250 @@ const Dashboard = () => {
     }
   };
 
+  // ============================================================================
+  // Call Forwarding Controls (Property Managers & Realtors)
+  // ============================================================================
+
+  /**
+   * Fetches the call forwarding state for the authenticated user or a selected realtor
+   */
+  const fetchCallForwardingState = async (realtorId?: number) => {
+    try {
+      setLoadingCallForwarding(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (realtorId) {
+        params.append("realtor_id", realtorId.toString());
+      }
+
+      const url = params.toString()
+        ? `${API_BASE}/call-forwarding-state?${params.toString()}`
+        : `${API_BASE}/call-forwarding-state`;
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || "Failed to load call forwarding state");
+      }
+
+      setCallForwardingState(data);
+      if (data.twilio_number) {
+        setMyNumber(data.twilio_number);
+      }
+    } catch (error: any) {
+      console.error("Error fetching call forwarding state:", error);
+      toast.error(error.message || "Unable to load call forwarding settings");
+    } finally {
+      setLoadingCallForwarding(false);
+    }
+  };
+
+  /**
+   * Loads the list of carriers the success team tests against for QA
+   */
+  const fetchForwardingCarriers = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/call-forwarding-carriers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to load carrier list");
+      }
+
+      const data = await res.json();
+      setForwardingCarriers(Array.isArray(data.carriers) ? data.carriers : []);
+    } catch (error) {
+      console.error("Error fetching carriers matrix:", error);
+    }
+  };
+
+  /**
+   * Returns the user's bot number formatted for dial codes (Twilio DID)
+   */
+  const getBotNumberForForwarding = () => {
+    if (callForwardingState?.twilio_number) {
+      return callForwardingState.twilio_number;
+    }
+    if (myNumber) {
+      return myNumber;
+    }
+    return "";
+  };
+
+  /**
+   * Generates dial codes using GSM sequences expected by carriers
+   */
+  const buildForwardingDialCode = (mode: "business" | "after-hours-on" | "after-hours-off") => {
+    const botNumber = getBotNumberForForwarding();
+    if (!botNumber) {
+      return "";
+    }
+
+    const sanitized = botNumber.replace(/[^\d+]/g, "");
+    if (!sanitized) {
+      return "";
+    }
+
+    switch (mode) {
+      case "business":
+        return `**61*${sanitized}**25#`;
+      case "after-hours-on":
+        return `**21*${sanitized}#`;
+      case "after-hours-off":
+        return "##21#";
+      default:
+        return "";
+    }
+  };
+
+  /**
+   * Opens the system dialer with the provided GSM/USSD code
+   */
+  const openDialerWithCode = (code: string) => {
+    if (!code) {
+      toast.error("Carrier code unavailable. Please assign a bot number first.");
+      return;
+    }
+
+    const encoded = code.replace(/\*/g, "%2A").replace(/#/g, "%23");
+    window.location.href = `tel:${encoded}`;
+  };
+
+  /**
+   * Sends PATCH requests to update the backing call forwarding state
+   */
+  const handleCallForwardingUpdate = async (
+    payload: Record<string, any>,
+    successMessage?: string
+  ) => {
+    try {
+      setUpdatingCallForwarding(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const body: Record<string, any> = {
+        ...payload,
+      };
+
+      const realtorId = getSelectedForwardingRealtorId();
+      if (realtorId) {
+        body.realtor_id = realtorId;
+      }
+
+      if (forwardingNotes.trim()) {
+        body.notes = forwardingNotes.trim();
+      }
+
+      const res = await fetch(`${API_BASE}/call-forwarding-state`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        let errorMessage = data.detail || data.message || "Failed to update call forwarding";
+        if (res.status === 429) {
+          errorMessage = "You've toggled call forwarding too many times. Please wait a few minutes before trying again.";
+        }
+        throw new Error(errorMessage);
+      }
+
+      toast.success(successMessage || data.message || "Call forwarding updated");
+      setForwardingFailureReason("");
+      await fetchCallForwardingState(realtorId);
+    } catch (error: any) {
+      console.error("Call forwarding update failed:", error);
+      toast.error(error.message || "Failed to update call forwarding");
+    } finally {
+      setUpdatingCallForwarding(false);
+    }
+  };
+
+  /**
+   * Launches the carrier dial code for business hours setup (one-time conditional forwarding)
+   */
+  const handleBusinessForwardingDial = () => {
+    const code = buildForwardingDialCode("business");
+    if (!code) {
+      toast.error("No bot number assigned yet. Assign a phone number to enable forwarding.");
+      return;
+    }
+
+    openDialerWithCode(code);
+    toast.info("Carrier dialer opened. Tap call, wait for the confirmation beep, then mark the setup as complete.");
+  };
+
+  /**
+   * Confirms business hours forwarding inside Leasap after the carrier code succeeds
+   */
+  const handleBusinessForwardingConfirmation = async () => {
+    await handleCallForwardingUpdate(
+      {
+        business_forwarding_enabled: true,
+        confirmation_status: "success",
+      },
+      "Business hours forwarding confirmed"
+    );
+  };
+
+  /**
+   * Enables or disables after-hours mode while guiding the user through carrier codes
+   */
+  const handleAfterHoursToggle = async (nextEnabled: boolean) => {
+    const code = buildForwardingDialCode(nextEnabled ? "after-hours-on" : "after-hours-off");
+    if (!code) {
+      toast.error("No bot number assigned yet. Assign a phone number to enable forwarding.");
+      return;
+    }
+
+    openDialerWithCode(code);
+    await handleCallForwardingUpdate(
+      {
+        after_hours_enabled: nextEnabled,
+        confirmation_status: "success",
+      },
+      nextEnabled ? "After-hours mode enabled" : "After-hours mode disabled"
+    );
+  };
+
+  /**
+   * Reports carrier failures so the support team can follow up
+   */
+  const handleForwardingFailureReport = async () => {
+    if (!forwardingFailureReason.trim()) {
+      toast.error("Please describe what happened so our team can assist.");
+      return;
+    }
+
+    await handleCallForwardingUpdate(
+      {
+        confirmation_status: "failure",
+        failure_reason: forwardingFailureReason.trim(),
+      },
+      "Forwarding issue submitted to support"
+    );
+  };
+
   const handleSignOut = () => {
     // Clear all authentication data
     localStorage.removeItem("access_token");
@@ -2226,6 +2521,7 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
+          {/* Tabs automatically hide/show PM-only sections by checking userType before rendering TabsTrigger/TabsContent */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Enhanced Tabs Navigation */}
             <motion.div
@@ -2267,6 +2563,13 @@ const Dashboard = () => {
                     </TabsTrigger>
                   </>
                 )}
+              <TabsTrigger 
+                value="call-forwarding" 
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm whitespace-nowrap flex-shrink-0"
+              >
+                <PhoneForwarded className="h-4 w-4 mr-2" />
+                Call Forwarding
+              </TabsTrigger>
                 <TabsTrigger 
                   value="properties" 
                   className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
@@ -3379,6 +3682,211 @@ const Dashboard = () => {
                               ))}
                             </div>
                           )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            )}
+
+            {/* Call Forwarding Controls - Property Managers & Realtors */}
+            {(userType === "property_manager" || userType === "realtor") && (
+              <TabsContent value="call-forwarding">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+                      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                        <div className="flex-1 space-y-3">
+                          <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4">
+                            <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                              <PhoneForwarded className="h-6 w-6 text-white" />
+                            </div>
+                            Call Forwarding Controls
+                          </CardTitle>
+                          <p className="text-gray-600 text-lg">
+                            Launch carrier dial codes, confirm forwarding state, and share carrier feedback with our support team.
+                          </p>
+                        </div>
+                        {userType === "property_manager" && (
+                          <div className="w-full lg:w-80">
+                            <p className="text-sm text-gray-500 font-semibold mb-2">Manage forwarding for</p>
+                            <Select value={forwardingTarget} onValueChange={setForwardingTarget}>
+                              <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
+                                <SelectValue placeholder="Select user" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="self">My Number</SelectItem>
+                                {realtors.map((realtor) => (
+                                  <SelectItem key={realtor.id} value={`realtor-${realtor.id}`}>
+                                    {realtor.name || `Realtor #${realtor.id}`}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6 sm:p-8 space-y-6">
+                      {loadingCallForwarding ? (
+                        <div className="text-center py-12">
+                          <RefreshCw className="h-10 w-10 animate-spin text-amber-500 mx-auto mb-4" />
+                          <p className="text-gray-600 font-semibold text-lg">Loading forwarding state...</p>
+                        </div>
+                      ) : callForwardingState ? (
+                        <div className="space-y-8">
+                          <div className="grid gap-4 md:grid-cols-3">
+                            <div className="p-4 sm:p-5 bg-gradient-to-br from-amber-50 to-white border border-amber-200 rounded-2xl shadow-sm">
+                              <p className="text-sm text-gray-500 font-semibold mb-1">Bot Number</p>
+                              <p className="text-2xl font-bold text-gray-900">
+                                {callForwardingState.twilio_number || myNumber || "Not assigned"}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                User: {callForwardingState.user_type === "realtor" ? "Realtor" : "Property Manager"} #{callForwardingState.user_id || "N/A"}
+                              </p>
+                            </div>
+                            <div className={`p-4 sm:p-5 rounded-2xl border ${businessForwardingEnabled ? "border-green-200 bg-green-50" : "border-amber-200 bg-white"}`}>
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <ShieldCheck className={`h-6 w-6 ${businessForwardingEnabled ? "text-green-600" : "text-amber-500"}`} />
+                                  <div>
+                                    <p className="text-base font-semibold text-gray-900">Business Hours Forwarding</p>
+                                    <p className="text-sm text-gray-500">One-time "no-answer" setup via carrier</p>
+                                  </div>
+                                </div>
+                                <Badge className={businessForwardingEnabled ? "bg-gradient-to-br from-green-500 to-green-600 text-white" : "bg-gradient-to-br from-amber-500 to-amber-600 text-white"}>
+                                  {businessForwardingEnabled ? "Enabled" : "Action Needed"}
+                                </Badge>
+                              </div>
+                              <div className="mt-4 flex flex-wrap gap-3">
+                                <Button
+                                  onClick={handleBusinessForwardingDial}
+                                  variant="secondary"
+                                  className="rounded-xl"
+                                >
+                                  Launch Dial Code
+                                </Button>
+                                <Button
+                                  onClick={handleBusinessForwardingConfirmation}
+                                  disabled={updatingCallForwarding}
+                                  className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl"
+                                >
+                                  {updatingCallForwarding ? (
+                                    <>
+                                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    "Mark Setup Complete"
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="p-4 sm:p-5 rounded-2xl border border-blue-200 bg-blue-50">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    {afterHoursEnabled ? <Moon className="h-5 w-5 text-indigo-600" /> : <Sun className="h-5 w-5 text-amber-500" />}
+                                    <p className="text-base font-semibold text-gray-900">After-Hours Mode</p>
+                                  </div>
+                                  <p className="text-sm text-gray-600">
+                                    Forwards every call directly to the AI agent when enabled.
+                                  </p>
+                                  {lastAfterHoursUpdate && (
+                                    <p className="text-xs text-gray-500">
+                                      Last update: {new Date(lastAfterHoursUpdate).toLocaleString()}
+                                    </p>
+                                  )}
+                                </div>
+                                <Switch
+                                  checked={afterHoursEnabled}
+                                  onCheckedChange={(checked) => handleAfterHoursToggle(Boolean(checked))}
+                                  disabled={updatingCallForwarding}
+                                  className="scale-110"
+                                />
+                              </div>
+                              <p className="text-xs text-indigo-700 font-semibold mt-3">
+                                {afterHoursEnabled ? "Currently forwarding all calls." : "Calls ring the carrier first, then fail over to the bot."}
+                              </p>
+                            </div>
+                          </div>
+
+                          {forwardingFailure && (
+                            <div className="p-4 sm:p-5 border border-red-200 bg-red-50 rounded-2xl">
+                              <div className="flex items-start gap-3">
+                                <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-1" />
+                                <div>
+                                  <p className="text-sm font-semibold text-red-700">Carrier reported an issue</p>
+                                  <p className="text-sm text-red-600 mt-1">{forwardingFailure}</p>
+                                  <p className="text-xs text-red-500 mt-2">
+                                    Re-run the dial code above, then mark the result so our support team knows it’s resolved.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="grid gap-6 lg:grid-cols-2">
+                            <div className="space-y-2">
+                              <p className="text-sm font-semibold text-gray-700">Internal Notes (optional)</p>
+                              <Textarea
+                                value={forwardingNotes}
+                                onChange={(event) => setForwardingNotes(event.target.value)}
+                                placeholder="Example: Confirmed AT&T setup with Sarah on 5/10. Carrier responded with success tone."
+                                className="min-h-[120px] rounded-2xl border-amber-200"
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              <p className="text-sm font-semibold text-gray-700">Carrier Failure Details</p>
+                              <Textarea
+                                value={forwardingFailureReason}
+                                onChange={(event) => setForwardingFailureReason(event.target.value)}
+                                placeholder="Tell us what you heard. Example: 'Call ended with busy tone' or 'Carrier said feature unavailable'."
+                                className="min-h-[120px] rounded-2xl border-red-200"
+                              />
+                              <div className="flex justify-end">
+                                <Button
+                                  variant="outline"
+                                  onClick={handleForwardingFailureReport}
+                                  disabled={updatingCallForwarding}
+                                  className="rounded-xl border-red-300 text-red-600 hover:bg-red-50"
+                                >
+                                  Report Issue to Support
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {forwardingCarriers.length > 0 && (
+                            <div className="border border-amber-100 rounded-2xl p-5 bg-amber-50/50">
+                              <p className="text-sm font-semibold text-amber-800 mb-3">
+                                Carrier QA Checklist
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {forwardingCarriers.map((carrier) => (
+                                  <Badge key={carrier} className="bg-white text-amber-700 border border-amber-200 rounded-full px-4 py-1">
+                                    {carrier}
+                                  </Badge>
+                                ))}
+                              </div>
+                              <p className="text-xs text-amber-700 mt-3">
+                                Use this list to confirm the dial codes with each carrier your team uses. Log issues so Support can coach onboarding teams.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <PhoneOff className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                          <p className="text-lg text-gray-600 font-semibold">Assign a phone number to unlock forwarding controls</p>
+                          <p className="text-sm text-gray-500 mt-2">
+                            Once a Twilio bot number is assigned, you can run the dial codes directly from this dashboard.
+                          </p>
                         </div>
                       )}
                     </CardContent>

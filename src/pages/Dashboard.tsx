@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink, PhoneForwarded, PhoneOff, ShieldCheck, Sun, Moon, Play, Pause, FileText, Clock, PhoneIncoming, PhoneOutgoing, PhoneMissed, Volume2 } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink, PhoneForwarded, PhoneOff, ShieldCheck, Sun, Moon, Play, Pause, FileText, Clock, PhoneIncoming, PhoneOutgoing, PhoneMissed, Volume2, Copy, Check } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -200,6 +200,7 @@ const Dashboard = () => {
   const [callRecordSearch, setCallRecordSearch] = useState("");
   const [callRecordFilterStatus, setCallRecordFilterStatus] = useState<string>("all");
   const [playingRecordingId, setPlayingRecordingId] = useState<string | null>(null);
+  const [copiedTranscript, setCopiedTranscript] = useState(false);
   
   // ============================================================================
   // Bookings State
@@ -711,6 +712,7 @@ const Dashboard = () => {
     try {
       setSelectedCallRecord(callRecord);
       setShowCallRecordDetail(true);
+      setCopiedTranscript(false); // Reset copy state when opening modal
       
       // Fetch full details if we don't have the transcript
       if (!callRecord.transcript || callRecord.transcript.trim() === "") {
@@ -769,6 +771,21 @@ const Dashboard = () => {
     } catch (err) {
       console.error("Error downloading recording:", err);
       toast.error("Failed to download recording");
+    }
+  };
+
+  /**
+   * Copies transcript to clipboard
+   */
+  const handleCopyTranscript = async (transcript: string) => {
+    try {
+      await navigator.clipboard.writeText(transcript);
+      setCopiedTranscript(true);
+      toast.success("Transcript copied to clipboard");
+      setTimeout(() => setCopiedTranscript(false), 2000);
+    } catch (err) {
+      console.error("Error copying transcript:", err);
+      toast.error("Failed to copy transcript");
     }
   };
 
@@ -5667,18 +5684,40 @@ const Dashboard = () => {
 
                 {/* Transcript */}
                 <div className="bg-white border border-amber-200 rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
-                      <FileText className="h-5 w-5 text-white" />
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
+                        <FileText className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900">Full Transcript</p>
+                        <p className="text-sm text-gray-500">Complete conversation text</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-gray-900">Full Transcript</p>
-                      <p className="text-sm text-gray-500">Complete conversation text</p>
-                    </div>
+                    {selectedCallRecord.transcript && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyTranscript(selectedCallRecord.transcript)}
+                        className="border-amber-300 hover:bg-amber-50 text-amber-600 rounded-lg"
+                      >
+                        {copiedTranscript ? (
+                          <>
+                            <Check className="h-4 w-4 mr-2" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                   {selectedCallRecord.transcript ? (
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto">
-                      <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                      <p className="text-gray-900 whitespace-pre-wrap leading-relaxed text-sm">
                         {selectedCallRecord.transcript}
                       </p>
                     </div>
@@ -5717,11 +5756,47 @@ const Dashboard = () => {
 
                 {/* Metadata */}
                 {selectedCallRecord.metadata && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Metadata</p>
-                    <pre className="text-xs text-gray-500 overflow-x-auto">
-                      {JSON.stringify(selectedCallRecord.metadata, null, 2)}
-                    </pre>
+                  <div className="bg-white border border-amber-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg">
+                        <Info className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900">Call Metadata</p>
+                        <p className="text-sm text-gray-500">Additional call information</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {selectedCallRecord.metadata.last_event_type && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">Last Event Type</p>
+                          <p className="text-sm text-gray-900 font-medium">
+                            {selectedCallRecord.metadata.last_event_type}
+                          </p>
+                        </div>
+                      )}
+                      {selectedCallRecord.metadata.last_event_at && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">Last Event Time</p>
+                          <p className="text-sm text-gray-900 font-medium">
+                            {new Date(selectedCallRecord.metadata.last_event_at).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                      {/* Show raw JSON for any additional metadata fields */}
+                      {Object.keys(selectedCallRecord.metadata).filter(
+                        key => key !== 'last_event_type' && key !== 'last_event_at'
+                      ).length > 0 && (
+                        <details className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <summary className="text-xs font-semibold text-gray-600 cursor-pointer hover:text-gray-900">
+                            View Raw Metadata
+                          </summary>
+                          <pre className="text-xs text-gray-500 overflow-x-auto mt-2 pt-2 border-t border-gray-200">
+                            {JSON.stringify(selectedCallRecord.metadata, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -5732,6 +5807,7 @@ const Dashboard = () => {
                   onClick={() => {
                     setShowCallRecordDetail(false);
                     setSelectedCallRecord(null);
+                    setCopiedTranscript(false); // Reset copy state when closing modal
                   }}
                   className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl px-6 py-3"
                 >

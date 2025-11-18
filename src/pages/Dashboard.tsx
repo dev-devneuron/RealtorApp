@@ -3832,73 +3832,89 @@ const Dashboard = () => {
                           </div>
 
                           <div className="grid gap-4 lg:grid-cols-2">
-                            <div className="rounded-xl border border-gray-200 p-5 space-y-3 bg-white">
-                              <div className="flex items-center justify-between">
-                                <p className="text-lg font-semibold text-gray-900">One-Time Business Setup</p>
-                                <Badge variant="outline" className={businessForwardingEnabled ? "border-green-200 text-green-700" : "border-amber-200 text-amber-700"}>
-                                  {businessForwardingEnabled ? "Complete" : "Action Needed"}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-gray-600">
-                                Dial the carrier code, wait for the confirmation tone, then mark the setup as done.
-                              </p>
-                              <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                                Dial: {businessDialCode || "Assign a phone number to view code"}
-                              </p>
-                              <div className="flex flex-wrap gap-3">
-                                <Button
-                                  onClick={handleBusinessForwardingDial}
-                                  variant="outline"
-                                  disabled={!hasBotNumber}
-                                  className="rounded-lg"
-                                >
-                                  Run Dial Code
-                                </Button>
-                                <Button
-                                  onClick={handleBusinessForwardingConfirmation}
-                                  disabled={!hasBotNumber || updatingCallForwarding}
-                                  className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
-                                >
-                                  {updatingCallForwarding ? (
-                                    <>
-                                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                      Saving...
-                                    </>
-                                  ) : (
-                                    "Mark Setup Complete"
-                                  )}
-                                </Button>
-                              </div>
+                          <div className="rounded-xl border border-gray-200 p-5 space-y-3 bg-white">
+                            <div className="flex items-center justify-between">
+                              <p className="text-lg font-semibold text-gray-900">Enable Missed-Call Forwarding (Business Hours)</p>
+                              <Badge variant="outline" className={businessForwardingEnabled ? "border-green-200 text-green-700" : "border-amber-200 text-amber-700"}>
+                                {businessForwardingEnabled ? "Complete" : "Action Needed"}
+                              </Badge>
                             </div>
+                            <p className="text-sm text-gray-600">
+                              Forward calls to the AI assistant only if you don’t pick up within ~25 seconds. It’s a one-time carrier setup.
+                            </p>
+                            <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                              Carrier code: {businessDialCode || "Assign a phone number to view code"}
+                            </p>
+                            <div className="flex flex-wrap gap-3">
+                              <Button
+                                onClick={handleBusinessForwardingDial}
+                                variant="outline"
+                                disabled={!hasBotNumber}
+                                className="rounded-lg"
+                              >
+                                Launch Dialer
+                              </Button>
+                              <Button
+                                onClick={handleBusinessForwardingConfirmation}
+                                disabled={!hasBotNumber || updatingCallForwarding}
+                                className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
+                              >
+                                {updatingCallForwarding ? (
+                                  <>
+                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                    Saving...
+                                  </>
+                                ) : (
+                                  "Confirm Setup"
+                                )}
+                              </Button>
+                            </div>
+                          </div>
 
-                            <div className="rounded-xl border border-gray-200 p-5 space-y-3 bg-white">
-                              <p className="text-lg font-semibold text-gray-900">After-Hours Actions</p>
+                          <div className="rounded-xl border border-gray-200 p-5 space-y-4 bg-white">
+                            <div className="space-y-1">
+                              <p className="text-lg font-semibold text-gray-900">After-Hours Forwarding Shortcuts</p>
                               <p className="text-sm text-gray-600">
-                                Use the carrier codes below whenever you switch between full forwarding and normal routing.
+                                Decide what happens after 5 PM: send every call to the assistant or let your phone ring normally.
                               </p>
-                              <div className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2 space-y-1">
-                                <p>Enable: {afterHoursEnableDialCode || "Assign a phone number to view code"}</p>
-                                <p>Disable: {afterHoursDisableDialCode || "Assign a phone number to view code"}</p>
-                              </div>
-                              <div className="flex flex-wrap gap-3">
+                            </div>
+                            <div className="space-y-4">
+                              <div className="border border-gray-200 rounded-lg p-4 space-y-2">
+                                <p className="text-base font-semibold text-gray-900">Turn On After-Hours Forwarding (All Calls)</p>
+                                <p className="text-sm text-gray-600">
+                                  After 5 PM, send every caller straight to the AI assistant so nothing slips through the cracks.
+                                </p>
+                                <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                  Dial: {afterHoursEnableDialCode || "Assign a phone number to view code"}
+                                </p>
                                 <Button
                                   variant="secondary"
                                   onClick={() => handleAfterHoursToggle(true)}
                                   disabled={!hasBotNumber || updatingCallForwarding || afterHoursEnabled}
-                                  className="rounded-lg"
+                                  className="rounded-lg w-full sm:w-auto"
                                 >
-                                  Enable After-Hours
+                                  Turn On After-Hours Forwarding
                                 </Button>
+                              </div>
+                              <div className="border border-gray-200 rounded-lg p-4 space-y-2">
+                                <p className="text-base font-semibold text-gray-900">Turn Off After-Hours Forwarding</p>
+                                <p className="text-sm text-gray-600">
+                                  Stop forwarding all calls so your phone rings like normal again.
+                                </p>
+                                <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                  Dial: {afterHoursDisableDialCode || "Assign a phone number to view code"}
+                                </p>
                                 <Button
                                   variant="outline"
                                   onClick={() => handleAfterHoursToggle(false)}
                                   disabled={!hasBotNumber || updatingCallForwarding || !afterHoursEnabled}
-                                  className="rounded-lg"
+                                  className="rounded-lg w-full sm:w-auto"
                                 >
-                                  Disable After-Hours
+                                  Turn Off After-Hours Forwarding
                                 </Button>
                               </div>
                             </div>
+                          </div>
                           </div>
 
                           {forwardingFailure && (

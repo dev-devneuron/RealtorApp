@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink, PhoneForwarded, PhoneOff, ShieldCheck, Sun, Moon } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink, PhoneForwarded, PhoneOff, ShieldCheck, Sun, Moon, Play, Pause, FileText, Clock, PhoneIncoming, PhoneOutgoing, PhoneMissed, Volume2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -186,6 +186,20 @@ const Dashboard = () => {
   // ============================================================================
   const [recordings, setRecordings] = useState<{ url: string }[]>([]);
   const [loadingRecordings, setLoadingRecordings] = useState(false);
+  
+  // ============================================================================
+  // Call Records & Transcripts State
+  // ============================================================================
+  const [callRecords, setCallRecords] = useState<any[]>([]);
+  const [loadingCallRecords, setLoadingCallRecords] = useState(false);
+  const [callRecordsTotal, setCallRecordsTotal] = useState(0);
+  const [callRecordsLimit] = useState(20);
+  const [callRecordsOffset, setCallRecordsOffset] = useState(0);
+  const [selectedCallRecord, setSelectedCallRecord] = useState<any | null>(null);
+  const [showCallRecordDetail, setShowCallRecordDetail] = useState(false);
+  const [callRecordSearch, setCallRecordSearch] = useState("");
+  const [callRecordFilterStatus, setCallRecordFilterStatus] = useState<string>("all");
+  const [playingRecordingId, setPlayingRecordingId] = useState<string | null>(null);
   
   // ============================================================================
   // Bookings State
@@ -455,6 +469,13 @@ const Dashboard = () => {
     fetchCallForwardingState(realtorId);
   }, [userType, forwardingTarget]);
 
+  // Fetch call records when the calls tab is active
+  useEffect(() => {
+    if (activeTab === "chats") {
+      fetchCallRecords(callRecordsLimit, callRecordsOffset);
+    }
+  }, [activeTab, callRecordsOffset]);
+
   // All your existing API functions remain exactly the same
   /**
    * Fetches the current user's assigned Twilio bot number
@@ -610,6 +631,145 @@ const Dashboard = () => {
       toast.error("Could not load chats");
     } finally {
       setLoadingChats(false);
+    }
+  };
+
+  // ============================================================================
+  // Call Records & Transcripts API Functions
+  // ============================================================================
+
+  /**
+   * Fetches call records with pagination and filtering
+   */
+  const fetchCallRecords = async (limit?: number, offset?: number) => {
+    try {
+      setLoadingCallRecords(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const params = new URLSearchParams();
+      const limitValue = limit !== undefined ? limit : callRecordsLimit;
+      const offsetValue = offset !== undefined ? offset : callRecordsOffset;
+      params.append("limit", limitValue.toString());
+      params.append("offset", offsetValue.toString());
+
+      const res = await fetch(`${API_BASE}/call-records?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || "Failed to fetch call records");
+      }
+
+      const data = await res.json();
+      setCallRecords(data.call_records || []);
+      setCallRecordsTotal(data.total || 0);
+    } catch (err: any) {
+      console.error("Error fetching call records:", err);
+      toast.error(err.message || "Could not load call records");
+    } finally {
+      setLoadingCallRecords(false);
+    }
+  };
+
+  /**
+   * Fetches detailed information for a specific call record
+   */
+  const fetchCallRecordDetail = async (callId: string) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/call-records/${callId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || "Failed to fetch call record details");
+      }
+
+      const data = await res.json();
+      return data;
+    } catch (err: any) {
+      console.error("Error fetching call record detail:", err);
+      toast.error(err.message || "Could not load call record details");
+      throw err;
+    }
+  };
+
+  /**
+   * Opens the call record detail modal and fetches full details
+   */
+  const handleViewCallRecord = async (callRecord: any) => {
+    try {
+      setSelectedCallRecord(callRecord);
+      setShowCallRecordDetail(true);
+      
+      // Fetch full details if we don't have the transcript
+      if (!callRecord.transcript || callRecord.transcript.trim() === "") {
+        const detail = await fetchCallRecordDetail(callRecord.id);
+        setSelectedCallRecord(detail);
+      }
+    } catch (err) {
+      console.error("Error viewing call record:", err);
+    }
+  };
+
+  /**
+   * Formats call duration from seconds to human-readable format
+   */
+  const formatCallDuration = (seconds: number | null | undefined): string => {
+    if (!seconds || seconds === 0) return "0s";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    }
+    return `${secs}s`;
+  };
+
+  /**
+   * Formats phone number for display
+   */
+  const formatPhoneNumber = (phone: string | null | undefined): string => {
+    if (!phone) return "Unknown";
+    // Format as (XXX) XXX-XXXX if it's a US number
+    const cleaned = phone.replace(/\D/g, "");
+    if (cleaned.length === 11 && cleaned.startsWith("1")) {
+      const match = cleaned.match(/^1(\d{3})(\d{3})(\d{4})$/);
+      if (match) return `+1 (${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    if (cleaned.length === 10) {
+      const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+      if (match) return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return phone;
+  };
+
+  /**
+   * Downloads a recording file
+   */
+  const handleDownloadRecording = (recordingUrl: string, callId: string) => {
+    try {
+      const link = document.createElement("a");
+      link.href = recordingUrl;
+      link.download = `call-${callId}.mp3`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Download started");
+    } catch (err) {
+      console.error("Error downloading recording:", err);
+      toast.error("Failed to download recording");
     }
   };
 
@@ -4662,7 +4822,7 @@ const Dashboard = () => {
               </motion.div>
             </TabsContent>
 
-            {/* Chats */}
+            {/* Call Records & Transcripts */}
             <TabsContent value="chats">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -4670,68 +4830,256 @@ const Dashboard = () => {
                 transition={{ duration: 0.6 }}
               >
                 <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-8">
-                    <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                      <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                        <Phone className="h-6 w-6 text-white" />
+                  <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                      <div className="flex-1">
+                        <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
+                          <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                            <Phone className="h-6 w-6 text-white" />
+                          </div>
+                          Call Records & Transcripts
+                        </CardTitle>
+                        <p className="text-gray-600 text-lg">
+                          View all your call history with transcripts, recordings, and detailed analytics.
+                        </p>
                       </div>
-                      Customer Chats
-                    </CardTitle>
-                    <p className="text-gray-600 text-lg">
-                      View conversations with your clients in a chat-style layout.
-                    </p>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-sm font-semibold px-4 py-2">
+                          {callRecordsTotal} {callRecordsTotal === 1 ? 'Call' : 'Calls'}
+                        </Badge>
+                      </div>
+                    </div>
                   </CardHeader>
-                  <CardContent className="p-8">
-                    {loadingChats ? (
-                      <div className="text-center py-12">
-                        <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mx-auto mb-4" />
-                        <p className="text-gray-600 font-medium text-lg">Loading chats...</p>
+                  <CardContent className="p-6 sm:p-8">
+                    {/* Search and Filter Bar */}
+                    <div className="mb-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex-1 relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search by caller number or transcript..."
+                            value={callRecordSearch}
+                            onChange={(e) => setCallRecordSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-400"
+                          />
+                        </div>
+                        <Select value={callRecordFilterStatus} onValueChange={setCallRecordFilterStatus}>
+                          <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                            <SelectValue placeholder="Filter by status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Calls</SelectItem>
+                            <SelectItem value="ended">Completed</SelectItem>
+                            <SelectItem value="started">In Progress</SelectItem>
+                            <SelectItem value="failed">Failed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          onClick={() => fetchCallRecords()}
+                          variant="outline"
+                          className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Refresh
+                        </Button>
                       </div>
-                    ) : Object.keys(chats).length === 0 ? (
+                    </div>
+
+                    {/* Loading State */}
+                    {loadingCallRecords ? (
                       <div className="text-center py-12">
-                        <Phone className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 font-medium text-lg">No chats available.</p>
+                        <RefreshCw className="h-10 w-10 animate-spin text-amber-500 mx-auto mb-4" />
+                        <p className="text-gray-600 font-medium text-lg">Loading call records...</p>
+                      </div>
+                    ) : callRecords.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Phone className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500 font-medium text-xl mb-2">No call records found</p>
+                        <p className="text-gray-400 text-sm">Call records will appear here once calls are received.</p>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center gap-8 overflow-x-hidden">
-                        {Object.entries(chats).map(([customer, messages]: any, idx) => (
-                          <div
-                            key={idx}
-                            className="border border-amber-200 rounded-2xl p-6 bg-white shadow-lg w-full max-w-4xl mx-auto"
-                          >
-                            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center border-b border-amber-200 pb-4">
-                              Chat with {customer}
-                            </h3>
-                            <div className="h-96 overflow-y-auto space-y-4 pr-4">
-                              {messages.map((msg: any, i: number) => (
-                                <div
-                                  key={i}
-                                  className={`flex ${
-                                    msg.sender === "realtor"
-                                      ? "justify-end"
-                                      : "justify-start"
-                                  }`}
-                                >
-                                  <div
-                                    className={`px-6 py-4 rounded-2xl max-w-[70%] text-lg shadow-md border ${
-                                      msg.sender === "realtor"
-                                        ? "bg-gradient-to-br from-amber-500 to-amber-600 text-white border-amber-400 rounded-br-none"
-                                        : "bg-white text-gray-900 border-amber-200 rounded-bl-none"
-                                    }`}
-                                  >
-                                    <p className="font-medium">{msg.message}</p>
-                                    <div className="text-sm text-amber-600/80 mt-2 font-semibold">
-                                      {msg.timestamp
-                                        ? new Date(msg.timestamp).toLocaleString()
-                                        : ""}
+                      <>
+                        {/* Call Records Grid */}
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+                          {callRecords
+                            .filter((record) => {
+                              // Apply search filter
+                              if (callRecordSearch) {
+                                const searchLower = callRecordSearch.toLowerCase();
+                                const matchesSearch = 
+                                  formatPhoneNumber(record.caller_number).toLowerCase().includes(searchLower) ||
+                                  (record.transcript && record.transcript.toLowerCase().includes(searchLower));
+                                if (!matchesSearch) return false;
+                              }
+                              // Apply status filter
+                              if (callRecordFilterStatus !== "all") {
+                                if (record.call_status !== callRecordFilterStatus) return false;
+                              }
+                              return true;
+                            })
+                            .map((record, idx) => (
+                              <motion.div
+                                key={record.id || idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: idx * 0.05 }}
+                                className="bg-white border border-amber-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                                onClick={() => handleViewCallRecord(record)}
+                              >
+                                <div className="flex items-start justify-between mb-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
+                                      <PhoneIncoming className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div>
+                                      <p className="font-bold text-gray-900 text-lg">
+                                        {formatPhoneNumber(record.caller_number)}
+                                      </p>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        {record.created_at 
+                                          ? new Date(record.created_at).toLocaleString()
+                                          : "Unknown date"}
+                                      </p>
                                     </div>
                                   </div>
+                                  <Badge 
+                                    className={`text-xs font-semibold ${
+                                      record.call_status === "ended"
+                                        ? "bg-green-100 text-green-700 border-green-300"
+                                        : record.call_status === "started"
+                                        ? "bg-blue-100 text-blue-700 border-blue-300"
+                                        : "bg-red-100 text-red-700 border-red-300"
+                                    }`}
+                                  >
+                                    {record.call_status || "unknown"}
+                                  </Badge>
                                 </div>
-                              ))}
+
+                                <div className="space-y-3">
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Clock className="h-4 w-4 text-amber-600" />
+                                    <span className="font-medium">
+                                      {formatCallDuration(record.call_duration)}
+                                    </span>
+                                  </div>
+
+                                  {record.realtor_number && userType === "property_manager" && (
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                      <User className="h-4 w-4 text-amber-600" />
+                                      <span className="font-medium">
+                                        {formatPhoneNumber(record.realtor_number)}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {record.transcript && (
+                                    <div className="mt-3 pt-3 border-t border-amber-100">
+                                      <p className="text-xs text-gray-500 line-clamp-2">
+                                        {record.transcript.substring(0, 100)}
+                                        {record.transcript.length > 100 ? "..." : ""}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  <div className="flex items-center gap-2 pt-2">
+                                    {record.recording_url && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-8 w-8 p-0 hover:bg-amber-100"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setPlayingRecordingId(record.id === playingRecordingId ? null : record.id);
+                                              }}
+                                            >
+                                              {playingRecordingId === record.id ? (
+                                                <Pause className="h-4 w-4 text-amber-600" />
+                                              ) : (
+                                                <Play className="h-4 w-4 text-amber-600" />
+                                              )}
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>{playingRecordingId === record.id ? "Pause" : "Play"} Recording</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-3 text-xs hover:bg-amber-100 text-amber-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewCallRecord(record);
+                                      }}
+                                    >
+                                      <FileText className="h-4 w-4 mr-1" />
+                                      View Details
+                                    </Button>
+                                  </div>
+
+                                  {playingRecordingId === record.id && record.recording_url && (
+                                    <div className="mt-2 pt-2 border-t border-amber-100">
+                                      <audio
+                                        controls
+                                        autoPlay
+                                        className="w-full h-8"
+                                        onEnded={() => setPlayingRecordingId(null)}
+                                      >
+                                        <source src={record.recording_url} type="audio/mpeg" />
+                                        Your browser does not support the audio element.
+                                      </audio>
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {callRecordsTotal > callRecordsLimit && (
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-amber-200">
+                            <p className="text-sm text-gray-600">
+                              Showing {callRecordsOffset + 1} to {Math.min(callRecordsOffset + callRecordsLimit, callRecordsTotal)} of {callRecordsTotal} calls
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newOffset = Math.max(0, callRecordsOffset - callRecordsLimit);
+                                  setCallRecordsOffset(newOffset);
+                                  fetchCallRecords(callRecordsLimit, newOffset);
+                                }}
+                                disabled={callRecordsOffset === 0 || loadingCallRecords}
+                                className="rounded-lg"
+                              >
+                                <ChevronLeft className="h-4 w-4 mr-1" />
+                                Previous
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newOffset = callRecordsOffset + callRecordsLimit;
+                                  setCallRecordsOffset(newOffset);
+                                  fetchCallRecords(callRecordsLimit, newOffset);
+                                }}
+                                disabled={callRecordsOffset + callRecordsLimit >= callRecordsTotal || loadingCallRecords}
+                                className="rounded-lg"
+                              >
+                                Next
+                                <ChevronRight className="h-4 w-4 ml-1" />
+                              </Button>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
@@ -5286,6 +5634,188 @@ const Dashboard = () => {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Call Record Detail Modal */}
+      <Dialog open={showCallRecordDetail} onOpenChange={setShowCallRecordDetail}>
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+          {selectedCallRecord && (
+            <div className="flex flex-col h-full max-h-[90vh] overflow-hidden">
+              {/* Header */}
+              <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
+                        <PhoneIncoming className="h-6 w-6 text-white" />
+                      </div>
+                      Call Details
+                    </DialogTitle>
+                    <DialogDescription className="text-gray-600 mt-2">
+                      {formatPhoneNumber(selectedCallRecord.caller_number)}
+                    </DialogDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      className={`text-sm font-semibold ${
+                        selectedCallRecord.call_status === "ended"
+                          ? "bg-green-100 text-green-700 border-green-300"
+                          : selectedCallRecord.call_status === "started"
+                          ? "bg-blue-100 text-blue-700 border-blue-300"
+                          : "bg-red-100 text-red-700 border-red-300"
+                      }`}
+                    >
+                      {selectedCallRecord.call_status || "unknown"}
+                    </Badge>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Call Information */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-5 w-5 text-amber-600" />
+                      <p className="text-sm font-semibold text-gray-600">Duration</p>
+                    </div>
+                    <p className="text-xl font-bold text-gray-900">
+                      {formatCallDuration(selectedCallRecord.call_duration)}
+                    </p>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="h-5 w-5 text-amber-600" />
+                      <p className="text-sm font-semibold text-gray-600">Date & Time</p>
+                    </div>
+                    <p className="text-lg font-bold text-gray-900">
+                      {selectedCallRecord.created_at 
+                        ? new Date(selectedCallRecord.created_at).toLocaleString()
+                        : "Unknown"}
+                    </p>
+                  </div>
+                  {selectedCallRecord.realtor_number && userType === "property_manager" && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:col-span-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-5 w-5 text-amber-600" />
+                        <p className="text-sm font-semibold text-gray-600">Realtor Number</p>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900">
+                        {formatPhoneNumber(selectedCallRecord.realtor_number)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recording */}
+                {selectedCallRecord.recording_url && (
+                  <div className="bg-white border border-amber-200 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
+                          <Volume2 className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900">Call Recording</p>
+                          <p className="text-sm text-gray-500">Listen to the full conversation</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownloadRecording(selectedCallRecord.recording_url, selectedCallRecord.id)}
+                        className="border-amber-300 hover:bg-amber-50 text-amber-600 rounded-lg"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                    <div className="mt-4">
+                      <audio controls className="w-full h-10">
+                        <source src={selectedCallRecord.recording_url} type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  </div>
+                )}
+
+                {/* Transcript */}
+                <div className="bg-white border border-amber-200 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
+                      <FileText className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">Full Transcript</p>
+                      <p className="text-sm text-gray-500">Complete conversation text</p>
+                    </div>
+                  </div>
+                  {selectedCallRecord.transcript ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto">
+                      <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                        {selectedCallRecord.transcript}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500 font-medium">No transcript available</p>
+                      <p className="text-sm text-gray-400 mt-1">Transcript may still be processing</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Live Transcript Chunks (if available) */}
+                {selectedCallRecord.live_transcript_chunks && 
+                 Array.isArray(selectedCallRecord.live_transcript_chunks) && 
+                 selectedCallRecord.live_transcript_chunks.length > 0 && (
+                  <div className="bg-white border border-amber-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+                        <Phone className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900">Live Transcript Chunks</p>
+                        <p className="text-sm text-gray-500">Real-time conversation segments</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {selectedCallRecord.live_transcript_chunks.map((chunk: string, idx: number) => (
+                        <div key={idx} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-sm text-gray-700">{chunk}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Metadata */}
+                {selectedCallRecord.metadata && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Metadata</p>
+                    <pre className="text-xs text-gray-500 overflow-x-auto">
+                      {JSON.stringify(selectedCallRecord.metadata, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <DialogFooter className="p-6 border-t border-amber-200 bg-gray-50">
+                <Button
+                  onClick={() => {
+                    setShowCallRecordDetail(false);
+                    setSelectedCallRecord(null);
+                  }}
+                  className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl px-6 py-3"
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </main>

@@ -294,17 +294,17 @@ const Dashboard = () => {
 
       // If not in localStorage, try to fetch from API
       try {
-        // Try different possible endpoints
+        // Try different possible endpoints (removed non-existent /me endpoints)
         const endpoints = storedUserType === "property_manager" 
           ? [
-              `${API_BASE}/property-manager/me`,
               `${API_BASE}/property-manager/profile`,
-              `${API_BASE}/property-manager/info`
+              `${API_BASE}/property-manager/info`,
+              `${API_BASE}/user-profile`
             ]
           : [
-              `${API_BASE}/realtor/me`,
               `${API_BASE}/realtor/profile`,
-              `${API_BASE}/realtor/info`
+              `${API_BASE}/realtor/info`,
+              `${API_BASE}/user-profile`
             ];
 
         let nameFound = false;

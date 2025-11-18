@@ -3896,23 +3896,35 @@ const Dashboard = () => {
                                   Turn On After-Hours Forwarding
                                 </Button>
                               </div>
-                              <div className="border border-gray-200 rounded-lg p-4 space-y-2">
-                                <p className="text-base font-semibold text-gray-900">Turn Off After-Hours Forwarding</p>
-                                <p className="text-sm text-gray-600">
-                                  Stop forwarding all calls so your phone rings like normal again.
-                                </p>
-                                <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                                  Dial: {afterHoursDisableDialCode || "Assign a phone number to view code"}
-                                </p>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => handleAfterHoursToggle(false)}
-                                  disabled={!hasBotNumber || updatingCallForwarding || !afterHoursEnabled}
-                                  className="rounded-lg w-full sm:w-auto"
-                                >
-                                  Turn Off After-Hours Forwarding
-                                </Button>
-                              </div>
+                              {afterHoursEnabled ? (
+                                <div className="border border-gray-200 rounded-lg p-4 space-y-2">
+                                  <p className="text-base font-semibold text-gray-900">Turn Off After-Hours Forwarding</p>
+                                  <p className="text-sm text-gray-600">
+                                    Stop forwarding all calls so your phone rings like normal again.
+                                  </p>
+                                  <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                    Dial: {afterHoursDisableDialCode || "Assign a phone number to view code"}
+                                  </p>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => handleAfterHoursToggle(false)}
+                                    disabled={!hasBotNumber || updatingCallForwarding}
+                                    className="rounded-lg w-full sm:w-auto"
+                                  >
+                                    Turn Off After-Hours Forwarding
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="border border-dashed border-gray-200 rounded-lg p-4 space-y-2 bg-gray-50">
+                                  <p className="text-base font-semibold text-gray-900">Turn Off After-Hours Forwarding</p>
+                                  <p className="text-sm text-gray-600">
+                                    This option appears once after-hours forwarding is turned on.
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Tip: tap “Turn On After-Hours Forwarding” first to activate full forwarding, then you’ll be able to turn it off here.
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
                           </div>

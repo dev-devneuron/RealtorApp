@@ -440,7 +440,6 @@ const Dashboard = () => {
     fetchUserInfo();
     fetchNumber();
     fetchApartments();
-    fetchRecordings();
     fetchBookings();
     fetchChats(); 
 
@@ -2794,18 +2793,11 @@ const Dashboard = () => {
                   Bookings
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="conversations" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
-                >
-                  <Music className="h-4 w-4 mr-2" />
-                  Conversations
-                </TabsTrigger>
-                <TabsTrigger 
                   value="chats" 
                   className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
                 >
                   <Phone className="h-4 w-4 mr-2" />
-                  Calls
+                  Call Records & Transcripts
                 </TabsTrigger>
               </TabsList>
             </motion.div>
@@ -4742,74 +4734,6 @@ const Dashboard = () => {
                                   >
                                     {b.status}
                                   </Badge>
-                                </TableCell>
-                              </motion.tr>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </TabsContent>
-
-            {/* Conversations */}
-            <TabsContent value="conversations">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-8">
-                    <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                      <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                        <Music className="h-6 w-6 text-white" />
-                      </div>
-                      Conversations (Call Recordings)
-                    </CardTitle>
-                    <p className="text-gray-600 text-lg">
-                      Listen to your recorded calls with leads and clients.
-                    </p>
-                  </CardHeader>
-                  <CardContent className="p-8">
-                    {loadingRecordings ? (
-                      <div className="text-center py-12">
-                        <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mx-auto mb-4" />
-                        <p className="text-gray-600 font-medium text-lg">Loading recordings...</p>
-                      </div>
-                    ) : recordings.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 font-medium text-lg">No recordings available.</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-                        <Table>
-                          <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
-                            <TableRow className="border-b border-amber-200">
-                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Call</TableHead>
-                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Recording</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {recordings.map((rec, idx) => (
-                              <motion.tr
-                                key={idx}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                                className="hover:bg-amber-50/50 transition-all duration-200 group border-b border-gray-100"
-                              >
-                                <TableCell className="font-semibold text-gray-900 py-5 px-6 group-hover:text-amber-700 transition-colors">
-                                  Call #{idx + 1}
-                                </TableCell>
-                                <TableCell className="py-5 px-6">
-                                  <audio controls className="w-full max-w-md">
-                                    <source src={rec.url} type="audio/mpeg" />
-                                    Your browser does not support the audio element.
-                                  </audio>
                                 </TableCell>
                               </motion.tr>
                             ))}

@@ -294,18 +294,19 @@ const Dashboard = () => {
 
       // If not in localStorage, try to fetch from API
       try {
-        // Try different possible endpoints (removed non-existent /me endpoints)
-        const endpoints = storedUserType === "property_manager" 
-          ? [
-              `${API_BASE}/property-manager/profile`,
-              `${API_BASE}/property-manager/info`,
-              `${API_BASE}/user-profile`
-            ]
-          : [
-              `${API_BASE}/realtor/profile`,
-              `${API_BASE}/realtor/info`,
-              `${API_BASE}/user-profile`
-            ];
+        // Try documented /user-profile endpoint first, then fallback to others
+        const endpoints = [
+          `${API_BASE}/user-profile`,  // Documented endpoint - prioritize this
+          ...(storedUserType === "property_manager" 
+            ? [
+                `${API_BASE}/property-manager/profile`,
+                `${API_BASE}/property-manager/info`
+              ]
+            : [
+                `${API_BASE}/realtor/profile`,
+                `${API_BASE}/realtor/info`
+              ])
+        ];
 
         let nameFound = false;
         for (const endpoint of endpoints) {
@@ -317,8 +318,11 @@ const Dashboard = () => {
             if (res.ok) {
               const data = await res.json();
               console.log("API response from", endpoint, ":", data);
-              const name = data.name || data.user?.name || data.property_manager?.name || data.realtor?.name || data.email?.split('@')[0] || null;
-              const gender = data.gender || data.user?.gender || data.property_manager?.gender || data.realtor?.gender || null;
+              
+              // Handle /user-profile response structure: { user: { name, email, ... } }
+              // Also handle other possible response structures
+              const name = data.user?.name || data.name || data.property_manager?.name || data.realtor?.name || data.email?.split('@')[0] || null;
+              const gender = data.user?.gender || data.gender || data.property_manager?.gender || data.realtor?.gender || null;
               
               if (name && name.trim() !== "") {
                 console.log("Setting user name:", name);

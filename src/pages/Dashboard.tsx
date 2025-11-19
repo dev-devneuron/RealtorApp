@@ -737,21 +737,41 @@ const Dashboard = () => {
       return transcript;
     }
 
-    const lines = transcript
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
+    const lines = transcript.split(/\r?\n/);
+    type Segment = { speaker: string; content: string };
+    const segments: Segment[] = [];
+    let currentSegment: Segment | null = null;
 
-    const allowedPrefixes = ["user:", "bot:", "summary:"];
-    const relevantLines = lines.filter((line) =>
-      allowedPrefixes.some((prefix) => line.toLowerCase().startsWith(prefix))
-    );
+    const speakerRegex = /^(bot|user|summary)\s*:\s*(.*)$/i;
 
-    if (relevantLines.length === 0) {
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      const match = line.match(speakerRegex);
+      if (match) {
+        const speaker = match[1];
+        const content = match[2]?.trim() || "";
+        currentSegment = { speaker, content };
+        segments.push(currentSegment);
+      } else if (currentSegment) {
+        currentSegment.content = currentSegment.content
+          ? `${currentSegment.content}\n${line}`
+          : line;
+      }
+    }
+
+    if (segments.length === 0) {
       return transcript;
     }
 
-    return relevantLines.join("\n\n");
+    return segments
+      .map((segment) => {
+        const speakerLabel =
+          segment.speaker.charAt(0).toUpperCase() + segment.speaker.slice(1).toLowerCase();
+        return `${speakerLabel}: ${segment.content}`;
+      })
+      .join("\n\n");
   };
 
   const sanitizeCallRecord = (record: any) => {

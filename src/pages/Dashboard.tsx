@@ -4499,7 +4499,7 @@ const Dashboard = () => {
                                 <div className="flex items-start gap-2">
                                   <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                                   <p className="text-xs text-blue-800">
-                                    <strong>Don't worry!</strong> You can disable this anytime you want. It's completely reversible - just dial the disable code when you're ready to turn it off.
+                                    <strong>Don't worry!</strong> You can disable this anytime you want. It's completely reversible - just dial the disable code after you've enabled it when you're ready to turn it off.
                                   </p>
                                 </div>
                               </div>

@@ -2295,56 +2295,60 @@ const Dashboard = () => {
 
   /**
    * Gets dial codes from backend-provided forwarding_codes (carrier-specific)
-   * Falls back to GSM codes if backend codes are not available (backward compatibility)
+   * Backend provides complete codes with actual assigned number already embedded
+   * Returns null if no number is assigned (codes will be null in that case)
    */
-  function getForwardingDialCode(mode: "business" | "after-hours-on" | "after-hours-off"): string {
-    // If we have backend-provided codes, use them
-    if (forwardingCodes) {
-      switch (mode) {
-        case "business":
-          // Use forward_no_answer.activate for 25-second forwarding
-          return forwardingCodes.forward_no_answer?.activate || "";
-        case "after-hours-on":
-          // Use forward_all.activate for unconditional forwarding
-          return forwardingCodes.forward_all?.activate || "";
-        case "after-hours-off":
-          // Use forward_all.deactivate to turn off forwarding
-          return forwardingCodes.forward_all?.deactivate || "";
-        default:
-          return "";
-      }
+  function getForwardingDialCode(mode: "business" | "after-hours-on" | "after-hours-off"): string | null {
+    // Backend always provides forwarding_codes, but codes are null if no number assigned
+    if (!forwardingCodes) {
+      return null;
     }
 
-    // Fallback to GSM codes for backward compatibility (shouldn't happen with new API)
-    const botNumber = getBotNumberForForwarding();
-    if (!botNumber) {
-      return "";
-    }
-
-    const sanitized = botNumber.replace(/[^\d+]/g, "");
-    if (!sanitized) {
-      return "";
+    // Check if user has a number assigned (backend sets codes to null if no number)
+    if (!callForwardingState?.twilio_number) {
+      return null;
     }
 
     switch (mode) {
       case "business":
-        return `**61*${sanitized}**25#`;
+        // Use forward_no_answer.activate for 25-second forwarding
+        // Backend returns null if not supported or no number assigned
+        return forwardingCodes.forward_no_answer?.activate || null;
       case "after-hours-on":
-        return `**21*${sanitized}#`;
+        // Use forward_all.activate for unconditional forwarding
+        // Backend returns null if no number assigned
+        return forwardingCodes.forward_all?.activate || null;
       case "after-hours-off":
-        return "##21#";
+        // Use forward_all.deactivate to turn off forwarding
+        // This is usually always available (##21# or *73)
+        return forwardingCodes.forward_all?.deactivate || null;
       default:
-        return "";
+        return null;
     }
   }
 
   /**
-   * Opens the system dialer with the provided carrier-specific code
-   * Handles different code formats (GSM, Verizon, etc.)
+   * Validates dial code (backend provides correct codes with actual number embedded)
+   * Returns the code as-is - backend is responsible for correct formatting
    */
-  const openDialerWithCode = (code: string) => {
+  const validateDialCode = (code: string | null): string | null => {
+    if (!code) return null;
+    
+    // Handle special cases
+    if (code === "app_only") return code;
+    
+    // Backend provides codes with actual number already embedded
+    // Just trim and return - backend ensures correct format
+    return code.trim();
+  };
+
+  /**
+   * Opens the system dialer with the provided carrier-specific code
+   * Backend provides complete codes with actual number already embedded
+   */
+  const openDialerWithCode = (code: string | null, mode: "business" | "after-hours-on" | "after-hours-off" = "after-hours-on") => {
     if (!code) {
-      toast.error("Carrier code unavailable. Please assign a bot number first.");
+      toast.error("Carrier code unavailable. Please assign a phone number first.");
       return;
     }
 
@@ -2354,12 +2358,25 @@ const Dashboard = () => {
       return;
     }
 
-    // For Verizon/Xfinity codes (e.g., "*72 14123882328"), encode space as %20
-    // For GSM codes (e.g., "**21*+14123882328#"), encode * and #
-    const encoded = code
+    // Validate the code (backend provides correct codes with actual number)
+    const validatedCode = validateDialCode(code);
+    
+    if (!validatedCode) {
+      toast.error("Invalid carrier code format. Please contact support.");
+      console.error("Invalid code format:", code);
+      return;
+    }
+
+    // Encode for tel: link
+    // Backend provides codes in correct format (GSM: **21*+18885551234#, Verizon: *72 18885551234)
+    // Preserve spaces for Verizon codes, encode * and # for all codes
+    const encoded = validatedCode
       .replace(/\*/g, "%2A")
       .replace(/#/g, "%23")
       .replace(/ /g, "%20");
+    
+    // Log for debugging
+    console.log("Opening dialer with code:", validatedCode, "Encoded:", encoded);
     
     window.location.href = `tel:${encoded}`;
   };
@@ -2425,6 +2442,12 @@ const Dashboard = () => {
    * Launches the carrier dial code for business hours setup (one-time conditional forwarding)
    */
   const handleBusinessForwardingDial = () => {
+    // Check if number is assigned
+    if (!hasBotNumber) {
+      toast.error("No bot number assigned yet. Assign a phone number to enable forwarding.");
+      return;
+    }
+
     // Check if carrier supports 25-second forwarding
     if (!supports25SecondForwarding) {
       toast.error(`Your carrier (${currentCarrier || "Unknown"}) doesn't support 25-second forwarding. Only unconditional forwarding is available.`);
@@ -2437,7 +2460,7 @@ const Dashboard = () => {
         toast.info("Google Fi requires app configuration. Please set up forwarding in the Google Fi app or website.");
         return;
       }
-      toast.error("No bot number assigned yet. Assign a phone number to enable forwarding.");
+      toast.error("Carrier code unavailable. Please contact support.");
       return;
     }
 
@@ -2446,8 +2469,12 @@ const Dashboard = () => {
       return;
     }
 
-    openDialerWithCode(code);
-    toast.info("Carrier dialer opened. Tap call, wait for the confirmation beep, then mark the setup as complete.");
+    // Show the exact code that will be dialed (backend provides code with actual number)
+    toast.info(`Opening dialer with code: ${code}. Tap CALL, wait for confirmation beep (usually 3 beeps), then return here to confirm.`, {
+      duration: 5000,
+    });
+    
+    openDialerWithCode(code, "business");
   };
 
   /**
@@ -2467,13 +2494,19 @@ const Dashboard = () => {
    * Enables or disables after-hours mode while guiding the user through carrier codes
    */
   const handleAfterHoursToggle = async (nextEnabled: boolean) => {
+    // Check if number is assigned
+    if (!hasBotNumber) {
+      toast.error("No bot number assigned yet. Assign a phone number to enable forwarding.");
+      return;
+    }
+
     const code = getForwardingDialCode(nextEnabled ? "after-hours-on" : "after-hours-off");
     if (!code) {
       if (carrierType === "google_fi") {
         toast.info("Google Fi requires app configuration. Please set up forwarding in the Google Fi app or website.");
         return;
       }
-      toast.error("No bot number assigned yet. Assign a phone number to enable forwarding.");
+      toast.error("Carrier code unavailable. Please contact support.");
       return;
     }
 
@@ -2482,7 +2515,14 @@ const Dashboard = () => {
       return;
     }
 
-    openDialerWithCode(code);
+    // Show the exact code that will be dialed (backend provides code with actual number)
+    toast.info(`Opening dialer with code: ${code}. Tap CALL, wait for confirmation beep (usually 3 beeps), then return here to confirm.`, {
+      duration: 5000,
+    });
+    
+    openDialerWithCode(code, nextEnabled ? "after-hours-on" : "after-hours-off");
+    
+    // Update state after user confirms (they'll click confirm button after dialing)
     await handleCallForwardingUpdate(
       {
         after_hours_enabled: nextEnabled,
@@ -2527,11 +2567,12 @@ const Dashboard = () => {
   };
 
   // Derived values for simplified rendering
-  const botNumberDisplay = getBotNumberForForwarding();
+  const botNumberDisplay = callForwardingState?.twilio_number || null;
   const hasBotNumber = Boolean(botNumberDisplay);
-  const businessDialCode = hasBotNumber ? getForwardingDialCode("business") : "";
-  const afterHoursEnableDialCode = hasBotNumber ? getForwardingDialCode("after-hours-on") : "";
-  const afterHoursDisableDialCode = hasBotNumber ? getForwardingDialCode("after-hours-off") : "";
+  // Backend provides codes with actual number embedded, or null if no number assigned
+  const businessDialCode = getForwardingDialCode("business");
+  const afterHoursEnableDialCode = getForwardingDialCode("after-hours-on");
+  const afterHoursDisableDialCode = getForwardingDialCode("after-hours-off");
 
   const handleSignOut = () => {
     // Clear all authentication data
@@ -4252,8 +4293,31 @@ const Dashboard = () => {
                         </div>
                       ) : callForwardingState ? (
                         <div className="space-y-6">
+                          {/* No Number Assigned Warning */}
+                          {!hasBotNumber && (
+                            <div className="rounded-xl border-2 border-red-300 bg-red-50 p-5">
+                              <div className="flex items-start gap-3">
+                                <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                <div className="flex-1">
+                                  <p className="text-base font-semibold text-red-900 mb-2">No Phone Number Assigned</p>
+                                  <p className="text-sm text-red-800 mb-3">
+                                    {callForwardingState.message || "This user doesn't have a phone number assigned yet. Please assign a phone number first to enable call forwarding."}
+                                  </p>
+                                  {userType === "property_manager" && (
+                                    <Button
+                                      onClick={() => setActiveTab("phone-numbers")}
+                                      className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                      Go to Phone Numbers
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Carrier Selection Prompt */}
-                          {showCarrierSelection && (
+                          {showCarrierSelection && hasBotNumber && (
                             <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-5 space-y-4">
                               <div className="flex items-start gap-3">
                                 <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
@@ -4431,27 +4495,38 @@ const Dashboard = () => {
                               </div>
                             )}
 
-                            {supports25SecondForwarding && (
+                            {supports25SecondForwarding && businessDialCode && hasBotNumber && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold text-gray-700">Carrier code to dial:</p>
+                                <p className="text-sm font-mono font-bold text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-lg px-4 py-3 text-center tracking-wider">
+                                  {businessDialCode}
+                                </p>
+                                <p className="text-xs text-gray-600 italic">
+                                  This code will open in your dialer. Tap CALL, wait for 3 beeps, then return here to confirm.
+                                </p>
+                              </div>
+                            )}
+                            {supports25SecondForwarding && (!businessDialCode || !hasBotNumber) && (
                               <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                                Carrier code: {businessDialCode || "Assign a phone number to view code"}
+                                {!hasBotNumber ? "Assign a phone number to view code" : "Code unavailable"}
                               </p>
                             )}
                             
                             <div className="flex flex-wrap gap-3">
-                              {supports25SecondForwarding && carrierType !== "google_fi" && (
+                              {supports25SecondForwarding && hasBotNumber && businessDialCode && carrierType !== "google_fi" && (
                                 <Button
                                   onClick={handleBusinessForwardingDial}
                                   variant="outline"
-                                  disabled={!hasBotNumber || !currentCarrier}
+                                  disabled={!currentCarrier}
                                   className="rounded-lg"
                                 >
                                   Launch Dialer
                                 </Button>
                               )}
-                              {supports25SecondForwarding && (
+                              {supports25SecondForwarding && hasBotNumber && (
                                 <Button
                                   onClick={handleBusinessForwardingConfirmation}
-                                  disabled={!hasBotNumber || updatingCallForwarding || !currentCarrier}
+                                  disabled={updatingCallForwarding || !currentCarrier}
                                   className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
                                 >
                                   {updatingCallForwarding ? (
@@ -4494,15 +4569,26 @@ const Dashboard = () => {
                                 <p className="text-sm text-gray-600">
                                   After 5 PM, send every caller straight to the AI assistant so nothing slips through the cracks.
                                 </p>
-                                {carrierType !== "google_fi" && (
+                                {carrierType !== "google_fi" && afterHoursEnableDialCode && hasBotNumber && (
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-semibold text-gray-700">Carrier code to dial:</p>
+                                    <p className="text-sm font-mono font-bold text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-lg px-4 py-3 text-center tracking-wider">
+                                      {afterHoursEnableDialCode}
+                                    </p>
+                                    <p className="text-xs text-gray-600 italic">
+                                      This code will open in your dialer. Tap CALL, wait for 3 beeps, then return here.
+                                    </p>
+                                  </div>
+                                )}
+                                {carrierType !== "google_fi" && (!afterHoursEnableDialCode || !hasBotNumber) && (
                                   <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                                    Dial: {afterHoursEnableDialCode || "Assign a phone number to view code"}
+                                    {!hasBotNumber ? "Assign a phone number to view code" : "Code unavailable"}
                                   </p>
                                 )}
                                 <Button
                                   variant="secondary"
                                   onClick={() => handleAfterHoursToggle(true)}
-                                  disabled={!hasBotNumber || updatingCallForwarding || afterHoursEnabled || !currentCarrier}
+                                  disabled={!hasBotNumber || updatingCallForwarding || afterHoursEnabled || !currentCarrier || !afterHoursEnableDialCode}
                                   className="rounded-lg w-full sm:w-auto"
                                 >
                                   {carrierType === "google_fi" ? "Configure in Google Fi App" : "Turn On After-Hours Forwarding"}
@@ -4514,15 +4600,26 @@ const Dashboard = () => {
                                   <p className="text-sm text-gray-600">
                                     Stop forwarding all calls so your phone rings like normal again.
                                   </p>
-                                  {carrierType !== "google_fi" && (
+                                  {carrierType !== "google_fi" && afterHoursDisableDialCode && hasBotNumber && (
+                                    <div className="space-y-2">
+                                      <p className="text-xs font-semibold text-gray-700">Carrier code to dial:</p>
+                                      <p className="text-sm font-mono font-bold text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-lg px-4 py-3 text-center tracking-wider">
+                                        {afterHoursDisableDialCode}
+                                      </p>
+                                      <p className="text-xs text-gray-600 italic">
+                                        This code will open in your dialer. Tap CALL, wait for 3 beeps, then return here.
+                                      </p>
+                                    </div>
+                                  )}
+                                  {carrierType !== "google_fi" && (!afterHoursDisableDialCode || !hasBotNumber) && (
                                     <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                                      Dial: {afterHoursDisableDialCode || "Assign a phone number to view code"}
+                                      {!hasBotNumber ? "Assign a phone number to view code" : "Code unavailable"}
                                     </p>
                                   )}
                                   <Button
                                     variant="outline"
                                     onClick={() => handleAfterHoursToggle(false)}
-                                    disabled={!hasBotNumber || updatingCallForwarding || !currentCarrier}
+                                    disabled={!hasBotNumber || updatingCallForwarding || !currentCarrier || !afterHoursDisableDialCode}
                                     className="rounded-lg w-full sm:w-auto"
                                   >
                                     {carrierType === "google_fi" ? "Disable in Google Fi App" : "Turn Off After-Hours Forwarding"}

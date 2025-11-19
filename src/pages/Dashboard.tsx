@@ -2966,6 +2966,13 @@ const Dashboard = () => {
                       View Assignments
                     </TabsTrigger>
                     <TabsTrigger 
+                      value="properties" 
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                    >
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Properties
+                    </TabsTrigger>
+                    <TabsTrigger 
                       value="phone-numbers" 
                       className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                     >
@@ -2974,13 +2981,15 @@ const Dashboard = () => {
                     </TabsTrigger>
                   </>
                 )}
-                <TabsTrigger 
-                  value="properties" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Properties
-                </TabsTrigger>
+                {userType !== "property_manager" && (
+                  <TabsTrigger 
+                    value="properties" 
+                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Properties
+                  </TabsTrigger>
+                )}
               <TabsTrigger 
                 value="call-forwarding" 
                 className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm whitespace-nowrap flex-shrink-0"
@@ -2989,18 +2998,18 @@ const Dashboard = () => {
                 Call Forwarding
               </TabsTrigger>
                 <TabsTrigger 
-                  value="bookings" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Bookings
-                </TabsTrigger>
-                <TabsTrigger 
                   value="chats" 
                   className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
                 >
                   <Phone className="h-4 w-4 mr-2" />
                   Call Records & Transcripts
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="bookings" 
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Bookings
                 </TabsTrigger>
               </TabsList>
             </motion.div>

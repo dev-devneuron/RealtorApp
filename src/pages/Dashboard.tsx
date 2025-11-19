@@ -2301,7 +2301,7 @@ const Dashboard = () => {
    * Backend provides complete codes with actual assigned number already embedded
    * Returns null if no number assigned, "app_only" for Google Fi, or the actual code
    */
-  function getForwardingDialCode(mode: "business" | "after-hours-on" | "after-hours-off"): string | null {
+  function getForwardingDialCode(mode: "business" | "business-disable" | "after-hours-on" | "after-hours-off"): string | null {
     if (!forwardingCodes) {
       return null;
     }
@@ -2311,6 +2311,9 @@ const Dashboard = () => {
       case "business":
         // Use forward_no_answer.activate directly - backend handles null/app_only/code
         return forwardingCodes.forward_no_answer?.activate ?? null;
+      case "business-disable":
+        // Use forward_no_answer.deactivate directly (e.g., ##61# for GSM)
+        return forwardingCodes.forward_no_answer?.deactivate ?? null;
       case "after-hours-on":
         // Use forward_all.activate directly - backend handles null/app_only/code
         return forwardingCodes.forward_all?.activate ?? null;
@@ -2474,6 +2477,42 @@ const Dashboard = () => {
   };
 
   /**
+   * Disables business hours forwarding (25-second forwarding)
+   * Uses code directly from backend - no modification
+   */
+  const handleBusinessForwardingDisable = async () => {
+    const code = getForwardingDialCode("business-disable");
+    
+    // Check for null (no number assigned)
+    if (!code) {
+      toast.error("Carrier code unavailable. Please assign a phone number first.");
+      return;
+    }
+
+    // Check for app_only (Google Fi)
+    if (code === "app_only") {
+      toast.info("Please configure forwarding in your carrier's app or website.");
+      return;
+    }
+
+    // Use code directly from backend - it already has the actual number embedded
+    toast.info(`Opening dialer with code: ${code}. Tap CALL, wait for confirmation beep (usually 3 beeps), then return here to confirm.`, {
+      duration: 5000,
+    });
+    
+    openDialerWithCode(code, "business");
+    
+    // Update state after user confirms
+    await handleCallForwardingUpdate(
+      {
+        business_forwarding_enabled: false,
+        confirmation_status: "success",
+      },
+      "Business hours forwarding disabled"
+    );
+  };
+
+  /**
    * Enables or disables after-hours mode while guiding the user through carrier codes
    * Uses code directly from backend - no modification
    */
@@ -2548,6 +2587,7 @@ const Dashboard = () => {
   const hasBotNumber = Boolean(botNumberDisplay);
   // Backend provides codes with actual number embedded, or null if no number assigned, or "app_only" for Google Fi
   const businessDialCode = getForwardingDialCode("business");
+  const businessDisableDialCode = getForwardingDialCode("business-disable");
   const afterHoursEnableDialCode = getForwardingDialCode("after-hours-on");
   const afterHoursDisableDialCode = getForwardingDialCode("after-hours-off");
   
@@ -4478,53 +4518,110 @@ const Dashboard = () => {
                               </div>
                             )}
 
-                            {/* Show code only if not app_only and code exists */}
-                            {supports25SecondForwarding && businessDialCode && businessDialCode !== "app_only" && (
-                              <div className="space-y-2">
-                                <p className="text-xs font-semibold text-gray-700">Carrier code to dial:</p>
-                                <p className="text-sm font-mono font-bold text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-lg px-4 py-3 text-center tracking-wider">
-                                  {businessDialCode}
-                                </p>
-                                <p className="text-xs text-gray-600 italic">
-                                  This code will open in your dialer. Tap CALL, wait for 3 beeps, then return here to confirm.
-                                </p>
+                            {/* Show enable section when not enabled */}
+                            {!businessForwardingEnabled && (
+                              <>
+                                {/* Show code only if not app_only and code exists */}
+                                {supports25SecondForwarding && businessDialCode && businessDialCode !== "app_only" && (
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-semibold text-gray-700">Carrier code to dial:</p>
+                                    <p className="text-sm font-mono font-bold text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-lg px-4 py-3 text-center tracking-wider">
+                                      {businessDialCode}
+                                    </p>
+                                    <p className="text-xs text-gray-600 italic">
+                                      This code will open in your dialer. Tap CALL, wait for 3 beeps, then return here to confirm.
+                                    </p>
+                                  </div>
+                                )}
+                                {supports25SecondForwarding && (!businessDialCode || businessDialCode === "app_only") && (
+                                  <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                    {businessDialCode === "app_only" ? "App configuration required" : "Code unavailable"}
+                                  </p>
+                                )}
+                                
+                                <div className="flex flex-wrap gap-3">
+                                  {/* Show enable buttons only if code exists and is not app_only */}
+                                  {supports25SecondForwarding && businessDialCode && businessDialCode !== "app_only" && (
+                                    <>
+                                      <Button
+                                        onClick={handleBusinessForwardingDial}
+                                        variant="outline"
+                                        disabled={!currentCarrier}
+                                        className="rounded-lg"
+                                      >
+                                        Launch Dialer
+                                      </Button>
+                                      <Button
+                                        onClick={handleBusinessForwardingConfirmation}
+                                        disabled={updatingCallForwarding || !currentCarrier}
+                                        className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
+                                      >
+                                        {updatingCallForwarding ? (
+                                          <>
+                                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                            Saving...
+                                          </>
+                                        ) : (
+                                          "Confirm Setup"
+                                        )}
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </>
+                            )}
+
+                            {/* Show disable section when business hours forwarding is enabled */}
+                            {businessForwardingEnabled && supports25SecondForwarding && (
+                              <div className="space-y-3">
+                                <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                                  <div className="flex items-start gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                    <p className="text-xs text-green-800">
+                                      Business hours forwarding is currently active. Missed calls will be forwarded to the AI assistant.
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {businessDisableDialCode && businessDisableDialCode !== "app_only" && (
+                                  <>
+                                    <p className="text-sm font-semibold text-gray-900">Disable Business Hours Forwarding</p>
+                                    <p className="text-xs text-gray-600">
+                                      Stop forwarding missed calls. Your phone will ring normally during business hours.
+                                    </p>
+                                    <div className="space-y-2">
+                                      <p className="text-xs font-semibold text-gray-700">Carrier code to dial:</p>
+                                      <p className="text-sm font-mono font-bold text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-lg px-4 py-3 text-center tracking-wider">
+                                        {businessDisableDialCode}
+                                      </p>
+                                      <p className="text-xs text-gray-600 italic">
+                                        This code will open in your dialer. Tap CALL, wait for 3 beeps, then return here to confirm.
+                                      </p>
+                                    </div>
+                                    <Button
+                                      onClick={handleBusinessForwardingDisable}
+                                      variant="outline"
+                                      disabled={updatingCallForwarding || !currentCarrier}
+                                      className="rounded-lg border-red-300 text-red-600 hover:bg-red-50"
+                                    >
+                                      {updatingCallForwarding ? (
+                                        <>
+                                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                          Disabling...
+                                        </>
+                                      ) : (
+                                        "Disable Business Hours Forwarding"
+                                      )}
+                                    </Button>
+                                  </>
+                                )}
+                                {(!businessDisableDialCode || businessDisableDialCode === "app_only") && (
+                                  <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                    {businessDisableDialCode === "app_only" ? "App configuration required" : "Disable code unavailable"}
+                                  </p>
+                                )}
                               </div>
                             )}
-                            {supports25SecondForwarding && (!businessDialCode || businessDialCode === "app_only") && (
-                              <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                                {businessDialCode === "app_only" ? "App configuration required" : "Code unavailable"}
-                              </p>
-                            )}
-                            
-                            <div className="flex flex-wrap gap-3">
-                              {/* Show button only if code exists and is not app_only */}
-                              {supports25SecondForwarding && businessDialCode && businessDialCode !== "app_only" && (
-                                <Button
-                                  onClick={handleBusinessForwardingDial}
-                                  variant="outline"
-                                  disabled={!currentCarrier}
-                                  className="rounded-lg"
-                                >
-                                  Launch Dialer
-                                </Button>
-                              )}
-                              {supports25SecondForwarding && hasBotNumber && (
-                                <Button
-                                  onClick={handleBusinessForwardingConfirmation}
-                                  disabled={updatingCallForwarding || !currentCarrier}
-                                  className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
-                                >
-                                  {updatingCallForwarding ? (
-                                    <>
-                                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                      Saving...
-                                    </>
-                                  ) : (
-                                    "Confirm Setup"
-                                  )}
-                                </Button>
-                              )}
-                            </div>
                           </div>
 
                           <div className="rounded-xl border border-gray-200 p-5 space-y-4 bg-white">

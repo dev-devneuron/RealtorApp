@@ -157,11 +157,18 @@ const Dashboard = () => {
   const [forwardingNotes, setForwardingNotes] = useState("");
   const [forwardingFailureReason, setForwardingFailureReason] = useState("");
   const [forwardingCarriers, setForwardingCarriers] = useState<string[]>([]);
+  const [carrierDetails, setCarrierDetails] = useState<any[]>([]);
+  const [showCarrierSelection, setShowCarrierSelection] = useState(false);
+  const [selectedCarrier, setSelectedCarrier] = useState<string>("");
   const forwardingState = callForwardingState?.forwarding_state || {};
+  const forwardingCodes = callForwardingState?.forwarding_codes || null;
   const businessForwardingEnabled = Boolean(forwardingState?.business_forwarding_enabled);
   const afterHoursEnabled = Boolean(forwardingState?.after_hours_enabled);
   const forwardingFailure = forwardingState?.forwarding_failure_reason;
   const lastAfterHoursUpdate = forwardingState?.last_after_hours_update;
+  const currentCarrier = forwardingState?.carrier || forwardingCodes?.carrier || null;
+  const supports25SecondForwarding = forwardingCodes?.supports_25_second_forwarding ?? true;
+  const carrierType = forwardingCodes?.carrier_type || "gsm";
 
   /**
    * Derives the currently selected realtor ID for call forwarding management
@@ -2224,6 +2231,13 @@ const Dashboard = () => {
       if (data.twilio_number) {
         setMyNumber(data.twilio_number);
       }
+      
+      // Check if carrier needs to be set
+      if (!data.forwarding_state?.carrier && !data.forwarding_codes?.carrier) {
+        setShowCarrierSelection(true);
+      } else {
+        setShowCarrierSelection(false);
+      }
     } catch (error: any) {
       console.error("Error fetching call forwarding state:", error);
       toast.error(error.message || "Unable to load call forwarding settings");
@@ -2252,6 +2266,7 @@ const Dashboard = () => {
 
       const data = await res.json();
       setForwardingCarriers(Array.isArray(data.carriers) ? data.carriers : []);
+      setCarrierDetails(Array.isArray(data.carrier_details) ? data.carrier_details : []);
     } catch (error) {
       console.error("Error fetching carriers matrix:", error);
     }
@@ -2279,9 +2294,28 @@ const Dashboard = () => {
   }
 
   /**
-   * Generates dial codes using GSM sequences expected by carriers
+   * Gets dial codes from backend-provided forwarding_codes (carrier-specific)
+   * Falls back to GSM codes if backend codes are not available (backward compatibility)
    */
-  function buildForwardingDialCode(mode: "business" | "after-hours-on" | "after-hours-off") {
+  function getForwardingDialCode(mode: "business" | "after-hours-on" | "after-hours-off"): string {
+    // If we have backend-provided codes, use them
+    if (forwardingCodes) {
+      switch (mode) {
+        case "business":
+          // Use forward_no_answer.activate for 25-second forwarding
+          return forwardingCodes.forward_no_answer?.activate || "";
+        case "after-hours-on":
+          // Use forward_all.activate for unconditional forwarding
+          return forwardingCodes.forward_all?.activate || "";
+        case "after-hours-off":
+          // Use forward_all.deactivate to turn off forwarding
+          return forwardingCodes.forward_all?.deactivate || "";
+        default:
+          return "";
+      }
+    }
+
+    // Fallback to GSM codes for backward compatibility (shouldn't happen with new API)
     const botNumber = getBotNumberForForwarding();
     if (!botNumber) {
       return "";
@@ -2305,7 +2339,8 @@ const Dashboard = () => {
   }
 
   /**
-   * Opens the system dialer with the provided GSM/USSD code
+   * Opens the system dialer with the provided carrier-specific code
+   * Handles different code formats (GSM, Verizon, etc.)
    */
   const openDialerWithCode = (code: string) => {
     if (!code) {
@@ -2313,7 +2348,19 @@ const Dashboard = () => {
       return;
     }
 
-    const encoded = code.replace(/\*/g, "%2A").replace(/#/g, "%23");
+    // Handle special cases
+    if (code === "app_only") {
+      toast.info("Please configure forwarding in your carrier's app or website.");
+      return;
+    }
+
+    // For Verizon/Xfinity codes (e.g., "*72 14123882328"), encode space as %20
+    // For GSM codes (e.g., "**21*+14123882328#"), encode * and #
+    const encoded = code
+      .replace(/\*/g, "%2A")
+      .replace(/#/g, "%23")
+      .replace(/ /g, "%20");
+    
     window.location.href = `tel:${encoded}`;
   };
 
@@ -2378,9 +2425,24 @@ const Dashboard = () => {
    * Launches the carrier dial code for business hours setup (one-time conditional forwarding)
    */
   const handleBusinessForwardingDial = () => {
-    const code = buildForwardingDialCode("business");
+    // Check if carrier supports 25-second forwarding
+    if (!supports25SecondForwarding) {
+      toast.error(`Your carrier (${currentCarrier || "Unknown"}) doesn't support 25-second forwarding. Only unconditional forwarding is available.`);
+      return;
+    }
+
+    const code = getForwardingDialCode("business");
     if (!code) {
+      if (carrierType === "google_fi") {
+        toast.info("Google Fi requires app configuration. Please set up forwarding in the Google Fi app or website.");
+        return;
+      }
       toast.error("No bot number assigned yet. Assign a phone number to enable forwarding.");
+      return;
+    }
+
+    if (code === "app_only") {
+      toast.info("Please configure forwarding in your carrier's app or website.");
       return;
     }
 
@@ -2405,9 +2467,18 @@ const Dashboard = () => {
    * Enables or disables after-hours mode while guiding the user through carrier codes
    */
   const handleAfterHoursToggle = async (nextEnabled: boolean) => {
-    const code = buildForwardingDialCode(nextEnabled ? "after-hours-on" : "after-hours-off");
+    const code = getForwardingDialCode(nextEnabled ? "after-hours-on" : "after-hours-off");
     if (!code) {
+      if (carrierType === "google_fi") {
+        toast.info("Google Fi requires app configuration. Please set up forwarding in the Google Fi app or website.");
+        return;
+      }
       toast.error("No bot number assigned yet. Assign a phone number to enable forwarding.");
+      return;
+    }
+
+    if (code === "app_only") {
+      toast.info("Please configure forwarding in your carrier's app or website.");
       return;
     }
 
@@ -2439,12 +2510,28 @@ const Dashboard = () => {
     );
   };
 
+  /**
+   * Updates the user's carrier setting
+   */
+  const handleCarrierUpdate = async (carrier: string) => {
+    try {
+      await handleCallForwardingUpdate(
+        { carrier: carrier },
+        `Carrier set to ${carrier}`
+      );
+      setSelectedCarrier("");
+      setShowCarrierSelection(false);
+    } catch (error) {
+      console.error("Failed to update carrier:", error);
+    }
+  };
+
   // Derived values for simplified rendering
   const botNumberDisplay = getBotNumberForForwarding();
   const hasBotNumber = Boolean(botNumberDisplay);
-  const businessDialCode = hasBotNumber ? buildForwardingDialCode("business") : "";
-  const afterHoursEnableDialCode = hasBotNumber ? buildForwardingDialCode("after-hours-on") : "";
-  const afterHoursDisableDialCode = hasBotNumber ? buildForwardingDialCode("after-hours-off") : "";
+  const businessDialCode = hasBotNumber ? getForwardingDialCode("business") : "";
+  const afterHoursEnableDialCode = hasBotNumber ? getForwardingDialCode("after-hours-on") : "";
+  const afterHoursDisableDialCode = hasBotNumber ? getForwardingDialCode("after-hours-off") : "";
 
   const handleSignOut = () => {
     // Clear all authentication data
@@ -2942,7 +3029,8 @@ const Dashboard = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="mb-4 sm:mb-6 lg:mb-8"
             >
-              <TabsList className="bg-white border border-amber-200 rounded-2xl p-1.5 sm:p-2 shadow-lg flex w-full overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb]:hover:bg-amber-400 [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgb(252_211_77)_transparent]">
+              <TabsList className="bg-white border border-amber-200 rounded-2xl shadow-lg w-full overflow-hidden p-0">
+                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-1.5 sm:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2 [scroll-padding-left:0.5rem] [scroll-padding-right:0.5rem] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb]:hover:bg-amber-400 [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgb(252_211_77)_transparent]">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
@@ -3021,6 +3109,7 @@ const Dashboard = () => {
                   <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                   Bookings
                 </TabsTrigger>
+                </div>
               </TabsList>
             </motion.div>
 
@@ -4163,6 +4252,106 @@ const Dashboard = () => {
                         </div>
                       ) : callForwardingState ? (
                         <div className="space-y-6">
+                          {/* Carrier Selection Prompt */}
+                          {showCarrierSelection && (
+                            <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-5 space-y-4">
+                              <div className="flex items-start gap-3">
+                                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <p className="text-base font-semibold text-amber-900">Select Your Mobile Carrier</p>
+                                    {currentCarrier && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowCarrierSelection(false)}
+                                        className="text-amber-700 hover:text-amber-900"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-amber-800 mb-4">
+                                    We need to know your carrier to provide the correct forwarding codes. Each carrier uses different dial codes.
+                                  </p>
+                                  <div className="flex flex-col sm:flex-row gap-3">
+                                    <Select value={selectedCarrier} onValueChange={setSelectedCarrier}>
+                                      <SelectTrigger className="w-full sm:w-64 bg-white border-amber-300">
+                                        <SelectValue placeholder="Select your carrier" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {forwardingCarriers.map((carrier) => (
+                                          <SelectItem key={carrier} value={carrier}>
+                                            {carrier}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        onClick={() => handleCarrierUpdate(selectedCarrier)}
+                                        disabled={!selectedCarrier}
+                                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                                      >
+                                        Save Carrier
+                                      </Button>
+                                      {currentCarrier && (
+                                        <Button
+                                          variant="outline"
+                                          onClick={() => setShowCarrierSelection(false)}
+                                          className="border-amber-300 text-amber-700"
+                                        >
+                                          Cancel
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Carrier Information Display */}
+                          {currentCarrier && (
+                            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <Phone className="h-5 w-5 text-blue-600" />
+                                  <div>
+                                    <p className="text-sm font-semibold text-blue-900">Mobile Carrier</p>
+                                    <p className="text-base font-bold text-blue-700">{currentCarrier}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {!supports25SecondForwarding && (
+                                    <Badge variant="outline" className="border-orange-300 text-orange-700">
+                                      Limited Support
+                                    </Badge>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowCarrierSelection(true)}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                                  >
+                                    Change
+                                  </Button>
+                                </div>
+                              </div>
+                              {carrierDetails.length > 0 && (
+                                <div className="text-xs text-blue-800">
+                                  {(() => {
+                                    const detail = carrierDetails.find((c: any) => c.name === currentCarrier);
+                                    if (detail?.notes) {
+                                      return <p className="italic">{detail.notes}</p>;
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             <div className="rounded-xl border border-gray-200 p-4 sm:p-5 bg-white">
                               <p className="text-sm font-semibold text-gray-500">Bot Number</p>
@@ -4214,34 +4403,67 @@ const Dashboard = () => {
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-600">
-                              Forward calls to the AI assistant only if you don’t pick up within ~25 seconds. It’s a one-time carrier setup.
+                              Forward calls to the AI assistant only if you don't pick up within ~25 seconds. It's a one-time carrier setup.
                             </p>
-                            <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                              Carrier code: {businessDialCode || "Assign a phone number to view code"}
-                            </p>
+                            
+                            {/* Carrier Limitation Warning */}
+                            {!supports25SecondForwarding && (
+                              <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
+                                <div className="flex items-start gap-2">
+                                  <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                                  <p className="text-xs text-orange-800">
+                                    <strong>{currentCarrier || "Your carrier"}</strong> doesn't support 25-second forwarding. Only unconditional forwarding (forward all calls) is available.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Google Fi Instructions */}
+                            {carrierType === "google_fi" && (
+                              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                                <div className="flex items-start gap-2">
+                                  <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                  <div className="text-xs text-blue-800">
+                                    <p className="font-semibold mb-1">Google Fi Setup Required</p>
+                                    <p>Configure forwarding in the Google Fi app: Settings → Calls → Call forwarding</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {supports25SecondForwarding && (
+                              <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                Carrier code: {businessDialCode || "Assign a phone number to view code"}
+                              </p>
+                            )}
+                            
                             <div className="flex flex-wrap gap-3">
-                              <Button
-                                onClick={handleBusinessForwardingDial}
-                                variant="outline"
-                                disabled={!hasBotNumber}
-                                className="rounded-lg"
-                              >
-                                Launch Dialer
-                              </Button>
-                              <Button
-                                onClick={handleBusinessForwardingConfirmation}
-                                disabled={!hasBotNumber || updatingCallForwarding}
-                                className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
-                              >
-                                {updatingCallForwarding ? (
-                                  <>
-                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  "Confirm Setup"
-                                )}
-                              </Button>
+                              {supports25SecondForwarding && carrierType !== "google_fi" && (
+                                <Button
+                                  onClick={handleBusinessForwardingDial}
+                                  variant="outline"
+                                  disabled={!hasBotNumber || !currentCarrier}
+                                  className="rounded-lg"
+                                >
+                                  Launch Dialer
+                                </Button>
+                              )}
+                              {supports25SecondForwarding && (
+                                <Button
+                                  onClick={handleBusinessForwardingConfirmation}
+                                  disabled={!hasBotNumber || updatingCallForwarding || !currentCarrier}
+                                  className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
+                                >
+                                  {updatingCallForwarding ? (
+                                    <>
+                                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    "Confirm Setup"
+                                  )}
+                                </Button>
+                              )}
                             </div>
                           </div>
 
@@ -4252,22 +4474,38 @@ const Dashboard = () => {
                                 Decide what happens after 5 PM: send every call to the assistant or let your phone ring normally.
                               </p>
                             </div>
+                            
+                            {/* Google Fi Instructions for After-Hours */}
+                            {carrierType === "google_fi" && (
+                              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                                <div className="flex items-start gap-2">
+                                  <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                  <div className="text-xs text-blue-800">
+                                    <p className="font-semibold mb-1">Google Fi Setup Required</p>
+                                    <p>Configure forwarding in the Google Fi app: Settings → Calls → Call forwarding</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                             <div className="space-y-4">
                               <div className="border border-gray-200 rounded-lg p-4 space-y-2">
                                 <p className="text-base font-semibold text-gray-900">Turn On After-Hours Forwarding (All Calls)</p>
                                 <p className="text-sm text-gray-600">
                                   After 5 PM, send every caller straight to the AI assistant so nothing slips through the cracks.
                                 </p>
-                                <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                                  Dial: {afterHoursEnableDialCode || "Assign a phone number to view code"}
-                                </p>
+                                {carrierType !== "google_fi" && (
+                                  <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                    Dial: {afterHoursEnableDialCode || "Assign a phone number to view code"}
+                                  </p>
+                                )}
                                 <Button
                                   variant="secondary"
                                   onClick={() => handleAfterHoursToggle(true)}
-                                  disabled={!hasBotNumber || updatingCallForwarding || afterHoursEnabled}
+                                  disabled={!hasBotNumber || updatingCallForwarding || afterHoursEnabled || !currentCarrier}
                                   className="rounded-lg w-full sm:w-auto"
                                 >
-                                  Turn On After-Hours Forwarding
+                                  {carrierType === "google_fi" ? "Configure in Google Fi App" : "Turn On After-Hours Forwarding"}
                                 </Button>
                               </div>
                               {afterHoursEnabled ? (
@@ -4276,16 +4514,18 @@ const Dashboard = () => {
                                   <p className="text-sm text-gray-600">
                                     Stop forwarding all calls so your phone rings like normal again.
                                   </p>
-                                  <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                                    Dial: {afterHoursDisableDialCode || "Assign a phone number to view code"}
-                                  </p>
+                                  {carrierType !== "google_fi" && (
+                                    <p className="text-xs font-mono text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-3 py-2">
+                                      Dial: {afterHoursDisableDialCode || "Assign a phone number to view code"}
+                                    </p>
+                                  )}
                                   <Button
                                     variant="outline"
                                     onClick={() => handleAfterHoursToggle(false)}
-                                    disabled={!hasBotNumber || updatingCallForwarding}
+                                    disabled={!hasBotNumber || updatingCallForwarding || !currentCarrier}
                                     className="rounded-lg w-full sm:w-auto"
                                   >
-                                    Turn Off After-Hours Forwarding
+                                    {carrierType === "google_fi" ? "Disable in Google Fi App" : "Turn Off After-Hours Forwarding"}
                                   </Button>
                                 </div>
                               ) : (

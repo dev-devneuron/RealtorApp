@@ -670,7 +670,8 @@ const Dashboard = () => {
       }
 
       const data = await res.json();
-      setCallRecords(data.call_records || []);
+      const records = Array.isArray(data.call_records) ? data.call_records : [];
+      setCallRecords(records.map((record) => sanitizeCallRecord(record)));
       setCallRecordsTotal(data.total || 0);
     } catch (err: any) {
       console.error("Error fetching call records:", err);
@@ -701,7 +702,7 @@ const Dashboard = () => {
       }
 
       const data = await res.json();
-      return data;
+      return sanitizeCallRecord(data);
     } catch (err: any) {
       console.error("Error fetching call record detail:", err);
       toast.error(err.message || "Could not load call record details");
@@ -714,7 +715,7 @@ const Dashboard = () => {
    */
   const handleViewCallRecord = async (callRecord: any) => {
     try {
-      setSelectedCallRecord(callRecord);
+      setSelectedCallRecord(sanitizeCallRecord(callRecord));
       setShowCallRecordDetail(true);
       setCopiedTranscript(false); // Reset copy state when opening modal
       
@@ -726,6 +727,42 @@ const Dashboard = () => {
     } catch (err) {
       console.error("Error viewing call record:", err);
     }
+  };
+
+  /**
+   * Extracts only the conversational parts of the transcript plus summary
+   */
+  const sanitizeTranscript = (transcript?: string | null) => {
+    if (!transcript || typeof transcript !== "string") {
+      return transcript;
+    }
+
+    const lines = transcript
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const allowedPrefixes = ["user:", "bot:", "summary:"];
+    const relevantLines = lines.filter((line) =>
+      allowedPrefixes.some((prefix) => line.toLowerCase().startsWith(prefix))
+    );
+
+    if (relevantLines.length === 0) {
+      return transcript;
+    }
+
+    return relevantLines.join("\n\n");
+  };
+
+  const sanitizeCallRecord = (record: any) => {
+    if (!record || typeof record !== "object") {
+      return record;
+    }
+
+    return {
+      ...record,
+      transcript: sanitizeTranscript(record.transcript),
+    };
   };
 
   /**

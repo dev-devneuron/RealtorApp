@@ -2974,13 +2974,6 @@ const Dashboard = () => {
                     </TabsTrigger>
                   </>
                 )}
-              <TabsTrigger 
-                value="call-forwarding" 
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm whitespace-nowrap flex-shrink-0"
-              >
-                <PhoneForwarded className="h-4 w-4 mr-2" />
-                Call Forwarding
-              </TabsTrigger>
                 <TabsTrigger 
                   value="properties" 
                   className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
@@ -2988,6 +2981,13 @@ const Dashboard = () => {
                   <Building2 className="h-4 w-4 mr-2" />
                   Properties
                 </TabsTrigger>
+              <TabsTrigger 
+                value="call-forwarding" 
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm whitespace-nowrap flex-shrink-0"
+              >
+                <PhoneForwarded className="h-4 w-4 mr-2" />
+                Call Forwarding
+              </TabsTrigger>
                 <TabsTrigger 
                   value="bookings" 
                   className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"

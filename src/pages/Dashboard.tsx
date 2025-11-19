@@ -201,6 +201,7 @@ const Dashboard = () => {
   const [callRecordFilterStatus, setCallRecordFilterStatus] = useState<string>("all");
   const [playingRecordingId, setPlayingRecordingId] = useState<string | null>(null);
   const [copiedTranscript, setCopiedTranscript] = useState(false);
+  const [deletingCallRecord, setDeletingCallRecord] = useState(false);
   
   // ============================================================================
   // Bookings State
@@ -920,6 +921,57 @@ const Dashboard = () => {
     } catch (err) {
       console.error("Error copying transcript:", err);
       toast.error("Failed to copy transcript");
+    }
+  };
+
+  /**
+   * Deletes or redacts a call record
+   */
+  const handleDeleteCallRecord = async (callId: string, hardDelete = false) => {
+    try {
+      setDeletingCallRecord(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const res = await fetch(
+        `${API_BASE}/call-records/${callId}?hard_delete=${hardDelete ? "true" : "false"}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || "Failed to delete call record");
+      }
+
+      toast.success(data.message || (hardDelete ? "Call record deleted" : "Transcript removed"));
+      await fetchCallRecords();
+
+      if (hardDelete) {
+        setShowCallRecordDetail(false);
+        setSelectedCallRecord(null);
+      } else {
+        setSelectedCallRecord((prev) => {
+          if (!prev || prev.id !== callId) return prev;
+          return {
+            ...prev,
+            transcript: "",
+            transcript_segments: [],
+            transcript_summary: "",
+            recording_url: null,
+          };
+        });
+      }
+    } catch (err: any) {
+      console.error("Error deleting call record:", err);
+      toast.error(err.message || "Failed to delete call record");
+    } finally {
+      setDeletingCallRecord(false);
     }
   };
 
@@ -5727,7 +5779,7 @@ const Dashboard = () => {
             <div className="flex flex-col h-full max-h-[90vh] overflow-hidden">
               {/* Header */}
               <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pr-12">
                   <div className="flex-1">
                     <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3 mb-2">
                       <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
@@ -5987,6 +6039,116 @@ const Dashboard = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Privacy & Delete Controls */}
+                <div className="bg-white border border-red-200 rounded-xl p-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-gray-900">Privacy Controls</p>
+                      <p className="text-sm text-gray-600">
+                        Remove sensitive transcript/audio or delete the record entirely.
+                      </p>
+                    </div>
+                    <Badge className="bg-red-100 text-red-700 border-red-300">Danger zone</Badge>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl flex-1"
+                          disabled={deletingCallRecord}
+                        >
+                          {deletingCallRecord ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Remove Transcript & Audio
+                            </>
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remove transcript & audio?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This keeps the call record for auditing but permanently removes the
+                            transcript, live transcript chunks, and recording URL.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={deletingCallRecord}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteCallRecord(selectedCallRecord.id, false)}
+                            disabled={deletingCallRecord}
+                            className="bg-amber-600 hover:bg-amber-700 text-white"
+                          >
+                            {deletingCallRecord ? (
+                              <>
+                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                Removing...
+                              </>
+                            ) : (
+                              "Remove Transcript & Audio"
+                            )}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          className="rounded-xl flex-1"
+                          disabled={deletingCallRecord}
+                        >
+                          {deletingCallRecord ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Record
+                            </>
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete call record permanently?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This removes the entire record and all assets. This action cannot be
+                            undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={deletingCallRecord}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteCallRecord(selectedCallRecord.id, true)}
+                            disabled={deletingCallRecord}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            {deletingCallRecord ? (
+                              <>
+                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                Deleting...
+                              </>
+                            ) : (
+                              "Delete Record"
+                            )}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
               </div>
 
               {/* Footer */}

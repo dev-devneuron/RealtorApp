@@ -2656,8 +2656,9 @@ const Dashboard = () => {
                   className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl"
                   size="sm"
                 >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Request a Phone Number
+                  <Phone className="h-4 w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                  <span className="hidden md:inline">Request a Phone Number</span>
+                  <span className="md:hidden">Request Number</span>
                 </Button>
               )}
               <Button 
@@ -2939,76 +2940,85 @@ const Dashboard = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
-              className="mb-8"
+              className="mb-4 sm:mb-6 lg:mb-8"
             >
-              <TabsList className="bg-white border border-amber-200 rounded-2xl p-2 shadow-lg inline-flex w-full overflow-x-auto overflow-y-hidden scrollbar-hide">
+              <TabsList className="bg-white border border-amber-200 rounded-2xl p-1.5 sm:p-2 shadow-lg flex w-full overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb]:hover:bg-amber-400 [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgb(252_211_77)_transparent]">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
                       value="realtors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <Users className="h-4 w-4 mr-2" />
+                      <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                       Realtors
                     </TabsTrigger>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <CheckSquare className="h-4 w-4 mr-2" />
-                      Assign Properties
+                      <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <span className="hidden md:inline">Assign Properties</span>
+                      <span className="md:hidden">Assign</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <ListChecks className="h-4 w-4 mr-2" />
-                      View Assignments
+                      <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <span className="hidden lg:inline">View Assignments</span>
+                      <span className="lg:hidden hidden md:inline">Assignments</span>
+                      <span className="md:hidden">View</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <Building2 className="h-4 w-4 mr-2" />
+                      <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                       Properties
                     </TabsTrigger>
                     <TabsTrigger 
                       value="phone-numbers" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-3 sm:px-4 py-2 sm:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <Phone className="h-4 w-4 mr-2" />
-                      Phone Numbers
+                      <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <span className="hidden lg:inline">Phone Numbers</span>
+                      <span className="lg:hidden">Numbers</span>
                     </TabsTrigger>
                   </>
                 )}
                 {userType !== "property_manager" && (
                   <TabsTrigger 
                     value="properties" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
+                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
                   >
-                    <Building2 className="h-4 w-4 mr-2" />
+                    <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                     Properties
                   </TabsTrigger>
                 )}
               <TabsTrigger 
                 value="call-forwarding" 
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm whitespace-nowrap flex-shrink-0"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
               >
-                <PhoneForwarded className="h-4 w-4 mr-2" />
-                Call Forwarding
+                <PhoneForwarded className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                <span className="hidden lg:inline">Call Forwarding</span>
+                <span className="lg:hidden hidden md:inline">Forwarding</span>
+                <span className="md:hidden">Forward</span>
               </TabsTrigger>
                 <TabsTrigger 
                   value="chats" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
                 >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call Records & Transcripts
+                  <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                  <span className="hidden xl:inline">Call Records & Transcripts</span>
+                  <span className="xl:hidden hidden lg:inline">Call Records</span>
+                  <span className="lg:hidden hidden md:inline">Records</span>
+                  <span className="md:hidden">Calls</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="bookings" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-3 font-semibold transition-all text-sm"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                   Bookings
                 </TabsTrigger>
               </TabsList>

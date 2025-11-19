@@ -732,17 +732,43 @@ const Dashboard = () => {
   /**
    * Extracts only the conversational parts of the transcript plus summary
    */
-  const sanitizeTranscript = (transcript?: string | null) => {
+  type TranscriptSegment = {
+    speaker: "user" | "bot" | "summary" | "other";
+    content: string;
+  };
+
+  const normalizeSpeaker = (rawSpeaker: string): TranscriptSegment["speaker"] => {
+    const speaker = rawSpeaker.toLowerCase();
+    if (speaker.includes("user") || speaker.includes("customer") || speaker.includes("caller")) {
+      return "user";
+    }
+    if (
+      speaker.includes("bot") ||
+      speaker.includes("ai") ||
+      speaker.includes("assistant") ||
+      speaker.includes("agent")
+    ) {
+      return "bot";
+    }
+    if (speaker.includes("summary")) {
+      return "summary";
+    }
+    return "other";
+  };
+
+  const extractTranscriptData = (transcript?: string | null) => {
     if (!transcript || typeof transcript !== "string") {
-      return transcript;
+      return {
+        conversationSegments: [] as TranscriptSegment[],
+        summarySegments: [] as TranscriptSegment[],
+        cleanedTranscript: transcript,
+      };
     }
 
     const lines = transcript.split(/\r?\n/);
-    type Segment = { speaker: string; content: string };
-    const segments: Segment[] = [];
-    let currentSegment: Segment | null = null;
-
-    const speakerRegex = /^(bot|user|summary)\s*:\s*(.*)$/i;
+    const segments: TranscriptSegment[] = [];
+    let currentSegment: TranscriptSegment | null = null;
+    const speakerRegex = /^(bot|user|summary|ai|assistant|agent|customer|caller)\s*:\s*(.*)$/i;
 
     for (const rawLine of lines) {
       const line = rawLine.trim();
@@ -750,8 +776,8 @@ const Dashboard = () => {
 
       const match = line.match(speakerRegex);
       if (match) {
-        const speaker = match[1];
-        const content = match[2]?.trim() || "";
+        const speaker = normalizeSpeaker(match[1]);
+        const content = (match[2] || "").trim();
         currentSegment = { speaker, content };
         segments.push(currentSegment);
       } else if (currentSegment) {
@@ -762,16 +788,29 @@ const Dashboard = () => {
     }
 
     if (segments.length === 0) {
-      return transcript;
+      return {
+        conversationSegments: [],
+        summarySegments: [],
+        cleanedTranscript: transcript,
+      };
     }
 
-    return segments
+    const conversationSegments = segments.filter((segment) => segment.speaker !== "summary");
+    const summarySegments = segments.filter((segment) => segment.speaker === "summary");
+
+    const cleanedTranscript = segments
       .map((segment) => {
         const speakerLabel =
           segment.speaker.charAt(0).toUpperCase() + segment.speaker.slice(1).toLowerCase();
         return `${speakerLabel}: ${segment.content}`;
       })
       .join("\n\n");
+
+    return {
+      conversationSegments,
+      summarySegments,
+      cleanedTranscript,
+    };
   };
 
   const sanitizeCallRecord = (record: any) => {
@@ -779,9 +818,15 @@ const Dashboard = () => {
       return record;
     }
 
+    const transcriptData = extractTranscriptData(record.transcript);
+
     return {
       ...record,
-      transcript: sanitizeTranscript(record.transcript),
+      transcript: transcriptData.cleanedTranscript,
+      transcript_segments: transcriptData.conversationSegments,
+      transcript_summary: transcriptData.summarySegments
+        .map((segment) => segment.content)
+        .join("\n\n"),
     };
   };
 
@@ -838,9 +883,37 @@ const Dashboard = () => {
   /**
    * Copies transcript to clipboard
    */
-  const handleCopyTranscript = async (transcript: string) => {
+  const formatSegmentsAsText = (segments?: TranscriptSegment[]) => {
+    if (!segments || segments.length === 0) {
+      return "";
+    }
+    return segments
+      .map((segment) => {
+        const speakerLabel =
+          segment.speaker === "user"
+            ? "User"
+            : segment.speaker === "bot"
+            ? "AI"
+            : segment.speaker === "summary"
+            ? "Summary"
+            : "Note";
+        return `${speakerLabel}: ${segment.content}`;
+      })
+      .join("\n\n");
+  };
+
+  const handleCopyTranscript = async (
+    transcript?: string | null,
+    segments?: TranscriptSegment[]
+  ) => {
     try {
-      await navigator.clipboard.writeText(transcript);
+      const textToCopy = transcript && transcript.trim().length > 0
+        ? transcript
+        : formatSegmentsAsText(segments);
+      if (!textToCopy) {
+        throw new Error("No transcript available to copy");
+      }
+      await navigator.clipboard.writeText(textToCopy);
       setCopiedTranscript(true);
       toast.success("Transcript copied to clipboard");
       setTimeout(() => setCopiedTranscript(false), 2000);
@@ -4975,14 +5048,22 @@ const Dashboard = () => {
                                     </div>
                                   )}
 
-                                  {record.transcript && (
-                                    <div className="mt-3 pt-3 border-t border-amber-100">
-                                      <p className="text-xs text-gray-500 line-clamp-2">
-                                        {record.transcript.substring(0, 100)}
-                                        {record.transcript.length > 100 ? "..." : ""}
-                                      </p>
-                                    </div>
-                                  )}
+                      {(record.transcript_segments?.length || record.transcript) && (
+                        <div className="mt-3 pt-3 border-t border-amber-100">
+                          <p className="text-xs text-gray-500 line-clamp-3 whitespace-pre-line">
+                            {record.transcript_segments?.length
+                              ? record.transcript_segments
+                                  .slice(0, 2)
+                                  .map((segment) => {
+                                    const speakerLabel =
+                                      segment.speaker === "user" ? "User" : "AI";
+                                    return `${speakerLabel}: ${segment.content}`;
+                                  })
+                                  .join("\n")
+                              : (record.transcript || "").substring(0, 140)}
+                          </p>
+                        </div>
+                      )}
 
                                   <div className="flex items-center gap-2 pt-2">
                                     {record.recording_url && (
@@ -5755,11 +5836,16 @@ const Dashboard = () => {
                         <p className="text-sm text-gray-500">Complete conversation text</p>
                       </div>
                     </div>
-                    {selectedCallRecord.transcript && (
+                    {(selectedCallRecord.transcript || selectedCallRecord.transcript_segments?.length) && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleCopyTranscript(selectedCallRecord.transcript)}
+                        onClick={() =>
+                          handleCopyTranscript(
+                            selectedCallRecord.transcript,
+                            selectedCallRecord.transcript_segments
+                          )
+                        }
                         className="border-amber-300 hover:bg-amber-50 text-amber-600 rounded-lg"
                       >
                         {copiedTranscript ? (
@@ -5776,11 +5862,35 @@ const Dashboard = () => {
                       </Button>
                     )}
                   </div>
-                  {selectedCallRecord.transcript ? (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto">
-                      <p className="text-gray-900 whitespace-pre-wrap leading-relaxed text-sm">
-                        {selectedCallRecord.transcript}
-                      </p>
+                  {selectedCallRecord.transcript_segments?.length ? (
+                    <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                      {selectedCallRecord.transcript_segments.map((segment: TranscriptSegment, idx: number) => (
+                        <div
+                          key={idx}
+                          className={`flex ${segment.speaker === "user" ? "justify-start" : "justify-end"}`}
+                        >
+                          <div
+                            className={`px-4 py-3 rounded-2xl max-w-[85%] text-sm shadow-sm border whitespace-pre-wrap ${
+                              segment.speaker === "user"
+                                ? "bg-white border-amber-100 text-gray-900 rounded-bl-none"
+                                : "bg-gradient-to-br from-amber-500 to-amber-600 text-white border-amber-400 rounded-br-none"
+                            }`}
+                          >
+                            <p className="font-semibold text-xs mb-1 uppercase tracking-wide opacity-80">
+                              {segment.speaker === "user"
+                                ? "User"
+                                : segment.speaker === "bot"
+                                ? "AI Assistant"
+                                : "Note"}
+                            </p>
+                            <p>{segment.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : selectedCallRecord.transcript ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto whitespace-pre-wrap text-sm text-gray-900 leading-relaxed">
+                      {selectedCallRecord.transcript}
                     </div>
                   ) : (
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
@@ -5790,6 +5900,23 @@ const Dashboard = () => {
                     </div>
                   )}
                 </div>
+
+                {selectedCallRecord.transcript_summary && (
+                  <div className="bg-white border border-amber-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                        <FileText className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900">Call Summary</p>
+                        <p className="text-sm text-gray-500">High-level recap for quick review</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                      {selectedCallRecord.transcript_summary}
+                    </p>
+                  </div>
+                )}
 
                 {/* Live Transcript Chunks (if available) */}
                 {selectedCallRecord.live_transcript_chunks && 

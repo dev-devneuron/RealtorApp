@@ -17,7 +17,7 @@
  * @module pages/Dashboard
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -318,7 +318,7 @@ const Dashboard = () => {
    * Falls back to localStorage if API calls fail. Updates user state and stores
    * information in localStorage for future use.
    */
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
       const storedUserType = localStorage.getItem("user_type");
@@ -331,14 +331,11 @@ const Dashboard = () => {
       const storedUserGender = localStorage.getItem("user_gender");
       
       if (storedUserName && storedUserName.trim() !== "" && storedUserName !== "User") {
-        console.log("✅ Found valid user name in localStorage:", storedUserName);
         setUserName(storedUserName);
         if (storedUserGender) {
           setUserGender(storedUserGender);
         }
         // Still try API to get better name if available, but don't return early
-      } else {
-        console.log("⚠️ No valid user name in localStorage, attempting to fetch from API");
       }
 
       // If not in localStorage, try to fetch from API
@@ -366,7 +363,6 @@ const Dashboard = () => {
 
             if (res.ok) {
               const data = await res.json();
-              console.log("API response from", endpoint, ":", data);
               
               // Handle /user-profile response structure: { user: { name, email, ... } }
               // Also handle other possible response structures
@@ -374,7 +370,6 @@ const Dashboard = () => {
               const gender = data.user?.gender || data.gender || data.property_manager?.gender || data.realtor?.gender || null;
               
               if (name && name.trim() !== "") {
-                console.log("Setting user name:", name);
                 setUserName(name);
                 localStorage.setItem("user_name", name);
                 nameFound = true;
@@ -384,8 +379,6 @@ const Dashboard = () => {
                   localStorage.setItem("user_gender", gender);
                 }
                 break;
-              } else {
-                console.log("No valid name found in response");
               }
             }
           } catch (endpointErr) {
@@ -422,9 +415,9 @@ const Dashboard = () => {
         console.error("Could not fetch user info:", err);
       }
     } catch (err) {
-      console.error("Error fetching user info:", err);
+      // Error handled silently
     }
-  };
+  }, []);
 
   // Basic SEO for SPA route
   useEffect(() => {
@@ -487,28 +480,36 @@ const Dashboard = () => {
     }
     canonical.setAttribute('href', window.location.href);
 
-    // Trigger staggered animations after component mount
-    setTimeout(() => setAnimateCards(true), 300);
+    // Trigger staggered animations after component mount (reduced delay for faster perceived performance)
+    setTimeout(() => setAnimateCards(true), 100);
     
-    // Fetch user information
+    // Fetch critical user information immediately
     fetchUserInfo();
     fetchNumber();
+    
+    // Fetch initial data for default tab (defer non-critical)
+    if (storedUserType === "property_manager") {
+      // Only fetch what's needed for the initial tab (realtors)
+      fetchRealtors();
+      // Defer other data fetching until tabs are accessed
+      setTimeout(() => {
+        fetchPropertiesForAssignment();
+        fetchAssignments();
+        fetchPhoneNumberRequests();
+        fetchPurchasedPhoneNumbers();
+        fetchTenants(); // Load tenants for stats card
+      }, 500);
+    }
+    
+    // Fetch properties and bookings (visible on default tab for realtors)
     fetchApartments();
     fetchBookings();
-    fetchChats(); 
-
-    // If property manager, fetch realtors and phone numbers
-    if (storedUserType === "property_manager") {
-      fetchRealtors();
-      fetchPropertiesForAssignment();
-      fetchAssignments();
-      fetchPhoneNumberRequests();
-      fetchPurchasedPhoneNumbers();
-      fetchTenants(); // Load tenants for stats card
-    }
-
-    // Prefetch carriers for call forwarding QA checklist
-    fetchForwardingCarriers();
+    
+    // Defer non-critical data
+    setTimeout(() => {
+      fetchChats();
+      fetchForwardingCarriers();
+    }, 800);
   }, []);
 
   // Refresh forwarding controls whenever auth role changes or PM selects a different realtor target
@@ -556,7 +557,7 @@ const Dashboard = () => {
    * If no number is found (404), this is a valid state - the user simply hasn't been assigned a number yet.
    * The backend handles case-insensitive matching for `assigned_to_type` variations.
    */
-  const fetchNumber = async () => {
+  const fetchNumber = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
@@ -572,32 +573,28 @@ const Dashboard = () => {
         // The backend will auto-promote numbers for PMs on first load if available
         const errorData = await res.json().catch(() => ({}));
         if (res.status === 404 || errorData.detail?.includes("haven't purchased") || errorData.detail?.includes("No number assigned")) {
-          console.log("No phone number assigned yet - this is a valid state");
           setMyNumber(null);
           return;
         }
-        // For other errors, log for debugging but don't show toast (not having a number is valid)
-        console.warn("Error fetching number:", res.status, errorData);
+        // For other errors, don't show toast (not having a number is valid)
         setMyNumber(null);
         return;
       }
 
       const data = await res.json();
-      console.log("✅ Fetched number:", data);
       // Backend returns twilio_number from purchased_phone_numbers (official callbot pool)
       // This is always the bot number we provisioned, never a legacy/historical value
       setMyNumber(data.twilio_number || null);
     } catch (err: any) {
-      console.error("Error fetching number:", err);
       // Don't show error toast - not having a number is a valid state
       // The backend handles auto-promotion and case-insensitive matching transparently
       setMyNumber(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setLoadingBookings(true);
       const token = localStorage.getItem("access_token");
@@ -616,14 +613,13 @@ const Dashboard = () => {
 
       setBookings(Array.isArray(data) ? data : data.bookings || []);
     } catch (err) {
-      console.error(err);
       toast.error("Could not load bookings");
     } finally {
       setLoadingBookings(false);
     }
-  };
+  }, []);
 
-  const fetchApartments = async () => {
+  const fetchApartments = useCallback(async () => {
     try {
       setLoadingApartments(true);
       const token = localStorage.getItem("access_token");
@@ -644,12 +640,11 @@ const Dashboard = () => {
       // since backend returns raw array
       setApartments(Array.isArray(data) ? data : data.apartments || []);
     } catch (err) {
-      console.error(err);
       toast.error("Could not load apartments");
     } finally {
       setLoadingApartments(false);
     }
-  };
+  }, []);
 
   const fetchRecordings = async () => {
     try {
@@ -676,7 +671,7 @@ const Dashboard = () => {
     }
   };
 
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     try {
       setLoadingChats(true);
       const token = localStorage.getItem("access_token");
@@ -695,12 +690,11 @@ const Dashboard = () => {
       // FIX: unwrap .chats
       setChats(data.chats || {});
     } catch (err) {
-      console.error(err);
       toast.error("Could not load chats");
     } finally {
       setLoadingChats(false);
     }
-  };
+  }, []);
 
   // ============================================================================
   // Call Records & Transcripts API Functions
@@ -1317,7 +1311,7 @@ const Dashboard = () => {
   // API Functions - Realtor Management
   // ============================================================================
 
-  const fetchRealtors = async () => {
+  const fetchRealtors = useCallback(async () => {
     try {
       setLoadingRealtors(true);
       const token = localStorage.getItem("access_token");
@@ -1335,12 +1329,11 @@ const Dashboard = () => {
       const data = await res.json();
       setRealtors(data.realtors || []);
     } catch (err) {
-      console.error(err);
       toast.error("Could not load realtors");
     } finally {
       setLoadingRealtors(false);
     }
-  };
+  }, []);
 
   const addRealtor = async () => {
     try {
@@ -3425,20 +3418,20 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mb-6 sm:mb-8 lg:mb-10"
             >
-              <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-2 sm:p-2.5">
-                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-2 [scroll-padding-left:0.5rem] [scroll-padding-right:0.5rem] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb]:hover:bg-amber-400 [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgb(252_211_77)_transparent]">
+              <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-2.5 sm:p-3 overflow-hidden">
+                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-2 items-center [scroll-padding-left:0.5rem] [scroll-padding-right:0.5rem] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb]:hover:bg-amber-400 [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgb(252_211_77)_transparent]">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
                       value="realtors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 data-[state=inactive]:hover:scale-105 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit h-full data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/20"
                     >
                       <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       Realtors
                     </TabsTrigger>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 data-[state=inactive]:hover:scale-105 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit h-full data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/20"
                     >
                       <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden md:inline">Assign Properties</span>
@@ -3446,7 +3439,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 data-[state=inactive]:hover:scale-105 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit h-full data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/20"
                     >
                       <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden lg:inline">View Assignments</span>
@@ -3455,7 +3448,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 data-[state=inactive]:hover:scale-105 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit h-full data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/20"
                     >
                       <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       Properties
@@ -3463,7 +3456,7 @@ const Dashboard = () => {
                     {userType === "property_manager" && (
                       <TabsTrigger 
                         value="tenants" 
-                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 data-[state=inactive]:hover:scale-105 border border-transparent data-[state=active]:border-amber-400/30"
+                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit h-full data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/20"
                       >
                         <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                         Tenants
@@ -3471,7 +3464,7 @@ const Dashboard = () => {
                     )}
                     <TabsTrigger 
                       value="phone-numbers" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 data-[state=inactive]:hover:scale-105 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit h-full data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/20"
                     >
                       <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden lg:inline">Phone Numbers</span>

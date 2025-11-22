@@ -3419,19 +3419,19 @@ const Dashboard = () => {
               className="mb-6 sm:mb-8 lg:mb-10"
             >
               <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden">
-                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-2 items-center p-3 sm:p-3.5 md:p-4 lg:p-4.5 xl:p-6 2xl:p-6.5 min-h-[52px] pb-[2px] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500 [&::-webkit-scrollbar-track]:bg-amber-100/40 [&::-webkit-scrollbar-track]:rounded-full [scrollbar-width:thin] [scrollbar-color:rgb(251_191_36)_rgb(254_243_199)]">
+                <div className="flex w-full overflow-x-scroll overflow-y-hidden gap-2 items-center p-3 sm:p-3.5 md:p-4 lg:p-4.5 xl:p-6 2xl:p-6.5 min-h-[52px] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400/80 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500 [&::-webkit-scrollbar-track]:bg-amber-50/50 [&::-webkit-scrollbar-track]:rounded-full [scrollbar-width:thin] [scrollbar-color:rgb(251_191_36_/_0.8)_rgb(254_243_199_/_0.5)]">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
                       value="realtors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
                     >
                       <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       Realtors
                     </TabsTrigger>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
                     >
                       <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden md:inline">Assign Properties</span>
@@ -3439,7 +3439,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
                     >
                       <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden lg:inline">View Assignments</span>
@@ -3448,7 +3448,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
                     >
                       <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       Properties
@@ -3456,7 +3456,7 @@ const Dashboard = () => {
                     {userType === "property_manager" && (
                       <TabsTrigger 
                         value="tenants" 
-                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
+                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
                       >
                         <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                         Tenants
@@ -3464,7 +3464,7 @@ const Dashboard = () => {
                     )}
                     <TabsTrigger 
                       value="phone-numbers" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
                     >
                       <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden lg:inline">Phone Numbers</span>
@@ -7558,7 +7558,7 @@ const Dashboard = () => {
       </Dialog>
 
       {/* Maintenance Request Update Modal */}
-      <Dialog open={showMaintenanceRequestUpdate && !!selectedMaintenanceRequest} onOpenChange={(open) => {
+      <Dialog open={showMaintenanceRequestUpdate} onOpenChange={(open) => {
         setShowMaintenanceRequestUpdate(open);
         // If closing update modal and detail was open, reopen detail
         if (!open && selectedMaintenanceRequest) {
@@ -7569,7 +7569,7 @@ const Dashboard = () => {
         }
       }}>
         <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
-          {selectedMaintenanceRequest && (
+          {selectedMaintenanceRequest ? (
             <>
               <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white flex-shrink-0">
                 <DialogTitle className="text-2xl font-bold text-gray-900">Update Maintenance Request</DialogTitle>
@@ -7751,6 +7751,8 @@ const Dashboard = () => {
             </Button>
           </DialogFooter>
             </>
+          ) : (
+            <div className="p-6 text-center text-gray-500">Loading...</div>
           )}
         </DialogContent>
       </Dialog>

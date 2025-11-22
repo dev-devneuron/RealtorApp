@@ -3419,7 +3419,7 @@ const Dashboard = () => {
               className="mb-6 sm:mb-8 lg:mb-10"
             >
               <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden">
-                <div className="flex w-full overflow-x-scroll overflow-y-hidden gap-2 items-center p-3 sm:p-3.5 md:p-4 lg:p-4.5 xl:p-6 2xl:p-6.5 min-h-[52px] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400/80 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500 [&::-webkit-scrollbar-track]:bg-amber-50/50 [&::-webkit-scrollbar-track]:rounded-full [scrollbar-width:thin] [scrollbar-color:rgb(251_191_36_/_0.8)_rgb(254_243_199_/_0.5)]">
+                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-2 items-center p-3 sm:p-3.5 md:p-4 lg:p-4.5 xl:p-6 2xl:p-6.5 min-h-[52px] [&::-webkit-scrollbar]:block [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500 [&::-webkit-scrollbar-track]:bg-amber-50/60 [&::-webkit-scrollbar-track]:rounded-full [scrollbar-width:thin] [scrollbar-color:rgb(251_191_36)_rgb(254_243_199_/_0.6)]">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
@@ -4666,7 +4666,9 @@ const Dashboard = () => {
                                 <div className="flex-1">
                                   <p className="text-base font-semibold text-red-900 mb-2">No Phone Number Assigned</p>
                                   <p className="text-sm text-red-800 mb-3">
-                                    {callForwardingState.message || "This user doesn't have a phone number assigned yet. Please assign a phone number first to enable call forwarding."}
+                                    {callForwardingState.message || (userType === "realtor" 
+                                      ? "No phone number assigned to you. Please ask your Property manager to assign you a number."
+                                      : "This user doesn't have a phone number assigned yet. Please assign a phone number first to enable call forwarding.")}
                                   </p>
                                   {userType === "property_manager" && (
                                     <Button
@@ -7558,14 +7560,15 @@ const Dashboard = () => {
       </Dialog>
 
       {/* Maintenance Request Update Modal */}
-      <Dialog open={showMaintenanceRequestUpdate} onOpenChange={(open) => {
-        setShowMaintenanceRequestUpdate(open);
-        // If closing update modal and detail was open, reopen detail
-        if (!open && selectedMaintenanceRequest) {
-          const wasDetailOpen = showMaintenanceRequestDetail;
-          if (wasDetailOpen) {
+      <Dialog open={showMaintenanceRequestUpdate && !!selectedMaintenanceRequest} onOpenChange={(open) => {
+        if (!open) {
+          setShowMaintenanceRequestUpdate(false);
+          // If closing update modal and detail was open, reopen detail
+          if (selectedMaintenanceRequest && showMaintenanceRequestDetail) {
             setTimeout(() => setShowMaintenanceRequestDetail(true), 100);
           }
+        } else {
+          setShowMaintenanceRequestUpdate(open);
         }
       }}>
         <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">

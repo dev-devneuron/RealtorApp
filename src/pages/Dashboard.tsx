@@ -7529,7 +7529,6 @@ const Dashboard = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setSelectedMaintenanceRequest(selectedMaintenanceRequest);
                     setMaintenanceRequestUpdateForm({
                       status: selectedMaintenanceRequest.status,
                       priority: selectedMaintenanceRequest.priority,
@@ -7539,7 +7538,6 @@ const Dashboard = () => {
                       category: selectedMaintenanceRequest.category || "",
                       location: selectedMaintenanceRequest.location || "",
                     });
-                    setShowMaintenanceRequestDetail(false);
                     setShowMaintenanceRequestUpdate(true);
                   }}
                   className="rounded-xl"
@@ -7661,15 +7659,29 @@ const Dashboard = () => {
               </>
             )}
 
-            <div>
-              <label className="text-sm font-semibold text-gray-700 mb-3 block">PM Notes (Optional)</label>
-              <Textarea
-                value={maintenanceRequestUpdateForm.pm_notes || ""}
-                onChange={(e) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, pm_notes: e.target.value })}
-                className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
-                placeholder="Add notes about this maintenance request..."
-              />
-            </div>
+            {userType === "property_manager" && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">PM Notes (Optional)</label>
+                <Textarea
+                  value={maintenanceRequestUpdateForm.pm_notes || ""}
+                  onChange={(e) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, pm_notes: e.target.value })}
+                  className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
+                  placeholder="Add notes about this maintenance request..."
+                />
+              </div>
+            )}
+
+            {userType !== "property_manager" && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">Notes (Optional)</label>
+                <Textarea
+                  value={maintenanceRequestUpdateForm.pm_notes || ""}
+                  onChange={(e) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, pm_notes: e.target.value })}
+                  className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
+                  placeholder="Add notes about this maintenance request..."
+                />
+              </div>
+            )}
 
             {maintenanceRequestUpdateForm.status === "completed" && (
               <div>
@@ -7684,7 +7696,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          <DialogFooter className="p-6 border-t border-gray-200">
+          <DialogFooter className="p-6 border-t border-gray-200 flex-shrink-0">
             <Button
               variant="outline"
               onClick={() => setShowMaintenanceRequestUpdate(false)}
@@ -7699,6 +7711,12 @@ const Dashboard = () => {
                 try {
                   await updateMaintenanceRequest(selectedMaintenanceRequest.maintenance_request_id, maintenanceRequestUpdateForm);
                   setShowMaintenanceRequestUpdate(false);
+                  // Keep detail modal open and refresh the data
+                  if (selectedMaintenanceRequest) {
+                    const updated = await fetchMaintenanceRequestDetail(selectedMaintenanceRequest.maintenance_request_id);
+                    setSelectedMaintenanceRequest(updated);
+                    setShowMaintenanceRequestDetail(true);
+                  }
                 } catch (err) {
                   // Error already handled in function
                 }

@@ -3418,8 +3418,8 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mb-6 sm:mb-8 lg:mb-10"
             >
-              <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-3 sm:p-3.5 md:p-4 lg:p-4.5 xl:p-5 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500 [&::-webkit-scrollbar-track]:bg-amber-100/50 [&::-webkit-scrollbar-track]:rounded-full [scrollbar-width:auto] [scrollbar-color:rgb(251_191_36)_rgb(254_243_199)]">
-                <div className="flex w-full gap-2 items-center min-w-max pb-0.5">
+              <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full overflow-hidden">
+                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-2 items-center p-3 sm:p-3.5 md:p-4 lg:p-4.5 xl:p-5 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300/60 [&::-webkit-scrollbar-thumb]:hover:bg-amber-400/80 [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgb(252_211_77)_transparent]">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 

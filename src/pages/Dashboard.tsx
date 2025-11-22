@@ -3425,45 +3425,45 @@ const Dashboard = () => {
               className="mb-4 sm:mb-6 lg:mb-8"
             >
               <TabsList className="bg-white border border-amber-200 rounded-2xl shadow-lg w-full overflow-hidden p-0">
-                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-1.5 sm:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2 [scroll-padding-left:0.5rem] [scroll-padding-right:0.5rem] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb]:hover:bg-amber-400 [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgb(252_211_77)_transparent]">
+                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-2 sm:gap-3 py-3 sm:py-4 px-2 sm:px-3 [scroll-padding-left:0.5rem] [scroll-padding-right:0.5rem] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb]:hover:bg-amber-400 [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgb(252_211_77)_transparent]">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
                       value="realtors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                       Realtors
                     </TabsTrigger>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                       <span className="hidden md:inline">Assign Properties</span>
                       <span className="md:hidden">Assign</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <ListChecks className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                       <span className="hidden lg:inline">View Assignments</span>
                       <span className="lg:hidden hidden md:inline">Assignments</span>
                       <span className="md:hidden">View</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <Building2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                       Properties
                     </TabsTrigger>
                     <TabsTrigger 
                       value="phone-numbers" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                     >
-                      <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                       <span className="hidden lg:inline">Phone Numbers</span>
                       <span className="lg:hidden">Numbers</span>
                     </TabsTrigger>
@@ -3472,26 +3472,26 @@ const Dashboard = () => {
                 {userType !== "property_manager" && (
                   <TabsTrigger 
                     value="properties" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                   >
-                    <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                     Properties
                   </TabsTrigger>
                 )}
               <TabsTrigger 
                 value="call-forwarding" 
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
               >
-                <PhoneForwarded className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                <PhoneForwarded className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                 <span className="hidden lg:inline">Call Forwarding</span>
                 <span className="lg:hidden hidden md:inline">Forwarding</span>
                 <span className="md:hidden">Forward</span>
               </TabsTrigger>
                 <TabsTrigger 
                   value="chats" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                 >
-                  <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                  <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                   <span className="hidden xl:inline">Call Records & Transcripts</span>
                   <span className="xl:hidden hidden lg:inline">Call Records</span>
                   <span className="lg:hidden hidden md:inline">Records</span>
@@ -3499,25 +3499,25 @@ const Dashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="bookings" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                 >
-                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                   Bookings
                 </TabsTrigger>
                 <TabsTrigger 
                   value="maintenance-requests" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                 >
-                  <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                  <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                   <span className="hidden lg:inline">Maintenance</span>
                   <span className="lg:hidden">Maint.</span>
                 </TabsTrigger>
                 {userType === "property_manager" && (
                   <TabsTrigger 
                     value="tenants" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 font-semibold transition-all text-sm sm:text-base whitespace-nowrap flex-shrink-0 min-w-fit"
                   >
-                    <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
                     Tenants
                   </TabsTrigger>
                 )}
@@ -5520,14 +5520,33 @@ const Dashboard = () => {
                             : "No properties available"}
                         </p>
                       </div>
-                      <Button
-                        onClick={fetchApartments}
-                        disabled={loadingApartments}
-                        className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl px-4 sm:px-6 py-2 sm:py-3"
-                      >
-                        <RefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 mr-2 ${loadingApartments ? "animate-spin" : ""}`} />
-                        Refresh
-                      </Button>
+                      <div className="flex flex-wrap gap-3">
+                        {userType === "property_manager" && (
+                          <Button
+                            onClick={() => {
+                              setNewTenant({
+                                ...newTenant,
+                                property_id: ""
+                              });
+                              setShowAddTenant(true);
+                            }}
+                            className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl px-4 sm:px-6 py-2 sm:py-3"
+                          >
+                            <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                            <span className="hidden sm:inline">Assign Tenant</span>
+                            <span className="sm:hidden">Tenant</span>
+                          </Button>
+                        )}
+                        <Button
+                          onClick={fetchApartments}
+                          disabled={loadingApartments}
+                          variant="outline"
+                          className="bg-white hover:bg-amber-50 text-amber-700 border-amber-300 hover:border-amber-400 font-semibold shadow-sm hover:shadow-md transition-all rounded-xl px-4 sm:px-6 py-2 sm:py-3"
+                        >
+                          <RefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 mr-2 ${loadingApartments ? "animate-spin" : ""}`} />
+                          Refresh
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                 </Card>
@@ -6636,6 +6655,35 @@ const Dashboard = () => {
                         )}
                       </div>
                     )}
+
+                    {/* Tenant Assignment Section (for PM) */}
+                    {userType === "property_manager" && (
+                      <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Users className="h-5 w-5 text-green-600" />
+                            Tenant Management
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Assign a tenant to this property. The property will be marked as "Rented" automatically.
+                        </p>
+                        <Button
+                          onClick={() => {
+                            setNewTenant({
+                              ...newTenant,
+                              property_id: String(selectedPropertyForDetail.id)
+                            });
+                            setShowPropertyDetailModal(false);
+                            setShowAddTenant(true);
+                          }}
+                          className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl w-full sm:w-auto"
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Assign Tenant to This Property
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -7700,15 +7748,15 @@ const Dashboard = () => {
 
       {/* Add Tenant Modal */}
       <Dialog open={showAddTenant} onOpenChange={setShowAddTenant}>
-        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
-          <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+          <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white flex-shrink-0">
             <DialogTitle className="text-2xl font-bold text-gray-900">Add New Tenant</DialogTitle>
             <DialogDescription className="text-gray-600 mt-2">
               Create a new tenant record. The property will be marked as "Rented" automatically.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-3 block">
                 Tenant Name <span className="text-red-500">*</span>
@@ -7873,15 +7921,15 @@ const Dashboard = () => {
 
       {/* Edit Tenant Modal */}
       <Dialog open={showEditTenant} onOpenChange={setShowEditTenant}>
-        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
-          <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+          <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white flex-shrink-0">
             <DialogTitle className="text-2xl font-bold text-gray-900">Edit Tenant</DialogTitle>
             <DialogDescription className="text-gray-600 mt-2">
               Update tenant information. Setting tenant to inactive will mark the property as "Available" if no other active tenants exist.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
             {editingTenant && (
               <>
                 <div>

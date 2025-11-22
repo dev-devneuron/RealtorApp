@@ -23,6 +23,7 @@ import { motion, useInView } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -260,6 +261,46 @@ const Dashboard = () => {
   const [selectedRealtorFilters, setSelectedRealtorFilters] = useState<Set<number | string>>(new Set());
   
   // ============================================================================
+  // Maintenance Requests State
+  // ============================================================================
+  const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
+  const [loadingMaintenanceRequests, setLoadingMaintenanceRequests] = useState(false);
+  const [maintenanceRequestsTotal, setMaintenanceRequestsTotal] = useState(0);
+  const [maintenanceRequestsLimit] = useState(50);
+  const [maintenanceRequestsOffset, setMaintenanceRequestsOffset] = useState(0);
+  const [maintenanceRequestFilterStatus, setMaintenanceRequestFilterStatus] = useState<string>("all");
+  const [selectedMaintenanceRequest, setSelectedMaintenanceRequest] = useState<any | null>(null);
+  const [showMaintenanceRequestDetail, setShowMaintenanceRequestDetail] = useState(false);
+  const [showMaintenanceRequestUpdate, setShowMaintenanceRequestUpdate] = useState(false);
+  const [updatingMaintenanceRequest, setUpdatingMaintenanceRequest] = useState(false);
+  const [maintenanceRequestUpdateForm, setMaintenanceRequestUpdateForm] = useState<any>({});
+
+  // ============================================================================
+  // Tenants State
+  // ============================================================================
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [loadingTenants, setLoadingTenants] = useState(false);
+  const [showAddTenant, setShowAddTenant] = useState(false);
+  const [newTenant, setNewTenant] = useState({
+    name: "",
+    property_id: "",
+    phone_number: "",
+    email: "",
+    realtor_id: "",
+    unit_number: "",
+    lease_start_date: "",
+    lease_end_date: "",
+    notes: ""
+  });
+  const [creatingTenant, setCreatingTenant] = useState(false);
+  const [showEditTenant, setShowEditTenant] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<any>(null);
+  const [editTenantForm, setEditTenantForm] = useState<any>({});
+  const [updatingTenant, setUpdatingTenant] = useState(false);
+  const [tenantFilterProperty, setTenantFilterProperty] = useState<string>("all");
+  const [tenantFilterActive, setTenantFilterActive] = useState<string>("all");
+
+  // ============================================================================
   // Pagination State
   // ============================================================================
   const [currentPage, setCurrentPage] = useState(1);
@@ -480,6 +521,20 @@ const Dashboard = () => {
     const realtorId = getSelectedForwardingRealtorId();
     fetchCallForwardingState(realtorId);
   }, [userType, forwardingTarget]);
+
+  // Fetch maintenance requests when the maintenance tab is active
+  useEffect(() => {
+    if (activeTab === "maintenance-requests") {
+      fetchMaintenanceRequests(maintenanceRequestFilterStatus !== "all" ? maintenanceRequestFilterStatus : undefined);
+    }
+  }, [activeTab, maintenanceRequestFilterStatus]);
+
+  // Fetch tenants when the tenants tab is active
+  useEffect(() => {
+    if (activeTab === "tenants") {
+      fetchTenants(tenantFilterProperty !== "all" ? tenantFilterProperty : undefined, tenantFilterActive !== "all" ? tenantFilterActive : undefined);
+    }
+  }, [activeTab, tenantFilterProperty, tenantFilterActive]);
 
   // Fetch call records when the calls tab is active
   useEffect(() => {
@@ -981,6 +1036,285 @@ const Dashboard = () => {
       setDeletingCallRecord(false);
     }
   };
+
+  // ============================================================================
+  // API Functions - Maintenance Requests
+  // ============================================================================
+
+  const fetchMaintenanceRequests = async (status?: string, limit?: number, offset?: number) => {
+    try {
+      setLoadingMaintenanceRequests(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (status && status !== "all") params.append("status", status);
+      params.append("limit", String(limit || maintenanceRequestsLimit));
+      params.append("offset", String(offset || maintenanceRequestsOffset));
+
+      const res = await fetch(`${API_BASE}/maintenance-requests?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch maintenance requests");
+
+      const data = await res.json();
+      setMaintenanceRequests(data.maintenance_requests || []);
+      setMaintenanceRequestsTotal(data.total || 0);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not load maintenance requests");
+    } finally {
+      setLoadingMaintenanceRequests(false);
+    }
+  };
+
+  const fetchMaintenanceRequestDetail = async (requestId: number) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/maintenance-requests/${requestId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch maintenance request details");
+
+      const data = await res.json();
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not load maintenance request details");
+      throw err;
+    }
+  };
+
+  const updateMaintenanceRequest = async (requestId: number, updateData: any) => {
+    try {
+      setUpdatingMaintenanceRequest(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/maintenance-requests/${requestId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || errorData.message || "Failed to update maintenance request");
+      }
+
+      const data = await res.json();
+      toast.success(data.message || "Maintenance request updated successfully");
+      
+      // Refresh the list
+      await fetchMaintenanceRequests(maintenanceRequestFilterStatus !== "all" ? maintenanceRequestFilterStatus : undefined);
+      
+      // Update detail view if open
+      if (selectedMaintenanceRequest && selectedMaintenanceRequest.maintenance_request_id === requestId) {
+        const updated = await fetchMaintenanceRequestDetail(requestId);
+        setSelectedMaintenanceRequest(updated);
+      }
+      
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not update maintenance request");
+      throw err;
+    } finally {
+      setUpdatingMaintenanceRequest(false);
+    }
+  };
+
+  // ============================================================================
+  // API Functions - Tenants
+  // ============================================================================
+
+  const fetchTenants = async (propertyId?: string, isActive?: string) => {
+    try {
+      setLoadingTenants(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (propertyId && propertyId !== "all") params.append("property_id", propertyId);
+      if (isActive && isActive !== "all") params.append("is_active", isActive === "active" ? "true" : "false");
+
+      const res = await fetch(`${API_BASE}/tenants?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch tenants");
+
+      const data = await res.json();
+      setTenants(data.tenants || []);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not load tenants");
+    } finally {
+      setLoadingTenants(false);
+    }
+  };
+
+  const createTenant = async () => {
+    try {
+      setCreatingTenant(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      // Prepare request body - only include non-empty fields
+      const requestBody: any = {
+        name: newTenant.name,
+        property_id: Number(newTenant.property_id),
+      };
+
+      if (newTenant.phone_number) requestBody.phone_number = newTenant.phone_number;
+      if (newTenant.email) requestBody.email = newTenant.email;
+      if (newTenant.realtor_id && newTenant.realtor_id !== "none") {
+        requestBody.realtor_id = Number(newTenant.realtor_id);
+      }
+      if (newTenant.unit_number) requestBody.unit_number = newTenant.unit_number;
+      if (newTenant.lease_start_date) requestBody.lease_start_date = newTenant.lease_start_date;
+      if (newTenant.lease_end_date) requestBody.lease_end_date = newTenant.lease_end_date;
+      if (newTenant.notes) requestBody.notes = newTenant.notes;
+
+      const res = await fetch(`${API_BASE}/tenants`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || errorData.message || "Failed to create tenant");
+      }
+
+      const data = await res.json();
+      toast.success(data.message || "Tenant created successfully");
+      
+      // Reset form
+      setNewTenant({
+        name: "",
+        property_id: "",
+        phone_number: "",
+        email: "",
+        realtor_id: "",
+        unit_number: "",
+        lease_start_date: "",
+        lease_end_date: "",
+        notes: ""
+      });
+      setShowAddTenant(false);
+      
+      // Refresh tenants and properties lists
+      await fetchTenants(tenantFilterProperty !== "all" ? tenantFilterProperty : undefined, tenantFilterActive !== "all" ? tenantFilterActive : undefined);
+      await fetchApartments();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not create tenant");
+    } finally {
+      setCreatingTenant(false);
+    }
+  };
+
+  const handleEditTenant = (tenant: any) => {
+    setEditingTenant(tenant);
+    setEditTenantForm({
+      name: tenant.name || "",
+      phone_number: tenant.phone_number || "",
+      email: tenant.email || "",
+      unit_number: tenant.unit_number || "",
+      lease_start_date: tenant.lease_start_date || "",
+      lease_end_date: tenant.lease_end_date || "",
+      is_active: tenant.is_active !== false,
+      notes: tenant.notes || "",
+    });
+    setShowEditTenant(true);
+  };
+
+  const updateTenant = async () => {
+    if (!editingTenant) return;
+
+    setUpdatingTenant(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      // Prepare request body - only include changed fields
+      const requestBody: any = {};
+      if (editTenantForm.name !== editingTenant.name) requestBody.name = editTenantForm.name;
+      if (editTenantForm.phone_number !== editingTenant.phone_number) requestBody.phone_number = editTenantForm.phone_number;
+      if (editTenantForm.email !== editingTenant.email) requestBody.email = editTenantForm.email;
+      if (editTenantForm.unit_number !== editingTenant.unit_number) requestBody.unit_number = editTenantForm.unit_number;
+      if (editTenantForm.lease_start_date !== editingTenant.lease_start_date) requestBody.lease_start_date = editTenantForm.lease_start_date;
+      if (editTenantForm.lease_end_date !== editingTenant.lease_end_date) requestBody.lease_end_date = editTenantForm.lease_end_date;
+      if (editTenantForm.is_active !== editingTenant.is_active) requestBody.is_active = editTenantForm.is_active;
+      if (editTenantForm.notes !== editingTenant.notes) requestBody.notes = editTenantForm.notes;
+
+      if (Object.keys(requestBody).length === 0) {
+        toast.info("No changes to save");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/tenants/${editingTenant.tenant_id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || errorData.message || "Failed to update tenant");
+      }
+
+      const data = await res.json();
+      toast.success(data.message || "Tenant updated successfully");
+      setShowEditTenant(false);
+      setEditingTenant(null);
+      
+      // Refresh tenants and properties lists
+      await fetchTenants(tenantFilterProperty !== "all" ? tenantFilterProperty : undefined, tenantFilterActive !== "all" ? tenantFilterActive : undefined);
+      await fetchApartments();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not update tenant");
+    } finally {
+      setUpdatingTenant(false);
+    }
+  };
+
+  // ============================================================================
+  // API Functions - Realtor Management
+  // ============================================================================
 
   const fetchRealtors = async () => {
     try {
@@ -3170,6 +3504,23 @@ const Dashboard = () => {
                   <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                   Bookings
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="maintenance-requests" 
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                >
+                  <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                  <span className="hidden lg:inline">Maintenance</span>
+                  <span className="lg:hidden">Maint.</span>
+                </TabsTrigger>
+                {userType === "property_manager" && (
+                  <TabsTrigger 
+                    value="tenants" 
+                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg sm:rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit"
+                  >
+                    <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                    Tenants
+                  </TabsTrigger>
+                )}
                 </div>
               </TabsList>
             </motion.div>
@@ -5674,6 +6025,392 @@ const Dashboard = () => {
                 </Card>
               </motion.div>
             </TabsContent>
+
+            {/* Maintenance Requests */}
+            <TabsContent value="maintenance-requests">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                      <div className="flex-1">
+                        <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
+                          <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                            <AlertTriangle className="h-6 w-6 text-white" />
+                          </div>
+                          Maintenance Requests
+                        </CardTitle>
+                        <p className="text-gray-600 text-lg">
+                          View and manage maintenance requests from tenants.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-sm font-semibold px-4 py-2">
+                          {maintenanceRequestsTotal} {maintenanceRequestsTotal === 1 ? 'Request' : 'Requests'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-6 sm:p-8">
+                    {/* Filter Bar */}
+                    <div className="mb-6 flex flex-col sm:flex-row gap-4">
+                      <Select value={maintenanceRequestFilterStatus} onValueChange={setMaintenanceRequestFilterStatus}>
+                        <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                          <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Requests</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        onClick={() => fetchMaintenanceRequests(maintenanceRequestFilterStatus !== "all" ? maintenanceRequestFilterStatus : undefined)}
+                        variant="outline"
+                        className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh
+                      </Button>
+                    </div>
+
+                    {/* Loading State */}
+                    {loadingMaintenanceRequests ? (
+                      <div className="text-center py-12">
+                        <RefreshCw className="h-10 w-10 animate-spin text-amber-500 mx-auto mb-4" />
+                        <p className="text-gray-600 font-medium text-lg">Loading maintenance requests...</p>
+                      </div>
+                    ) : maintenanceRequests.length === 0 ? (
+                      <div className="text-center py-12">
+                        <AlertTriangle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500 font-medium text-xl mb-2">No maintenance requests found</p>
+                        <p className="text-gray-400 text-sm">Maintenance requests will appear here when tenants submit them.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                        <Table>
+                          <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
+                            <TableRow className="border-b border-amber-200">
+                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">ID</TableHead>
+                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Tenant</TableHead>
+                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Property</TableHead>
+                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Issue</TableHead>
+                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Priority</TableHead>
+                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Status</TableHead>
+                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Submitted</TableHead>
+                              <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {maintenanceRequests.map((request, idx) => (
+                              <motion.tr
+                                key={request.maintenance_request_id || idx}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="border-b border-gray-100 hover:bg-amber-50/50 transition-colors"
+                              >
+                                <TableCell className="py-4 px-6">
+                                  <span className="font-semibold text-gray-900">#{request.maintenance_request_id}</span>
+                                </TableCell>
+                                <TableCell className="py-4 px-6">
+                                  <div>
+                                    <p className="font-semibold text-gray-900">{request.tenant_name || "Unknown"}</p>
+                                    {request.tenant_phone && (
+                                      <p className="text-sm text-gray-500">{formatPhoneNumber(request.tenant_phone)}</p>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="py-4 px-6">
+                                  <p className="text-gray-900">{request.property_address || "N/A"}</p>
+                                  {request.location && (
+                                    <p className="text-sm text-gray-500">{request.location}</p>
+                                  )}
+                                </TableCell>
+                                <TableCell className="py-4 px-6">
+                                  <p className="text-gray-900 line-clamp-2">{request.issue_description || "N/A"}</p>
+                                  {request.category && (
+                                    <Badge variant="outline" className="mt-1 text-xs">
+                                      {request.category}
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="py-4 px-6">
+                                  <Badge
+                                    className={`text-sm font-semibold ${
+                                      request.priority === "urgent"
+                                        ? "bg-red-100 text-red-700 border-red-300"
+                                        : request.priority === "high"
+                                        ? "bg-orange-100 text-orange-700 border-orange-300"
+                                        : request.priority === "normal"
+                                        ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+                                        : "bg-gray-100 text-gray-700 border-gray-300"
+                                    }`}
+                                  >
+                                    {request.priority || "normal"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="py-4 px-6">
+                                  <Badge
+                                    className={`text-sm font-semibold ${
+                                      request.status === "completed"
+                                        ? "bg-green-100 text-green-700 border-green-300"
+                                        : request.status === "in_progress"
+                                        ? "bg-blue-100 text-blue-700 border-blue-300"
+                                        : request.status === "cancelled"
+                                        ? "bg-gray-100 text-gray-700 border-gray-300"
+                                        : "bg-amber-100 text-amber-700 border-amber-300"
+                                    }`}
+                                  >
+                                    {request.status || "pending"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="py-4 px-6">
+                                  <p className="text-sm text-gray-900">
+                                    {request.submitted_at
+                                      ? new Date(request.submitted_at).toLocaleDateString()
+                                      : "N/A"}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {request.submitted_at
+                                      ? new Date(request.submitted_at).toLocaleTimeString()
+                                      : ""}
+                                  </p>
+                                </TableCell>
+                                <TableCell className="py-4 px-6">
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={async () => {
+                                        try {
+                                          const detail = await fetchMaintenanceRequestDetail(request.maintenance_request_id);
+                                          setSelectedMaintenanceRequest(detail);
+                                          setShowMaintenanceRequestDetail(true);
+                                        } catch (err) {
+                                          // Error already handled in function
+                                        }
+                                      }}
+                                      className="rounded-lg"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedMaintenanceRequest(request);
+                                        setMaintenanceRequestUpdateForm({
+                                          status: request.status,
+                                          priority: request.priority,
+                                          assigned_to_realtor_id: request.assigned_to_realtor_id || "",
+                                          pm_notes: request.pm_notes || "",
+                                          resolution_notes: request.resolution_notes || "",
+                                          category: request.category || "",
+                                          location: request.location || "",
+                                        });
+                                        setShowMaintenanceRequestUpdate(true);
+                                      }}
+                                      className="rounded-lg"
+                                    >
+                                      <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </motion.tr>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
+            {/* Tenants - Property Manager Only */}
+            {userType === "property_manager" && (
+              <TabsContent value="tenants">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+                      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                        <div className="flex-1">
+                          <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
+                            <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                              <Users className="h-6 w-6 text-white" />
+                            </div>
+                            Tenant Management
+                          </CardTitle>
+                          <p className="text-gray-600 text-lg">
+                            Manage your tenants and their lease information.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => setShowAddTenant(true)}
+                          className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl px-6 py-3"
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Add Tenant
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6 sm:p-8">
+                      {/* Filter Bar */}
+                      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+                        <Select value={tenantFilterProperty} onValueChange={setTenantFilterProperty}>
+                          <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                            <SelectValue placeholder="Filter by property" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Properties</SelectItem>
+                            {apartments.map((apt) => (
+                              <SelectItem key={apt.id} value={String(apt.id)}>
+                                {getPropertyMetadata(apt).address || `Property #${apt.id}`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={tenantFilterActive} onValueChange={setTenantFilterActive}>
+                          <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                            <SelectValue placeholder="Filter by status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Tenants</SelectItem>
+                            <SelectItem value="active">Active Only</SelectItem>
+                            <SelectItem value="inactive">Inactive Only</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          onClick={() => fetchTenants(tenantFilterProperty !== "all" ? tenantFilterProperty : undefined, tenantFilterActive !== "all" ? tenantFilterActive : undefined)}
+                          variant="outline"
+                          className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Refresh
+                        </Button>
+                      </div>
+
+                      {/* Loading State */}
+                      {loadingTenants ? (
+                        <div className="text-center py-12">
+                          <RefreshCw className="h-10 w-10 animate-spin text-amber-500 mx-auto mb-4" />
+                          <p className="text-gray-600 font-medium text-lg">Loading tenants...</p>
+                        </div>
+                      ) : tenants.length === 0 ? (
+                        <div className="text-center py-12">
+                          <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                          <p className="text-gray-500 font-medium text-xl mb-2">No tenants found</p>
+                          <p className="text-gray-400 text-sm mb-4">Add your first tenant to get started.</p>
+                          <Button
+                            onClick={() => setShowAddTenant(true)}
+                            className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl"
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Add Tenant
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                          <Table>
+                            <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
+                              <TableRow className="border-b border-amber-200">
+                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Name</TableHead>
+                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Contact</TableHead>
+                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Property</TableHead>
+                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Unit</TableHead>
+                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Lease Period</TableHead>
+                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Status</TableHead>
+                                <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {tenants.map((tenant, idx) => (
+                                <motion.tr
+                                  key={tenant.tenant_id || idx}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: idx * 0.05 }}
+                                  className="border-b border-gray-100 hover:bg-amber-50/50 transition-colors"
+                                >
+                                  <TableCell className="py-4 px-6">
+                                    <p className="font-semibold text-gray-900">{tenant.name || "Unknown"}</p>
+                                  </TableCell>
+                                  <TableCell className="py-4 px-6">
+                                    <div>
+                                      {tenant.phone_number && (
+                                        <p className="text-sm text-gray-900">{formatPhoneNumber(tenant.phone_number)}</p>
+                                      )}
+                                      {tenant.email && (
+                                        <p className="text-sm text-gray-500">{tenant.email}</p>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="py-4 px-6">
+                                    <p className="text-gray-900">{tenant.property_address || "N/A"}</p>
+                                  </TableCell>
+                                  <TableCell className="py-4 px-6">
+                                    <p className="text-gray-900">{tenant.unit_number || "N/A"}</p>
+                                  </TableCell>
+                                  <TableCell className="py-4 px-6">
+                                    {tenant.lease_start_date || tenant.lease_end_date ? (
+                                      <div>
+                                        <p className="text-sm text-gray-900">
+                                          {tenant.lease_start_date
+                                            ? new Date(tenant.lease_start_date).toLocaleDateString()
+                                            : "N/A"}
+                                          {" - "}
+                                          {tenant.lease_end_date
+                                            ? new Date(tenant.lease_end_date).toLocaleDateString()
+                                            : "Ongoing"}
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-gray-500">Not specified</p>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="py-4 px-6">
+                                    <Badge
+                                      className={`text-sm font-semibold ${
+                                        tenant.is_active
+                                          ? "bg-green-100 text-green-700 border-green-300"
+                                          : "bg-gray-100 text-gray-700 border-gray-300"
+                                      }`}
+                                    >
+                                      {tenant.is_active ? "Active" : "Inactive"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="py-4 px-6">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleEditTenant(tenant)}
+                                      className="rounded-lg"
+                                    >
+                                      <Edit2 className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </Button>
+                                  </TableCell>
+                                </motion.tr>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            )}
           </Tabs>
         </motion.div>
       </section>
@@ -6620,6 +7357,658 @@ const Dashboard = () => {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Maintenance Request Detail Modal */}
+      <Dialog open={showMaintenanceRequestDetail} onOpenChange={setShowMaintenanceRequestDetail}>
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+          {selectedMaintenanceRequest && (
+            <div className="flex flex-col h-full max-h-[90vh] overflow-hidden">
+              <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pr-12">
+                  <div className="flex-1">
+                    <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
+                        <AlertTriangle className="h-6 w-6 text-white" />
+                      </div>
+                      Maintenance Request #{selectedMaintenanceRequest.maintenance_request_id}
+                    </DialogTitle>
+                    <DialogDescription className="text-gray-600 mt-2">
+                      {selectedMaintenanceRequest.property_address || "Property address not available"}
+                    </DialogDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      className={`text-sm font-semibold ${
+                        selectedMaintenanceRequest.status === "completed"
+                          ? "bg-green-100 text-green-700 border-green-300"
+                          : selectedMaintenanceRequest.status === "in_progress"
+                          ? "bg-blue-100 text-blue-700 border-blue-300"
+                          : selectedMaintenanceRequest.status === "cancelled"
+                          ? "bg-gray-100 text-gray-700 border-gray-300"
+                          : "bg-amber-100 text-amber-700 border-amber-300"
+                      }`}
+                    >
+                      {selectedMaintenanceRequest.status || "pending"}
+                    </Badge>
+                    <Badge
+                      className={`text-sm font-semibold ${
+                        selectedMaintenanceRequest.priority === "urgent"
+                          ? "bg-red-100 text-red-700 border-red-300"
+                          : selectedMaintenanceRequest.priority === "high"
+                          ? "bg-orange-100 text-orange-700 border-orange-300"
+                          : selectedMaintenanceRequest.priority === "normal"
+                          ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+                          : "bg-gray-100 text-gray-700 border-gray-300"
+                      }`}
+                    >
+                      {selectedMaintenanceRequest.priority || "normal"}
+                    </Badge>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Tenant</p>
+                    <p className="text-lg font-bold text-gray-900">{selectedMaintenanceRequest.tenant_name || "Unknown"}</p>
+                    {selectedMaintenanceRequest.tenant_unit_number && (
+                      <p className="text-sm text-gray-500">Unit: {selectedMaintenanceRequest.tenant_unit_number}</p>
+                    )}
+                    {selectedMaintenanceRequest.tenant_phone && (
+                      <p className="text-sm text-gray-600 mt-1">{formatPhoneNumber(selectedMaintenanceRequest.tenant_phone)}</p>
+                    )}
+                    {selectedMaintenanceRequest.tenant_email && (
+                      <p className="text-sm text-gray-600">{selectedMaintenanceRequest.tenant_email}</p>
+                    )}
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Property</p>
+                    <p className="text-lg font-bold text-gray-900">{selectedMaintenanceRequest.property_address || "N/A"}</p>
+                    {selectedMaintenanceRequest.location && (
+                      <p className="text-sm text-gray-600 mt-1">Location: {selectedMaintenanceRequest.location}</p>
+                    )}
+                    {selectedMaintenanceRequest.category && (
+                      <Badge variant="outline" className="mt-2">
+                        {selectedMaintenanceRequest.category}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Issue Description</p>
+                  <p className="text-gray-900 whitespace-pre-wrap">{selectedMaintenanceRequest.issue_description || "No description provided"}</p>
+                </div>
+
+                {selectedMaintenanceRequest.call_transcript && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Call Transcript</p>
+                    <p className="text-gray-900 text-sm whitespace-pre-wrap">{selectedMaintenanceRequest.call_transcript}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Submitted</p>
+                    <p className="text-gray-900">
+                      {selectedMaintenanceRequest.submitted_at
+                        ? new Date(selectedMaintenanceRequest.submitted_at).toLocaleString()
+                        : "N/A"}
+                    </p>
+                    {selectedMaintenanceRequest.submitted_via && (
+                      <p className="text-sm text-gray-500 mt-1">Via: {selectedMaintenanceRequest.submitted_via}</p>
+                    )}
+                  </div>
+                  {selectedMaintenanceRequest.assigned_to_realtor_name && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                      <p className="text-sm font-semibold text-gray-600 mb-2">Assigned To</p>
+                      <p className="text-gray-900">{selectedMaintenanceRequest.assigned_to_realtor_name}</p>
+                    </div>
+                  )}
+                  {selectedMaintenanceRequest.updated_at && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                      <p className="text-sm font-semibold text-gray-600 mb-2">Last Updated</p>
+                      <p className="text-gray-900">
+                        {new Date(selectedMaintenanceRequest.updated_at).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                  {selectedMaintenanceRequest.completed_at && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                      <p className="text-sm font-semibold text-gray-600 mb-2">Completed</p>
+                      <p className="text-gray-900">
+                        {new Date(selectedMaintenanceRequest.completed_at).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {selectedMaintenanceRequest.pm_notes && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">PM Notes</p>
+                    <p className="text-gray-900 whitespace-pre-wrap">{selectedMaintenanceRequest.pm_notes}</p>
+                  </div>
+                )}
+
+                {selectedMaintenanceRequest.resolution_notes && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Resolution Notes</p>
+                    <p className="text-gray-900 whitespace-pre-wrap">{selectedMaintenanceRequest.resolution_notes}</p>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter className="p-6 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedMaintenanceRequest(selectedMaintenanceRequest);
+                    setMaintenanceRequestUpdateForm({
+                      status: selectedMaintenanceRequest.status,
+                      priority: selectedMaintenanceRequest.priority,
+                      assigned_to_realtor_id: selectedMaintenanceRequest.assigned_to_realtor_id || "",
+                      pm_notes: selectedMaintenanceRequest.pm_notes || "",
+                      resolution_notes: selectedMaintenanceRequest.resolution_notes || "",
+                      category: selectedMaintenanceRequest.category || "",
+                      location: selectedMaintenanceRequest.location || "",
+                    });
+                    setShowMaintenanceRequestDetail(false);
+                    setShowMaintenanceRequestUpdate(true);
+                  }}
+                  className="rounded-xl"
+                >
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Update Request
+                </Button>
+                <Button
+                  onClick={() => setShowMaintenanceRequestDetail(false)}
+                  className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl"
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Maintenance Request Update Modal */}
+      <Dialog open={showMaintenanceRequestUpdate} onOpenChange={setShowMaintenanceRequestUpdate}>
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+          <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
+            <DialogTitle className="text-2xl font-bold text-gray-900">Update Maintenance Request</DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Update the status, priority, and assignment for this maintenance request.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-3 block">Status</label>
+              <Select
+                value={maintenanceRequestUpdateForm.status || "pending"}
+                onValueChange={(value) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, status: value })}
+              >
+                <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-3 block">Priority</label>
+              <Select
+                value={maintenanceRequestUpdateForm.priority || "normal"}
+                onValueChange={(value) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, priority: value })}
+              >
+                <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {userType === "property_manager" && (
+              <>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-3 block">Assign to Realtor (Optional)</label>
+                  <Select
+                    value={maintenanceRequestUpdateForm.assigned_to_realtor_id ? String(maintenanceRequestUpdateForm.assigned_to_realtor_id) : "none"}
+                    onValueChange={(value) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, assigned_to_realtor_id: value === "none" ? "" : Number(value) })}
+                  >
+                    <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Assignment</SelectItem>
+                      {realtors.map((realtor) => (
+                        <SelectItem key={realtor.id} value={String(realtor.id)}>
+                          {realtor.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-3 block">Category (Optional)</label>
+                  <Select
+                    value={maintenanceRequestUpdateForm.category || ""}
+                    onValueChange={(value) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, category: value })}
+                  >
+                    <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Category</SelectItem>
+                      <SelectItem value="plumbing">Plumbing</SelectItem>
+                      <SelectItem value="electrical">Electrical</SelectItem>
+                      <SelectItem value="appliance">Appliance</SelectItem>
+                      <SelectItem value="heating">Heating</SelectItem>
+                      <SelectItem value="hvac">HVAC</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-3 block">Location (Optional)</label>
+                  <Input
+                    value={maintenanceRequestUpdateForm.location || ""}
+                    onChange={(e) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, location: e.target.value })}
+                    className="w-full bg-white border-amber-300 rounded-xl"
+                    placeholder="e.g., Kitchen, Bathroom, Bedroom 2"
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-3 block">PM Notes (Optional)</label>
+              <Textarea
+                value={maintenanceRequestUpdateForm.pm_notes || ""}
+                onChange={(e) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, pm_notes: e.target.value })}
+                className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
+                placeholder="Add notes about this maintenance request..."
+              />
+            </div>
+
+            {maintenanceRequestUpdateForm.status === "completed" && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">Resolution Notes (Optional)</label>
+                <Textarea
+                  value={maintenanceRequestUpdateForm.resolution_notes || ""}
+                  onChange={(e) => setMaintenanceRequestUpdateForm({ ...maintenanceRequestUpdateForm, resolution_notes: e.target.value })}
+                  className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
+                  placeholder="Describe how the issue was resolved..."
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="p-6 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => setShowMaintenanceRequestUpdate(false)}
+              className="rounded-xl"
+              disabled={updatingMaintenanceRequest}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!selectedMaintenanceRequest) return;
+                try {
+                  await updateMaintenanceRequest(selectedMaintenanceRequest.maintenance_request_id, maintenanceRequestUpdateForm);
+                  setShowMaintenanceRequestUpdate(false);
+                } catch (err) {
+                  // Error already handled in function
+                }
+              }}
+              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl"
+              disabled={updatingMaintenanceRequest}
+            >
+              {updatingMaintenanceRequest ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Update Request
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Tenant Modal */}
+      <Dialog open={showAddTenant} onOpenChange={setShowAddTenant}>
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+          <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
+            <DialogTitle className="text-2xl font-bold text-gray-900">Add New Tenant</DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Create a new tenant record. The property will be marked as "Rented" automatically.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                Tenant Name <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={newTenant.name}
+                onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
+                className="w-full bg-white border-amber-300 rounded-xl"
+                placeholder="John Smith"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                Property <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={newTenant.property_id}
+                onValueChange={(value) => setNewTenant({ ...newTenant, property_id: value })}
+              >
+                <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
+                  <SelectValue placeholder="Select a property" />
+                </SelectTrigger>
+                <SelectContent>
+                  {apartments.map((apt) => (
+                    <SelectItem key={apt.id} value={String(apt.id)}>
+                      {getPropertyMetadata(apt).address || `Property #${apt.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">Phone Number</label>
+                <Input
+                  value={newTenant.phone_number}
+                  onChange={(e) => setNewTenant({ ...newTenant, phone_number: e.target.value })}
+                  className="w-full bg-white border-amber-300 rounded-xl"
+                  placeholder="+14125551234"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">Email</label>
+                <Input
+                  type="email"
+                  value={newTenant.email}
+                  onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
+                  className="w-full bg-white border-amber-300 rounded-xl"
+                  placeholder="john@example.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">Unit Number</label>
+                <Input
+                  value={newTenant.unit_number}
+                  onChange={(e) => setNewTenant({ ...newTenant, unit_number: e.target.value })}
+                  className="w-full bg-white border-amber-300 rounded-xl"
+                  placeholder="Apt 3B"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">Assigned Realtor (Optional)</label>
+                <Select
+                  value={newTenant.realtor_id}
+                  onValueChange={(value) => setNewTenant({ ...newTenant, realtor_id: value })}
+                >
+                  <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
+                    <SelectValue placeholder="Select a realtor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Assignment</SelectItem>
+                    {realtors.map((realtor) => (
+                      <SelectItem key={realtor.id} value={String(realtor.id)}>
+                        {realtor.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">Lease Start Date</label>
+                <Input
+                  type="date"
+                  value={newTenant.lease_start_date}
+                  onChange={(e) => setNewTenant({ ...newTenant, lease_start_date: e.target.value })}
+                  className="w-full bg-white border-amber-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">Lease End Date</label>
+                <Input
+                  type="date"
+                  value={newTenant.lease_end_date}
+                  onChange={(e) => setNewTenant({ ...newTenant, lease_end_date: e.target.value })}
+                  className="w-full bg-white border-amber-300 rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-3 block">Notes (Optional)</label>
+              <Textarea
+                value={newTenant.notes}
+                onChange={(e) => setNewTenant({ ...newTenant, notes: e.target.value })}
+                className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
+                placeholder="Additional notes about the tenant..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="p-6 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAddTenant(false);
+                setNewTenant({
+                  name: "",
+                  property_id: "",
+                  phone_number: "",
+                  email: "",
+                  realtor_id: "",
+                  unit_number: "",
+                  lease_start_date: "",
+                  lease_end_date: "",
+                  notes: ""
+                });
+              }}
+              className="rounded-xl"
+              disabled={creatingTenant}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={createTenant}
+              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl"
+              disabled={creatingTenant || !newTenant.name || !newTenant.property_id}
+            >
+              {creatingTenant ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Create Tenant
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Tenant Modal */}
+      <Dialog open={showEditTenant} onOpenChange={setShowEditTenant}>
+        <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+          <DialogHeader className="p-6 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
+            <DialogTitle className="text-2xl font-bold text-gray-900">Edit Tenant</DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Update tenant information. Setting tenant to inactive will mark the property as "Available" if no other active tenants exist.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {editingTenant && (
+              <>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                    Tenant Name <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={editTenantForm.name}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, name: e.target.value })}
+                    className="w-full bg-white border-amber-300 rounded-xl"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Phone Number</label>
+                    <Input
+                      value={editTenantForm.phone_number || ""}
+                      onChange={(e) => setEditTenantForm({ ...editTenantForm, phone_number: e.target.value })}
+                      className="w-full bg-white border-amber-300 rounded-xl"
+                      placeholder="+14125551234"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Email</label>
+                    <Input
+                      type="email"
+                      value={editTenantForm.email || ""}
+                      onChange={(e) => setEditTenantForm({ ...editTenantForm, email: e.target.value })}
+                      className="w-full bg-white border-amber-300 rounded-xl"
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Unit Number</label>
+                    <Input
+                      value={editTenantForm.unit_number || ""}
+                      onChange={(e) => setEditTenantForm({ ...editTenantForm, unit_number: e.target.value })}
+                      className="w-full bg-white border-amber-300 rounded-xl"
+                      placeholder="Apt 3B"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Status</label>
+                    <Select
+                      value={editTenantForm.is_active ? "active" : "inactive"}
+                      onValueChange={(value) => setEditTenantForm({ ...editTenantForm, is_active: value === "active" })}
+                    >
+                      <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Lease Start Date</label>
+                    <Input
+                      type="date"
+                      value={editTenantForm.lease_start_date || ""}
+                      onChange={(e) => setEditTenantForm({ ...editTenantForm, lease_start_date: e.target.value })}
+                      className="w-full bg-white border-amber-300 rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Lease End Date</label>
+                    <Input
+                      type="date"
+                      value={editTenantForm.lease_end_date || ""}
+                      onChange={(e) => setEditTenantForm({ ...editTenantForm, lease_end_date: e.target.value })}
+                      className="w-full bg-white border-amber-300 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-3 block">Notes (Optional)</label>
+                  <Textarea
+                    value={editTenantForm.notes || ""}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, notes: e.target.value })}
+                    className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
+                    placeholder="Additional notes about the tenant..."
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter className="p-6 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEditTenant(false);
+                setEditingTenant(null);
+              }}
+              className="rounded-xl"
+              disabled={updatingTenant}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={updateTenant}
+              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl"
+              disabled={updatingTenant || !editTenantForm.name}
+            >
+              {updatingTenant ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Update Tenant
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </main>

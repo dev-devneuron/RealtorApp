@@ -45,7 +45,15 @@ export const MaintenanceRequestUpdateModal = ({
       return;
     }
     try {
-      await onUpdate(selectedMaintenanceRequest.maintenance_request_id, safeFormData);
+      // Filter out null values for optional fields - convert to undefined so they're omitted from JSON
+      const updateData: any = { ...safeFormData };
+      if (updateData.assigned_to_realtor_id === null) {
+        updateData.assigned_to_realtor_id = undefined;
+      }
+      if (updateData.category === null) {
+        updateData.category = undefined;
+      }
+      await onUpdate(selectedMaintenanceRequest.maintenance_request_id, updateData);
       onClose();
     } catch (err) {
       // Error already handled in function
@@ -123,7 +131,7 @@ export const MaintenanceRequestUpdateModal = ({
                   <label className="text-sm font-semibold text-gray-700 mb-3 block">Assign to Realtor (Optional)</label>
                   <Select
                     value={safeFormData.assigned_to_realtor_id ? String(safeFormData.assigned_to_realtor_id) : "none"}
-                    onValueChange={(value) => onFormDataChange({ ...safeFormData, assigned_to_realtor_id: value === "none" ? "" : Number(value) })}
+                    onValueChange={(value) => onFormDataChange({ ...safeFormData, assigned_to_realtor_id: value === "none" ? null : Number(value) })}
                   >
                     <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                       <SelectValue />
@@ -142,14 +150,14 @@ export const MaintenanceRequestUpdateModal = ({
                 <div>
                   <label className="text-sm font-semibold text-gray-700 mb-3 block">Category (Optional)</label>
                   <Select
-                    value={safeFormData.category || ""}
-                    onValueChange={(value) => onFormDataChange({ ...safeFormData, category: value })}
+                    value={safeFormData.category && safeFormData.category !== "" ? safeFormData.category : "none"}
+                    onValueChange={(value) => onFormDataChange({ ...safeFormData, category: value === "none" ? null : value })}
                   >
                     <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Category</SelectItem>
+                      <SelectItem value="none">No Category</SelectItem>
                       <SelectItem value="plumbing">Plumbing</SelectItem>
                       <SelectItem value="electrical">Electrical</SelectItem>
                       <SelectItem value="appliance">Appliance</SelectItem>

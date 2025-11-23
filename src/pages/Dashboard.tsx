@@ -3783,10 +3783,10 @@ const Dashboard = () => {
                     const formDataObj = {
                       status: detail.status || "pending",
                       priority: detail.priority || "normal",
-                      assigned_to_realtor_id: detail.assigned_to_realtor_id || "",
+                      assigned_to_realtor_id: detail.assigned_to_realtor_id || null,
                       pm_notes: detail.pm_notes || "",
                       resolution_notes: detail.resolution_notes || "",
-                      category: detail.category || "",
+                      category: detail.category || null,
                       location: detail.location || "",
                     };
                     
@@ -3806,10 +3806,10 @@ const Dashboard = () => {
                     const formDataObj = {
                       status: request.status || "pending",
                       priority: request.priority || "normal",
-                      assigned_to_realtor_id: request.assigned_to_realtor_id || "",
+                      assigned_to_realtor_id: request.assigned_to_realtor_id || null,
                       pm_notes: request.pm_notes || "",
                       resolution_notes: request.resolution_notes || "",
-                      category: request.category || "",
+                      category: request.category || null,
                       location: request.location || "",
                     };
                     
@@ -4000,10 +4000,10 @@ const Dashboard = () => {
             const formDataObj = {
               status: selectedMaintenanceRequest.status || "pending",
               priority: selectedMaintenanceRequest.priority || "normal",
-              assigned_to_realtor_id: selectedMaintenanceRequest.assigned_to_realtor_id || "",
+              assigned_to_realtor_id: selectedMaintenanceRequest.assigned_to_realtor_id || null,
               pm_notes: selectedMaintenanceRequest.pm_notes || "",
               resolution_notes: selectedMaintenanceRequest.resolution_notes || "",
-              category: selectedMaintenanceRequest.category || "",
+              category: selectedMaintenanceRequest.category || null,
               location: selectedMaintenanceRequest.location || "",
             };
             

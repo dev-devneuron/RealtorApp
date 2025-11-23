@@ -3079,7 +3079,7 @@ const Dashboard = () => {
                     return (
                       <>
                         <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                          Welcome not back <span className="text-amber-600">{displayNameFinal}</span>!
+                          Welcome back <span className="text-amber-600">{displayNameFinal}</span>!
                         </p>
                         <p className="text-amber-600/80 text-sm">
                           {userType === "property_manager" 
@@ -3413,8 +3413,8 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mb-6 sm:mb-8 lg:mb-10"
             >
-              <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden">
-                <div className="flex w-full overflow-x-auto overflow-y-hidden gap-2 items-center p-3 sm:p-3.5 md:p-4 lg:p-4.5 xl:p-6 2xl:p-6.5 min-h-[52px] [&::-webkit-scrollbar]:block [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500 [&::-webkit-scrollbar-track]:bg-amber-50/60 [&::-webkit-scrollbar-track]:rounded-full [scrollbar-width:thin] [scrollbar-color:rgb(251_191_36)_rgb(254_243_199_/_0.6)]">
+              <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-1.5 sm:p-2 md:p-2.5 lg:p-3 xl:p-3.5 2xl:p-4 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500 [&::-webkit-scrollbar-track]:bg-amber-50/60 [&::-webkit-scrollbar-track]:rounded-full [scrollbar-width:thin] [scrollbar-color:rgb(251_191_36)_rgb(254_243_199_/_0.6)]">
+                <div className="flex gap-2 items-center min-h-[44px] sm:min-h-[48px]">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
@@ -6196,7 +6196,7 @@ const Dashboard = () => {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => {
-                                        setSelectedMaintenanceRequest(request);
+                                        // Set the form data first
                                         setMaintenanceRequestUpdateForm({
                                           status: request.status,
                                           priority: request.priority,
@@ -6206,7 +6206,12 @@ const Dashboard = () => {
                                           category: request.category || "",
                                           location: request.location || "",
                                         });
-                                        setShowMaintenanceRequestUpdate(true);
+                                        // Set the selected request and open modal in the same render cycle
+                                        setSelectedMaintenanceRequest(request);
+                                        // Use requestAnimationFrame to ensure state is updated before opening modal
+                                        requestAnimationFrame(() => {
+                                          setShowMaintenanceRequestUpdate(true);
+                                        });
                                       }}
                                       className="rounded-lg"
                                     >
@@ -7780,7 +7785,7 @@ const Dashboard = () => {
               )}
             </Button>
           </DialogFooter>
-            </>
+          </>
           ) : (
             <div className="p-6 text-center text-gray-500">Loading...</div>
           )}

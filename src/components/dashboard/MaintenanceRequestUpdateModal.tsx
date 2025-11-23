@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -38,28 +38,52 @@ export const MaintenanceRequestUpdateModal = ({
   onUpdate,
   onClose,
 }: MaintenanceRequestUpdateModalProps) => {
-  // Initialize form data when modal opens and request is available
+  // Local state to ensure we have form data ready
+  const [localFormData, setLocalFormData] = useState<any>(null);
+
+  // Initialize form data when modal opens
   useEffect(() => {
     if (open && selectedMaintenanceRequest) {
-      // Ensure form data is initialized
-      if (!formData || Object.keys(formData).length === 0) {
-        onFormDataChange({
-          status: selectedMaintenanceRequest.status || "pending",
-          priority: selectedMaintenanceRequest.priority || "normal",
-          assigned_to_realtor_id: selectedMaintenanceRequest.assigned_to_realtor_id || "",
-          pm_notes: selectedMaintenanceRequest.pm_notes || "",
-          resolution_notes: selectedMaintenanceRequest.resolution_notes || "",
-          category: selectedMaintenanceRequest.category || "",
-          location: selectedMaintenanceRequest.location || "",
-        });
-      }
+      // Initialize form data from selectedMaintenanceRequest if formData is empty
+      const initialData = formData && Object.keys(formData).length > 0 
+        ? formData 
+        : {
+            status: selectedMaintenanceRequest.status || "pending",
+            priority: selectedMaintenanceRequest.priority || "normal",
+            assigned_to_realtor_id: selectedMaintenanceRequest.assigned_to_realtor_id || "",
+            pm_notes: selectedMaintenanceRequest.pm_notes || "",
+            resolution_notes: selectedMaintenanceRequest.resolution_notes || "",
+            category: selectedMaintenanceRequest.category || "",
+            location: selectedMaintenanceRequest.location || "",
+          };
+      
+      setLocalFormData(initialData);
+      // Also update parent form data
+      onFormDataChange(initialData);
+    } else if (!open) {
+      // Reset when modal closes
+      setLocalFormData(null);
     }
-  }, [open, selectedMaintenanceRequest, onFormDataChange]);
+  }, [open, selectedMaintenanceRequest]);
+
+  // Sync local form data with parent form data when it changes externally
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      setLocalFormData(formData);
+    }
+  }, [formData]);
+
+  const handleFormChange = (updates: any) => {
+    const baseData = localFormData || formData || {};
+    const newData = { ...baseData, ...updates };
+    setLocalFormData(newData);
+    onFormDataChange(newData);
+  };
 
   const handleUpdate = async () => {
-    if (!selectedMaintenanceRequest || !formData) return;
+    if (!selectedMaintenanceRequest || !currentFormData) return;
     try {
-      await onUpdate(selectedMaintenanceRequest.maintenance_request_id, formData);
+      await onUpdate(selectedMaintenanceRequest.maintenance_request_id, currentFormData);
       onClose();
     } catch (err) {
       // Error already handled in function
@@ -70,8 +94,16 @@ export const MaintenanceRequestUpdateModal = ({
     onClose();
   };
 
-  // Always render Dialog, but show loading state if data isn't ready
-  const isReady = open && selectedMaintenanceRequest && formData && Object.keys(formData).length > 0;
+  // Use formData if localFormData isn't ready yet
+  const currentFormData = localFormData || formData;
+
+  // Don't render Dialog if we don't have the required data
+  if (!open || !selectedMaintenanceRequest) {
+    return null;
+  }
+
+  // Show loading state if form data isn't ready
+  const isReady = currentFormData && Object.keys(currentFormData).length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,8 +129,8 @@ export const MaintenanceRequestUpdateModal = ({
           <div>
             <label className="text-sm font-semibold text-gray-700 mb-3 block">Status</label>
             <Select
-              value={formData?.status || "pending"}
-              onValueChange={(value) => onFormDataChange({ ...formData, status: value })}
+              value={currentFormData.status || "pending"}
+              onValueChange={(value) => handleFormChange({ status: value })}
             >
               <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                 <SelectValue />
@@ -115,8 +147,8 @@ export const MaintenanceRequestUpdateModal = ({
           <div>
             <label className="text-sm font-semibold text-gray-700 mb-3 block">Priority</label>
             <Select
-              value={formData?.priority || "normal"}
-              onValueChange={(value) => onFormDataChange({ ...formData, priority: value })}
+              value={currentFormData.priority || "normal"}
+              onValueChange={(value) => handleFormChange({ priority: value })}
             >
               <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                 <SelectValue />
@@ -135,8 +167,8 @@ export const MaintenanceRequestUpdateModal = ({
               <div>
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">Assign to Realtor (Optional)</label>
                 <Select
-                  value={formData?.assigned_to_realtor_id ? String(formData.assigned_to_realtor_id) : "none"}
-                  onValueChange={(value) => onFormDataChange({ ...formData, assigned_to_realtor_id: value === "none" ? "" : Number(value) })}
+                  value={currentFormData.assigned_to_realtor_id ? String(currentFormData.assigned_to_realtor_id) : "none"}
+                  onValueChange={(value) => handleFormChange({ assigned_to_realtor_id: value === "none" ? "" : Number(value) })}
                 >
                   <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                     <SelectValue />
@@ -155,8 +187,8 @@ export const MaintenanceRequestUpdateModal = ({
               <div>
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">Category (Optional)</label>
                 <Select
-                  value={formData?.category || ""}
-                  onValueChange={(value) => onFormDataChange({ ...formData, category: value })}
+                  value={currentFormData.category || ""}
+                  onValueChange={(value) => handleFormChange({ category: value })}
                 >
                   <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                     <SelectValue placeholder="Select category" />
@@ -176,8 +208,8 @@ export const MaintenanceRequestUpdateModal = ({
               <div>
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">Location (Optional)</label>
                 <Input
-                  value={formData?.location || ""}
-                  onChange={(e) => onFormDataChange({ ...formData, location: e.target.value })}
+                  value={currentFormData.location || ""}
+                  onChange={(e) => handleFormChange({ location: e.target.value })}
                   className="w-full bg-white border-amber-300 rounded-xl"
                   placeholder="e.g., Kitchen, Bathroom, Bedroom 2"
                 />
@@ -189,8 +221,8 @@ export const MaintenanceRequestUpdateModal = ({
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-3 block">PM Notes (Optional)</label>
               <Textarea
-                value={formData?.pm_notes || ""}
-                onChange={(e) => onFormDataChange({ ...formData, pm_notes: e.target.value })}
+                value={currentFormData.pm_notes || ""}
+                onChange={(e) => handleFormChange({ pm_notes: e.target.value })}
                 className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
                 placeholder="Add notes about this maintenance request..."
               />
@@ -201,20 +233,20 @@ export const MaintenanceRequestUpdateModal = ({
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-3 block">Notes (Optional)</label>
               <Textarea
-                value={formData?.pm_notes || ""}
-                onChange={(e) => onFormDataChange({ ...formData, pm_notes: e.target.value })}
+                value={currentFormData.pm_notes || ""}
+                onChange={(e) => handleFormChange({ pm_notes: e.target.value })}
                 className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
                 placeholder="Add notes about this maintenance request..."
               />
             </div>
           )}
 
-          {formData?.status === "completed" && (
+          {currentFormData.status === "completed" && (
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-3 block">Resolution Notes (Optional)</label>
               <Textarea
-                value={formData?.resolution_notes || ""}
-                onChange={(e) => onFormDataChange({ ...formData, resolution_notes: e.target.value })}
+                value={currentFormData.resolution_notes || ""}
+                onChange={(e) => handleFormChange({ resolution_notes: e.target.value })}
                 className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
                 placeholder="Describe how the issue was resolved..."
               />
@@ -235,7 +267,7 @@ export const MaintenanceRequestUpdateModal = ({
           <Button
             onClick={handleUpdate}
             className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl"
-            disabled={updatingMaintenanceRequest || !isReady}
+            disabled={updatingMaintenanceRequest}
           >
             {updatingMaintenanceRequest ? (
               <>
@@ -254,4 +286,3 @@ export const MaintenanceRequestUpdateModal = ({
     </Dialog>
   );
 };
-

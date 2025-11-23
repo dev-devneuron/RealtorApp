@@ -3750,8 +3750,8 @@ const Dashboard = () => {
                     // Fetch full details to ensure we have all data
                     const detail = await fetchMaintenanceRequestDetail(request.maintenance_request_id);
                     
-                    // Initialize form data FIRST
-                    const formData = {
+                    // Initialize form data FIRST - ensure it's a complete object
+                    const formDataObj = {
                       status: detail.status || "pending",
                       priority: detail.priority || "normal",
                       assigned_to_realtor_id: detail.assigned_to_realtor_id || "",
@@ -3761,19 +3761,20 @@ const Dashboard = () => {
                       location: detail.location || "",
                     };
                     
-                    // Set form data first
-                    setMaintenanceRequestUpdateForm(formData);
-                    
-                    // Then set the selected request
+                    // Set the selected request FIRST
                     setSelectedMaintenanceRequest(detail);
                     
-                    // Finally open the modal - use a small delay to ensure state is set
-                    setTimeout(() => {
+                    // Then set form data
+                    setMaintenanceRequestUpdateForm(formDataObj);
+                    
+                    // Finally open the modal - use requestAnimationFrame for proper state update
+                    requestAnimationFrame(() => {
                       setShowMaintenanceRequestUpdate(true);
-                    }, 50);
+                    });
                   } catch (err) {
+                    console.error("Error fetching maintenance request detail:", err);
                     // If fetch fails, use the request data we have
-                    const formData = {
+                    const formDataObj = {
                       status: request.status || "pending",
                       priority: request.priority || "normal",
                       assigned_to_realtor_id: request.assigned_to_realtor_id || "",
@@ -3783,16 +3784,16 @@ const Dashboard = () => {
                       location: request.location || "",
                     };
                     
-                    // Set form data first
-                    setMaintenanceRequestUpdateForm(formData);
-                    
-                    // Then set the selected request
+                    // Set the selected request FIRST
                     setSelectedMaintenanceRequest(request);
                     
+                    // Then set form data
+                    setMaintenanceRequestUpdateForm(formDataObj);
+                    
                     // Finally open the modal
-                    setTimeout(() => {
+                    requestAnimationFrame(() => {
                       setShowMaintenanceRequestUpdate(true);
-                    }, 50);
+                    });
                   }
                 }}
               />
@@ -3966,8 +3967,8 @@ const Dashboard = () => {
             // Close detail modal first
             setShowMaintenanceRequestDetail(false);
             
-            // Initialize form data FIRST
-            const formData = {
+            // Initialize form data - ensure it's a complete object
+            const formDataObj = {
               status: selectedMaintenanceRequest.status || "pending",
               priority: selectedMaintenanceRequest.priority || "normal",
               assigned_to_realtor_id: selectedMaintenanceRequest.assigned_to_realtor_id || "",
@@ -3977,13 +3978,13 @@ const Dashboard = () => {
               location: selectedMaintenanceRequest.location || "",
             };
             
-            // Set form data first
-            setMaintenanceRequestUpdateForm(formData);
+            // Set form data
+            setMaintenanceRequestUpdateForm(formDataObj);
             
-            // Then open the modal - use a small delay to ensure state is set
-            setTimeout(() => {
+            // Then open the modal - use requestAnimationFrame for proper state update
+            requestAnimationFrame(() => {
               setShowMaintenanceRequestUpdate(true);
-            }, 50);
+            });
           }
         }}
         onRefresh={async () => {

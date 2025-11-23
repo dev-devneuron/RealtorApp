@@ -37,18 +37,28 @@ export const MaintenanceRequestUpdateModal = ({
   onUpdate,
   onClose,
 }: MaintenanceRequestUpdateModalProps) => {
+  // Ensure formData is always an object
+  const safeFormData = formData || {};
+
   const handleUpdate = async () => {
-    if (!selectedMaintenanceRequest || !formData) return;
+    if (!selectedMaintenanceRequest || !safeFormData || Object.keys(safeFormData).length === 0) {
+      return;
+    }
     try {
-      await onUpdate(selectedMaintenanceRequest.maintenance_request_id, formData);
+      await onUpdate(selectedMaintenanceRequest.maintenance_request_id, safeFormData);
       onClose();
     } catch (err) {
       // Error already handled in function
     }
   };
 
-  // If no form data or request, show loading
-  const hasData = formData && Object.keys(formData).length > 0 && selectedMaintenanceRequest;
+  // Check if we have the minimum required data
+  const hasData = selectedMaintenanceRequest && safeFormData && Object.keys(safeFormData).length > 0;
+
+  // Don't render anything if modal is closed
+  if (!open) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,8 +84,8 @@ export const MaintenanceRequestUpdateModal = ({
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-3 block">Status</label>
               <Select
-                value={formData.status || "pending"}
-                onValueChange={(value) => onFormDataChange({ ...formData, status: value })}
+                value={safeFormData.status || "pending"}
+                onValueChange={(value) => onFormDataChange({ ...safeFormData, status: value })}
               >
                 <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                   <SelectValue />
@@ -92,8 +102,8 @@ export const MaintenanceRequestUpdateModal = ({
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-3 block">Priority</label>
               <Select
-                value={formData.priority || "normal"}
-                onValueChange={(value) => onFormDataChange({ ...formData, priority: value })}
+                value={safeFormData.priority || "normal"}
+                onValueChange={(value) => onFormDataChange({ ...safeFormData, priority: value })}
               >
                 <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                   <SelectValue />
@@ -112,15 +122,15 @@ export const MaintenanceRequestUpdateModal = ({
                 <div>
                   <label className="text-sm font-semibold text-gray-700 mb-3 block">Assign to Realtor (Optional)</label>
                   <Select
-                    value={formData.assigned_to_realtor_id ? String(formData.assigned_to_realtor_id) : "none"}
-                    onValueChange={(value) => onFormDataChange({ ...formData, assigned_to_realtor_id: value === "none" ? "" : Number(value) })}
+                    value={safeFormData.assigned_to_realtor_id ? String(safeFormData.assigned_to_realtor_id) : "none"}
+                    onValueChange={(value) => onFormDataChange({ ...safeFormData, assigned_to_realtor_id: value === "none" ? "" : Number(value) })}
                   >
                     <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No Assignment</SelectItem>
-                      {realtors.map((realtor) => (
+                      {realtors && realtors.map((realtor) => (
                         <SelectItem key={realtor.id} value={String(realtor.id)}>
                           {realtor.name}
                         </SelectItem>
@@ -132,8 +142,8 @@ export const MaintenanceRequestUpdateModal = ({
                 <div>
                   <label className="text-sm font-semibold text-gray-700 mb-3 block">Category (Optional)</label>
                   <Select
-                    value={formData.category || ""}
-                    onValueChange={(value) => onFormDataChange({ ...formData, category: value })}
+                    value={safeFormData.category || ""}
+                    onValueChange={(value) => onFormDataChange({ ...safeFormData, category: value })}
                   >
                     <SelectTrigger className="w-full bg-white border-amber-300 rounded-xl">
                       <SelectValue placeholder="Select category" />
@@ -153,8 +163,8 @@ export const MaintenanceRequestUpdateModal = ({
                 <div>
                   <label className="text-sm font-semibold text-gray-700 mb-3 block">Location (Optional)</label>
                   <Input
-                    value={formData.location || ""}
-                    onChange={(e) => onFormDataChange({ ...formData, location: e.target.value })}
+                    value={safeFormData.location || ""}
+                    onChange={(e) => onFormDataChange({ ...safeFormData, location: e.target.value })}
                     className="w-full bg-white border-amber-300 rounded-xl"
                     placeholder="e.g., Kitchen, Bathroom, Bedroom 2"
                   />
@@ -166,8 +176,8 @@ export const MaintenanceRequestUpdateModal = ({
               <div>
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">PM Notes (Optional)</label>
                 <Textarea
-                  value={formData.pm_notes || ""}
-                  onChange={(e) => onFormDataChange({ ...formData, pm_notes: e.target.value })}
+                  value={safeFormData.pm_notes || ""}
+                  onChange={(e) => onFormDataChange({ ...safeFormData, pm_notes: e.target.value })}
                   className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
                   placeholder="Add notes about this maintenance request..."
                 />
@@ -178,20 +188,20 @@ export const MaintenanceRequestUpdateModal = ({
               <div>
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">Notes (Optional)</label>
                 <Textarea
-                  value={formData.pm_notes || ""}
-                  onChange={(e) => onFormDataChange({ ...formData, pm_notes: e.target.value })}
+                  value={safeFormData.pm_notes || ""}
+                  onChange={(e) => onFormDataChange({ ...safeFormData, pm_notes: e.target.value })}
                   className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
                   placeholder="Add notes about this maintenance request..."
                 />
               </div>
             )}
 
-            {formData.status === "completed" && (
+            {safeFormData.status === "completed" && (
               <div>
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">Resolution Notes (Optional)</label>
                 <Textarea
-                  value={formData.resolution_notes || ""}
-                  onChange={(e) => onFormDataChange({ ...formData, resolution_notes: e.target.value })}
+                  value={safeFormData.resolution_notes || ""}
+                  onChange={(e) => onFormDataChange({ ...safeFormData, resolution_notes: e.target.value })}
                   className="w-full bg-white border-amber-300 rounded-xl min-h-[100px]"
                   placeholder="Describe how the issue was resolved..."
                 />

@@ -3742,44 +3742,50 @@ const Dashboard = () => {
                   setShowCallTranscript(false);
                   setShowMaintenanceRequestDetail(true);
                 }}
-                onEditRequest={(request) => {
-                  // First fetch full details to ensure we have all data
-                  fetchMaintenanceRequestDetail(request.maintenance_request_id)
-                    .then((detail) => {
-                      setSelectedMaintenanceRequest(detail);
-                      setMaintenanceRequestUpdateForm({
-                        status: detail.status || "pending",
-                        priority: detail.priority || "normal",
-                        assigned_to_realtor_id: detail.assigned_to_realtor_id || "",
-                        pm_notes: detail.pm_notes || "",
-                        resolution_notes: detail.resolution_notes || "",
-                        category: detail.category || "",
-                        location: detail.location || "",
-                      });
-                      // Close detail modal if open
-                      setShowMaintenanceRequestDetail(false);
-                      // Use requestAnimationFrame to ensure state is ready
-                      requestAnimationFrame(() => {
-                        setShowMaintenanceRequestUpdate(true);
-                      });
-                    })
-                    .catch((err) => {
-                      // If fetch fails, use the request data we have
-                      setSelectedMaintenanceRequest(request);
-                      setMaintenanceRequestUpdateForm({
-                        status: request.status || "pending",
-                        priority: request.priority || "normal",
-                        assigned_to_realtor_id: request.assigned_to_realtor_id || "",
-                        pm_notes: request.pm_notes || "",
-                        resolution_notes: request.resolution_notes || "",
-                        category: request.category || "",
-                        location: request.location || "",
-                      });
-                      setShowMaintenanceRequestDetail(false);
-                      requestAnimationFrame(() => {
-                        setShowMaintenanceRequestUpdate(true);
-                      });
+                onEditRequest={async (request) => {
+                  try {
+                    // Close detail modal first
+                    setShowMaintenanceRequestDetail(false);
+                    
+                    // Fetch full details to ensure we have all data
+                    const detail = await fetchMaintenanceRequestDetail(request.maintenance_request_id);
+                    
+                    // Set the selected request
+                    setSelectedMaintenanceRequest(detail);
+                    
+                    // Initialize form data with all required fields
+                    setMaintenanceRequestUpdateForm({
+                      status: detail.status || "pending",
+                      priority: detail.priority || "normal",
+                      assigned_to_realtor_id: detail.assigned_to_realtor_id || "",
+                      pm_notes: detail.pm_notes || "",
+                      resolution_notes: detail.resolution_notes || "",
+                      category: detail.category || "",
+                      location: detail.location || "",
                     });
+                    
+                    // Use setTimeout to ensure state updates are processed before opening modal
+                    setTimeout(() => {
+                      setShowMaintenanceRequestUpdate(true);
+                    }, 100);
+                  } catch (err) {
+                    // If fetch fails, use the request data we have
+                    setSelectedMaintenanceRequest(request);
+                    setMaintenanceRequestUpdateForm({
+                      status: request.status || "pending",
+                      priority: request.priority || "normal",
+                      assigned_to_realtor_id: request.assigned_to_realtor_id || "",
+                      pm_notes: request.pm_notes || "",
+                      resolution_notes: request.resolution_notes || "",
+                      category: request.category || "",
+                      location: request.location || "",
+                    });
+                    
+                    // Use setTimeout to ensure state updates are processed before opening modal
+                    setTimeout(() => {
+                      setShowMaintenanceRequestUpdate(true);
+                    }, 100);
+                  }
                 }}
               />
             </TabsContent>
@@ -3949,20 +3955,24 @@ const Dashboard = () => {
         }}
         onEdit={() => {
           if (selectedMaintenanceRequest) {
+            // Close detail modal first
+            setShowMaintenanceRequestDetail(false);
+            
+            // Initialize form data with all required fields
             setMaintenanceRequestUpdateForm({
-              status: selectedMaintenanceRequest.status,
-              priority: selectedMaintenanceRequest.priority,
+              status: selectedMaintenanceRequest.status || "pending",
+              priority: selectedMaintenanceRequest.priority || "normal",
               assigned_to_realtor_id: selectedMaintenanceRequest.assigned_to_realtor_id || "",
               pm_notes: selectedMaintenanceRequest.pm_notes || "",
               resolution_notes: selectedMaintenanceRequest.resolution_notes || "",
               category: selectedMaintenanceRequest.category || "",
               location: selectedMaintenanceRequest.location || "",
             });
-            setShowMaintenanceRequestDetail(false);
-            // Use requestAnimationFrame to ensure state is ready
-            requestAnimationFrame(() => {
+            
+            // Use setTimeout to ensure state updates are processed before opening modal
+            setTimeout(() => {
               setShowMaintenanceRequestUpdate(true);
-            });
+            }, 100);
           }
         }}
         onRefresh={async () => {

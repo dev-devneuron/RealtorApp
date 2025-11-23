@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -38,8 +38,6 @@ export const MaintenanceRequestUpdateModal = ({
   onUpdate,
   onClose,
 }: MaintenanceRequestUpdateModalProps) => {
-  const [isReady, setIsReady] = useState(false);
-
   // Initialize form data when modal opens and request is available
   useEffect(() => {
     if (open && selectedMaintenanceRequest) {
@@ -55,15 +53,11 @@ export const MaintenanceRequestUpdateModal = ({
           location: selectedMaintenanceRequest.location || "",
         });
       }
-      // Small delay to ensure state is ready
-      setTimeout(() => setIsReady(true), 50);
-    } else {
-      setIsReady(false);
     }
-  }, [open, selectedMaintenanceRequest, formData, onFormDataChange]);
+  }, [open, selectedMaintenanceRequest, onFormDataChange]);
 
   const handleUpdate = async () => {
-    if (!selectedMaintenanceRequest || !isReady) return;
+    if (!selectedMaintenanceRequest || !formData) return;
     try {
       await onUpdate(selectedMaintenanceRequest.maintenance_request_id, formData);
       onClose();
@@ -73,14 +67,11 @@ export const MaintenanceRequestUpdateModal = ({
   };
 
   const handleClose = () => {
-    setIsReady(false);
     onClose();
   };
 
-  // Don't render until ready
-  if (!open || !selectedMaintenanceRequest || !isReady) {
-    return null;
-  }
+  // Always render Dialog, but show loading state if data isn't ready
+  const isReady = open && selectedMaintenanceRequest && formData && Object.keys(formData).length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,6 +85,14 @@ export const MaintenanceRequestUpdateModal = ({
           </DialogDescription>
         </DialogHeader>
 
+        {!isReady ? (
+          <div className="flex-1 flex items-center justify-center p-12 min-h-[200px]">
+            <div className="text-center">
+              <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mx-auto mb-4" />
+              <p className="text-gray-600 font-medium">Loading request details...</p>
+            </div>
+          </div>
+        ) : (
         <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
           <div>
             <label className="text-sm font-semibold text-gray-700 mb-3 block">Status</label>
@@ -222,6 +221,7 @@ export const MaintenanceRequestUpdateModal = ({
             </div>
           )}
         </div>
+        )}
 
         <DialogFooter className="p-6 border-t border-gray-200 flex-shrink-0">
           <Button

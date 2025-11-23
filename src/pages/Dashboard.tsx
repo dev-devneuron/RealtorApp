@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink, PhoneForwarded, PhoneOff, ShieldCheck, Sun, Moon, Play, Pause, FileText, Clock, PhoneIncoming, PhoneOutgoing, PhoneMissed, Volume2, Copy, Check } from "lucide-react";
+import { Home, MapPin, Bed, Bath, Ruler, TrendingUp, Calendar, Eye, Music, Phone, Users, UserPlus, Settings, Building2, CheckSquare, Square, CalendarDays, User, ListChecks, RefreshCw, Mail, Calendar as CalendarIcon, Info, X, AlertTriangle, Edit2, Trash2, CheckCircle2, Star, Filter, Search, Download, Upload, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, LogOut, Unlink, PhoneForwarded, PhoneOff, ShieldCheck, Sun, Moon, Play, Pause, FileText, Clock, PhoneIncoming, PhoneOutgoing, PhoneMissed, Volume2, Copy, Check, ArrowUp, ArrowDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -269,6 +269,12 @@ const Dashboard = () => {
   const [maintenanceRequestsLimit] = useState(50);
   const [maintenanceRequestsOffset, setMaintenanceRequestsOffset] = useState(0);
   const [maintenanceRequestFilterStatus, setMaintenanceRequestFilterStatus] = useState<string>("all");
+  const [maintenanceRequestFilterProperty, setMaintenanceRequestFilterProperty] = useState<string>("all");
+  const [maintenanceRequestFilterPriority, setMaintenanceRequestFilterPriority] = useState<string>("all");
+  const [maintenanceRequestFilterCategory, setMaintenanceRequestFilterCategory] = useState<string>("all");
+  const [maintenanceRequestSortBy, setMaintenanceRequestSortBy] = useState<string>("submitted_at");
+  const [maintenanceRequestSortOrder, setMaintenanceRequestSortOrder] = useState<"asc" | "desc">("desc");
+  const [showCallTranscript, setShowCallTranscript] = useState(false);
   const [selectedMaintenanceRequest, setSelectedMaintenanceRequest] = useState<any | null>(null);
   const [showMaintenanceRequestDetail, setShowMaintenanceRequestDetail] = useState(false);
   const [showMaintenanceRequestUpdate, setShowMaintenanceRequestUpdate] = useState(false);
@@ -520,7 +526,7 @@ const Dashboard = () => {
     if (activeTab === "maintenance-requests") {
       fetchMaintenanceRequests(maintenanceRequestFilterStatus !== "all" ? maintenanceRequestFilterStatus : undefined);
     }
-  }, [activeTab, maintenanceRequestFilterStatus]);
+  }, [activeTab, maintenanceRequestFilterStatus, maintenanceRequestFilterProperty, maintenanceRequestFilterPriority, maintenanceRequestFilterCategory, maintenanceRequestSortBy, maintenanceRequestSortOrder]);
 
   // Fetch tenants when the tenants tab is active
   useEffect(() => {
@@ -1035,10 +1041,12 @@ const Dashboard = () => {
         return;
       }
 
+      // Fetch with status filter only (API supports this)
       const params = new URLSearchParams();
       if (status && status !== "all") params.append("status", status);
-      params.append("limit", String(limit || maintenanceRequestsLimit));
-      params.append("offset", String(offset || maintenanceRequestsOffset));
+      // Fetch more items to allow client-side filtering
+      params.append("limit", "100");
+      params.append("offset", "0");
 
       const res = await fetch(`${API_BASE}/maintenance-requests?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -1048,9 +1056,64 @@ const Dashboard = () => {
 
       const data = await res.json();
       // API returns array directly, not wrapped in object
-      const requests = Array.isArray(data) ? data : (data.maintenance_requests || []);
-      setMaintenanceRequests(requests);
-      setMaintenanceRequestsTotal(requests.length);
+      let requests = Array.isArray(data) ? data : (data.maintenance_requests || []);
+      
+      // Client-side filtering
+      if (maintenanceRequestFilterProperty !== "all") {
+        requests = requests.filter((req: any) => 
+          req.property_id === Number(maintenanceRequestFilterProperty) ||
+          req.property?.id === Number(maintenanceRequestFilterProperty)
+        );
+      }
+      
+      if (maintenanceRequestFilterPriority !== "all") {
+        requests = requests.filter((req: any) => req.priority === maintenanceRequestFilterPriority);
+      }
+      
+      if (maintenanceRequestFilterCategory !== "all") {
+        requests = requests.filter((req: any) => req.category === maintenanceRequestFilterCategory);
+      }
+      
+      // Client-side sorting
+      requests.sort((a: any, b: any) => {
+        let aValue: any;
+        let bValue: any;
+        
+        switch (maintenanceRequestSortBy) {
+          case "submitted_at":
+            aValue = new Date(a.submitted_at || 0).getTime();
+            bValue = new Date(b.submitted_at || 0).getTime();
+            break;
+          case "priority":
+            const priorityOrder: { [key: string]: number } = { urgent: 4, high: 3, normal: 2, low: 1 };
+            aValue = priorityOrder[a.priority] || 0;
+            bValue = priorityOrder[b.priority] || 0;
+            break;
+          case "status":
+            const statusOrder: { [key: string]: number } = { pending: 1, in_progress: 2, completed: 3, cancelled: 4 };
+            aValue = statusOrder[a.status] || 0;
+            bValue = statusOrder[b.status] || 0;
+            break;
+          default:
+            aValue = a[maintenanceRequestSortBy] || "";
+            bValue = b[maintenanceRequestSortBy] || "";
+        }
+        
+        if (maintenanceRequestSortOrder === "asc") {
+          return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        } else {
+          return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+        }
+      });
+      
+      // Apply pagination
+      const total = requests.length;
+      const start = offset || maintenanceRequestsOffset;
+      const end = start + (limit || maintenanceRequestsLimit);
+      const paginatedRequests = requests.slice(start, end);
+      
+      setMaintenanceRequests(paginatedRequests);
+      setMaintenanceRequestsTotal(total);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Could not load maintenance requests");
@@ -3413,20 +3476,20 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mb-6 sm:mb-8 lg:mb-10"
             >
-              <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-1.5 sm:p-2 md:p-2.5 lg:p-3 xl:p-3.5 2xl:p-4 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500 [&::-webkit-scrollbar-track]:bg-amber-50/60 [&::-webkit-scrollbar-track]:rounded-full [scrollbar-width:thin] [scrollbar-color:rgb(251_191_36)_rgb(254_243_199_/_0.6)]">
-                <div className="flex gap-2 items-center min-h-[44px] sm:min-h-[48px]">
+              <TabsList className="bg-gradient-to-br from-amber-50/50 to-white border border-amber-200/60 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden">
+                <div className="flex gap-2 items-center min-h-[44px] sm:min-h-[48px] px-4 sm:px-4.5 md:px-5 lg:px-5.5 xl:px-6 2xl:px-6.5 py-2.5 sm:py-3 md:py-3 lg:py-3 xl:py-3 2xl:py-3 overflow-x-auto overflow-y-hidden scroll-smooth [scrollbar-width:thin] [scrollbar-color:rgb(251_191_36)_rgb(254_243_199_/_0.6)] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-400/60 [&::-webkit-scrollbar-thumb]:hover:bg-amber-500/70 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:rounded-full">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
                       value="realtors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                     >
                       <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       Realtors
                     </TabsTrigger>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                     >
                       <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden md:inline">Assign Properties</span>
@@ -3434,7 +3497,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                     >
                       <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden lg:inline">View Assignments</span>
@@ -3443,7 +3506,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                     >
                       <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       Properties
@@ -3451,7 +3514,7 @@ const Dashboard = () => {
                     {userType === "property_manager" && (
                       <TabsTrigger 
                         value="tenants" 
-                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                       >
                         <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                         Tenants
@@ -3459,7 +3522,7 @@ const Dashboard = () => {
                     )}
                     <TabsTrigger 
                       value="phone-numbers" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                     >
                       <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                       <span className="hidden lg:inline">Phone Numbers</span>
@@ -3470,7 +3533,7 @@ const Dashboard = () => {
                 {userType !== "property_manager" && (
                   <TabsTrigger 
                     value="properties" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                   >
                     <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                     Properties
@@ -3478,7 +3541,7 @@ const Dashboard = () => {
                 )}
               <TabsTrigger 
                 value="call-forwarding" 
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
               >
                 <PhoneForwarded className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                 <span className="hidden lg:inline">Call Forwarding</span>
@@ -3487,7 +3550,7 @@ const Dashboard = () => {
               </TabsTrigger>
                 <TabsTrigger 
                   value="chats" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                 >
                   <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                   <span className="hidden xl:inline">Call Records</span>
@@ -3497,7 +3560,7 @@ const Dashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="maintenance-requests" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                 >
                   <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                   <span className="hidden lg:inline">Maintenance</span>
@@ -3505,7 +3568,7 @@ const Dashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="bookings" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 xl:py-2.5 2xl:py-2.5 font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 min-w-fit data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 my-0"
                 >
                   <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0" />
                   Bookings
@@ -6048,27 +6111,104 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent className="p-6 sm:p-8">
                     {/* Filter Bar */}
-                    <div className="mb-6 flex flex-col sm:flex-row gap-4">
-                      <Select value={maintenanceRequestFilterStatus} onValueChange={setMaintenanceRequestFilterStatus}>
-                        <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
-                          <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Requests</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        onClick={() => fetchMaintenanceRequests(maintenanceRequestFilterStatus !== "all" ? maintenanceRequestFilterStatus : undefined)}
-                        variant="outline"
-                        className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
-                      >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
-                      </Button>
+                    <div className="mb-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+                        <Select value={maintenanceRequestFilterStatus} onValueChange={setMaintenanceRequestFilterStatus}>
+                          <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                            <SelectValue placeholder="Filter by status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        {userType === "property_manager" && (
+                          <Select value={maintenanceRequestFilterProperty} onValueChange={setMaintenanceRequestFilterProperty}>
+                            <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                              <SelectValue placeholder="Filter by property" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Properties</SelectItem>
+                              {apartments.map((apt) => (
+                                <SelectItem key={apt.id} value={String(apt.id)}>
+                                  {apt.address || `Property ${apt.id}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        
+                        <Select value={maintenanceRequestFilterPriority} onValueChange={setMaintenanceRequestFilterPriority}>
+                          <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                            <SelectValue placeholder="Filter by priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Priorities</SelectItem>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="urgent">Urgent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Select value={maintenanceRequestFilterCategory} onValueChange={setMaintenanceRequestFilterCategory}>
+                          <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                            <SelectValue placeholder="Filter by category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="plumbing">Plumbing</SelectItem>
+                            <SelectItem value="electrical">Electrical</SelectItem>
+                            <SelectItem value="heating">Heating</SelectItem>
+                            <SelectItem value="hvac">HVAC</SelectItem>
+                            <SelectItem value="appliance">Appliance</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Select value={maintenanceRequestSortBy} onValueChange={setMaintenanceRequestSortBy}>
+                          <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                            <SelectValue placeholder="Sort by" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="submitted_at">Date</SelectItem>
+                            <SelectItem value="priority">Priority</SelectItem>
+                            <SelectItem value="status">Status</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setMaintenanceRequestSortOrder(maintenanceRequestSortOrder === "asc" ? "desc" : "asc")}
+                          className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
+                        >
+                          {maintenanceRequestSortOrder === "asc" ? (
+                            <>
+                              <ArrowUp className="h-4 w-4 mr-2" />
+                              Ascending
+                            </>
+                          ) : (
+                            <>
+                              <ArrowDown className="h-4 w-4 mr-2" />
+                              Descending
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button
+                          onClick={() => fetchMaintenanceRequests(maintenanceRequestFilterStatus !== "all" ? maintenanceRequestFilterStatus : undefined)}
+                          variant="outline"
+                          className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Refresh
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Loading State */}
@@ -6183,6 +6323,7 @@ const Dashboard = () => {
                                         try {
                                           const detail = await fetchMaintenanceRequestDetail(request.maintenance_request_id);
                                           setSelectedMaintenanceRequest(detail);
+                                          setShowCallTranscript(false);
                                           setShowMaintenanceRequestDetail(true);
                                         } catch (err) {
                                           // Error already handled in function
@@ -6196,7 +6337,9 @@ const Dashboard = () => {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => {
-                                        // Set the form data first
+                                        // Set the selected request first
+                                        setSelectedMaintenanceRequest(request);
+                                        // Set the form data
                                         setMaintenanceRequestUpdateForm({
                                           status: request.status,
                                           priority: request.priority,
@@ -6206,12 +6349,10 @@ const Dashboard = () => {
                                           category: request.category || "",
                                           location: request.location || "",
                                         });
-                                        // Set the selected request and open modal in the same render cycle
-                                        setSelectedMaintenanceRequest(request);
-                                        // Use requestAnimationFrame to ensure state is updated before opening modal
-                                        requestAnimationFrame(() => {
+                                        // Use setTimeout to ensure state is fully updated before opening modal
+                                        setTimeout(() => {
                                           setShowMaintenanceRequestUpdate(true);
-                                        });
+                                        }, 0);
                                       }}
                                       className="rounded-lg"
                                     >
@@ -7469,10 +7610,59 @@ const Dashboard = () => {
                   <p className="text-gray-900 whitespace-pre-wrap">{selectedMaintenanceRequest.issue_description || "No description provided"}</p>
                 </div>
 
-                {selectedMaintenanceRequest.call_transcript && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Call Transcript</p>
-                    <p className="text-gray-900 text-sm whitespace-pre-wrap">{selectedMaintenanceRequest.call_transcript}</p>
+                {(selectedMaintenanceRequest.call_recording_url || selectedMaintenanceRequest.call_transcript || selectedMaintenanceRequest.vapi_call_id) && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-700 mb-0">Call Information</p>
+                      {selectedMaintenanceRequest.submitted_via === "phone" && (
+                        <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                          Phone Submission
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {selectedMaintenanceRequest.call_recording_url && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Volume2 className="h-4 w-4 text-blue-600" />
+                          <p className="text-sm font-medium text-gray-700">Call Recording</p>
+                        </div>
+                        <audio
+                          controls
+                          className="w-full h-10"
+                          src={selectedMaintenanceRequest.call_recording_url}
+                        >
+                          Your browser does not support the audio element.
+                        </audio>
+                        <a
+                          href={selectedMaintenanceRequest.call_recording_url}
+                          download
+                          className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 underline"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Download Recording
+                        </a>
+                      </div>
+                    )}
+                    
+                    {selectedMaintenanceRequest.call_transcript && (
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => setShowCallTranscript(!showCallTranscript)}
+                          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                        >
+                          <FileText className="h-4 w-4" />
+                          {showCallTranscript ? "Hide" : "Show"} Call Transcript
+                        </button>
+                        {showCallTranscript && (
+                          <div className="bg-white border border-blue-200 rounded-lg p-4 max-h-64 overflow-y-auto">
+                            <pre className="text-gray-900 text-sm whitespace-pre-wrap font-sans">
+                              {selectedMaintenanceRequest.call_transcript}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -7572,7 +7762,10 @@ const Dashboard = () => {
                       category: selectedMaintenanceRequest.category || "",
                       location: selectedMaintenanceRequest.location || "",
                     });
-                    setShowMaintenanceRequestUpdate(true);
+                    // Use setTimeout to ensure state is fully updated before opening modal
+                    setTimeout(() => {
+                      setShowMaintenanceRequestUpdate(true);
+                    }, 0);
                   }}
                   className="rounded-xl"
                 >
@@ -7592,7 +7785,7 @@ const Dashboard = () => {
       </Dialog>
 
       {/* Maintenance Request Update Modal */}
-      <Dialog open={showMaintenanceRequestUpdate && !!selectedMaintenanceRequest} onOpenChange={(open) => {
+      <Dialog open={showMaintenanceRequestUpdate} onOpenChange={(open) => {
         if (!open) {
           setShowMaintenanceRequestUpdate(false);
           // If closing update modal and detail was open, reopen detail

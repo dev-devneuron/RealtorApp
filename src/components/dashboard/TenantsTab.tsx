@@ -259,6 +259,7 @@ export const TenantsTab = ({
         </CardContent>
       </Card>
     </motion.div>
+    </>
   );
 };
 

@@ -64,11 +64,20 @@ export interface MaintenanceRequest {
 }
 
 export interface CallRecord {
-  id: string;
+  id: string; // UUID - database ID
+  call_id: string; // VAPI call ID - use this for API calls
   caller_number?: string;
   recording_url?: string;
   transcript?: string;
   call_status?: string;
+  call_duration?: number;
+  realtor_number?: string;
+  created_at?: string;
+  updated_at?: string;
+  live_transcript_chunks?: string[];
+  transcript_segments?: any[];
+  transcript_summary?: string;
+  metadata?: any;
   [key: string]: any;
 }
 

@@ -246,7 +246,8 @@ export const ChatsTab = ({
                                     className="h-8 w-8 p-0 hover:bg-amber-100"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      onPlayRecording(record.id === playingRecordingId ? null : record.id);
+                                      const recordId = record.call_id || record.id;
+                                      onPlayRecording(recordId === playingRecordingId ? null : recordId);
                                     }}
                                   >
                                     {playingRecordingId === record.id ? (
@@ -276,7 +277,7 @@ export const ChatsTab = ({
                           </Button>
                         </div>
 
-                        {playingRecordingId === record.id && (record as any).recording_url && (
+                        {((record.call_id || record.id) === playingRecordingId) && (record as any).recording_url && (
                           <div className="mt-2 pt-2 border-t border-amber-100">
                             <audio
                               controls

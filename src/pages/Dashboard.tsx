@@ -666,6 +666,7 @@ const Dashboard = () => {
 
   /**
    * Fetches detailed information for a specific call record
+   * IMPORTANT: Uses call_id (not id) as per API documentation
    */
   const fetchCallRecordDetail = async (callId: string) => {
     try {
@@ -675,7 +676,10 @@ const Dashboard = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/call-records/${callId}`, {
+      // URL encode the call_id in case it contains special characters
+      const encodedCallId = encodeURIComponent(callId);
+
+      const res = await fetch(`${API_BASE}/call-records/${encodedCallId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -703,9 +707,13 @@ const Dashboard = () => {
       setCopiedTranscript(false); // Reset copy state when opening modal
       
       // Fetch full details if we don't have the transcript
+      // IMPORTANT: Use call_id (not id) for API calls
       if (!callRecord.transcript || callRecord.transcript.trim() === "") {
-        const detail = await fetchCallRecordDetail(callRecord.id);
-        setSelectedCallRecord(detail);
+        const callIdToUse = callRecord.call_id || callRecord.id;
+        if (callIdToUse) {
+          const detail = await fetchCallRecordDetail(callIdToUse);
+          setSelectedCallRecord(detail);
+        }
       }
     } catch (err) {
       console.error("Error viewing call record:", err);
@@ -888,19 +896,33 @@ const Dashboard = () => {
         return;
       }
 
+      // IMPORTANT: URL encode the call_id in case it contains special characters
+      const encodedCallId = encodeURIComponent(callId);
+
       const res = await fetch(
-        `${API_BASE}/call-records/${callId}?hard_delete=${hardDelete ? "true" : "false"}`,
+        `${API_BASE}/call-records/${encodedCallId}?hard_delete=${hardDelete ? "true" : "false"}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.detail || data.message || "Failed to delete call record");
+      // Always parse JSON response - even for errors
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        const text = await res.text();
+        throw new Error(`Server error: ${text || res.statusText}`);
       }
 
+      if (!res.ok) {
+        // Error response - data.detail contains the error message
+        const errorMessage = data.detail || data.message || "Failed to delete call record";
+        throw new Error(errorMessage);
+      }
+
+      // Success
       toast.success(data.message || (hardDelete ? "Call record deleted" : "Transcript removed"));
       await fetchCallRecords();
 
@@ -908,20 +930,27 @@ const Dashboard = () => {
         setShowCallRecordDetail(false);
         setSelectedCallRecord(null);
       } else {
+        // Soft delete - update the record to remove transcript/recording
         setSelectedCallRecord((prev) => {
-          if (!prev || prev.id !== callId) return prev;
+          if (!prev) return prev;
+          // Check by call_id if available, otherwise by id
+          const matches = prev.call_id ? prev.call_id === callId : prev.id === callId;
+          if (!matches) return prev;
           return {
             ...prev,
             transcript: "",
             transcript_segments: [],
             transcript_summary: "",
             recording_url: null,
+            live_transcript_chunks: [],
           };
         });
       }
     } catch (err: any) {
       console.error("Error deleting call record:", err);
-      toast.error(err.message || "Failed to delete call record");
+      const errorMessage = err.message || String(err);
+      toast.error(errorMessage);
+      throw err;
     } finally {
       setDeletingCallRecord(false);
     }

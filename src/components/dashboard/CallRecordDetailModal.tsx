@@ -186,7 +186,7 @@ export const CallRecordDetailModal = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDownloadRecording(selectedCallRecord.recording_url!, selectedCallRecord.id)}
+                    onClick={() => handleDownloadRecording(selectedCallRecord.recording_url!, selectedCallRecord.call_id || selectedCallRecord.id)}
                     className="border-amber-300 hover:bg-amber-50 text-amber-600 rounded-lg"
                   >
                     <Download className="h-4 w-4 mr-2" />
@@ -408,7 +408,7 @@ export const CallRecordDetailModal = ({
                     <AlertDialogFooter>
                       <AlertDialogCancel disabled={deletingCallRecord}>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => onDelete(selectedCallRecord.id, false)}
+                        onClick={() => onDelete(selectedCallRecord.call_id || selectedCallRecord.id, false)}
                         disabled={deletingCallRecord}
                         className="bg-amber-600 hover:bg-amber-700 text-white"
                       >
@@ -456,7 +456,7 @@ export const CallRecordDetailModal = ({
                     <AlertDialogFooter>
                       <AlertDialogCancel disabled={deletingCallRecord}>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => onDelete(selectedCallRecord.id, true)}
+                        onClick={() => onDelete(selectedCallRecord.call_id || selectedCallRecord.id, true)}
                         disabled={deletingCallRecord}
                         className="bg-red-600 hover:bg-red-700 text-white"
                       >

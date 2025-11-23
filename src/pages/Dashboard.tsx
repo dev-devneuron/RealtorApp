@@ -3163,12 +3163,12 @@ const Dashboard = () => {
         initial="hidden"
         animate="visible"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
           {userType === "property_manager" ? (
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-amber-100 hover:border-amber-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
@@ -3185,17 +3185,17 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Active team members</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform"
+                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0"
                     whileHover={{ rotate: 15 }}
                   >
-                    <Users className="h-6 w-6 text-white" />
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-amber-100 hover:border-amber-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
@@ -3212,17 +3212,17 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">In your portfolio</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform"
+                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0"
                     whileHover={{ rotate: -15 }}
                   >
-                    <Building2 className="h-6 w-6 text-white" />
+                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-amber-100 hover:border-amber-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
@@ -3239,17 +3239,17 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform"
+                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0"
                     whileHover={{ rotate: 15 }}
                   >
-                    <Calendar className="h-6 w-6 text-white" />
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-amber-100 hover:border-amber-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
@@ -3266,10 +3266,10 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Active tenants</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform"
+                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0"
                     whileHover={{ rotate: -15 }}
                   >
-                    <Users className="h-6 w-6 text-white" />
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -3278,7 +3278,7 @@ const Dashboard = () => {
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-amber-100 hover:border-amber-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
@@ -3295,17 +3295,17 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Assigned to you</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform"
+                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0"
                     whileHover={{ rotate: 15 }}
                   >
-                    <Building2 className="h-6 w-6 text-white" />
+                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-amber-100 hover:border-amber-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
@@ -3322,17 +3322,17 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform"
+                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0"
                     whileHover={{ rotate: -15 }}
                   >
-                    <Calendar className="h-6 w-6 text-white" />
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-amber-100 hover:border-amber-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
@@ -3349,17 +3349,17 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Total views this month</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform"
+                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0"
                     whileHover={{ rotate: 15 }}
                   >
-                    <Eye className="h-6 w-6 text-white" />
+                    <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-amber-100 hover:border-amber-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
                 whileHover={{ y: -4 }}
               >
                 <div className="flex items-center justify-between">
@@ -3376,10 +3376,10 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Client inquiries</p>
                   </div>
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform"
+                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0"
                     whileHover={{ rotate: -15 }}
                   >
-                    <CheckCircle2 className="h-6 w-6 text-white" />
+                    <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -3405,67 +3405,78 @@ const Dashboard = () => {
               className="mb-6 sm:mb-8 lg:mb-10"
             >
               <TabsList className="bg-gradient-to-br from-amber-50/90 via-white to-amber-50/70 border-2 border-amber-200/90 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden relative">
-                {/* Scrollable tabs container with thin scrollbar */}
+                {/* Scrollable tabs container with responsive scrollbar */}
                 <div className="relative w-full overflow-x-auto overflow-y-hidden scroll-smooth
                   [scrollbar-width:thin]
-                  [scrollbar-color:rgb(251_191_36)_rgb(254_243_199_/_0.5)]
-                  [&::-webkit-scrollbar]:h-[4px]
-                  [&::-webkit-scrollbar]:w-[4px]
+                  [scrollbar-color:rgb(251_191_36_/_0.7)_transparent]
+                  [&::-webkit-scrollbar]:h-[6px]
+                  [&::-webkit-scrollbar]:w-[6px]
                   [&::-webkit-scrollbar-thumb]:rounded-full
-                  [&::-webkit-scrollbar-thumb]:bg-amber-500/70
-                  [&::-webkit-scrollbar-thumb]:hover:bg-amber-600/80
-                  [&::-webkit-scrollbar-thumb]:active:bg-amber-700
-                  [&::-webkit-scrollbar-track]:bg-amber-50/50
-                  [&::-webkit-scrollbar-track]:rounded-full">
-                  <div className="flex gap-2.5 items-center min-h-[48px] sm:min-h-[52px] md:min-h-[56px] px-4 sm:px-5 md:px-6 lg:px-7 xl:px-8 py-2.5 sm:py-3 md:py-3.5">
+                  [&::-webkit-scrollbar-thumb]:bg-amber-400/70
+                  [&::-webkit-scrollbar-thumb]:hover:bg-amber-500/80
+                  [&::-webkit-scrollbar-thumb]:active:bg-amber-600
+                  [&::-webkit-scrollbar-track]:bg-transparent
+                  [&::-webkit-scrollbar-track]:rounded-full
+                  md:[&::-webkit-scrollbar]:h-[5px]
+                  md:[&::-webkit-scrollbar]:w-[5px]
+                  sm:[&::-webkit-scrollbar]:h-[4px]
+                  sm:[&::-webkit-scrollbar]:w-[4px]">
+                  <div className="flex gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 items-center 
+                    min-h-[52px] sm:min-h-[56px] md:min-h-[60px] lg:min-h-[64px] 
+                    px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 2xl:px-10 
+                    py-2 sm:py-2.5 md:py-3 lg:py-3.5 xl:py-4">
                 {userType === "property_manager" && (
                   <>
                     <TabsTrigger 
                       value="realtors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                     >
-                      <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                      <span>Realtors</span>
+                      <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                      <span className="hidden xs:inline">Realtors</span>
+                      <span className="xs:hidden">Realtors</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                     >
-                      <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                      <span className="hidden md:inline">Assign Properties</span>
+                      <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                      <span className="hidden lg:inline">Assign Properties</span>
+                      <span className="lg:hidden hidden md:inline">Assign</span>
                       <span className="md:hidden">Assign</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                     >
-                      <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                      <span className="hidden lg:inline">View Assignments</span>
-                      <span className="lg:hidden hidden md:inline">Assignments</span>
+                      <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                      <span className="hidden xl:inline">View Assignments</span>
+                      <span className="xl:hidden hidden lg:inline">Assignments</span>
+                      <span className="lg:hidden hidden md:inline">View</span>
                       <span className="md:hidden">View</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                     >
-                      <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
                       <span>Properties</span>
                     </TabsTrigger>
                     {userType === "property_manager" && (
                       <TabsTrigger 
                         value="tenants" 
-                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                       >
-                        <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                        <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
                         <span>Tenants</span>
                       </TabsTrigger>
                     )}
                     <TabsTrigger 
                       value="phone-numbers" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                     >
-                      <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                      <span className="hidden lg:inline">Phone Numbers</span>
+                      <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                      <span className="hidden xl:inline">Phone Numbers</span>
+                      <span className="xl:hidden hidden lg:inline">Numbers</span>
                       <span className="lg:hidden">Numbers</span>
                     </TabsTrigger>
                   </>
@@ -3473,26 +3484,27 @@ const Dashboard = () => {
                 {userType !== "property_manager" && (
                   <TabsTrigger 
                     value="properties" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                   >
-                    <Building2 className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5 mr-2 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                    <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
                     <span>Properties</span>
                   </TabsTrigger>
                 )}
               <TabsTrigger 
                 value="call-forwarding" 
-                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
               >
-                <PhoneForwarded className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                <span className="hidden lg:inline">Call Forwarding</span>
-                <span className="lg:hidden hidden md:inline">Forwarding</span>
+                <PhoneForwarded className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                <span className="hidden xl:inline">Call Forwarding</span>
+                <span className="xl:hidden hidden lg:inline">Forwarding</span>
+                <span className="lg:hidden hidden md:inline">Forward</span>
                 <span className="md:hidden">Forward</span>
               </TabsTrigger>
                 <TabsTrigger 
                   value="chats" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                 >
-                  <Phone className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5 mr-2 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                  <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
                   <span className="hidden xl:inline">Call Records</span>
                   <span className="xl:hidden hidden lg:inline">Records</span>
                   <span className="lg:hidden hidden md:inline">Calls</span>
@@ -3500,17 +3512,19 @@ const Dashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="maintenance-requests" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                 >
-                  <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                  <span className="hidden lg:inline">Maintenance</span>
-                  <span className="lg:hidden">Maint.</span>
+                  <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
+                  <span className="hidden xl:inline">Maintenance</span>
+                  <span className="xl:hidden hidden lg:inline">Maintenance</span>
+                  <span className="lg:hidden hidden md:inline">Maint.</span>
+                  <span className="md:hidden">Maint.</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="bookings" 
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-amber-500/25 rounded-lg px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-2.5 font-medium transition-all duration-200 ease-out text-xs sm:text-sm md:text-sm whitespace-nowrap flex-shrink-0 data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/80 border border-transparent data-[state=active]:border-amber-400/30 relative group"
+                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-xl px-2.5 sm:px-3 md:px-4 lg:px-5 xl:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3 xl:py-3.5 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap flex-shrink-0 min-h-[44px] sm:min-h-[48px] md:min-h-[52px] lg:min-h-[56px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center"
                 >
-                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5 mr-1 sm:mr-1.5 md:mr-2 flex-shrink-0" />
                   <span>Bookings</span>
                 </TabsTrigger>
                   </div>

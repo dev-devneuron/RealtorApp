@@ -273,6 +273,7 @@ const Dashboard = () => {
   const [showMaintenanceRequestDetail, setShowMaintenanceRequestDetail] = useState(false);
   const [showMaintenanceRequestUpdate, setShowMaintenanceRequestUpdate] = useState(false);
   const [updatingMaintenanceRequest, setUpdatingMaintenanceRequest] = useState(false);
+  const [deletingMaintenanceRequest, setDeletingMaintenanceRequest] = useState(false);
   const [maintenanceRequestUpdateForm, setMaintenanceRequestUpdateForm] = useState<any>({});
 
   // ============================================================================
@@ -389,8 +390,6 @@ const Dashboard = () => {
 
         // If still no name found, try alternative methods
         if (!nameFound) {
-          console.log("⚠️ Could not find user name in standard endpoints, trying alternative methods");
-          
           // For property managers, we might need to get it from a different endpoint
           // Or check if we can get email and extract username from it
           const storedEmail = localStorage.getItem("user_email");
@@ -399,20 +398,18 @@ const Dashboard = () => {
             // Clean and capitalize
             const cleanedName = emailName.replace(/[._0-9]/g, '');
             const formattedName = cleanedName.charAt(0).toUpperCase() + cleanedName.slice(1);
-            console.log("✅ Using email-derived name:", formattedName);
             setUserName(formattedName);
             localStorage.setItem("user_name", formattedName);
           } else {
             // Ensure we always have something
             if (!localStorage.getItem("user_name") || localStorage.getItem("user_name") === "User") {
-              console.log("⚠️ Setting default name 'User'");
               setUserName("User");
               localStorage.setItem("user_name", "User");
             }
           }
         }
       } catch (err) {
-        console.error("Could not fetch user info:", err);
+        // Silently handle error - user name will fall back to default
       }
     } catch (err) {
       // Error handled silently
@@ -433,26 +430,20 @@ const Dashboard = () => {
 
     // ALWAYS ensure we have a user name - check localStorage first and set immediately
     const storedUserName = localStorage.getItem("user_name");
-    console.log("🔍 Checking localStorage for user_name:", storedUserName);
     
     if (storedUserName && storedUserName.trim() !== "") {
-      console.log("✅ Found user_name in localStorage:", storedUserName);
       setUserName(storedUserName);
     } else {
-      console.log("⚠️ No user_name found in localStorage. Attempting to derive one...");
-      
       // Try to get from email
       const storedEmail = localStorage.getItem("user_email");
       if (storedEmail && storedEmail.includes('@')) {
         const emailName = storedEmail.split('@')[0];
         const cleanedName = emailName.replace(/[._0-9]/g, '');
         const formattedName = cleanedName.charAt(0).toUpperCase() + cleanedName.slice(1);
-        console.log("✅ Derived name from stored email:", formattedName);
         setUserName(formattedName);
         localStorage.setItem("user_name", formattedName);
       } else {
         // Set a default
-        console.log("⚠️ No email found either. Setting default name 'User'");
         setUserName("User");
         localStorage.setItem("user_name", "User");
       }
@@ -635,7 +626,6 @@ const Dashboard = () => {
       if (!res.ok) throw new Error("Failed to fetch apartments");
 
       const data = await res.json();
-      console.log("Fetched apartments:", data);
 
       // since backend returns raw array
       setApartments(Array.isArray(data) ? data : data.apartments || []);
@@ -1057,8 +1047,10 @@ const Dashboard = () => {
       if (!res.ok) throw new Error("Failed to fetch maintenance requests");
 
       const data = await res.json();
-      setMaintenanceRequests(data.maintenance_requests || []);
-      setMaintenanceRequestsTotal(data.total || 0);
+      // API returns array directly, not wrapped in object
+      const requests = Array.isArray(data) ? data : (data.maintenance_requests || []);
+      setMaintenanceRequests(requests);
+      setMaintenanceRequestsTotal(requests.length);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Could not load maintenance requests");
@@ -1135,6 +1127,50 @@ const Dashboard = () => {
     }
   };
 
+  const deleteMaintenanceRequest = async (requestId: number) => {
+    try {
+      setDeletingMaintenanceRequest(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/maintenance-requests/${requestId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || errorData.message || "Failed to delete maintenance request");
+      }
+
+      const data = await res.json();
+      toast.success(data.message || "Maintenance request deleted successfully");
+      
+      // Refresh the list
+      await fetchMaintenanceRequests(maintenanceRequestFilterStatus !== "all" ? maintenanceRequestFilterStatus : undefined);
+      
+      // Close detail modal if it was open for this request
+      if (selectedMaintenanceRequest && selectedMaintenanceRequest.maintenance_request_id === requestId) {
+        setShowMaintenanceRequestDetail(false);
+        setSelectedMaintenanceRequest(null);
+      }
+      
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Could not delete maintenance request");
+      throw err;
+    } finally {
+      setDeletingMaintenanceRequest(false);
+    }
+  };
+
   // ============================================================================
   // API Functions - Tenants
   // ============================================================================
@@ -1159,7 +1195,9 @@ const Dashboard = () => {
       if (!res.ok) throw new Error("Failed to fetch tenants");
 
       const data = await res.json();
-      setTenants(data.tenants || []);
+      // API returns array directly, not wrapped in object
+      const tenantsList = Array.isArray(data) ? data : (data.tenants || []);
+      setTenants(tenantsList);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Could not load tenants");
@@ -1932,13 +1970,6 @@ const Dashboard = () => {
       const propertyId = selectedPropertyForDetail.id;
       const apiUrl = `${API_BASE}/properties/${propertyId}`;
       
-      console.log("🔄 Updating property:", {
-        propertyId,
-        apiUrl,
-        payload: updatePayload,
-        payloadKeys: Object.keys(updatePayload)
-      });
-
       const res = await fetch(apiUrl, {
         method: "PATCH",
         headers: { 
@@ -1948,30 +1979,16 @@ const Dashboard = () => {
         body: JSON.stringify(updatePayload),
       });
 
-      console.log("📡 API Response:", {
-        status: res.status,
-        statusText: res.statusText,
-        ok: res.ok,
-        headers: Object.fromEntries(res.headers.entries())
-      });
-
       if (!res.ok) {
         let errorData: any = {};
         try {
           const errorText = await res.text();
-          console.error("❌ Error response body:", errorText);
           errorData = errorText ? JSON.parse(errorText) : {};
         } catch (parseError) {
-          console.error("❌ Failed to parse error response:", parseError);
+          // Failed to parse error response, use default error message
         }
         
         const errorMessage = errorData.detail || errorData.message || errorData.error || `HTTP ${res.status}: ${res.statusText}`;
-        console.error("❌ Update failed:", {
-          status: res.status,
-          statusText: res.statusText,
-          errorData,
-          errorMessage
-        });
         throw new Error(errorMessage);
       }
 
@@ -1979,9 +1996,8 @@ const Dashboard = () => {
       try {
         const responseText = await res.text();
         data = responseText ? JSON.parse(responseText) : {};
-        console.log("✅ Update successful:", data);
       } catch (parseError) {
-        console.warn("⚠️ Response is not JSON, treating as success");
+        // Response is not JSON, treat as success with empty data
       }
 
       toast.success(data.message || "Property updated successfully!");
@@ -1989,7 +2005,6 @@ const Dashboard = () => {
       
       // Use the returned property object from API response for immediate UI update
       if (data.property) {
-        console.log("📦 Using API response property:", data.property);
         setSelectedPropertyForDetail(data.property);
         setShowPropertyDetailModal(true);
       }
@@ -1999,22 +2014,12 @@ const Dashboard = () => {
         fetchApartments(),
         fetchAssignments(),
         fetchPropertiesForAssignment()
-      ]).catch(err => {
-        console.error("Background refresh error:", err);
+      ]).catch(() => {
+        // Silently handle background refresh errors
       });
     } catch (err: any) {
-      console.error("❌ handleUpdateProperty error:", err);
       const errorMessage = err.message || "Could not update property";
       toast.error(errorMessage);
-      
-      // Log detailed error for debugging
-      if (err.message) {
-        console.error("Error details:", {
-          message: err.message,
-          stack: err.stack,
-          name: err.name
-        });
-      }
     } finally {
       setUpdatingProperty(false);
     }
@@ -2134,7 +2139,6 @@ const Dashboard = () => {
       }
 
       const data = await res.json();
-      console.log("Number purchased:", data);
       setMyNumber(data.twilio_contact || data.twilio_number || null);
     } catch (err: any) {
       console.error(err);
@@ -2457,8 +2461,7 @@ const Dashboard = () => {
       }
 
       // Success - data is already parsed
-      console.log("Success:", data);
-      console.log("Message:", data.message); // This will show the actual message
+      // Success response received
       
       // Safely extract success message - ensure it's a string
       let successMessage = "Phone number unassigned successfully!";
@@ -2467,7 +2470,6 @@ const Dashboard = () => {
           successMessage = data.message;
         } else {
           // If message is not a string, use default
-          console.warn("Success message is not a string:", data.message);
         }
       }
       
@@ -2476,10 +2478,8 @@ const Dashboard = () => {
       
       // Log additional info for debugging
       if (data.phone_number) {
-        console.log("Unassigned phone number:", data.phone_number);
       }
       if (data.purchased_phone_number_id) {
-        console.log("Purchased phone number ID:", data.purchased_phone_number_id);
       }
       
       // Refresh the phone numbers list to show updated status
@@ -2492,13 +2492,8 @@ const Dashboard = () => {
       return data;
     } catch (error: any) {
       // Handle network errors or other exceptions
-      console.error("Fetch error:", error);
-      console.error("Error type:", typeof error);
-      console.error("Error constructor:", error?.constructor?.name);
-      
       // Use helper function to safely extract error message
       const errorMessage = extractErrorMessage(error);
-      console.error("Extracted error message:", errorMessage);
       
       toast.error(`Failed to unassign phone number: ${errorMessage}`);
     } finally {
@@ -2702,7 +2697,7 @@ const Dashboard = () => {
       .replace(/ /g, "%20");
     
     // Log for debugging
-    console.log("Opening dialer with code:", validatedCode, "Encoded:", encoded);
+    // Opening dialer with validated code
     
     window.location.href = `tel:${encoded}`;
   };
@@ -3084,7 +3079,7 @@ const Dashboard = () => {
                     return (
                       <>
                         <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                          Welcome back <span className="text-amber-600">{displayNameFinal}</span>!
+                          Welcome not back <span className="text-amber-600">{displayNameFinal}</span>!
                         </p>
                         <p className="text-amber-600/80 text-sm">
                           {userType === "property_manager" 
@@ -7488,10 +7483,13 @@ const Dashboard = () => {
                       <p className="text-sm text-gray-500 mt-1">Via: {selectedMaintenanceRequest.submitted_via}</p>
                     )}
                   </div>
-                  {selectedMaintenanceRequest.assigned_to_realtor_name && (
+                  {(selectedMaintenanceRequest.assigned_realtor?.name || selectedMaintenanceRequest.assigned_to_realtor_name) && (
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                       <p className="text-sm font-semibold text-gray-600 mb-2">Assigned To</p>
-                      <p className="text-gray-900">{selectedMaintenanceRequest.assigned_to_realtor_name}</p>
+                      <p className="text-gray-900">{selectedMaintenanceRequest.assigned_realtor?.name || selectedMaintenanceRequest.assigned_to_realtor_name}</p>
+                      {selectedMaintenanceRequest.assigned_realtor?.email && (
+                        <p className="text-sm text-gray-500 mt-1">{selectedMaintenanceRequest.assigned_realtor.email}</p>
+                      )}
                     </div>
                   )}
                   {selectedMaintenanceRequest.updated_at && (
@@ -7527,7 +7525,36 @@ const Dashboard = () => {
                 )}
               </div>
 
-              <DialogFooter className="p-6 border-t border-gray-200">
+              <DialogFooter className="p-6 border-t border-gray-200 flex flex-wrap gap-2">
+                {userType === "property_manager" && (
+                  <Button
+                    variant="destructive"
+                    onClick={async () => {
+                      if (!confirm("Are you sure you want to delete this maintenance request? This action cannot be undone.")) {
+                        return;
+                      }
+                      try {
+                        await deleteMaintenanceRequest(selectedMaintenanceRequest.maintenance_request_id);
+                      } catch (err) {
+                        // Error already handled in function
+                      }
+                    }}
+                    className="rounded-xl"
+                    disabled={deletingMaintenanceRequest}
+                  >
+                    {deletingMaintenanceRequest ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Request
+                      </>
+                    )}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => {

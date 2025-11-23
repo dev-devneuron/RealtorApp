@@ -73,6 +73,9 @@ export const MaintenanceRequestUpdateModal = ({
     }
   }, [formData]);
 
+  // Use formData if localFormData isn't ready yet
+  const currentFormData = localFormData || formData;
+
   const handleFormChange = (updates: any) => {
     const baseData = localFormData || formData || {};
     const newData = { ...baseData, ...updates };
@@ -93,9 +96,6 @@ export const MaintenanceRequestUpdateModal = ({
   const handleClose = () => {
     onClose();
   };
-
-  // Use formData if localFormData isn't ready yet
-  const currentFormData = localFormData || formData;
 
   // Don't render Dialog if we don't have the required data
   if (!open || !selectedMaintenanceRequest) {

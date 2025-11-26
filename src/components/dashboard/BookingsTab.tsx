@@ -379,21 +379,21 @@ export const BookingsTab = ({
           <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-5 lg:mb-6 xl:mb-6">
               <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                <TabsList className="grid w-full grid-cols-5 min-w-[500px] sm:min-w-0 gap-1 lg:gap-2 xl:gap-2">
+                <TabsList className={`grid w-full ${hasAssignedPropertiesOrBookings ? 'grid-cols-6' : 'grid-cols-5'} min-w-[500px] sm:min-w-0 gap-1 lg:gap-2 xl:gap-2`}>
                   <TabsTrigger value="list" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">List</TabsTrigger>
                   <TabsTrigger value="day" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Day</TabsTrigger>
                   <TabsTrigger value="week" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Week</TabsTrigger>
                   <TabsTrigger value="month" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Month</TabsTrigger>
                   <TabsTrigger value="stats" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Stats</TabsTrigger>
+                  {hasAssignedPropertiesOrBookings && (
+                    <TabsTrigger value="availability" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">
+                      Availability
+                    </TabsTrigger>
+                  )}
                 </TabsList>
               </div>
               <div className="flex gap-2">
                 <BookingExport bookings={filteredBookings} filters={{ status: statusFilter, search: searchQuery }} />
-                {hasAssignedPropertiesOrBookings && (
-                  <TabsTrigger value="availability" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">
-                    Availability
-                  </TabsTrigger>
-                )}
               </div>
             </div>
 

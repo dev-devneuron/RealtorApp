@@ -483,6 +483,15 @@ const Dashboard = () => {
    * If no number is found (404), this is a valid state - the user simply hasn't been assigned a number yet.
    * The backend handles case-insensitive matching for `assigned_to_type` variations.
    */
+  // Helper function to handle token expiration
+  const handleTokenExpiration = useCallback(() => {
+    toast.error("Session expired. Please sign in again.");
+    localStorage.clear();
+    setTimeout(() => {
+      window.location.href = "/signin";
+    }, 1500);
+  }, []);
+
   const fetchNumber = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -493,6 +502,12 @@ const Dashboard = () => {
       const res = await fetch(`${API_BASE}/my-number`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
 
       if (!res.ok) {
         // If 404, user doesn't have a number assigned yet - this is normal
@@ -518,7 +533,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleTokenExpiration]);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -526,6 +541,10 @@ const Dashboard = () => {
       const token = localStorage.getItem("access_token");
       if (!token) {
         toast.error("You must be signed in");
+        // Redirect to login if no token
+        setTimeout(() => {
+          window.location.href = "/signin";
+        }, 1000);
         return;
       }
 
@@ -540,25 +559,53 @@ const Dashboard = () => {
         return;
       }
 
+      // Ensure userId is a number (API expects integer)
+      const userIdNum = parseInt(userId, 10);
+      if (isNaN(userIdNum)) {
+        console.error("Invalid user ID format:", userId);
+        toast.error("Invalid user ID");
+        return;
+      }
+
       // Use the new booking API endpoint
-      const res = await fetch(`${API_BASE}/api/users/${userId}/bookings`, {
+      const res = await fetch(`${API_BASE}/api/users/${userIdNum}/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Failed to fetch bookings");
+        const errorMessage = errorData.detail || errorData.message || "Failed to fetch bookings";
+        
+        // Handle 422 validation errors
+        if (res.status === 422) {
+          console.error("Validation error:", errorData);
+          // Still try to set empty array to prevent UI errors
+          setBookings([]);
+          // Don't show error toast for validation errors - might be expected
+          return;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await res.json();
       setBookings(Array.isArray(data.bookings) ? data.bookings : []);
     } catch (err: any) {
       console.error("Error fetching bookings:", err);
-      toast.error(err.message || "Could not load bookings");
+      // Only show error if it's not a token expiration (already handled)
+      if (!err.message?.includes("expired") && !err.message?.includes("401")) {
+        toast.error(err.message || "Could not load bookings");
+      }
     } finally {
       setLoadingBookings(false);
     }
-  }, []);
+  }, [handleTokenExpiration]);
 
   const fetchApartments = useCallback(async () => {
     try {
@@ -573,18 +620,26 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to fetch apartments");
 
       const data = await res.json();
 
       // since backend returns raw array
       setApartments(Array.isArray(data) ? data : data.apartments || []);
-    } catch (err) {
-      toast.error("Could not load apartments");
+    } catch (err: any) {
+      if (!err.message?.includes("expired") && !err.message?.includes("401")) {
+        toast.error("Could not load apartments");
+      }
     } finally {
       setLoadingApartments(false);
     }
-  }, []);
+  }, [handleTokenExpiration]);
 
   const fetchRecordings = async () => {
     try {
@@ -661,6 +716,12 @@ const Dashboard = () => {
       const res = await fetch(`${API_BASE}/call-records?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -995,6 +1056,12 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to fetch maintenance requests");
 
       const data = await res.json();
@@ -1198,6 +1265,12 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to fetch tenants");
 
       const data = await res.json();
@@ -1368,6 +1441,12 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to fetch realtors");
 
       const data = await res.json();
@@ -1493,6 +1572,12 @@ const Dashboard = () => {
       const res = await fetch(`${API_BASE}/apartments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
 
       if (!res.ok) throw new Error("Failed to fetch properties");
 
@@ -1687,6 +1772,12 @@ const Dashboard = () => {
       const res = await fetch(`${API_BASE}/property-manager/assignments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
 
       if (!res.ok) throw new Error("Failed to fetch assignments");
 
@@ -2177,6 +2268,12 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
+
       if (!res.ok) {
         throw new Error("Failed to fetch phone number requests");
       }
@@ -2209,6 +2306,12 @@ const Dashboard = () => {
       const res = await fetch(`${API_BASE}/purchased-phone-numbers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
 
       if (!res.ok) {
         throw new Error("Failed to fetch purchased phone numbers");
@@ -2550,6 +2653,12 @@ const Dashboard = () => {
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Handle token expiration
+      if (res.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

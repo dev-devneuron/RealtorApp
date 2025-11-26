@@ -188,9 +188,23 @@ export const fetchUserBookings = async (
     },
   });
 
+  // Handle token expiration
+  if (response.status === 401) {
+    localStorage.clear();
+    window.location.href = "/signin";
+    throw new Error("Token expired. Redirecting to login...");
+  }
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Failed to fetch bookings" }));
-    throw new Error(error.detail || "Failed to fetch bookings");
+    
+    // Handle 422 validation errors gracefully
+    if (response.status === 422) {
+      console.warn("Validation error fetching bookings:", error);
+      return []; // Return empty array instead of throwing
+    }
+    
+    throw new Error(error.detail || error.message || "Failed to fetch bookings");
   }
 
   const data = await response.json();

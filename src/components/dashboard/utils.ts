@@ -671,9 +671,28 @@ export const assignProperty = async (
 };
 
 /**
+ * Convert API day format (0=Monday, 6=Sunday) to JS format (0=Sunday, 6=Saturday)
+ * API: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
+ * JS:  0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+ */
+const convertApiDaysToJs = (apiDays: number[]): number[] => {
+  return apiDays.map(day => (day === 6) ? 0 : day + 1);
+};
+
+/**
+ * Convert JS day format (0=Sunday, 6=Saturday) to API format (0=Monday, 6=Sunday)
+ * JS:  0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+ * API: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
+ */
+const convertJsDaysToApi = (jsDays: number[]): number[] => {
+  return jsDays.map(day => (day === 0) ? 6 : day - 1).sort();
+};
+
+/**
  * Fetch calendar preferences for a user
  * API: GET /api/users/{user_id}/calendar-preferences?user_type={user_type}
- * Response: { timezone, defaultSlotLengthMins, workingHours: { start, end } }
+ * Response: { timezone, defaultSlotLengthMins, workingHours: { start, end }, working_days? }
+ * Note: API uses 0=Monday, 6=Sunday format for working_days
  */
 export const fetchCalendarPreferences = async (
   userId: number,
@@ -701,25 +720,31 @@ export const fetchCalendarPreferences = async (
     if (response.ok) {
       const data = await response.json();
       
-      // Handle API response format: { timezone, defaultSlotLengthMins, workingHours: { start, end } }
-      if (data.workingHours) {
+      // Handle API response format: { timezone, defaultSlotLengthMins, workingHours: { start, end }, working_days? }
+      // working_days can be at top level or in preferences object
+      if (data.workingHours || data.preferences?.workingHours) {
+        const prefs = data.preferences || data;
+        // Check for working_days in preferences first, then top level, then data.working_days
+        const apiWorkingDays = prefs.working_days || data.working_days;
+        
         return {
-          start_time: data.workingHours.start || "09:00",
-          end_time: data.workingHours.end || "17:00",
-          timezone: data.timezone || data.workingHours.timezone || "America/New_York",
-          slot_length: data.defaultSlotLengthMins || 30,
-          working_days: [1, 2, 3, 4, 5], // Default Mon-Fri (API doesn't return working_days)
+          start_time: prefs.workingHours?.start || data.workingHours?.start || "09:00",
+          end_time: prefs.workingHours?.end || data.workingHours?.end || "17:00",
+          timezone: prefs.timezone || data.timezone || "America/New_York",
+          slot_length: prefs.defaultSlotLengthMins || data.defaultSlotLengthMins || 30,
+          working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : [1, 2, 3, 4, 5], // Convert API format (0=Mon) to JS format (0=Sun)
         };
       }
       
       // Fallback: Handle legacy format if API returns it
       if (data.start_time && data.end_time) {
+        const apiWorkingDays = data.working_days;
         return {
           start_time: data.start_time,
           end_time: data.end_time,
           timezone: data.timezone || "America/New_York",
           slot_length: data.slot_length || data.defaultSlotLengthMins || 30,
-          working_days: data.working_days || [1, 2, 3, 4, 5],
+          working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : [1, 2, 3, 4, 5], // Convert API format to JS format
         };
       }
     }
@@ -740,8 +765,9 @@ export const fetchCalendarPreferences = async (
 /**
  * Update calendar preferences for a user
  * API: PATCH /api/users/{user_id}/calendar-preferences?user_type={user_type}
- * Request: { timezone?, default_slot_length_mins?, working_hours_start?, working_hours_end? }
+ * Request: { timezone?, default_slot_length_mins?, working_hours_start?, working_hours_end?, working_days? }
  * All fields are optional - only send what you want to update
+ * Note: API uses 0=Monday, 6=Sunday format for working_days
  */
 export const updateCalendarPreferences = async (
   userId: number,
@@ -751,7 +777,7 @@ export const updateCalendarPreferences = async (
     end_time: string;
     timezone: string;
     slot_length: number;
-    working_days?: number[]; // Note: API doesn't support working_days, but we keep it for internal use
+    working_days?: number[]; // JS format: 0=Sunday, 1=Monday, ..., 6=Saturday
   }
 ): Promise<any> => {
   const token = getAuthToken();
@@ -763,6 +789,7 @@ export const updateCalendarPreferences = async (
     default_slot_length_mins?: number;
     working_hours_start?: string;
     working_hours_end?: string;
+    working_days?: number[]; // API format: 0=Monday, 1=Tuesday, ..., 6=Sunday
   } = {};
 
   if (preferences.timezone) {
@@ -776,6 +803,10 @@ export const updateCalendarPreferences = async (
   }
   if (preferences.end_time) {
     requestBody.working_hours_end = preferences.end_time;
+  }
+  if (preferences.working_days && preferences.working_days.length > 0) {
+    // Convert JS format (0=Sunday) to API format (0=Monday)
+    requestBody.working_days = convertJsDaysToApi(preferences.working_days);
   }
 
   try {
@@ -802,6 +833,8 @@ export const updateCalendarPreferences = async (
     // Convert API response format back to internal format
     if (data.preferences) {
       const prefs = data.preferences;
+      const apiWorkingDays = prefs.working_days || data.working_days;
+      
       return {
         ...data,
         preferences: {
@@ -809,7 +842,7 @@ export const updateCalendarPreferences = async (
           end_time: prefs.workingHours?.end || preferences.end_time,
           timezone: prefs.timezone || preferences.timezone,
           slot_length: prefs.defaultSlotLengthMins || preferences.slot_length,
-          working_days: preferences.working_days || [1, 2, 3, 4, 5], // Keep working_days from input
+          working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : (preferences.working_days || [1, 2, 3, 4, 5]), // Convert API format to JS format
         },
       };
     }

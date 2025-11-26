@@ -329,7 +329,7 @@ export const cancelBooking = async (
 };
 
 /**
- * Get property availability
+ * Get property availability (Dashboard endpoint - uses GET)
  */
 export const fetchPropertyAvailability = async (
   propertyId: number,
@@ -356,6 +356,149 @@ export const fetchPropertyAvailability = async (
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Failed to fetch availability" }));
     throw new Error(error.detail || "Failed to fetch availability");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Validate tour request (VAPI endpoint - uses POST with property_name)
+ * This is for VAPI to validate a specific time slot request
+ */
+export const validateTourRequest = async (
+  propertyName: string,
+  requestedStartAt: string,
+  requestedEndAt: string
+): Promise<{
+  isAvailable: boolean;
+  canBook: boolean;
+  propertyId?: number;
+  propertyName?: string;
+  requestedSlot?: { startAt: string; endAt: string };
+  suggestedSlots?: Array<{ startAt: string; endAt: string }>;
+  assignedUser?: { userId: number; userType: string; name: string };
+  timezone?: string;
+  reason?: string;
+  message?: string;
+}> => {
+  // Note: This endpoint doesn't require auth (VAPI calls it)
+  const response = await fetch(`${API_BASE}/vapi/properties/validate-tour-request`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      property_name: propertyName,
+      requested_start_at: requestedStartAt,
+      requested_end_at: requestedEndAt,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to validate tour request" }));
+    throw new Error(error.detail || "Failed to validate tour request");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get property availability by property name (VAPI endpoint - uses POST)
+ * Alternative to validateTourRequest - returns all available slots
+ */
+export const fetchPropertyAvailabilityByName = async (
+  propertyName: string,
+  fromDate?: string,
+  toDate?: string
+): Promise<{
+  propertyId: number;
+  assignedUser: { userId: number; userType: string; name: string };
+  timezone: string;
+  availableSlots: AvailabilitySlot[];
+}> => {
+  // Note: This endpoint doesn't require auth (VAPI calls it)
+  const response = await fetch(`${API_BASE}/vapi/properties/availability`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      property_name: propertyName,
+      from_date: fromDate,
+      to_date: toDate,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to fetch availability" }));
+    throw new Error(error.detail || "Failed to fetch availability");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get bookings by visitor (VAPI endpoint - uses POST)
+ */
+export const getBookingsByVisitor = async (
+  visitorPhone?: string,
+  visitorName?: string,
+  status?: string
+): Promise<{
+  visitorPhone?: string;
+  visitorName?: string;
+  bookings: Booking[];
+}> => {
+  // Note: This endpoint doesn't require auth (VAPI calls it)
+  const response = await fetch(`${API_BASE}/vapi/bookings/by-visitor`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      visitor_phone: visitorPhone,
+      visitor_name: visitorName,
+      status: status,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to get bookings" }));
+    throw new Error(error.detail || "Failed to get bookings");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Cancel booking by visitor (VAPI endpoint - uses POST)
+ */
+export const cancelBookingByVisitor = async (
+  visitorPhone: string,
+  visitorName?: string,
+  propertyName?: string,
+  reason?: string
+): Promise<{
+  message: string;
+  cancelledBookings: Array<{ bookingId: number; status: string; propertyId: number }>;
+}> => {
+  // Note: This endpoint doesn't require auth (VAPI calls it)
+  const response = await fetch(`${API_BASE}/vapi/bookings/cancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      visitor_phone: visitorPhone,
+      visitor_name: visitorName,
+      property_name: propertyName,
+      reason: reason,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to cancel booking" }));
+    throw new Error(error.detail || "Failed to cancel booking");
   }
 
   return await response.json();

@@ -5,16 +5,18 @@
  * (approve, deny, reschedule, cancel) based on booking status.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X } from "lucide-react";
-import { formatDateTime, formatDate, formatTime, getStatusColor } from "./utils";
-import type { Booking } from "./types";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2 } from "lucide-react";
+import { formatDateTime, formatDate, formatTime, getStatusColor, fetchPropertyAvailability } from "./utils";
+import { toast } from "sonner";
+import type { Booking, AvailabilitySlot } from "./types";
 
 interface BookingDetailModalProps {
   booking: Booking | null;
@@ -44,8 +46,51 @@ export const BookingDetailModal = ({
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [selectedSlots, setSelectedSlots] = useState<Array<{ startAt: string; endAt: string }>>([]);
 
   if (!booking) return null;
+
+  // Fetch available slots when reschedule dialog opens
+  useEffect(() => {
+    if (showRescheduleDialog && booking.propertyId) {
+      setLoadingSlots(true);
+      const now = new Date();
+      const nextWeek = new Date(now);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      
+      fetchPropertyAvailability(
+        booking.propertyId,
+        now.toISOString(),
+        nextWeek.toISOString()
+      )
+        .then((data) => {
+          setAvailableSlots(data.availableSlots || []);
+        })
+        .catch((error) => {
+          console.error("Error fetching availability:", error);
+          toast.error("Failed to load available time slots");
+        })
+        .finally(() => {
+          setLoadingSlots(false);
+        });
+    }
+  }, [showRescheduleDialog, booking.propertyId]);
+
+  const toggleSlot = (slot: AvailabilitySlot) => {
+    const slotKey = `${slot.startAt}-${slot.endAt}`;
+    setSelectedSlots((prev) => {
+      const exists = prev.some(
+        (s) => `${s.startAt}-${s.endAt}` === slotKey
+      );
+      if (exists) {
+        return prev.filter((s) => `${s.startAt}-${s.endAt}` !== slotKey);
+      } else {
+        return [...prev, { startAt: slot.startAt, endAt: slot.endAt }];
+      }
+    });
+  };
 
   const handleApprove = async () => {
     setLoading(true);
@@ -88,15 +133,16 @@ export const BookingDetailModal = ({
   };
 
   const handleReschedule = async () => {
-    // For now, we'll need to implement a slot picker
-    // This is a placeholder - you'll need to add a calendar/slot picker component
+    if (selectedSlots.length === 0) {
+      toast.error("Please select at least one alternative time slot");
+      return;
+    }
     setLoading(true);
     try {
-      // TODO: Get proposed slots from a calendar picker
-      const proposedSlots: Array<{ startAt: string; endAt: string }> = [];
-      await onReschedule(booking.bookingId, proposedSlots, rescheduleReason || undefined);
+      await onReschedule(booking.bookingId, selectedSlots, rescheduleReason || undefined);
       setShowRescheduleDialog(false);
       setRescheduleReason("");
+      setSelectedSlots([]);
       onClose();
     } catch (error) {
       console.error("Error rescheduling booking:", error);
@@ -378,15 +424,21 @@ export const BookingDetailModal = ({
       </Dialog>
 
       {/* Reschedule Dialog */}
-      <Dialog open={showRescheduleDialog} onOpenChange={setShowRescheduleDialog}>
-        <DialogContent className="w-[95vw] sm:w-full p-4 sm:p-6">
+      <Dialog open={showRescheduleDialog} onOpenChange={(open) => {
+        setShowRescheduleDialog(open);
+        if (!open) {
+          setSelectedSlots([]);
+          setRescheduleReason("");
+        }
+      }}>
+        <DialogContent className="w-[95vw] sm:w-full max-w-2xl lg:max-w-3xl xl:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Reschedule Booking</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl lg:text-xl xl:text-2xl">Reschedule Booking</DialogTitle>
             <DialogDescription className="text-sm sm:text-base">
               Select alternative time slots for this booking. The visitor will be asked to confirm.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 sm:space-y-5 lg:space-y-6 py-4">
             <div>
               <Label htmlFor="reschedule-reason" className="text-sm sm:text-base">Reason (optional)</Label>
               <Textarea
@@ -398,24 +450,102 @@ export const BookingDetailModal = ({
                 className="mt-2 text-base"
               />
             </div>
-            <div className="text-sm text-gray-600">
-              Note: Slot picker will be implemented here. For now, this is a placeholder.
+
+            <div>
+              <Label className="text-sm sm:text-base lg:text-base xl:text-lg font-semibold mb-3 block">
+                Select Alternative Time Slots (Select 1-3 options)
+              </Label>
+              {loadingSlots ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-amber-600 mr-2" />
+                  <span className="text-sm sm:text-base">Loading available slots...</span>
+                </div>
+              ) : availableSlots.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm sm:text-base text-gray-600">No available slots found for the next 7 days</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg p-3 sm:p-4">
+                  {availableSlots.map((slot, idx) => {
+                    const slotKey = `${slot.startAt}-${slot.endAt}`;
+                    const isSelected = selectedSlots.some(
+                      (s) => `${s.startAt}-${s.endAt}` === slotKey
+                    );
+                    return (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex items-center gap-3 p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          isSelected
+                            ? "border-amber-500 bg-amber-50"
+                            : "border-gray-200 bg-white hover:border-amber-300 hover:bg-amber-50/50"
+                        }`}
+                        onClick={() => toggleSlot(slot)}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSlot(slot)}
+                          className="flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm sm:text-base lg:text-base xl:text-lg">
+                            {formatDate(slot.startAt)}
+                          </div>
+                          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-gray-600">
+                            {formatTime(slot.startAt)} - {formatTime(slot.endAt)}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+              {selectedSlots.length > 0 && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm sm:text-base font-medium text-blue-900 mb-2">
+                    Selected {selectedSlots.length} slot{selectedSlots.length > 1 ? "s" : ""}:
+                  </p>
+                  <div className="space-y-1">
+                    {selectedSlots.map((slot, idx) => (
+                      <div key={idx} className="text-xs sm:text-sm text-blue-800">
+                        • {formatDateTime(slot.startAt)} - {formatTime(slot.endAt)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button 
-              onClick={() => setShowRescheduleDialog(false)} 
+              onClick={() => {
+                setShowRescheduleDialog(false);
+                setSelectedSlots([]);
+                setRescheduleReason("");
+              }} 
               variant="outline"
-              className="w-full sm:w-auto min-h-[44px] order-2 sm:order-1"
+              className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] order-2 sm:order-1"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleReschedule} 
-              disabled={loading}
-              className="w-full sm:w-auto min-h-[44px] order-1 sm:order-2"
+              disabled={loading || selectedSlots.length === 0 || loadingSlots}
+              className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] order-1 sm:order-2"
             >
-              Propose Reschedule
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Proposing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2" />
+                  Propose Reschedule ({selectedSlots.length} slot{selectedSlots.length > 1 ? "s" : ""})
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

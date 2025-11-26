@@ -73,6 +73,45 @@ export const BookingsTab = ({
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = bookings.length;
+    const pending = bookings.filter((b) => b.status === "pending").length;
+    const approved = bookings.filter((b) => b.status === "approved").length;
+    const denied = bookings.filter((b) => b.status === "denied").length;
+    const cancelled = bookings.filter((b) => b.status === "cancelled").length;
+    const rescheduled = bookings.filter((b) => b.status === "rescheduled").length;
+    
+    const approvalRate = total > 0 
+      ? Math.round((approved / (approved + denied)) * 100) 
+      : 0;
+
+    // Calculate average response time (time from requestedAt to updatedAt for approved/denied)
+    const respondedBookings = bookings.filter(
+      (b) => (b.status === "approved" || b.status === "denied") && b.requestedAt && b.updatedAt
+    );
+    const avgResponseTime = respondedBookings.length > 0
+      ? Math.round(
+          respondedBookings.reduce((sum, b) => {
+            const requested = new Date(b.requestedAt!).getTime();
+            const updated = new Date(b.updatedAt!).getTime();
+            return sum + (updated - requested);
+          }, 0) / respondedBookings.length / (1000 * 60) // Convert to minutes
+        )
+      : 0;
+
+    return {
+      total,
+      pending,
+      approved,
+      denied,
+      cancelled,
+      rescheduled,
+      approvalRate,
+      avgResponseTime,
+    };
+  }, [bookings]);
+
   // Filter bookings based on status and search
   const filteredBookings = useMemo(() => {
     let filtered = bookings;
@@ -193,6 +232,34 @@ export const BookingsTab = ({
 
   return (
     <div className="space-y-4 sm:space-y-5 lg:space-y-6 xl:space-y-6">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-4 xl:gap-5">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 p-3 sm:p-4 lg:p-4 xl:p-5">
+          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-blue-700 font-medium mb-1">Total</div>
+          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-blue-900">{stats.total}</div>
+        </Card>
+        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 p-3 sm:p-4 lg:p-4 xl:p-5">
+          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-yellow-700 font-medium mb-1">Pending</div>
+          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-yellow-900">{stats.pending}</div>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 p-3 sm:p-4 lg:p-4 xl:p-5">
+          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-green-700 font-medium mb-1">Approved</div>
+          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-green-900">{stats.approved}</div>
+        </Card>
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 p-3 sm:p-4 lg:p-4 xl:p-5">
+          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-red-700 font-medium mb-1">Denied</div>
+          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-red-900">{stats.denied}</div>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 p-3 sm:p-4 lg:p-4 xl:p-5">
+          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-purple-700 font-medium mb-1">Approval Rate</div>
+          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-purple-900">{stats.approvalRate}%</div>
+        </Card>
+        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 p-3 sm:p-4 lg:p-4 xl:p-5">
+          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-indigo-700 font-medium mb-1">Avg Response</div>
+          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-indigo-900">{stats.avgResponseTime}m</div>
+        </Card>
+      </div>
+
       {/* Header with filters and view controls */}
       <Card className="bg-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
         <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-4 sm:p-5 lg:p-6 xl:p-8">

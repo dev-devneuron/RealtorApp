@@ -180,6 +180,42 @@
   box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
 }
 
+/* Make whole day clickable in month view */
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg:hover {
+  background-color: #fffbeb !important;
+}
+
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg.rbc-off-range-bg {
+  cursor: default;
+}
+
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg.rbc-off-range-bg:hover {
+  background-color: #f9fafb !important;
+}
+
+/* Make the entire day cell clickable in month view */
+.booking-calendar-enhanced .rbc-month-row {
+  cursor: pointer;
+}
+
+.booking-calendar-enhanced .rbc-month-row:hover .rbc-day-bg:not(.rbc-off-range-bg) {
+  background-color: #fffbeb !important;
+}
+
+/* Working hours styling */
+.booking-calendar-enhanced .rbc-event[data-type="working-hours"] {
+  background-color: rgba(251, 191, 36, 0.1) !important;
+  border: 2px dashed #fbbf24 !important;
+  color: #92400e !important;
+  opacity: 0.7 !important;
+}
+
 /* Time slot enhancements */
 .booking-calendar-enhanced .rbc-time-slot {
   min-height: 60px;

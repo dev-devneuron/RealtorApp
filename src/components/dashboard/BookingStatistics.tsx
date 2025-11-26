@@ -107,7 +107,7 @@ export const BookingStatistics = ({ bookings }: BookingStatisticsProps) => {
   return (
     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 p-3 sm:p-4">
           <div className="text-xs sm:text-sm text-blue-700 font-medium mb-1">Total</div>
           <div className="text-xl sm:text-2xl font-bold text-blue-900">{stats.total}</div>
@@ -124,23 +124,17 @@ export const BookingStatistics = ({ bookings }: BookingStatisticsProps) => {
           <div className="text-xs sm:text-sm text-red-700 font-medium mb-1">Denied</div>
           <div className="text-xl sm:text-2xl font-bold text-red-900">{stats.denied}</div>
         </Card>
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 p-3 sm:p-4">
-          <div className="text-xs sm:text-sm text-purple-700 font-medium mb-1">Approval Rate</div>
-          <div className="text-xl sm:text-2xl font-bold text-purple-900">{stats.approvalRate}%</div>
-        </Card>
-        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 p-3 sm:p-4">
-          <div className="text-xs sm:text-sm text-indigo-700 font-medium mb-1">Avg Response</div>
-          <div className="text-xl sm:text-2xl font-bold text-indigo-900">{stats.avgResponseTime}m</div>
-        </Card>
       </div>
 
-      {/* Charts */}
+      {/* Charts - Enhanced with more visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
         {/* Status Distribution Pie Chart */}
         {stats.statusData.length > 0 && (
-          <Card className="bg-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
+          <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
             <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-lg sm:text-xl lg:text-xl xl:text-2xl">Bookings by Status</CardTitle>
+              <CardTitle className="text-lg sm:text-xl lg:text-xl xl:text-2xl bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+                Bookings by Status
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
               <ResponsiveContainer width="100%" height={300}>
@@ -168,21 +162,29 @@ export const BookingStatistics = ({ bookings }: BookingStatisticsProps) => {
 
         {/* Bookings Over Time Line Chart */}
         {stats.bookingsOverTime.length > 0 && (
-          <Card className="bg-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
+          <Card className="bg-gradient-to-br from-white via-blue-50/30 to-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
             <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-lg sm:text-xl lg:text-xl xl:text-2xl">Bookings Over Time (Last 7 Days)</CardTitle>
+              <CardTitle className="text-lg sm:text-xl lg:text-xl xl:text-2xl bg-gradient-to-r from-blue-700 to-blue-900 bg-clip-text text-transparent">
+                Bookings Over Time (Last 7 Days)
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={stats.bookingsOverTime}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #fbbf24',
+                      borderRadius: '8px'
+                    }} 
+                  />
                   <Legend />
-                  <Line type="monotone" dataKey="bookings" stroke="#3b82f6" name="Total" />
-                  <Line type="monotone" dataKey="approved" stroke="#10b981" name="Approved" />
-                  <Line type="monotone" dataKey="pending" stroke="#fbbf24" name="Pending" />
+                  <Line type="monotone" dataKey="bookings" stroke="#3b82f6" strokeWidth={2} name="Total" dot={{ fill: '#3b82f6', r: 4 }} />
+                  <Line type="monotone" dataKey="approved" stroke="#10b981" strokeWidth={2} name="Approved" dot={{ fill: '#10b981', r: 4 }} />
+                  <Line type="monotone" dataKey="pending" stroke="#fbbf24" strokeWidth={2} name="Pending" dot={{ fill: '#fbbf24', r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -191,18 +193,58 @@ export const BookingStatistics = ({ bookings }: BookingStatisticsProps) => {
 
         {/* Top Properties Bar Chart */}
         {stats.topProperties.length > 0 && (
-          <Card className="bg-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl lg:col-span-2">
+          <Card className="bg-gradient-to-br from-white via-emerald-50/30 to-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
             <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-lg sm:text-xl lg:text-xl xl:text-2xl">Most Requested Properties</CardTitle>
+              <CardTitle className="text-lg sm:text-xl lg:text-xl xl:text-2xl bg-gradient-to-r from-emerald-700 to-emerald-900 bg-clip-text text-transparent">
+                Most Requested Properties
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={stats.topProperties}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#f59e0b" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #fbbf24',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                  <Bar dataKey="count" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Status Comparison Bar Chart */}
+        {stats.statusData.length > 0 && (
+          <Card className="bg-gradient-to-br from-white via-purple-50/30 to-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl lg:text-xl xl:text-2xl bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">
+                Status Comparison
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.statusData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis type="number" stroke="#6b7280" />
+                  <YAxis dataKey="name" type="category" width={100} stroke="#6b7280" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #fbbf24',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                  <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+                    {stats.statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

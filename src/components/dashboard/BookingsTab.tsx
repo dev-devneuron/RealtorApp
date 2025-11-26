@@ -316,7 +316,7 @@ export const BookingsTab = ({
   return (
     <div className="space-y-6">
       {/* Enhanced Statistics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           icon={<Calendar className="h-6 w-6 text-white" />}
           label="Total Bookings"
@@ -344,20 +344,6 @@ export const BookingsTab = ({
           value={stats.denied}
           gradient="bg-gradient-to-br from-red-500 via-red-600 to-red-700"
           iconBg="bg-red-400/30"
-        />
-        <StatCard
-          icon={<TrendingUp className="h-6 w-6 text-white" />}
-          label="Approval Rate"
-          value={`${stats.approvalRate}%`}
-          gradient="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700"
-          iconBg="bg-purple-400/30"
-        />
-        <StatCard
-          icon={<Clock className="h-6 w-6 text-white" />}
-          label="Avg Response"
-          value={`${stats.avgResponseTime}m`}
-          gradient="bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700"
-          iconBg="bg-indigo-400/30"
         />
       </div>
 
@@ -769,6 +755,8 @@ export const BookingsTab = ({
                 onViewChange={(v) => setView(v)}
                 onNavigate={setSelectedDate}
                 onSelectEvent={(booking) => handleBookingClick(booking)}
+                userId={userId}
+                userType={userType}
               />
             </TabsContent>
 
@@ -780,6 +768,8 @@ export const BookingsTab = ({
                 onViewChange={(v) => setView(v)}
                 onNavigate={setSelectedDate}
                 onSelectEvent={(booking) => handleBookingClick(booking)}
+                userId={userId}
+                userType={userType}
               />
             </TabsContent>
 
@@ -791,6 +781,8 @@ export const BookingsTab = ({
                 onViewChange={(v) => setView(v)}
                 onNavigate={setSelectedDate}
                 onSelectEvent={(booking) => handleBookingClick(booking)}
+                userId={userId}
+                userType={userType}
               />
             </TabsContent>
 

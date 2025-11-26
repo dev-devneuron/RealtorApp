@@ -567,9 +567,29 @@ const Dashboard = () => {
         return;
       }
 
+      // Ensure token is valid and properly formatted
+      if (!token || token.trim() === "") {
+        console.error("Token is empty or invalid");
+        toast.error("Authentication token is missing");
+        handleTokenExpiration();
+        return;
+      }
+
+      // Prepare headers with explicit Authorization header
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token.trim()}`,
+      };
+
+      // Debug logging (remove in production)
+      console.log("Fetching bookings for user:", userIdNum);
+      console.log("Authorization header present:", !!headers.Authorization);
+      console.log("Token length:", token.length);
+
       // Use the new booking API endpoint
       const res = await fetch(`${API_BASE}/api/users/${userIdNum}/bookings`, {
-        headers: { Authorization: `Bearer ${token}` },
+        method: "GET",
+        headers: headers,
       });
 
       // Handle token expiration

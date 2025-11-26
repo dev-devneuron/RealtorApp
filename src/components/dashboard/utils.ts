@@ -182,10 +182,20 @@ export const fetchUserBookings = async (
     params.append("to", dateRange.to);
   }
 
+  // Ensure token is valid and properly formatted
+  if (!token || token.trim() === "") {
+    throw new Error("Authentication token is missing");
+  }
+
+  // Prepare headers with explicit Authorization header
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token.trim()}`,
+  };
+
   const response = await fetch(`${API_BASE}/api/users/${userId}/bookings?${params}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    method: "GET",
+    headers: headers,
   });
 
   // Handle token expiration
@@ -234,12 +244,16 @@ export const fetchUserBookings = async (
  */
 export const fetchBookingDetail = async (bookingId: number): Promise<Booking> => {
   const token = getAuthToken();
-  if (!token) throw new Error("Not authenticated");
+  if (!token || token.trim() === "") throw new Error("Not authenticated");
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token.trim()}`,
+  };
 
   const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    method: "GET",
+    headers: headers,
   });
 
   if (!response.ok) {
@@ -258,14 +272,16 @@ export const approveBooking = async (
   approverId: number
 ): Promise<Booking> => {
   const token = getAuthToken();
-  if (!token) throw new Error("Not authenticated");
+  if (!token || token.trim() === "") throw new Error("Not authenticated");
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token.trim()}`,
+  };
 
   const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/approve`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    headers: headers,
     body: JSON.stringify({ approver_id: approverId }),
   });
 
@@ -286,14 +302,16 @@ export const denyBooking = async (
   reason?: string
 ): Promise<Booking> => {
   const token = getAuthToken();
-  if (!token) throw new Error("Not authenticated");
+  if (!token || token.trim() === "") throw new Error("Not authenticated");
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token.trim()}`,
+  };
 
   const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/deny`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    headers: headers,
     body: JSON.stringify({ approver_id: approverId, reason }),
   });
 
@@ -314,14 +332,16 @@ export const rescheduleBooking = async (
   reason?: string
 ): Promise<Booking> => {
   const token = getAuthToken();
-  if (!token) throw new Error("Not authenticated");
+  if (!token || token.trim() === "") throw new Error("Not authenticated");
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token.trim()}`,
+  };
 
   const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/reschedule`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    headers: headers,
     body: JSON.stringify({ proposed_slots: proposedSlots, reason }),
   });
 
@@ -341,14 +361,16 @@ export const cancelBooking = async (
   reason?: string
 ): Promise<Booking> => {
   const token = getAuthToken();
-  if (!token) throw new Error("Not authenticated");
+  if (!token || token.trim() === "") throw new Error("Not authenticated");
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token.trim()}`,
+  };
 
   const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/cancel`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    headers: headers,
     body: JSON.stringify({ reason }),
   });
 

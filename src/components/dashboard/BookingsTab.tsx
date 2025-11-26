@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,8 @@ import {
   User,
   Phone,
   Mail,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -60,8 +62,8 @@ interface BookingsTabProps {
   bookings: Booking[];
   loadingBookings: boolean;
   onRefresh: () => void;
-  realtors?: Realtor[]; // For PM property assignment
-  properties?: Property[]; // For PM property assignment - also used to check if realtor has assigned properties
+  realtors?: Realtor[];
+  properties?: Property[];
 }
 
 export const BookingsTab = ({
@@ -96,7 +98,6 @@ export const BookingsTab = ({
       ? Math.round((approved / (approved + denied)) * 100) 
       : 0;
 
-    // Calculate average response time (time from requestedAt to updatedAt for approved/denied)
     const respondedBookings = bookings.filter(
       (b) => (b.status === "approved" || b.status === "denied") && b.requestedAt && b.updatedAt
     );
@@ -106,7 +107,7 @@ export const BookingsTab = ({
             const requested = new Date(b.requestedAt!).getTime();
             const updated = new Date(b.updatedAt!).getTime();
             return sum + (updated - requested);
-          }, 0) / respondedBookings.length / (1000 * 60) // Convert to minutes
+          }, 0) / respondedBookings.length / (1000 * 60)
         )
       : 0;
 
@@ -126,12 +127,10 @@ export const BookingsTab = ({
   const filteredBookings = useMemo(() => {
     let filtered = bookings;
 
-    // Filter by status
     if (statusFilter !== "all") {
       filtered = filtered.filter((b) => b.status === statusFilter);
     }
 
-    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -230,15 +229,13 @@ export const BookingsTab = ({
   // Check if realtor has assigned properties or bookings (for showing Availability tab)
   const hasAssignedPropertiesOrBookings = useMemo(() => {
     if (userType === "property_manager") {
-      return true; // PMs always have access
+      return true;
     }
     
-    // For realtors: check if they have any bookings (which means they have assigned properties)
     if (bookings.length > 0) {
       return true;
     }
     
-    // Also check if they have any assigned properties from the properties list
     if (properties && properties.length > 0) {
       const assignedProperties = properties.filter((prop: Property) => {
         const meta = prop.listing_metadata || {};
@@ -268,10 +265,7 @@ export const BookingsTab = ({
       }
     };
 
-    // Check every 30 seconds
     const interval = setInterval(checkForNewBookings, 30000);
-    
-    // Initial check
     checkForNewBookings();
 
     return () => clearInterval(interval);
@@ -290,76 +284,129 @@ export const BookingsTab = ({
     setSelectedDate(newDate);
   };
 
+  const StatCard = ({ icon, label, value, gradient, iconBg }: {
+    icon: React.ReactNode;
+    label: string;
+    value: string | number;
+    gradient: string;
+    iconBg: string;
+  }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02, y: -2 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className={`${gradient} border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden relative`}>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+        <CardContent className="p-6 relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className={`${iconBg} p-3 rounded-xl shadow-md`}>
+              {icon}
+            </div>
+            <Sparkles className="h-5 w-5 text-white/30" />
+          </div>
+          <div className="text-white/80 text-sm font-medium mb-1">{label}</div>
+          <div className="text-white text-3xl font-bold">{value}</div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+
   return (
-    <div className="space-y-4 sm:space-y-5 lg:space-y-6 xl:space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-4 xl:gap-5">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 p-3 sm:p-4 lg:p-4 xl:p-5">
-          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-blue-700 font-medium mb-1">Total</div>
-          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-blue-900">{stats.total}</div>
-        </Card>
-        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 p-3 sm:p-4 lg:p-4 xl:p-5">
-          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-yellow-700 font-medium mb-1">Pending</div>
-          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-yellow-900">{stats.pending}</div>
-        </Card>
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 p-3 sm:p-4 lg:p-4 xl:p-5">
-          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-green-700 font-medium mb-1">Approved</div>
-          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-green-900">{stats.approved}</div>
-        </Card>
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 p-3 sm:p-4 lg:p-4 xl:p-5">
-          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-red-700 font-medium mb-1">Denied</div>
-          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-red-900">{stats.denied}</div>
-        </Card>
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 p-3 sm:p-4 lg:p-4 xl:p-5">
-          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-purple-700 font-medium mb-1">Approval Rate</div>
-          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-purple-900">{stats.approvalRate}%</div>
-        </Card>
-        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 p-3 sm:p-4 lg:p-4 xl:p-5">
-          <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-indigo-700 font-medium mb-1">Avg Response</div>
-          <div className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold text-indigo-900">{stats.avgResponseTime}m</div>
-        </Card>
+    <div className="space-y-6">
+      {/* Enhanced Statistics Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatCard
+          icon={<Calendar className="h-6 w-6 text-white" />}
+          label="Total Bookings"
+          value={stats.total}
+          gradient="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700"
+          iconBg="bg-blue-400/30"
+        />
+        <StatCard
+          icon={<Clock className="h-6 w-6 text-white" />}
+          label="Pending"
+          value={stats.pending}
+          gradient="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700"
+          iconBg="bg-amber-400/30"
+        />
+        <StatCard
+          icon={<CheckCircle2 className="h-6 w-6 text-white" />}
+          label="Approved"
+          value={stats.approved}
+          gradient="bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700"
+          iconBg="bg-emerald-400/30"
+        />
+        <StatCard
+          icon={<XCircle className="h-6 w-6 text-white" />}
+          label="Denied"
+          value={stats.denied}
+          gradient="bg-gradient-to-br from-red-500 via-red-600 to-red-700"
+          iconBg="bg-red-400/30"
+        />
+        <StatCard
+          icon={<TrendingUp className="h-6 w-6 text-white" />}
+          label="Approval Rate"
+          value={`${stats.approvalRate}%`}
+          gradient="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700"
+          iconBg="bg-purple-400/30"
+        />
+        <StatCard
+          icon={<Clock className="h-6 w-6 text-white" />}
+          label="Avg Response"
+          value={`${stats.avgResponseTime}m`}
+          gradient="bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700"
+          iconBg="bg-indigo-400/30"
+        />
       </div>
 
-      {/* Header with filters and view controls */}
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-4 sm:p-5 lg:p-6 xl:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-gray-900 text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-bold flex items-center gap-2 sm:gap-3 lg:gap-3 xl:gap-4">
-                <div className="p-1.5 sm:p-2 lg:p-2.5 xl:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
-                  <Calendar className="h-5 w-5 sm:h-6 sm:w-6 lg:h-6 lg:w-6 xl:h-7 xl:w-7 text-white" />
+      {/* Enhanced Header Card */}
+      <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5" />
+        <CardHeader className="relative p-6 lg:p-8 border-b border-amber-100/50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl blur-lg opacity-50" />
+                <div className="relative bg-gradient-to-br from-amber-500 to-amber-600 p-4 rounded-2xl shadow-xl">
+                  <Calendar className="h-8 w-8 text-white" />
                 </div>
-                <span className="truncate">Property Tour Bookings</span>
-              </CardTitle>
-              <p className="text-gray-600 mt-1 sm:mt-2 lg:mt-2 xl:mt-3 text-sm sm:text-base lg:text-base xl:text-lg">
-                Manage property tour bookings and availability
-              </p>
+              </div>
+              <div>
+                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
+                  Property Tour Bookings
+                </CardTitle>
+                <p className="text-gray-600 mt-1 text-sm">
+                  Manage property tour bookings and availability
+                </p>
+              </div>
             </div>
             <Button 
               onClick={onRefresh} 
               disabled={loadingBookings} 
               variant="outline"
-              className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] px-4 sm:px-4 lg:px-5 xl:px-6 text-sm sm:text-sm lg:text-base xl:text-base"
+              className="bg-white/80 backdrop-blur-sm border-amber-200 hover:bg-white hover:border-amber-300 shadow-md hover:shadow-lg transition-all"
             >
-              <RefreshCw className={`h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2 ${loadingBookings ? "animate-spin" : ""}`} />
-              <span>Refresh</span>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loadingBookings ? "animate-spin" : ""}`} />
+              Refresh
             </Button>
           </div>
 
-          {/* Filters and Search */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-4 xl:gap-5 mt-4 lg:mt-5 xl:mt-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 lg:left-4 xl:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 text-gray-400 pointer-events-none" />
+          {/* Enhanced Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-6">
+            <div className="flex-1 relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors" />
               <Input
-                placeholder="Search bookings..."
+                placeholder="Search bookings by name, phone, property..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 lg:pl-11 xl:pl-12 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] text-base lg:text-base xl:text-lg"
+                className="pl-12 h-12 bg-white/80 backdrop-blur-sm border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl shadow-sm"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[180px] lg:w-[200px] xl:w-[220px] min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] text-sm lg:text-base xl:text-base">
-                <Filter className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2 flex-shrink-0" />
+              <SelectTrigger className="w-full sm:w-[200px] h-12 bg-white/80 backdrop-blur-sm border-amber-200 focus:border-amber-400 rounded-xl shadow-sm">
+                <Filter className="h-4 w-4 mr-2 text-amber-600" />
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -374,19 +421,47 @@ export const BookingsTab = ({
           </div>
         </CardHeader>
 
-        <CardContent className="p-4 sm:p-5 lg:p-6 xl:p-8">
-          {/* View Tabs */}
+        <CardContent className="relative p-6 lg:p-8">
+          {/* Enhanced View Tabs */}
           <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-5 lg:mb-6 xl:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                <TabsList className={`grid w-full ${hasAssignedPropertiesOrBookings ? 'grid-cols-6' : 'grid-cols-5'} min-w-[500px] sm:min-w-0 gap-1 lg:gap-2 xl:gap-2`}>
-                  <TabsTrigger value="list" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">List</TabsTrigger>
-                  <TabsTrigger value="day" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Day</TabsTrigger>
-                  <TabsTrigger value="week" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Week</TabsTrigger>
-                  <TabsTrigger value="month" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Month</TabsTrigger>
-                  <TabsTrigger value="stats" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Stats</TabsTrigger>
+                <TabsList className={`inline-flex h-12 items-center justify-center rounded-xl bg-amber-50/50 p-1.5 ${hasAssignedPropertiesOrBookings ? 'w-full sm:w-auto' : ''}`}>
+                  <TabsTrigger 
+                    value="list" 
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                  >
+                    List
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="day" 
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                  >
+                    Day
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="week" 
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                  >
+                    Week
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="month" 
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                  >
+                    Month
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="stats" 
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                  >
+                    Stats
+                  </TabsTrigger>
                   {hasAssignedPropertiesOrBookings && (
-                    <TabsTrigger value="availability" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">
+                    <TabsTrigger 
+                      value="availability" 
+                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                    >
                       Availability
                     </TabsTrigger>
                   )}
@@ -397,99 +472,120 @@ export const BookingsTab = ({
               </div>
             </div>
 
-            {/* Pending Bookings Queue */}
-            {pendingBookings.length > 0 && (
-              <Card className="mb-4 sm:mb-5 lg:mb-6 xl:mb-6 border-yellow-200 bg-yellow-50/50">
-                <CardHeader className="p-4 sm:p-5 lg:p-6 xl:p-6">
-                  <CardTitle className="text-base sm:text-lg lg:text-lg xl:text-xl flex items-center gap-2 lg:gap-2.5 xl:gap-3">
-                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-yellow-600 flex-shrink-0" />
-                    <span>Pending Bookings ({pendingBookings.length})</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-5 lg:p-6 xl:p-6 pt-0">
-                  <div className="space-y-3 lg:space-y-3.5 xl:space-y-4">
-                    {pendingBookings.slice(0, 5).map((booking) => (
-                      <motion.div
-                        key={booking.bookingId}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-lg p-3 sm:p-4 lg:p-4 xl:p-5 border border-yellow-200 hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
-                        onClick={() => handleBookingClick(booking)}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 lg:gap-4 xl:gap-5">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-2 lg:mb-2.5 xl:mb-3">
-                              <Badge className={getStatusColor(booking.status)}>
-                                {booking.status}
-                              </Badge>
-                              <span className="font-semibold text-sm sm:text-base lg:text-base xl:text-lg truncate">{booking.visitor.name}</span>
-                            </div>
-                            <div className="text-xs sm:text-sm lg:text-sm xl:text-base text-gray-600 space-y-1.5 lg:space-y-2 xl:space-y-2">
-                              <div className="flex items-start gap-2">
-                                <MapPin className="h-3.5 w-3.5 lg:h-4 lg:w-4 xl:h-4 xl:w-4 mt-0.5 flex-shrink-0" />
-                                <span className="break-words">{booking.propertyAddress || `Property #${booking.propertyId}`}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-3.5 w-3.5 lg:h-4 lg:w-4 xl:h-4 xl:w-4 flex-shrink-0" />
-                                <span className="break-words">{formatDateTime(booking.startAt)}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 sm:flex-col sm:gap-2 lg:gap-2.5 xl:gap-3">
-                            <Button
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleApprove(booking.bookingId);
-                              }}
-                              disabled={actionLoading === booking.bookingId}
-                              className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] sm:min-h-0 sm:px-3 lg:px-4 xl:px-5 text-sm lg:text-base xl:text-base"
-                            >
-                              <CheckCircle2 className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 sm:mr-2" />
-                              <span className="hidden sm:inline">Approve</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeny(booking.bookingId);
-                              }}
-                              disabled={actionLoading === booking.bookingId}
-                              className="flex-1 sm:flex-none min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] sm:min-h-0 sm:px-3 lg:px-4 xl:px-5 text-sm lg:text-base xl:text-base"
-                            >
-                              <XCircle className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 sm:mr-2" />
-                              <span className="hidden sm:inline">Deny</span>
-                            </Button>
-                          </div>
+            {/* Enhanced Pending Bookings Queue */}
+            <AnimatePresence>
+              {pendingBookings.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6"
+                >
+                  <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-yellow-50/50 to-amber-50 shadow-lg">
+                    <CardHeader className="p-5">
+                      <CardTitle className="text-xl flex items-center gap-3">
+                        <div className="p-2 bg-amber-500 rounded-lg shadow-md">
+                          <Clock className="h-5 w-5 text-white" />
                         </div>
-                      </motion.div>
-                    ))}
-                    {pendingBookings.length > 5 && (
-                      <Button
-                        variant="outline"
-                        className="w-full min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] text-sm lg:text-base xl:text-base"
-                        onClick={() => setStatusFilter("pending")}
-                      >
-                        View All {pendingBookings.length} Pending Bookings
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                        <span className="bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent font-bold">
+                          Pending Bookings ({pendingBookings.length})
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-5 pt-0">
+                      <div className="space-y-3">
+                        {pendingBookings.slice(0, 5).map((booking, index) => (
+                          <motion.div
+                            key={booking.bookingId}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="bg-white rounded-xl p-5 border border-amber-200 hover:shadow-xl hover:border-amber-300 transition-all cursor-pointer group"
+                            onClick={() => handleBookingClick(booking)}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-3 mb-3">
+                                  <Badge className="bg-amber-500 text-white border-0 shadow-sm">
+                                    {booking.status}
+                                  </Badge>
+                                  <span className="font-bold text-lg text-gray-900">{booking.visitor.name}</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-amber-600" />
+                                    <span className="truncate">{booking.propertyAddress || `Property #${booking.propertyId}`}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4 text-amber-600" />
+                                    <span>{formatDateTime(booking.startAt)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleApprove(booking.bookingId);
+                                  }}
+                                  disabled={actionLoading === booking.bookingId}
+                                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeny(booking.bookingId);
+                                  }}
+                                  disabled={actionLoading === booking.bookingId}
+                                  className="shadow-md hover:shadow-lg transition-all"
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  Deny
+                                </Button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                        {pendingBookings.length > 5 && (
+                          <Button
+                            variant="outline"
+                            className="w-full border-amber-300 hover:bg-amber-50"
+                            onClick={() => setStatusFilter("pending")}
+                          >
+                            View All {pendingBookings.length} Pending Bookings
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* List View */}
             <TabsContent value="list" className="mt-0">
               {loadingBookings ? (
-                <div className="text-center py-8 sm:py-12">
-                  <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mx-auto mb-4" />
-                  <p className="text-gray-600 font-medium text-sm sm:text-base">Loading bookings...</p>
+                <div className="text-center py-16">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    <RefreshCw className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                  </motion.div>
+                  <p className="text-gray-600 font-medium">Loading bookings...</p>
                 </div>
               ) : filteredBookings.length === 0 ? (
-                <div className="text-center py-8 sm:py-12">
-                  <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium text-base sm:text-lg">
+                <div className="text-center py-16">
+                  <div className="inline-flex p-4 bg-amber-100 rounded-full mb-4">
+                    <Calendar className="h-12 w-12 text-amber-600" />
+                  </div>
+                  <p className="text-gray-500 font-medium text-lg">
                     {searchQuery || statusFilter !== "all"
                       ? "No bookings match your filters"
                       : "No bookings found"}
@@ -498,49 +594,50 @@ export const BookingsTab = ({
               ) : (
                 <>
                   {/* Desktop Table View */}
-                  <div className="hidden md:block overflow-hidden rounded-xl border border-gray-200 bg-white">
+                  <div className="hidden md:block overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-lg">
                     <Table>
                       <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
-                        <TableRow>
-                          <TableHead className="font-bold text-sm lg:text-base xl:text-base py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">ID</TableHead>
-                          <TableHead className="font-bold text-sm lg:text-base xl:text-base py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">Visitor</TableHead>
-                          <TableHead className="font-bold text-sm lg:text-base xl:text-base py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">Property</TableHead>
-                          <TableHead className="font-bold text-sm lg:text-base xl:text-base py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">Date & Time</TableHead>
-                          <TableHead className="font-bold text-sm lg:text-base xl:text-base py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">Status</TableHead>
-                          <TableHead className="font-bold text-sm lg:text-base xl:text-base py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">Actions</TableHead>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="font-bold text-amber-900 py-4 px-6">ID</TableHead>
+                          <TableHead className="font-bold text-amber-900 py-4 px-6">Visitor</TableHead>
+                          <TableHead className="font-bold text-amber-900 py-4 px-6">Property</TableHead>
+                          <TableHead className="font-bold text-amber-900 py-4 px-6">Date & Time</TableHead>
+                          <TableHead className="font-bold text-amber-900 py-4 px-6">Status</TableHead>
+                          <TableHead className="font-bold text-amber-900 py-4 px-6">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredBookings.map((booking) => (
+                        {filteredBookings.map((booking, index) => (
                           <motion.tr
                             key={booking.bookingId}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="hover:bg-amber-50/50 transition-colors cursor-pointer"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="hover:bg-amber-50/50 transition-colors cursor-pointer border-b border-amber-50"
                             onClick={() => handleBookingClick(booking)}
                           >
-                            <TableCell className="font-semibold text-sm lg:text-base xl:text-base py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">#{booking.bookingId}</TableCell>
-                            <TableCell className="py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">
+                            <TableCell className="font-semibold text-amber-900 py-4 px-6">#{booking.bookingId}</TableCell>
+                            <TableCell className="py-4 px-6">
                               <div>
-                                <div className="font-medium text-sm lg:text-base xl:text-base">{booking.visitor.name}</div>
-                                <div className="text-xs lg:text-sm xl:text-sm text-gray-500">{booking.visitor.phone}</div>
+                                <div className="font-semibold text-gray-900">{booking.visitor.name}</div>
+                                <div className="text-sm text-gray-500">{booking.visitor.phone}</div>
                               </div>
                             </TableCell>
-                            <TableCell className="max-w-xs truncate text-sm lg:text-base xl:text-base py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">
+                            <TableCell className="max-w-xs truncate py-4 px-6 text-gray-700">
                               {booking.propertyAddress || `Property #${booking.propertyId}`}
                             </TableCell>
-                            <TableCell className="py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">
-                              <div className="text-sm lg:text-base xl:text-base">
-                                <div>{formatDate(booking.startAt)}</div>
-                                <div className="text-gray-500 text-xs lg:text-sm xl:text-sm">{formatTime(booking.startAt)}</div>
+                            <TableCell className="py-4 px-6">
+                              <div>
+                                <div className="font-medium text-gray-900">{formatDate(booking.startAt)}</div>
+                                <div className="text-sm text-gray-500">{formatTime(booking.startAt)}</div>
                               </div>
                             </TableCell>
-                            <TableCell className="py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">
+                            <TableCell className="py-4 px-6">
                               <Badge className={getStatusColor(booking.status)}>
                                 {booking.status}
                               </Badge>
                             </TableCell>
-                            <TableCell className="py-3 lg:py-4 xl:py-5 px-4 lg:px-5 xl:px-6">
+                            <TableCell className="py-4 px-6">
                               <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                                 {booking.status === "pending" && (
                                   <>
@@ -548,18 +645,18 @@ export const BookingsTab = ({
                                       size="sm"
                                       onClick={() => handleApprove(booking.bookingId)}
                                       disabled={actionLoading === booking.bookingId}
-                                      className="bg-green-600 hover:bg-green-700 h-8 lg:h-9 xl:h-10 w-8 lg:w-9 xl:w-10 p-0"
+                                      className="bg-emerald-500 hover:bg-emerald-600 h-9 w-9 p-0 shadow-md"
                                     >
-                                      <CheckCircle2 className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5" />
+                                      <CheckCircle2 className="h-4 w-4" />
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="destructive"
                                       onClick={() => handleDeny(booking.bookingId)}
                                       disabled={actionLoading === booking.bookingId}
-                                      className="h-8 lg:h-9 xl:h-10 w-8 lg:w-9 xl:w-10 p-0"
+                                      className="h-9 w-9 p-0 shadow-md"
                                     >
-                                      <XCircle className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5" />
+                                      <XCircle className="h-4 w-4" />
                                     </Button>
                                   </>
                                 )}
@@ -569,9 +666,9 @@ export const BookingsTab = ({
                                     variant="destructive"
                                     onClick={() => handleCancel(booking.bookingId)}
                                     disabled={actionLoading === booking.bookingId}
-                                    className="h-8 lg:h-9 xl:h-10 w-8 lg:w-9 xl:w-10 p-0"
+                                    className="h-9 w-9 p-0 shadow-md"
                                   >
-                                    <X className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5" />
+                                    <X className="h-4 w-4" />
                                   </Button>
                                 )}
                               </div>
@@ -583,50 +680,51 @@ export const BookingsTab = ({
                   </div>
 
                   {/* Mobile Card View */}
-                  <div className="md:hidden space-y-3">
-                    {filteredBookings.map((booking) => (
+                  <div className="md:hidden space-y-4">
+                    {filteredBookings.map((booking, index) => (
                       <motion.div
                         key={booking.bookingId}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
+                        transition={{ delay: index * 0.05 }}
+                        className="bg-white rounded-xl p-5 border border-amber-200 shadow-md hover:shadow-xl transition-all cursor-pointer"
                         onClick={() => handleBookingClick(booking)}
                       >
-                        <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex items-start justify-between gap-3 mb-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="font-semibold text-sm text-gray-500">#{booking.bookingId}</span>
+                              <span className="font-semibold text-sm text-amber-600">#{booking.bookingId}</span>
                               <Badge className={getStatusColor(booking.status)}>
                                 {booking.status}
                               </Badge>
                             </div>
-                            <h3 className="font-semibold text-base mb-1 truncate">{booking.visitor.name}</h3>
-                            <div className="text-sm text-gray-600 space-y-1">
+                            <h3 className="font-bold text-lg mb-3 text-gray-900">{booking.visitor.name}</h3>
+                            <div className="space-y-2 text-sm text-gray-600">
                               <div className="flex items-center gap-2">
-                                <Phone className="h-3.5 w-3.5 flex-shrink-0" />
-                                <span className="truncate">{booking.visitor.phone}</span>
+                                <Phone className="h-4 w-4 text-amber-600" />
+                                <span>{booking.visitor.phone}</span>
                               </div>
                               <div className="flex items-start gap-2">
-                                <MapPin className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-                                <span className="break-words">{booking.propertyAddress || `Property #${booking.propertyId}`}</span>
+                                <MapPin className="h-4 w-4 text-amber-600 mt-0.5" />
+                                <span>{booking.propertyAddress || `Property #${booking.propertyId}`}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+                                <Calendar className="h-4 w-4 text-amber-600" />
                                 <span>{formatDate(booking.startAt)}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                                <Clock className="h-4 w-4 text-amber-600" />
                                 <span>{formatTime(booking.startAt)}</span>
                               </div>
                             </div>
                           </div>
                         </div>
                         {booking.status === "pending" && (
-                          <div className="flex gap-2 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2 pt-4 border-t border-amber-100" onClick={(e) => e.stopPropagation()}>
                             <Button
                               onClick={() => handleApprove(booking.bookingId)}
                               disabled={actionLoading === booking.bookingId}
-                              className="bg-green-600 hover:bg-green-700 flex-1 min-h-[44px]"
+                              className="bg-emerald-500 hover:bg-emerald-600 flex-1 shadow-md"
                             >
                               <CheckCircle2 className="h-4 w-4 mr-2" />
                               Approve
@@ -635,7 +733,7 @@ export const BookingsTab = ({
                               variant="destructive"
                               onClick={() => handleDeny(booking.bookingId)}
                               disabled={actionLoading === booking.bookingId}
-                              className="flex-1 min-h-[44px]"
+                              className="flex-1 shadow-md"
                             >
                               <XCircle className="h-4 w-4 mr-2" />
                               Deny
@@ -643,12 +741,12 @@ export const BookingsTab = ({
                           </div>
                         )}
                         {booking.status === "approved" && (
-                          <div className="pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                          <div className="pt-4 border-t border-amber-100" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="destructive"
                               onClick={() => handleCancel(booking.bookingId)}
                               disabled={actionLoading === booking.bookingId}
-                              className="w-full min-h-[44px]"
+                              className="w-full shadow-md"
                             >
                               <X className="h-4 w-4 mr-2" />
                               Cancel Booking

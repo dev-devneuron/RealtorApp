@@ -196,15 +196,33 @@ export const fetchUserBookings = async (
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to fetch bookings" }));
+    let error: any = {};
+    try {
+      error = await response.json();
+    } catch {
+      error = { detail: "Failed to fetch bookings" };
+    }
+    
+    // Extract error message properly (handle both string and object)
+    let errorMessage = "Failed to fetch bookings";
+    if (error.detail) {
+      errorMessage = typeof error.detail === 'string' 
+        ? error.detail 
+        : JSON.stringify(error.detail);
+    } else if (error.message) {
+      errorMessage = typeof error.message === 'string'
+        ? error.message
+        : JSON.stringify(error.message);
+    }
     
     // Handle 422 validation errors gracefully
     if (response.status === 422) {
       console.warn("Validation error fetching bookings:", error);
+      console.warn("Error message:", errorMessage);
       return []; // Return empty array instead of throwing
     }
     
-    throw new Error(error.detail || error.message || "Failed to fetch bookings");
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();

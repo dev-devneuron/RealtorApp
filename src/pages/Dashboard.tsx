@@ -579,15 +579,37 @@ const Dashboard = () => {
       }
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        const errorMessage = errorData.detail || errorData.message || "Failed to fetch bookings";
+        let errorData: any = {};
+        try {
+          errorData = await res.json();
+        } catch {
+          // If response is not JSON, use status text
+          errorData = { detail: res.statusText || "Failed to fetch bookings" };
+        }
+        
+        // Extract error message properly (handle both string and object)
+        let errorMessage = "Failed to fetch bookings";
+        if (errorData.detail) {
+          errorMessage = typeof errorData.detail === 'string' 
+            ? errorData.detail 
+            : JSON.stringify(errorData.detail);
+        } else if (errorData.message) {
+          errorMessage = typeof errorData.message === 'string'
+            ? errorData.message
+            : JSON.stringify(errorData.message);
+        } else if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string'
+            ? errorData.error
+            : JSON.stringify(errorData.error);
+        }
         
         // Handle 422 validation errors
         if (res.status === 422) {
-          console.error("Validation error:", errorData);
+          console.error("Validation error (422):", errorData);
+          console.warn("Error message:", errorMessage);
           // Still try to set empty array to prevent UI errors
           setBookings([]);
-          // Don't show error toast for validation errors - might be expected
+          // Don't show error toast for validation errors - might be expected (e.g., user has no bookings yet)
           return;
         }
         

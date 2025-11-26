@@ -306,7 +306,7 @@ export const BookingsTab = ({
       transition={{ duration: 0.2 }}
     >
       <Card className={`${gradient} border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden relative`}>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
         <CardContent className="p-6 relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div className={`${iconBg} p-3 rounded-xl shadow-md`}>
@@ -356,8 +356,8 @@ export const BookingsTab = ({
       </div>
 
       {/* Enhanced Header Card */}
-      <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5" />
+      <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
         <CardHeader className="relative p-6 lg:p-8 border-b border-amber-100/50">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">

@@ -246,6 +246,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   padding: 16px;
+  z-index: 40;
 }
 
 .booking-calendar-enhanced .rbc-overlay-header {

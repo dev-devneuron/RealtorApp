@@ -3570,7 +3570,7 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mb-6 sm:mb-8 lg:mb-10"
             >
-              <TabsList className="bg-gradient-to-br from-amber-50/90 via-white to-amber-50/70 border-2 border-amber-200/90 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden relative">
+              <TabsList className="bg-gradient-to-br from-amber-50/90 via-white to-amber-50/70 border-2 border-amber-200/90 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden relative z-50">
                 {/* Scrollable tabs container with responsive scrollbar */}
                 <div className="relative w-full overflow-x-auto overflow-y-hidden scroll-smooth
                   [scrollbar-width:thin]

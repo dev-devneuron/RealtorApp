@@ -3879,6 +3879,9 @@ const Dashboard = () => {
                   setShowPropertyDetailModal(false);
                   setShowAddTenant(true);
                 }}
+                userId={userType === "property_manager" 
+                  ? Number(localStorage.getItem("property_manager_id") || "0")
+                  : Number(localStorage.getItem("realtor_id") || "0")}
               />
             </TabsContent>
 

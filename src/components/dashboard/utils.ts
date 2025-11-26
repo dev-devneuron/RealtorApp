@@ -164,6 +164,61 @@ const getAuthToken = (): string | null => {
 };
 
 /**
+ * Extract error message from error object, handling [object Object] cases
+ */
+export const extractErrorMessage = (error: any): string => {
+  if (!error) return "An unknown error occurred";
+  
+  // If it's already a string, return it
+  if (typeof error === 'string') return error;
+  
+  // Try to get message from error object
+  if (error.message) {
+    if (typeof error.message === 'string') return error.message;
+    if (typeof error.message === 'object') {
+      // Handle validation errors that might be arrays
+      if (Array.isArray(error.message)) {
+        return error.message.map((err: any) => {
+          if (typeof err === 'string') return err;
+          if (err.msg) return err.msg;
+          return JSON.stringify(err);
+        }).join(', ');
+      }
+      return JSON.stringify(error.message);
+    }
+  }
+  
+  // Try detail field (common in FastAPI errors)
+  if (error.detail) {
+    if (typeof error.detail === 'string') return error.detail;
+    if (Array.isArray(error.detail)) {
+      return error.detail.map((err: any) => {
+        if (typeof err === 'string') return err;
+        if (err.msg) return err.msg;
+        if (err.loc && err.msg) return `${err.loc.join('.')}: ${err.msg}`;
+        return JSON.stringify(err);
+      }).join(', ');
+    }
+    if (typeof error.detail === 'object') {
+      return JSON.stringify(error.detail);
+    }
+  }
+  
+  // Try error field
+  if (error.error) {
+    if (typeof error.error === 'string') return error.error;
+    return JSON.stringify(error.error);
+  }
+  
+  // Last resort: stringify the whole object
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "An unknown error occurred";
+  }
+};
+
+/**
  * Get user's bookings
  */
 export const fetchUserBookings = async (
@@ -617,6 +672,8 @@ export const assignProperty = async (
 
 /**
  * Fetch calendar preferences for a user
+ * API: GET /api/users/{user_id}/calendar-preferences?user_type={user_type}
+ * Response: { timezone, defaultSlotLengthMins, workingHours: { start, end } }
  */
 export const fetchCalendarPreferences = async (
   userId: number,
@@ -631,38 +688,43 @@ export const fetchCalendarPreferences = async (
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const endpoints = [
-    `${API_BASE}/api/users/${userId}/calendar-preferences?user_type=${userType}`,
-    `${API_BASE}/calendar-preferences?user_id=${userId}&user_type=${userType}`,
-    `${API_BASE}/property-manager/calendar-preferences`,
-  ];
-
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, {
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/users/${userId}/calendar-preferences?user_type=${userType}`,
+      {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Handle different response formats
-        if (data.start_time && data.end_time) {
-          return data;
-        } else if (data.workingHours) {
-          return {
-            start_time: data.workingHours.start || "09:00",
-            end_time: data.workingHours.end || "17:00",
-            timezone: data.workingHours.timezone || "America/New_York",
-            slot_length: data.workingHours.defaultSlotLength || 30,
-            working_days: data.working_days || [1, 2, 3, 4, 5],
-          };
-        }
       }
-    } catch (e) {
-      continue;
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Handle API response format: { timezone, defaultSlotLengthMins, workingHours: { start, end } }
+      if (data.workingHours) {
+        return {
+          start_time: data.workingHours.start || "09:00",
+          end_time: data.workingHours.end || "17:00",
+          timezone: data.timezone || data.workingHours.timezone || "America/New_York",
+          slot_length: data.defaultSlotLengthMins || 30,
+          working_days: [1, 2, 3, 4, 5], // Default Mon-Fri (API doesn't return working_days)
+        };
+      }
+      
+      // Fallback: Handle legacy format if API returns it
+      if (data.start_time && data.end_time) {
+        return {
+          start_time: data.start_time,
+          end_time: data.end_time,
+          timezone: data.timezone || "America/New_York",
+          slot_length: data.slot_length || data.defaultSlotLengthMins || 30,
+          working_days: data.working_days || [1, 2, 3, 4, 5],
+        };
+      }
     }
+  } catch (e) {
+    console.warn("Failed to fetch calendar preferences from API:", e);
   }
 
   // Return defaults if API fails
@@ -677,6 +739,9 @@ export const fetchCalendarPreferences = async (
 
 /**
  * Update calendar preferences for a user
+ * API: PATCH /api/users/{user_id}/calendar-preferences?user_type={user_type}
+ * Request: { timezone?, default_slot_length_mins?, working_hours_start?, working_hours_end? }
+ * All fields are optional - only send what you want to update
  */
 export const updateCalendarPreferences = async (
   userId: number,
@@ -686,42 +751,74 @@ export const updateCalendarPreferences = async (
     end_time: string;
     timezone: string;
     slot_length: number;
-    working_days: number[];
+    working_days?: number[]; // Note: API doesn't support working_days, but we keep it for internal use
   }
 ): Promise<any> => {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const endpoints = [
-    `${API_BASE}/api/users/${userId}/calendar-preferences`,
-    `${API_BASE}/calendar-preferences`,
-    `${API_BASE}/property-manager/calendar-preferences`,
-  ];
+  // Convert internal format to API format
+  const requestBody: {
+    timezone?: string;
+    default_slot_length_mins?: number;
+    working_hours_start?: string;
+    working_hours_end?: string;
+  } = {};
 
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
+  if (preferences.timezone) {
+    requestBody.timezone = preferences.timezone;
+  }
+  if (preferences.slot_length) {
+    requestBody.default_slot_length_mins = preferences.slot_length;
+  }
+  if (preferences.start_time) {
+    requestBody.working_hours_start = preferences.start_time;
+  }
+  if (preferences.end_time) {
+    requestBody.working_hours_end = preferences.end_time;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/users/${userId}/calendar-preferences?user_type=${userType}`,
+      {
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          user_id: userId,
-          user_type: userType,
-          ...preferences,
-        }),
-      });
-
-      if (response.ok) {
-        return await response.json();
+        body: JSON.stringify(requestBody),
       }
-    } catch (e) {
-      continue;
-    }
-  }
+    );
 
-  throw new Error("Failed to update calendar preferences");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: "Failed to update calendar preferences" }));
+      const errorMessage = extractErrorMessage(errorData);
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    
+    // Convert API response format back to internal format
+    if (data.preferences) {
+      const prefs = data.preferences;
+      return {
+        ...data,
+        preferences: {
+          start_time: prefs.workingHours?.start || preferences.start_time,
+          end_time: prefs.workingHours?.end || preferences.end_time,
+          timezone: prefs.timezone || preferences.timezone,
+          slot_length: prefs.defaultSlotLengthMins || preferences.slot_length,
+          working_days: preferences.working_days || [1, 2, 3, 4, 5], // Keep working_days from input
+        },
+      };
+    }
+    
+    return data;
+  } catch (error: any) {
+    const errorMessage = extractErrorMessage(error);
+    throw new Error(errorMessage);
+  }
 };
 
 /**
@@ -875,8 +972,15 @@ export const createManualBooking = async (
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to create booking" }));
-    throw new Error(error.detail || "Failed to create booking");
+    let errorData: any = {};
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = { detail: "Failed to create booking" };
+    }
+    
+    const errorMessage = extractErrorMessage(errorData) || "Failed to create booking";
+    throw new Error(errorMessage);
   }
 
   return await response.json();
@@ -884,6 +988,8 @@ export const createManualBooking = async (
 
 /**
  * Get all calendar events (bookings + availability slots)
+ * API: GET /api/users/{user_id}/calendar-events?from_date={ISO_DATE}&to_date={ISO_DATE}
+ * Response includes bookings with callRecord information if available
  */
 export const fetchCalendarEvents = async (
   userId: number,
@@ -908,6 +1014,11 @@ export const fetchCalendarEvents = async (
     status?: string;
     slotType?: string;
     isFullDay?: boolean;
+    callRecord?: {
+      vapiCallId?: string;
+      callTranscript?: string;
+      callRecordingUrl?: string;
+    };
   }>;
   bookings: any[];
   availabilitySlots: any[];
@@ -929,7 +1040,8 @@ export const fetchCalendarEvents = async (
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Failed to fetch calendar events" }));
-    throw new Error(error.detail || "Failed to fetch calendar events");
+    const errorMessage = extractErrorMessage(error);
+    throw new Error(errorMessage);
   }
 
   return await response.json();

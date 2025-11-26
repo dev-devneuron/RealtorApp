@@ -49,13 +49,13 @@ import {
   formatTime,
   formatDateTime,
   getStatusColor,
+  extractErrorMessage,
 } from "./utils";
 import { BookingDetailModal } from "./BookingDetailModal";
 import { BookingCalendar } from "./BookingCalendar";
 import { BookingStatistics } from "./BookingStatistics";
 import { BookingExport } from "./BookingExport";
 import { AvailabilityManager } from "./AvailabilityManager";
-import { PropertyAssignmentPanel } from "./PropertyAssignmentPanel";
 import { ManualBookingModal } from "./ManualBookingModal";
 import type { Booking, Realtor, Property } from "./types";
 
@@ -176,7 +176,8 @@ export const BookingsTab = ({
       toast.success("Booking approved successfully");
       onRefresh();
     } catch (error: any) {
-      toast.error(error.message || "Failed to approve booking");
+      const errorMessage = extractErrorMessage(error) || "Failed to approve booking";
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -189,7 +190,8 @@ export const BookingsTab = ({
       toast.success("Booking denied");
       onRefresh();
     } catch (error: any) {
-      toast.error(error.message || "Failed to deny booking");
+      const errorMessage = extractErrorMessage(error) || "Failed to deny booking";
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -206,7 +208,8 @@ export const BookingsTab = ({
       toast.success("Reschedule proposal sent");
       onRefresh();
     } catch (error: any) {
-      toast.error(error.message || "Failed to reschedule booking");
+      const errorMessage = extractErrorMessage(error) || "Failed to reschedule booking";
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -219,7 +222,8 @@ export const BookingsTab = ({
       toast.success("Booking cancelled");
       onRefresh();
     } catch (error: any) {
-      toast.error(error.message || "Failed to cancel booking");
+      const errorMessage = extractErrorMessage(error) || "Failed to cancel booking";
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -372,15 +376,24 @@ export const BookingsTab = ({
                 </p>
               </div>
             </div>
-            <Button 
-              onClick={onRefresh} 
-              disabled={loadingBookings} 
-              variant="outline"
-              className="bg-white/80 backdrop-blur-sm border-amber-200 hover:bg-white hover:border-amber-300 shadow-md hover:shadow-lg transition-all"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loadingBookings ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={onRefresh} 
+                disabled={loadingBookings} 
+                variant="outline"
+                className="bg-white/80 backdrop-blur-sm border-amber-200 hover:bg-white hover:border-amber-300 shadow-md hover:shadow-lg transition-all"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loadingBookings ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+              <Button
+                onClick={() => setShowManualBookingModal(true)}
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md hover:shadow-lg"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Booking
+              </Button>
+            </div>
           </div>
 
           {/* Enhanced Filters */}
@@ -458,13 +471,6 @@ export const BookingsTab = ({
                 </TabsList>
               </div>
               <div className="flex gap-2">
-                <Button
-                  onClick={() => setShowManualBookingModal(true)}
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md hover:shadow-lg"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Booking
-                </Button>
                 <BookingExport bookings={filteredBookings} filters={{ status: statusFilter, search: searchQuery }} />
               </div>
             </div>
@@ -804,19 +810,7 @@ export const BookingsTab = ({
 
             {/* Availability Management View */}
             <TabsContent value="availability" className="mt-0">
-              {userType === "property_manager" ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <AvailabilityManager userId={userId} userType={userType} onSave={onRefresh} />
-                  <PropertyAssignmentPanel
-                    pmId={userId}
-                    realtors={realtors}
-                    properties={properties}
-                    onAssignmentChange={onRefresh}
-                  />
-                </div>
-              ) : (
-                <AvailabilityManager userId={userId} userType={userType} onSave={onRefresh} />
-              )}
+              <AvailabilityManager userId={userId} userType={userType} onSave={onRefresh} />
             </TabsContent>
           </Tabs>
         </CardContent>

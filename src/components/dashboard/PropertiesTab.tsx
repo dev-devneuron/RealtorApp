@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, RefreshCw, Bed, Bath, Square, Info } from "lucide-react";
+import { Building2, RefreshCw, Bed, Bath, Square, Info, Calendar, Plus } from "lucide-react";
 import { getPropertyMetadata } from "./utils";
 import { Property } from "./types";
 import { PropertyDetailModal } from "./PropertyDetailModal";
 import { PropertyUpdateModal } from "./PropertyUpdateModal";
+import { ManualBookingModal } from "./ManualBookingModal";
 
 interface PropertiesTabProps {
   apartments: Property[];
@@ -27,6 +29,7 @@ interface PropertiesTabProps {
   onUpdateProperty: () => Promise<void>;
   onDeleteProperty: (propertyId: number) => Promise<void>;
   onAssignTenant: (property: Property) => void;
+  userId?: number;
 }
 
 const containerVariants = {
@@ -62,7 +65,23 @@ export const PropertiesTab = ({
   onUpdateProperty,
   onDeleteProperty,
   onAssignTenant,
+  userId,
 }: PropertiesTabProps) => {
+  const [showManualBookingModal, setShowManualBookingModal] = useState(false);
+  const [selectedPropertyForBooking, setSelectedPropertyForBooking] = useState<number | null>(null);
+
+  const handleCreateBooking = (propertyId: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setSelectedPropertyForBooking(propertyId);
+    setShowManualBookingModal(true);
+  };
+
+  const handleBookingSuccess = () => {
+    setShowManualBookingModal(false);
+    setSelectedPropertyForBooking(null);
+    onRefresh(); // Refresh properties if needed
+  };
+
   return (
     <>
       {/* Property Detail Modal */}
@@ -101,6 +120,20 @@ export const PropertiesTab = ({
           setPropertyUpdateForm({});
         }}
       />
+
+      {/* Manual Booking Modal */}
+      {userId && (
+        <ManualBookingModal
+          open={showManualBookingModal}
+          onClose={() => {
+            setShowManualBookingModal(false);
+            setSelectedPropertyForBooking(null);
+          }}
+          onSuccess={handleBookingSuccess}
+          userId={userId}
+          initialPropertyId={selectedPropertyForBooking || undefined}
+        />
+      )}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -263,9 +296,19 @@ export const PropertiesTab = ({
                       </div>
                     )}
 
-                    <p className="text-xs sm:text-sm text-amber-600 font-medium pt-2 border-t border-amber-200 text-center">
-                      Click to view details →
-                    </p>
+                    <div className="pt-2 border-t border-amber-200 space-y-2">
+                      <Button
+                        onClick={(e) => handleCreateBooking(apt.id, e)}
+                        className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md hover:shadow-lg transition-all text-xs sm:text-sm"
+                        size="sm"
+                      >
+                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                        Create Booking
+                      </Button>
+                      <p className="text-xs sm:text-sm text-amber-600 font-medium text-center">
+                        Click card to view details →
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>

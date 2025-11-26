@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Clock, User, Phone, Mail, MapPin, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { createManualBooking, fetchPropertiesForAssignment } from "./utils";
+import { createManualBooking, fetchPropertiesForAssignment, extractErrorMessage } from "./utils";
 import type { Property } from "./types";
 
 interface ManualBookingModalProps {
@@ -63,7 +63,8 @@ export const ManualBookingModal = ({
       setProperties(props);
     } catch (error: any) {
       console.error("Error loading properties:", error);
-      toast.error(error.message || "Failed to load properties");
+      const errorMessage = extractErrorMessage(error) || "Failed to load properties";
+      toast.error(errorMessage);
     } finally {
       setLoadingProperties(false);
     }
@@ -113,7 +114,8 @@ export const ManualBookingModal = ({
       handleClose();
     } catch (error: any) {
       console.error("Error creating booking:", error);
-      toast.error(error.message || "Failed to create booking");
+      const errorMessage = extractErrorMessage(error) || "Failed to create booking";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

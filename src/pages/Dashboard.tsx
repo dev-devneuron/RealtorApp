@@ -3741,6 +3741,7 @@ const Dashboard = () => {
                 bookings={bookings}
                 loadingBookings={loadingBookings}
                 onRefresh={fetchBookings}
+                properties={apartments} // Pass apartments so realtors can check for assigned properties
               />
             </TabsContent>
 

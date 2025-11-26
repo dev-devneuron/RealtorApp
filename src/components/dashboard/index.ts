@@ -20,6 +20,10 @@ export { TenantAddModal } from "./TenantAddModal";
 export { TenantEditModal } from "./TenantEditModal";
 export { PhoneNumberRequestDialog } from "./PhoneNumberRequestDialog";
 export { BookingDetailModal } from "./BookingDetailModal";
+export { BookingCalendar } from "./BookingCalendar";
+export { BookingStatistics } from "./BookingStatistics";
+export { BookingExport, exportToCSV, exportToPDF } from "./BookingExport";
+export { AvailabilityManager } from "./AvailabilityManager";
 
 // Export shared utilities
 export * from "./constants";

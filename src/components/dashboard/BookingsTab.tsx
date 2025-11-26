@@ -48,7 +48,11 @@ import {
   getStatusColor,
 } from "./utils";
 import { BookingDetailModal } from "./BookingDetailModal";
-import type { Booking } from "./types";
+import { BookingCalendar } from "./BookingCalendar";
+import { BookingStatistics } from "./BookingStatistics";
+import { BookingExport } from "./BookingExport";
+import { AvailabilityManager } from "./AvailabilityManager";
+import type { Booking, Realtor, Property } from "./types";
 
 interface BookingsTabProps {
   userId: number;
@@ -56,6 +60,8 @@ interface BookingsTabProps {
   bookings: Booking[];
   loadingBookings: boolean;
   onRefresh: () => void;
+  realtors?: Realtor[]; // For PM property assignment
+  properties?: Property[]; // For PM property assignment - also used to check if realtor has assigned properties
 }
 
 export const BookingsTab = ({
@@ -64,14 +70,18 @@ export const BookingsTab = ({
   bookings,
   loadingBookings,
   onRefresh,
+  realtors = [],
+  properties = [],
 }: BookingsTabProps) => {
-  const [view, setView] = useState<"list" | "day" | "week" | "month">("list");
+  const [view, setView] = useState<"list" | "day" | "week" | "month" | "stats" | "availability">("list");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [lastNotificationCheck, setLastNotificationCheck] = useState<Date>(new Date());
+  const [pendingCount, setPendingCount] = useState(0);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -217,6 +227,56 @@ export const BookingsTab = ({
     setShowBookingModal(true);
   };
 
+  // Check if realtor has assigned properties or bookings (for showing Availability tab)
+  const hasAssignedPropertiesOrBookings = useMemo(() => {
+    if (userType === "property_manager") {
+      return true; // PMs always have access
+    }
+    
+    // For realtors: check if they have any bookings (which means they have assigned properties)
+    if (bookings.length > 0) {
+      return true;
+    }
+    
+    // Also check if they have any assigned properties from the properties list
+    if (properties && properties.length > 0) {
+      const assignedProperties = properties.filter((prop: Property) => {
+        const meta = prop.listing_metadata || {};
+        return meta.assigned_to_realtor_id === userId || prop.assigned_to_realtor_id === userId;
+      });
+      return assignedProperties.length > 0;
+    }
+    
+    return false;
+  }, [userType, bookings, properties, userId]);
+
+  // Real-time notifications with polling
+  useEffect(() => {
+    const checkForNewBookings = async () => {
+      try {
+        const pending = bookings.filter((b) => b.status === "pending").length;
+        if (pending > pendingCount && pendingCount > 0) {
+          const newCount = pending - pendingCount;
+          toast.success(`You have ${newCount} new pending booking${newCount > 1 ? "s" : ""}!`, {
+            duration: 5000,
+          });
+        }
+        setPendingCount(pending);
+        setLastNotificationCheck(new Date());
+      } catch (error) {
+        console.error("Error checking for new bookings:", error);
+      }
+    };
+
+    // Check every 30 seconds
+    const interval = setInterval(checkForNewBookings, 30000);
+    
+    // Initial check
+    checkForNewBookings();
+
+    return () => clearInterval(interval);
+  }, [bookings, pendingCount]);
+
   // Navigate dates
   const navigateDate = (direction: "prev" | "next") => {
     const newDate = new Date(selectedDate);
@@ -317,13 +377,24 @@ export const BookingsTab = ({
         <CardContent className="p-4 sm:p-5 lg:p-6 xl:p-8">
           {/* View Tabs */}
           <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
-            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 mb-4 sm:mb-5 lg:mb-6 xl:mb-6">
-              <TabsList className="grid w-full grid-cols-4 min-w-[400px] sm:min-w-0 gap-1 lg:gap-2 xl:gap-2">
-                <TabsTrigger value="list" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">List</TabsTrigger>
-                <TabsTrigger value="day" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Day</TabsTrigger>
-                <TabsTrigger value="week" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Week</TabsTrigger>
-                <TabsTrigger value="month" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Month</TabsTrigger>
-              </TabsList>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-5 lg:mb-6 xl:mb-6">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <TabsList className="grid w-full grid-cols-5 min-w-[500px] sm:min-w-0 gap-1 lg:gap-2 xl:gap-2">
+                  <TabsTrigger value="list" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">List</TabsTrigger>
+                  <TabsTrigger value="day" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Day</TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Week</TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Month</TabsTrigger>
+                  <TabsTrigger value="stats" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">Stats</TabsTrigger>
+                </TabsList>
+              </div>
+              <div className="flex gap-2">
+                <BookingExport bookings={filteredBookings} filters={{ status: statusFilter, search: searchQuery }} />
+                {hasAssignedPropertiesOrBookings && (
+                  <TabsTrigger value="availability" className="text-xs sm:text-sm lg:text-base xl:text-base px-2 sm:px-4 lg:px-5 xl:px-6 min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]">
+                    Availability
+                  </TabsTrigger>
+                )}
+              </div>
             </div>
 
             {/* Pending Bookings Queue */}
@@ -591,26 +662,48 @@ export const BookingsTab = ({
               )}
             </TabsContent>
 
-            {/* Calendar Views (simplified for now) */}
+            {/* Calendar Views */}
             <TabsContent value="day" className="mt-0">
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Day view coming soon</p>
-              </div>
+              <BookingCalendar
+                bookings={filteredBookings}
+                view="day"
+                date={selectedDate}
+                onViewChange={(v) => setView(v)}
+                onNavigate={setSelectedDate}
+                onSelectEvent={(booking) => handleBookingClick(booking)}
+              />
             </TabsContent>
 
             <TabsContent value="week" className="mt-0">
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Week view coming soon</p>
-              </div>
+              <BookingCalendar
+                bookings={filteredBookings}
+                view="week"
+                date={selectedDate}
+                onViewChange={(v) => setView(v)}
+                onNavigate={setSelectedDate}
+                onSelectEvent={(booking) => handleBookingClick(booking)}
+              />
             </TabsContent>
 
             <TabsContent value="month" className="mt-0">
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Month view coming soon</p>
-              </div>
+              <BookingCalendar
+                bookings={filteredBookings}
+                view="month"
+                date={selectedDate}
+                onViewChange={(v) => setView(v)}
+                onNavigate={setSelectedDate}
+                onSelectEvent={(booking) => handleBookingClick(booking)}
+              />
+            </TabsContent>
+
+            {/* Statistics View */}
+            <TabsContent value="stats" className="mt-0">
+              <BookingStatistics bookings={bookings} />
+            </TabsContent>
+
+            {/* Availability Management View */}
+            <TabsContent value="availability" className="mt-0">
+              <AvailabilityManager userId={userId} userType={userType} onSave={onRefresh} />
             </TabsContent>
           </Tabs>
         </CardContent>

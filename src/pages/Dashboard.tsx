@@ -529,17 +529,32 @@ const Dashboard = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/bookings`, {
+      // Get user ID from localStorage
+      const storedUserType = localStorage.getItem("user_type");
+      const userId = storedUserType === "property_manager" 
+        ? localStorage.getItem("property_manager_id")
+        : localStorage.getItem("realtor_id");
+
+      if (!userId) {
+        toast.error("User ID not found");
+        return;
+      }
+
+      // Use the new booking API endpoint
+      const res = await fetch(`${API_BASE}/api/users/${userId}/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch bookings");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to fetch bookings");
+      }
 
       const data = await res.json();
-
-      setBookings(Array.isArray(data) ? data : data.bookings || []);
-    } catch (err) {
-      toast.error("Could not load bookings");
+      setBookings(Array.isArray(data.bookings) ? data.bookings : []);
+    } catch (err: any) {
+      console.error("Error fetching bookings:", err);
+      toast.error(err.message || "Could not load bookings");
     } finally {
       setLoadingBookings(false);
     }
@@ -3719,6 +3734,10 @@ const Dashboard = () => {
             {/* Bookings Table */}
             <TabsContent value="bookings">
               <BookingsTab
+                userId={userType === "property_manager" 
+                  ? Number(localStorage.getItem("property_manager_id") || "0")
+                  : Number(localStorage.getItem("realtor_id") || "0")}
+                userType={userType || ""}
                 bookings={bookings}
                 loadingBookings={loadingBookings}
                 onRefresh={fetchBookings}

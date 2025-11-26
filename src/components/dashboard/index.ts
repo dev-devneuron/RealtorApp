@@ -19,6 +19,7 @@ export { CallRecordDetailModal } from "./CallRecordDetailModal";
 export { TenantAddModal } from "./TenantAddModal";
 export { TenantEditModal } from "./TenantEditModal";
 export { PhoneNumberRequestDialog } from "./PhoneNumberRequestDialog";
+export { BookingDetailModal } from "./BookingDetailModal";
 
 // Export shared utilities
 export * from "./constants";

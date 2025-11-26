@@ -82,9 +82,68 @@ export interface CallRecord {
 }
 
 export interface Booking {
-  id: number;
-  property_id: number;
+  bookingId: number;
+  propertyId: number;
+  propertyAddress?: string;
+  visitor: {
+    name: string;
+    phone: string;
+    email?: string;
+  };
+  startAt: string; // ISO date string
+  endAt: string; // ISO date string
+  timezone: string;
+  status: "pending" | "approved" | "denied" | "cancelled" | "rescheduled";
+  createdBy: "vapi" | "dashboard";
+  notes?: string;
+  proposedSlots?: Array<{
+    startAt: string;
+    endAt: string;
+  }>;
+  requestedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  approverId?: number;
+  approverType?: "property_manager" | "realtor";
+  auditLog?: Array<{
+    action: string;
+    performedBy: string;
+    performedAt: string;
+    notes?: string;
+  }>;
   [key: string]: any;
+}
+
+export interface AvailabilitySlot {
+  startAt: string; // ISO date string
+  endAt: string; // ISO date string
+  slotType?: "available" | "unavailable" | "booked";
+  reason?: string;
+}
+
+export interface CalendarPreferences {
+  workingHours: {
+    start: string; // "09:00"
+    end: string; // "17:00"
+    timezone: string;
+    defaultSlotLength: number; // minutes
+  };
+  unavailableSlots?: AvailabilitySlot[];
+}
+
+export interface PropertyAssignment {
+  propertyId: number;
+  propertyAddress?: string;
+  assignedTo: {
+    userId: number;
+    userType: "property_manager" | "realtor";
+    name: string;
+    phone?: string;
+    email?: string;
+  };
+  assignedAt?: string;
+  assignedBy?: number;
+  reason?: string;
 }
 
 export interface PhoneNumber {

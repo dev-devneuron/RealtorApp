@@ -87,6 +87,7 @@ export const BookingsTab = ({
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [lastNotificationCheck, setLastNotificationCheck] = useState<Date>(new Date());
   const [pendingCount, setPendingCount] = useState(0);
+  const [showManualBookingModal, setShowManualBookingModal] = useState(false);
 
   // Calculate statistics
   const stats = useMemo(() => {

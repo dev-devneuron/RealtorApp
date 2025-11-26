@@ -615,3 +615,370 @@ export const assignProperty = async (
   return await response.json();
 };
 
+/**
+ * Fetch calendar preferences for a user
+ */
+export const fetchCalendarPreferences = async (
+  userId: number,
+  userType: string
+): Promise<{
+  start_time: string;
+  end_time: string;
+  timezone: string;
+  slot_length: number;
+  working_days: number[];
+}> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const endpoints = [
+    `${API_BASE}/api/users/${userId}/calendar-preferences?user_type=${userType}`,
+    `${API_BASE}/calendar-preferences?user_id=${userId}&user_type=${userType}`,
+    `${API_BASE}/property-manager/calendar-preferences`,
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Handle different response formats
+        if (data.start_time && data.end_time) {
+          return data;
+        } else if (data.workingHours) {
+          return {
+            start_time: data.workingHours.start || "09:00",
+            end_time: data.workingHours.end || "17:00",
+            timezone: data.workingHours.timezone || "America/New_York",
+            slot_length: data.workingHours.defaultSlotLength || 30,
+            working_days: data.working_days || [1, 2, 3, 4, 5],
+          };
+        }
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+
+  // Return defaults if API fails
+  return {
+    start_time: "09:00",
+    end_time: "17:00",
+    timezone: "America/New_York",
+    slot_length: 30,
+    working_days: [1, 2, 3, 4, 5],
+  };
+};
+
+/**
+ * Update calendar preferences for a user
+ */
+export const updateCalendarPreferences = async (
+  userId: number,
+  userType: string,
+  preferences: {
+    start_time: string;
+    end_time: string;
+    timezone: string;
+    slot_length: number;
+    working_days: number[];
+  }
+): Promise<any> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const endpoints = [
+    `${API_BASE}/api/users/${userId}/calendar-preferences`,
+    `${API_BASE}/calendar-preferences`,
+    `${API_BASE}/property-manager/calendar-preferences`,
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          user_type: userType,
+          ...preferences,
+        }),
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+
+  throw new Error("Failed to update calendar preferences");
+};
+
+/**
+ * Fetch unavailable slots for a user
+ */
+export const fetchUnavailableSlots = async (
+  userId: number,
+  userType: string,
+  fromDate?: string,
+  toDate?: string
+): Promise<Array<{
+  id: number;
+  startAt: string;
+  endAt: string;
+  slotType: string;
+  isFullDay: boolean;
+  reason?: string;
+  notes?: string;
+}>> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const params = new URLSearchParams();
+  if (fromDate) params.append("from_date", fromDate);
+  if (toDate) params.append("to_date", toDate);
+
+  const endpoints = [
+    `${API_BASE}/api/users/${userId}/availability?${params}`,
+    `${API_BASE}/api/users/${userId}/unavailable-slots?${params}`,
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.unavailableSlots || data.slots || [];
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+
+  return [];
+};
+
+/**
+ * Add unavailable slot (block time)
+ */
+export const addUnavailableSlot = async (
+  userId: number,
+  userType: string,
+  slot: {
+    start_at: string;
+    end_at: string;
+    slot_type: "unavailable" | "busy" | "personal" | "holiday" | "off_day";
+    is_full_day?: boolean;
+    reason?: string;
+    notes?: string;
+  }
+): Promise<any> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetch(`${API_BASE}/api/users/${userId}/availability`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user_type: userType,
+      ...slot,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to add unavailable slot" }));
+    throw new Error(error.detail || "Failed to add unavailable slot");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Remove unavailable slot
+ */
+export const removeUnavailableSlot = async (
+  userId: number,
+  slotId: number
+): Promise<any> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetch(`${API_BASE}/api/users/${userId}/availability/${slotId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to remove unavailable slot" }));
+    throw new Error(error.detail || "Failed to remove unavailable slot");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Create manual booking (from dashboard - auto-approved)
+ */
+export const createManualBooking = async (
+  booking: {
+    property_id: number;
+    visitor_name: string;
+    visitor_phone: string;
+    visitor_email?: string;
+    start_at: string;
+    end_at: string;
+    timezone?: string;
+    notes?: string;
+  }
+): Promise<{
+  bookingId: number;
+  status: string;
+  propertyId: number;
+  visitorName: string;
+  startAt: string;
+  endAt: string;
+  message: string;
+}> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetch(`${API_BASE}/api/bookings/manual`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      ...booking,
+      timezone: booking.timezone || "America/New_York",
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to create booking" }));
+    throw new Error(error.detail || "Failed to create booking");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get all calendar events (bookings + availability slots)
+ */
+export const fetchCalendarEvents = async (
+  userId: number,
+  fromDate: string,
+  toDate: string
+): Promise<{
+  userId: number;
+  userType: string;
+  fromDate: string;
+  toDate: string;
+  events: Array<{
+    id: string;
+    type: "booking" | "availability_slot";
+    bookingId?: number;
+    slotId?: number;
+    propertyId?: number;
+    propertyAddress?: string;
+    visitorName?: string;
+    visitorPhone?: string;
+    startAt: string;
+    endAt: string;
+    status?: string;
+    slotType?: string;
+    isFullDay?: boolean;
+  }>;
+  bookings: any[];
+  availabilitySlots: any[];
+  total: number;
+}> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const params = new URLSearchParams({
+    from_date: fromDate,
+    to_date: toDate,
+  });
+
+  const response = await fetch(`${API_BASE}/api/users/${userId}/calendar-events?${params}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to fetch calendar events" }));
+    throw new Error(error.detail || "Failed to fetch calendar events");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get properties for dropdown (for manual booking creation)
+ */
+export const fetchPropertiesForAssignment = async (userId?: number): Promise<Array<{
+  id: number;
+  address: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  listing_status: string;
+}>> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  // Try to get userId from parameter or localStorage
+  let targetUserId = userId;
+  if (!targetUserId) {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        targetUserId = user.id || user.user_id || 0;
+      } catch (e) {
+        // Ignore
+      }
+    }
+  }
+
+  if (!targetUserId) {
+    throw new Error("User ID is required");
+  }
+
+  const response = await fetch(`${API_BASE}/api/users/${targetUserId}/properties`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to fetch properties" }));
+    throw new Error(error.detail || "Failed to fetch properties");
+  }
+
+  const data = await response.json();
+  return data.properties || [];
+};
+

@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, X, Plus, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock, X, Plus, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { formatDate, formatTime } from "./utils";
+import { formatDate, formatTime, fetchCalendarPreferences, updateCalendarPreferences, fetchUnavailableSlots, addUnavailableSlot, removeUnavailableSlot } from "./utils";
+import { API_BASE } from "./constants";
 import type { CalendarPreferences, AvailabilitySlot } from "./types";
 
 interface AvailabilityManagerProps {
@@ -40,10 +43,13 @@ export const AvailabilityManager = ({
   });
 
   const [blockedSlots, setBlockedSlots] = useState<Array<{
-    id: string;
+    id: number | string;
     startAt: string;
     endAt: string;
+    slotType?: string;
+    isFullDay?: boolean;
     reason?: string;
+    notes?: string;
   }>>([]);
 
   const [newBlock, setNewBlock] = useState({
@@ -51,17 +57,93 @@ export const AvailabilityManager = ({
     startTime: "",
     endDate: "",
     endTime: "",
+    slotType: "unavailable" as "unavailable" | "busy" | "personal" | "holiday" | "off_day",
+    isFullDay: false,
     reason: "",
+    notes: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [showBlockForm, setShowBlockForm] = useState(false);
 
-  // Load preferences
+  // Load preferences and unavailable slots on mount
   useEffect(() => {
-    // TODO: Fetch from API
-    // fetchCalendarPreferences(userId, userType).then(setWorkingHours);
+    const loadData = async () => {
+      try {
+        // Load preferences from localStorage first
+        const stored = localStorage.getItem(`calendar_preferences_${userId}`);
+        if (stored) {
+          const prefs = JSON.parse(stored);
+          setWorkingHours({
+            start_time: prefs.start_time || "09:00",
+            end_time: prefs.end_time || "17:00",
+            timezone: prefs.timezone || "America/New_York",
+            slot_length: prefs.slot_length || 30,
+            working_days: prefs.working_days || [1, 2, 3, 4, 5],
+          });
+        }
+
+        // Try to fetch from API
+        try {
+          const prefs = await fetchCalendarPreferences(userId, userType);
+          setWorkingHours({
+            start_time: prefs.start_time,
+            end_time: prefs.end_time,
+            timezone: prefs.timezone,
+            slot_length: prefs.slot_length,
+            working_days: prefs.working_days,
+          });
+          // Save to localStorage
+          localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
+        } catch (e) {
+          // API fetch failed, use localStorage defaults
+        }
+
+        // Fetch unavailable slots
+        try {
+          const slots = await fetchUnavailableSlots(userId, userType);
+          setBlockedSlots(slots.map(slot => ({
+            id: slot.id,
+            startAt: slot.startAt,
+            endAt: slot.endAt,
+            slotType: slot.slotType,
+            isFullDay: slot.isFullDay,
+            reason: slot.reason,
+            notes: slot.notes,
+          })));
+        } catch (e) {
+          console.error("Error fetching unavailable slots:", e);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+
+    loadData();
   }, [userId, userType]);
+
+  // Listen for preference updates from other components
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `calendar_preferences_${userId}` && e.newValue) {
+        try {
+          const prefs = JSON.parse(e.newValue);
+          setWorkingHours({
+            start_time: prefs.start_time || "09:00",
+            end_time: prefs.end_time || "17:00",
+            timezone: prefs.timezone || "America/New_York",
+            slot_length: prefs.slot_length || 30,
+            working_days: prefs.working_days || [1, 2, 3, 4, 5],
+          });
+        } catch (error) {
+          console.error("Error parsing preferences:", error);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [userId]);
 
   const handleSavePreferences = async () => {
     setLoading(true);
@@ -72,8 +154,22 @@ export const AvailabilityManager = ({
         return;
       }
 
-      // TODO: Implement API call
-      // await updateCalendarPreferences(userId, userType, workingHours);
+      // Save to localStorage immediately for instant updates
+      const prefsKey = `calendar_preferences_${userId}`;
+      localStorage.setItem(prefsKey, JSON.stringify(workingHours));
+      
+      // Trigger custom event for same-window updates
+      window.dispatchEvent(new CustomEvent("calendarPreferencesUpdated", { 
+        detail: { userId, preferences: workingHours } 
+      }));
+
+      // Try to save to API
+      try {
+        await updateCalendarPreferences(userId, userType, workingHours);
+      } catch (apiError) {
+        // API save failed, but localStorage save succeeded, so continue
+        console.warn("API save failed, but preferences saved locally:", apiError);
+      }
       
       toast.success("Working hours updated successfully");
       onSave?.();
@@ -84,44 +180,106 @@ export const AvailabilityManager = ({
     }
   };
 
-  const handleAddBlock = () => {
-    if (!newBlock.startDate || !newBlock.startTime || !newBlock.endDate || !newBlock.endTime) {
-      toast.error("Please fill in all required fields");
+  const handleAddBlock = async () => {
+    if (!newBlock.startDate) {
+      toast.error("Please select a start date");
       return;
     }
 
-    const startAt = new Date(`${newBlock.startDate}T${newBlock.startTime}`).toISOString();
-    const endAt = new Date(`${newBlock.endDate}T${newBlock.endTime}`).toISOString();
+    let startAt: string;
+    let endAt: string;
 
-    if (new Date(endAt) <= new Date(startAt)) {
-      toast.error("End time must be after start time");
-      return;
+    if (newBlock.isFullDay) {
+      // Full day event - set to start and end of day
+      const startDate = new Date(newBlock.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      startAt = startDate.toISOString();
+
+      const endDate = new Date(newBlock.startDate);
+      endDate.setHours(23, 59, 59, 999);
+      endAt = endDate.toISOString();
+    } else {
+      // Time-specific slot
+      if (!newBlock.startTime || !newBlock.endTime) {
+        toast.error("Please fill in start and end times");
+        return;
+      }
+      startAt = new Date(`${newBlock.startDate}T${newBlock.startTime}`).toISOString();
+      endAt = new Date(`${newBlock.startDate}T${newBlock.endTime}`).toISOString();
+
+      if (new Date(endAt) <= new Date(startAt)) {
+        toast.error("End time must be after start time");
+        return;
+      }
     }
 
-    setBlockedSlots([
-      ...blockedSlots,
-      {
-        id: Date.now().toString(),
-        startAt,
-        endAt,
+    try {
+      setLoading(true);
+      const result = await addUnavailableSlot(userId, userType, {
+        start_at: startAt,
+        end_at: endAt,
+        slot_type: newBlock.slotType,
+        is_full_day: newBlock.isFullDay,
         reason: newBlock.reason || undefined,
-      },
-    ]);
+        notes: newBlock.notes || undefined,
+      });
 
-    setNewBlock({
-      startDate: "",
-      startTime: "",
-      endDate: "",
-      endTime: "",
-      reason: "",
-    });
-    setShowBlockForm(false);
-    toast.success("Time slot blocked");
+      // Refresh blocked slots
+      const slots = await fetchUnavailableSlots(userId, userType);
+      setBlockedSlots(slots.map(slot => ({
+        id: slot.id,
+        startAt: slot.startAt,
+        endAt: slot.endAt,
+        slotType: slot.slotType,
+        isFullDay: slot.isFullDay,
+        reason: slot.reason,
+        notes: slot.notes,
+      })));
+
+      setNewBlock({
+        startDate: "",
+        startTime: "",
+        endDate: "",
+        endTime: "",
+        slotType: "unavailable",
+        isFullDay: false,
+        reason: "",
+        notes: "",
+      });
+      setShowBlockForm(false);
+      toast.success("Time slot blocked successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to block time slot");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRemoveBlock = (id: string) => {
-    setBlockedSlots(blockedSlots.filter((slot) => slot.id !== id));
-    toast.success("Block removed");
+  const handleRemoveBlock = async (id: number | string) => {
+    try {
+      setLoading(true);
+      if (typeof id === "number") {
+        await removeUnavailableSlot(userId, id);
+      }
+      
+      // Refresh blocked slots
+      const slots = await fetchUnavailableSlots(userId, userType);
+      setBlockedSlots(slots.map(slot => ({
+        id: slot.id,
+        startAt: slot.startAt,
+        endAt: slot.endAt,
+        slotType: slot.slotType,
+        isFullDay: slot.isFullDay,
+        reason: slot.reason,
+        notes: slot.notes,
+      })));
+
+      toast.success("Block removed successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to remove block");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleWorkingDay = (day: number) => {
@@ -136,22 +294,34 @@ export const AvailabilityManager = ({
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
-    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+    <div className="space-y-6">
       {/* Working Hours Configuration */}
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl flex items-center gap-2">
-            <Clock className="h-5 w-5 sm:h-6 sm:w-6 lg:h-6 lg:w-6 xl:h-7 xl:w-7" />
-            Working Hours
-          </CardTitle>
-          <CardDescription className="text-sm sm:text-base">
-            Configure your default working hours and availability
-          </CardDescription>
+      <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
+        <CardHeader className="relative p-6 lg:p-8 border-b border-amber-100/50">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl blur-lg opacity-50" />
+              <div className="relative bg-gradient-to-br from-amber-500 to-amber-600 p-4 rounded-2xl shadow-xl">
+                <Clock className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <CardTitle className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+                Working Hours
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600 mt-1">
+                Configure your default working hours and availability
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+        <CardContent className="relative p-6 lg:p-8 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="start-time" className="text-sm sm:text-base">Start Time</Label>
+              <Label htmlFor="start-time" className="text-sm font-semibold text-gray-700 mb-2 block">
+                Start Time
+              </Label>
               <Input
                 id="start-time"
                 type="time"
@@ -159,11 +329,13 @@ export const AvailabilityManager = ({
                 onChange={(e) =>
                   setWorkingHours({ ...workingHours, start_time: e.target.value })
                 }
-                className="mt-2"
+                className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
               />
             </div>
             <div>
-              <Label htmlFor="end-time" className="text-sm sm:text-base">End Time</Label>
+              <Label htmlFor="end-time" className="text-sm font-semibold text-gray-700 mb-2 block">
+                End Time
+              </Label>
               <Input
                 id="end-time"
                 type="time"
@@ -171,21 +343,23 @@ export const AvailabilityManager = ({
                 onChange={(e) =>
                   setWorkingHours({ ...workingHours, end_time: e.target.value })
                 }
-                className="mt-2"
+                className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="timezone" className="text-sm sm:text-base">Timezone</Label>
+              <Label htmlFor="timezone" className="text-sm font-semibold text-gray-700 mb-2 block">
+                Timezone
+              </Label>
               <Select
                 value={workingHours.timezone}
                 onValueChange={(value) =>
                   setWorkingHours({ ...workingHours, timezone: value })
                 }
               >
-                <SelectTrigger className="mt-2">
+                <SelectTrigger className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -197,14 +371,16 @@ export const AvailabilityManager = ({
               </Select>
             </div>
             <div>
-              <Label htmlFor="slot-length" className="text-sm sm:text-base">Slot Length (minutes)</Label>
+              <Label htmlFor="slot-length" className="text-sm font-semibold text-gray-700 mb-2 block">
+                Slot Length (minutes)
+              </Label>
               <Select
                 value={workingHours.slot_length.toString()}
                 onValueChange={(value) =>
                   setWorkingHours({ ...workingHours, slot_length: parseInt(value) })
                 }
               >
-                <SelectTrigger className="mt-2">
+                <SelectTrigger className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -218,22 +394,36 @@ export const AvailabilityManager = ({
           </div>
 
           <div>
-            <Label className="text-sm sm:text-base mb-3 block">Working Days</Label>
-            <div className="flex flex-wrap gap-2">
+            <Label className="text-sm font-semibold text-gray-700 mb-3 block">Working Days</Label>
+            <div className="flex flex-wrap gap-3">
               {dayNames.map((day, index) => (
-                <div key={index} className="flex items-center space-x-2">
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all ${
+                    workingHours.working_days.includes(index)
+                      ? "bg-gradient-to-br from-amber-100 to-amber-50 border-amber-400 shadow-md"
+                      : "bg-white border-amber-200 hover:border-amber-300"
+                  }`}
+                >
                   <Checkbox
                     id={`day-${index}`}
                     checked={workingHours.working_days.includes(index)}
                     onCheckedChange={() => toggleWorkingDay(index)}
+                    className="border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
                   />
                   <Label
                     htmlFor={`day-${index}`}
-                    className="text-sm font-normal cursor-pointer"
+                    className={`text-sm font-medium cursor-pointer ${
+                      workingHours.working_days.includes(index)
+                        ? "text-amber-900"
+                        : "text-gray-600"
+                    }`}
                   >
                     {day}
                   </Label>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -241,101 +431,144 @@ export const AvailabilityManager = ({
           <Button
             onClick={handleSavePreferences}
             disabled={loading}
-            className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px]"
+            className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl transition-all h-12 px-8 text-base font-semibold"
           >
-            <Save className="h-4 w-4 mr-2" />
-            Save Preferences
+            <Save className="h-5 w-5 mr-2" />
+            {loading ? "Saving..." : "Save Preferences"}
           </Button>
         </CardContent>
       </Card>
 
       {/* Blocked Time Slots */}
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-xl sm:rounded-2xl">
-        <CardHeader className="p-4 sm:p-6">
+      <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
+        <CardHeader className="relative p-6 lg:p-8 border-b border-amber-100/50">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl flex items-center gap-2">
-                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 lg:h-6 lg:w-6 xl:h-7 xl:w-7" />
-                Blocked Time Slots
-              </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
-                Block specific time slots when you're unavailable
-              </CardDescription>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl blur-lg opacity-50" />
+                <div className="relative bg-gradient-to-br from-amber-500 to-amber-600 p-4 rounded-2xl shadow-xl">
+                  <Calendar className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div>
+                <CardTitle className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+                  Blocked Time Slots
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-600 mt-1">
+                  Block specific time slots when you're unavailable
+                </CardDescription>
+              </div>
             </div>
             <Button
               onClick={() => setShowBlockForm(!showBlockForm)}
               variant="outline"
-              size="sm"
-              className="min-h-[44px]"
+              className="border-amber-300 hover:bg-amber-50 hover:border-amber-400 shadow-md hover:shadow-lg transition-all h-12 px-6"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-5 w-5 mr-2" />
               Add Block
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6 space-y-4">
+        <CardContent className="relative p-6 lg:p-8 space-y-4">
           {showBlockForm && (
-            <Card className="bg-gray-50 p-4 border-2 border-amber-200">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-amber-50 to-white p-6 rounded-2xl border-2 border-amber-200 shadow-lg"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Checkbox
+                      id="full-day"
+                      checked={newBlock.isFullDay}
+                      onCheckedChange={(checked) =>
+                        setNewBlock({ ...newBlock, isFullDay: checked === true })
+                      }
+                      className="border-amber-400 data-[state=checked]:bg-amber-500"
+                    />
+                    <Label htmlFor="full-day" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                      Full Day Event (Holiday/Off Day)
+                    </Label>
+                  </div>
+                </div>
                 <div>
-                  <Label className="text-sm sm:text-base">Start Date</Label>
+                  <Label className="text-sm font-semibold text-gray-700 mb-2 block">Date</Label>
                   <Input
                     type="date"
                     value={newBlock.startDate}
                     onChange={(e) =>
                       setNewBlock({ ...newBlock, startDate: e.target.value })
                     }
-                    className="mt-2"
+                    className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
                   />
                 </div>
-                <div>
-                  <Label className="text-sm sm:text-base">Start Time</Label>
-                  <Input
-                    type="time"
-                    value={newBlock.startTime}
-                    onChange={(e) =>
-                      setNewBlock({ ...newBlock, startTime: e.target.value })
+                {!newBlock.isFullDay && (
+                  <>
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700 mb-2 block">Start Time</Label>
+                      <Input
+                        type="time"
+                        value={newBlock.startTime}
+                        onChange={(e) =>
+                          setNewBlock({ ...newBlock, startTime: e.target.value })
+                        }
+                        className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700 mb-2 block">End Time</Label>
+                      <Input
+                        type="time"
+                        value={newBlock.endTime}
+                        onChange={(e) =>
+                          setNewBlock({ ...newBlock, endTime: e.target.value })
+                        }
+                        className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                      />
+                    </div>
+                  </>
+                )}
+                <div className="sm:col-span-2">
+                  <Label className="text-sm font-semibold text-gray-700 mb-2 block">Slot Type</Label>
+                  <Select
+                    value={newBlock.slotType}
+                    onValueChange={(value: any) =>
+                      setNewBlock({ ...newBlock, slotType: value })
                     }
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm sm:text-base">End Date</Label>
-                  <Input
-                    type="date"
-                    value={newBlock.endDate}
-                    onChange={(e) =>
-                      setNewBlock({ ...newBlock, endDate: e.target.value })
-                    }
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm sm:text-base">End Time</Label>
-                  <Input
-                    type="time"
-                    value={newBlock.endTime}
-                    onChange={(e) =>
-                      setNewBlock({ ...newBlock, endTime: e.target.value })
-                    }
-                    className="mt-2"
-                  />
+                  >
+                    <SelectTrigger className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unavailable">Unavailable</SelectItem>
+                      <SelectItem value="busy">Busy</SelectItem>
+                      <SelectItem value="personal">Personal</SelectItem>
+                      <SelectItem value="holiday">Holiday</SelectItem>
+                      <SelectItem value="off_day">Off Day</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="sm:col-span-2">
-                  <Label className="text-sm sm:text-base">Reason (optional)</Label>
+                  <Label className="text-sm font-semibold text-gray-700 mb-2 block">Reason/Notes (optional)</Label>
                   <Textarea
                     value={newBlock.reason}
                     onChange={(e) =>
                       setNewBlock({ ...newBlock, reason: e.target.value })
                     }
-                    placeholder="e.g., Personal appointment, Meeting..."
-                    className="mt-2"
-                    rows={2}
+                    placeholder="e.g., Personal appointment, Meeting, Christmas Day..."
+                    className="mt-2 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                    rows={3}
                   />
                 </div>
               </div>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleAddBlock} size="sm">
+              <div className="flex gap-3 mt-6">
+                <Button 
+                  onClick={handleAddBlock} 
+                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md hover:shadow-lg h-12 px-6"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Block
                 </Button>
                 <Button
@@ -346,37 +579,59 @@ export const AvailabilityManager = ({
                       startTime: "",
                       endDate: "",
                       endTime: "",
+                      slotType: "unavailable",
+                      isFullDay: false,
                       reason: "",
+                      notes: "",
                     });
                   }}
                   variant="outline"
-                  size="sm"
+                  className="border-amber-300 hover:bg-amber-50 hover:border-amber-400 h-12 px-6"
                 >
                   Cancel
                 </Button>
               </div>
-            </Card>
+            </motion.div>
           )}
 
           {blockedSlots.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm sm:text-base">No blocked time slots</p>
+            <div className="text-center py-12">
+              <div className="inline-flex p-4 bg-amber-100 rounded-full mb-4">
+                <Calendar className="h-12 w-12 text-amber-600" />
+              </div>
+              <p className="text-gray-500 font-medium text-base">No blocked time slots</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {blockedSlots.map((slot) => (
-                <div
+            <div className="space-y-3">
+              {blockedSlots.map((slot, index) => (
+                <motion.div
                   key={slot.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-amber-50/50 rounded-xl border-2 border-amber-200 hover:border-amber-300 shadow-md hover:shadow-lg transition-all"
                 >
                   <div className="flex-1">
-                    <div className="font-medium text-sm sm:text-base">
-                      {formatDate(slot.startAt)} {formatTime(slot.startAt)} - {formatTime(slot.endAt)}
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline" className="text-xs">
+                        {slot.slotType || "unavailable"}
+                      </Badge>
+                      {slot.isFullDay && (
+                        <Badge variant="outline" className="text-xs bg-amber-100 text-amber-800">
+                          Full Day
+                        </Badge>
+                      )}
                     </div>
-                    {slot.reason && (
-                      <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                        {slot.reason}
+                    <div className="font-semibold text-base text-gray-900 mb-1">
+                      {slot.isFullDay 
+                        ? formatDate(slot.startAt)
+                        : `${formatDate(slot.startAt)} ${formatTime(slot.startAt)} - ${formatTime(slot.endAt)}`
+                      }
+                    </div>
+                    {(slot.reason || slot.notes) && (
+                      <div className="text-sm text-amber-700 mt-1 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                        {slot.reason || slot.notes}
                       </div>
                     )}
                   </div>
@@ -384,11 +639,11 @@ export const AvailabilityManager = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRemoveBlock(slot.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-10 w-10 p-0 rounded-lg"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </Button>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
@@ -397,4 +652,3 @@ export const AvailabilityManager = ({
     </div>
   );
 };
-

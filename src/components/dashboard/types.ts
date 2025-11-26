@@ -111,6 +111,11 @@ export interface Booking {
     performedAt: string;
     notes?: string;
   }>;
+  callRecord?: {
+    vapiCallId?: string;
+    callTranscript?: string;
+    callRecordingUrl?: string;
+  };
   [key: string]: any;
 }
 

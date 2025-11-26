@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2 } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2, Headphones, Download, Play } from "lucide-react";
 import { formatDateTime, formatDate, formatTime, getStatusColor, fetchPropertyAvailability } from "./utils";
 import { toast } from "sonner";
 import type { Booking, AvailabilitySlot } from "./types";
@@ -242,15 +242,74 @@ export const BookingDetailModal = ({
               </div>
             </section>
 
+            {/* Call Record (if booking came from phone call) */}
+            {booking.callRecord && (booking.callRecord.callRecordingUrl || booking.callRecord.callTranscript || booking.callRecord.vapiCallId) && (
+              <section className="space-y-2 sm:space-y-3 lg:space-y-3 xl:space-y-4">
+                <h3 className="text-base sm:text-lg lg:text-lg xl:text-xl font-semibold flex items-center gap-2 lg:gap-2.5 xl:gap-3">
+                  <Headphones className="h-4 w-4 sm:h-5 sm:w-5 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-amber-600 flex-shrink-0" />
+                  Call Record
+                </h3>
+                <div className="bg-gradient-to-br from-blue-50 to-amber-50 rounded-lg p-3 sm:p-4 lg:p-4 xl:p-5 space-y-3 border-2 border-amber-200">
+                  {booking.callRecord.callRecordingUrl && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm sm:text-base font-medium text-gray-900">
+                        <Headphones className="h-4 w-4 text-amber-600" />
+                        Call Recording
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <audio 
+                          controls 
+                          className="w-full sm:flex-1 h-10 rounded-lg"
+                          src={booking.callRecord.callRecordingUrl}
+                        >
+                          Your browser does not support the audio element.
+                        </audio>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = booking.callRecord!.callRecordingUrl!;
+                            link.download = `call-${booking.callRecord!.vapiCallId || booking.bookingId}.mp3`;
+                            link.click();
+                          }}
+                          className="border-amber-300 hover:bg-amber-50 hover:border-amber-400"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {booking.callRecord.callTranscript && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm sm:text-base font-medium text-gray-900">
+                        <FileText className="h-4 w-4 text-amber-600" />
+                        Call Transcript
+                      </div>
+                      <div className="bg-white rounded-lg p-3 sm:p-4 max-h-60 overflow-y-auto border border-amber-200">
+                        <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap">{booking.callRecord.callTranscript}</p>
+                      </div>
+                    </div>
+                  )}
+                  {booking.callRecord.vapiCallId && (
+                    <div className="text-xs sm:text-sm text-gray-600">
+                      <strong>Call ID:</strong> {booking.callRecord.vapiCallId}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
             {/* Notes */}
             {booking.notes && (
-              <section className="space-y-3">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-amber-600" />
+              <section className="space-y-2 sm:space-y-3 lg:space-y-3 xl:space-y-4">
+                <h3 className="text-base sm:text-lg lg:text-lg xl:text-xl font-semibold flex items-center gap-2 lg:gap-2.5 xl:gap-3">
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-amber-600 flex-shrink-0" />
                   Notes
                 </h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-700">{booking.notes}</p>
+                <div className="bg-gray-50 rounded-lg p-3 sm:p-4 lg:p-4 xl:p-5">
+                  <p className="text-sm sm:text-base text-gray-700">{booking.notes}</p>
                 </div>
               </section>
             )}

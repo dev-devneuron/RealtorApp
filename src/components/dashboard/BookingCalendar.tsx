@@ -12,10 +12,19 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from "lucide-react";
-import { formatTime } from "./utils";
+import { formatTime, fetchCalendarEvents, fetchUnavailableSlots } from "./utils";
 import { API_BASE } from "./constants";
 import type { Booking } from "./types";
 import "./BookingCalendar.css";
+
+// Calendar preferences type (matches what we store in localStorage)
+interface CalendarPreferences {
+  start_time: string;
+  end_time: string;
+  timezone: string;
+  slot_length: number;
+  working_days: number[];
+}
 
 // Create localizer using moment
 const localizer = momentLocalizer(moment);
@@ -84,15 +93,32 @@ export const BookingCalendar = ({
 }: BookingCalendarProps) => {
   const [calendarPreferences, setCalendarPreferences] = useState<CalendarPreferences | null>(null);
 
-  // Fetch calendar preferences for PMs
-  useEffect(() => {
-    const fetchPreferences = async () => {
-      if (userType === "property_manager" && userId) {
+  // Load preferences from localStorage and listen for updates
+  const loadPreferences = () => {
+    if (userType === "property_manager" && userId) {
+      try {
+        const stored = localStorage.getItem(`calendar_preferences_${userId}`);
+        if (stored) {
+          const prefs = JSON.parse(stored);
+          setCalendarPreferences({
+            start_time: prefs.start_time || "09:00",
+            end_time: prefs.end_time || "17:00",
+            timezone: prefs.timezone || "America/New_York",
+            slot_length: prefs.slot_length || 30,
+            working_days: prefs.working_days || [1, 2, 3, 4, 5],
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Error loading preferences from localStorage:", error);
+      }
+
+      // Try to fetch from API if not in localStorage
+      const fetchFromAPI = async () => {
         try {
           const token = localStorage.getItem("access_token");
           if (!token) return;
 
-          // Try multiple possible endpoints for calendar preferences
           const endpoints = [
             `${API_BASE}/calendar-preferences?user_id=${userId}&user_type=${userType}`,
             `${API_BASE}/api/calendar-preferences?user_id=${userId}&user_type=${userType}`,
@@ -110,7 +136,6 @@ export const BookingCalendar = ({
 
               if (response.ok) {
                 const data = await response.json();
-                // Handle different response formats
                 if (data.start_time && data.end_time) {
                   preferences = data;
                 } else if (data.workingHours) {
@@ -122,45 +147,174 @@ export const BookingCalendar = ({
                     working_days: data.working_days || [1, 2, 3, 4, 5],
                   };
                 }
+                if (preferences) {
+                  // Save to localStorage for future use
+                  localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(preferences));
+                }
                 break;
               }
             } catch (e) {
-              // Try next endpoint
               continue;
             }
           }
 
-          // Use default preferences if fetch fails
-          if (!preferences) {
-            preferences = {
+          if (preferences) {
+            setCalendarPreferences(preferences);
+          } else {
+            // Use defaults
+            const defaults = {
               start_time: "09:00",
               end_time: "17:00",
               timezone: "America/New_York",
               slot_length: 30,
-              working_days: [1, 2, 3, 4, 5], // Mon-Fri
+              working_days: [1, 2, 3, 4, 5],
             };
+            setCalendarPreferences(defaults);
+            localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(defaults));
           }
-
-          setCalendarPreferences(preferences);
         } catch (error) {
           console.error("Error fetching calendar preferences:", error);
-          // Use default preferences if fetch fails
-          setCalendarPreferences({
+          const defaults = {
             start_time: "09:00",
             end_time: "17:00",
             timezone: "America/New_York",
             slot_length: 30,
-            working_days: [1, 2, 3, 4, 5], // Mon-Fri
+            working_days: [1, 2, 3, 4, 5],
+          };
+          setCalendarPreferences(defaults);
+        }
+      };
+
+      fetchFromAPI();
+    }
+  };
+
+  // Load preferences on mount and when userId/userType changes
+  useEffect(() => {
+    loadPreferences();
+  }, [userId, userType]);
+
+  // Listen for preference updates from AvailabilityManager
+  useEffect(() => {
+    const handlePreferenceUpdate = (e: CustomEvent) => {
+      if (e.detail?.userId === userId) {
+        setCalendarPreferences(e.detail.preferences);
+      }
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `calendar_preferences_${userId}` && e.newValue) {
+        try {
+          const prefs = JSON.parse(e.newValue);
+          setCalendarPreferences({
+            start_time: prefs.start_time || "09:00",
+            end_time: prefs.end_time || "17:00",
+            timezone: prefs.timezone || "America/New_York",
+            slot_length: prefs.slot_length || 30,
+            working_days: prefs.working_days || [1, 2, 3, 4, 5],
           });
+        } catch (error) {
+          console.error("Error parsing preferences:", error);
         }
       }
     };
 
-    fetchPreferences();
-  }, [userId, userType]);
+    // Listen for custom event (same window)
+    window.addEventListener("calendarPreferencesUpdated", handlePreferenceUpdate as EventListener);
+    // Listen for storage event (cross-tab)
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("calendarPreferencesUpdated", handlePreferenceUpdate as EventListener);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [userId]);
+
+  const [availabilitySlots, setAvailabilitySlots] = useState<Array<{
+    id: number | string;
+    startAt: string;
+    endAt: string;
+    slotType?: string;
+    isFullDay?: boolean;
+    reason?: string;
+  }>>([]);
+
+  // Fetch calendar events (bookings + availability slots) when view or date changes
+  useEffect(() => {
+    const loadCalendarEvents = async () => {
+      if (!userId || !userType) return;
+
+      try {
+        // Calculate date range based on current view
+        let fromDate: Date;
+        let toDate: Date;
+
+        if (view === "day") {
+          fromDate = moment(date).startOf("day").toDate();
+          toDate = moment(date).endOf("day").toDate();
+        } else if (view === "week") {
+          fromDate = moment(date).startOf("week").toDate();
+          toDate = moment(date).endOf("week").toDate();
+        } else if (view === "month") {
+          fromDate = moment(date).startOf("month").toDate();
+          toDate = moment(date).endOf("month").toDate();
+        } else {
+          return; // List view doesn't need calendar events
+        }
+
+        // Try to fetch from calendar events endpoint
+        try {
+          const eventsData = await fetchCalendarEvents(
+            userId,
+            fromDate.toISOString(),
+            toDate.toISOString()
+          );
+          
+          // Update availability slots from calendar events
+          if (eventsData.availabilitySlots) {
+            setAvailabilitySlots(eventsData.availabilitySlots.map((slot: any) => ({
+              id: slot.slotId || slot.id || `slot-${slot.startAt}`,
+              startAt: slot.startAt,
+              endAt: slot.endAt,
+              slotType: slot.slotType,
+              isFullDay: slot.isFullDay,
+              reason: slot.notes || slot.reason,
+            })));
+          }
+        } catch (error) {
+          // Fallback: fetch unavailable slots directly
+          console.warn("Failed to fetch calendar events, trying unavailable slots:", error);
+          try {
+            const slots = await fetchUnavailableSlots(
+              userId,
+              userType,
+              fromDate.toISOString(),
+              toDate.toISOString()
+            );
+            setAvailabilitySlots(slots.map(slot => ({
+              id: slot.id,
+              startAt: slot.startAt,
+              endAt: slot.endAt,
+              slotType: slot.slotType,
+              isFullDay: slot.isFullDay,
+              reason: slot.reason || slot.notes,
+            })));
+          } catch (e) {
+            console.error("Error fetching unavailable slots:", e);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading calendar events:", error);
+      }
+    };
+
+    if (view !== "list" && view !== "stats" && view !== "availability") {
+      loadCalendarEvents();
+    }
+  }, [userId, userType, view, date]);
 
   // Convert bookings to calendar events
-  const events = useMemo(() => {
+  const bookingEvents = useMemo(() => {
     return bookings.map((booking) => ({
       ...booking,
       title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
@@ -169,6 +323,20 @@ export const BookingCalendar = ({
       resource: booking,
     }));
   }, [bookings]);
+
+  // Convert availability slots to calendar events
+  const availabilityEvents = useMemo(() => {
+    return availabilitySlots.map((slot) => ({
+      id: `availability-${slot.id}`,
+      title: slot.isFullDay 
+        ? `${slot.slotType === "holiday" ? "Holiday" : slot.slotType === "off_day" ? "Off Day" : slot.slotType || "Unavailable"}: ${slot.reason || ""}`
+        : `${slot.slotType || "Unavailable"}: ${slot.reason || ""}`,
+      start: new Date(slot.startAt),
+      end: new Date(slot.endAt),
+      resource: { type: "availability", ...slot },
+      allDay: slot.isFullDay || false,
+    }));
+  }, [availabilitySlots]);
 
   // Generate working hours events for day/week views
   const workingHoursEvents = useMemo(() => {
@@ -208,10 +376,10 @@ export const BookingCalendar = ({
     return events;
   }, [calendarPreferences, view, date]);
 
-  // Combine bookings and working hours events
+  // Combine bookings, working hours, and availability slots
   const allEvents = useMemo(() => {
-    return [...events, ...workingHoursEvents];
-  }, [events, workingHoursEvents]);
+    return [...bookingEvents, ...workingHoursEvents, ...availabilityEvents];
+  }, [bookingEvents, workingHoursEvents, availabilityEvents]);
 
   // Enhanced custom toolbar with beautiful design
   const CustomToolbar = ({ label, onNavigate: nav, onView }: any) => {
@@ -336,6 +504,64 @@ export const BookingCalendar = ({
       };
     }
 
+    // Availability slot styling
+    if (event.resource?.type === "availability") {
+      const slotType = event.resource.slotType || "unavailable";
+      const isFullDay = event.resource.isFullDay;
+      
+      if (slotType === "holiday") {
+        return {
+          style: {
+            backgroundColor: "rgba(239, 68, 68, 0.15)",
+            border: "2px solid #ef4444",
+            color: "#991b1b",
+            opacity: 0.8,
+            borderRadius: "4px",
+            padding: "2px 4px",
+            fontWeight: "500",
+          },
+        };
+      }
+      if (slotType === "off_day") {
+        return {
+          style: {
+            backgroundColor: "rgba(168, 85, 247, 0.15)",
+            border: "2px solid #a855f7",
+            color: "#6b21a8",
+            opacity: 0.8,
+            borderRadius: "4px",
+            padding: "2px 4px",
+            fontWeight: "500",
+          },
+        };
+      }
+      if (slotType === "busy") {
+        return {
+          style: {
+            backgroundColor: "rgba(249, 115, 22, 0.15)",
+            border: "2px dashed #f97316",
+            color: "#9a3412",
+            opacity: 0.7,
+            borderRadius: "4px",
+            padding: "2px 4px",
+            fontWeight: "500",
+          },
+        };
+      }
+      // unavailable, personal
+      return {
+        style: {
+          backgroundColor: "rgba(107, 114, 128, 0.15)",
+          border: "1px dashed #6b7280",
+          color: "#374151",
+          opacity: 0.6,
+          borderRadius: "4px",
+          padding: "2px 4px",
+          fontWeight: "500",
+        },
+      };
+    }
+
     // Booking styling
     const status = event.resource?.status || "pending";
     let backgroundColor = "#fbbf24"; // amber for pending
@@ -375,7 +601,7 @@ export const BookingCalendar = ({
     };
   };
 
-  // Custom event component that handles working hours differently
+  // Custom event component that handles working hours and availability slots differently
   const CustomEventComponent = ({ event }: { event: any }) => {
     if (event.resource?.type === "working-hours") {
       const timeRange = event.title?.replace("Working Hours: ", "") || "";
@@ -383,6 +609,24 @@ export const BookingCalendar = ({
         <div className="flex items-center gap-1 text-xs text-amber-700 font-medium px-1">
           <Clock className="h-3 w-3 flex-shrink-0" />
           <span className="truncate">{timeRange || "Working Hours"}</span>
+        </div>
+      );
+    }
+    if (event.resource?.type === "availability") {
+      const slotType = event.resource.slotType || "unavailable";
+      const isFullDay = event.resource.isFullDay;
+      const bgColor = slotType === "holiday" ? "bg-red-100" 
+        : slotType === "off_day" ? "bg-purple-100"
+        : slotType === "busy" ? "bg-orange-100"
+        : "bg-gray-100";
+      const textColor = slotType === "holiday" ? "text-red-800"
+        : slotType === "off_day" ? "text-purple-800"
+        : slotType === "busy" ? "text-orange-800"
+        : "text-gray-800";
+      
+      return (
+        <div className={`flex items-center gap-1 text-xs font-medium px-1 ${bgColor} ${textColor} rounded border border-current/20`}>
+          <span className="truncate">{isFullDay ? event.title : event.title.split(":")[0]}</span>
         </div>
       );
     }

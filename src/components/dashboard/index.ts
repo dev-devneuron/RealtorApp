@@ -24,6 +24,8 @@ export { BookingCalendar } from "./BookingCalendar";
 export { BookingStatistics } from "./BookingStatistics";
 export { BookingExport, exportToCSV, exportToPDF } from "./BookingExport";
 export { AvailabilityManager } from "./AvailabilityManager";
+export { PropertyAssignmentPanel } from "./PropertyAssignmentPanel";
+export { ManualBookingModal } from "./ManualBookingModal";
 
 // Export shared utilities
 export * from "./constants";

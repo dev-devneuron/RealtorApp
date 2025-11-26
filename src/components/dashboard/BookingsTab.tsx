@@ -36,6 +36,7 @@ import {
   Mail,
   Sparkles,
   TrendingUp,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -54,6 +55,8 @@ import { BookingCalendar } from "./BookingCalendar";
 import { BookingStatistics } from "./BookingStatistics";
 import { BookingExport } from "./BookingExport";
 import { AvailabilityManager } from "./AvailabilityManager";
+import { PropertyAssignmentPanel } from "./PropertyAssignmentPanel";
+import { ManualBookingModal } from "./ManualBookingModal";
 import type { Booking, Realtor, Property } from "./types";
 
 interface BookingsTabProps {
@@ -454,6 +457,13 @@ export const BookingsTab = ({
                 </TabsList>
               </div>
               <div className="flex gap-2">
+                <Button
+                  onClick={() => setShowManualBookingModal(true)}
+                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md hover:shadow-lg"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Booking
+                </Button>
                 <BookingExport bookings={filteredBookings} filters={{ status: statusFilter, search: searchQuery }} />
               </div>
             </div>
@@ -793,7 +803,19 @@ export const BookingsTab = ({
 
             {/* Availability Management View */}
             <TabsContent value="availability" className="mt-0">
-              <AvailabilityManager userId={userId} userType={userType} onSave={onRefresh} />
+              {userType === "property_manager" ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <AvailabilityManager userId={userId} userType={userType} onSave={onRefresh} />
+                  <PropertyAssignmentPanel
+                    pmId={userId}
+                    realtors={realtors}
+                    properties={properties}
+                    onAssignmentChange={onRefresh}
+                  />
+                </div>
+              ) : (
+                <AvailabilityManager userId={userId} userType={userType} onSave={onRefresh} />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -815,6 +837,17 @@ export const BookingsTab = ({
           approverId={userId}
         />
       )}
+
+      {/* Manual Booking Modal */}
+      <ManualBookingModal
+        open={showManualBookingModal}
+        onClose={() => setShowManualBookingModal(false)}
+        onSuccess={() => {
+          onRefresh();
+          setShowManualBookingModal(false);
+        }}
+        userId={userId}
+      />
     </div>
   );
 };

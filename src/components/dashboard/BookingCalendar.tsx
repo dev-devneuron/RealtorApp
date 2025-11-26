@@ -5,7 +5,7 @@
  * Includes working hours visualization for PMs
  */
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import { Calendar as BigCalendar, momentLocalizer, View, SlotInfo } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -39,14 +39,6 @@ interface BookingCalendarProps {
   onSelectEvent?: (booking: Booking) => void;
   userId?: number;
   userType?: string;
-}
-
-interface CalendarPreferences {
-  start_time: string;
-  end_time: string;
-  timezone: string;
-  slot_length: number;
-  working_days: number[];
 }
 
 // Enhanced event component with beautiful styling
@@ -191,7 +183,9 @@ export const BookingCalendar = ({
 
   // Load preferences on mount and when userId/userType changes
   useEffect(() => {
-    loadPreferences();
+    if (userType === "property_manager" && userId) {
+      loadPreferences();
+    }
   }, [userId, userType]);
 
   // Listen for preference updates from AvailabilityManager
@@ -271,7 +265,7 @@ export const BookingCalendar = ({
           );
           
           // Update availability slots from calendar events
-          if (eventsData.availabilitySlots) {
+          if (eventsData && eventsData.availabilitySlots) {
             setAvailabilitySlots(eventsData.availabilitySlots.map((slot: any) => ({
               id: slot.slotId || slot.id || `slot-${slot.startAt}`,
               startAt: slot.startAt,
@@ -291,25 +285,34 @@ export const BookingCalendar = ({
               fromDate.toISOString(),
               toDate.toISOString()
             );
-            setAvailabilitySlots(slots.map(slot => ({
-              id: slot.id,
-              startAt: slot.startAt,
-              endAt: slot.endAt,
-              slotType: slot.slotType,
-              isFullDay: slot.isFullDay,
-              reason: slot.reason || slot.notes,
-            })));
+            if (slots && Array.isArray(slots)) {
+              setAvailabilitySlots(slots.map(slot => ({
+                id: slot.id,
+                startAt: slot.startAt,
+                endAt: slot.endAt,
+                slotType: slot.slotType,
+                isFullDay: slot.isFullDay,
+                reason: slot.reason || slot.notes,
+              })));
+            }
           } catch (e) {
             console.error("Error fetching unavailable slots:", e);
+            // Don't crash - just leave availability slots empty
+            setAvailabilitySlots([]);
           }
         }
       } catch (error) {
         console.error("Error loading calendar events:", error);
+        // Don't crash - just leave availability slots empty
+        setAvailabilitySlots([]);
       }
     };
 
     if (view !== "list" && view !== "stats" && view !== "availability") {
       loadCalendarEvents();
+    } else {
+      // Clear availability slots when not in calendar view
+      setAvailabilitySlots([]);
     }
   }, [userId, userType, view, date]);
 
@@ -677,14 +680,25 @@ export const BookingCalendar = ({
           date={date}
           onView={onViewChange}
           onNavigate={onNavigate}
-          onSelectSlot={onSelectSlot}
           onSelectEvent={(event) => {
-            // Don't trigger for working hours events
-            if (event.resource?.type !== "working-hours") {
+            // Don't trigger for working hours or availability slot events
+            if (event.resource?.type === "working-hours" || event.resource?.type === "availability") {
+              return;
+            }
+            if (event.resource?.bookingId) {
               onSelectEvent?.(event.resource);
             }
           }}
-            components={{
+          onSelectSlot={(slotInfo) => {
+            // In month view, clicking anywhere in a day should navigate to day view
+            if (view === "month") {
+              onNavigate(slotInfo.start);
+              onViewChange("day");
+            } else {
+              onSelectSlot?.(slotInfo);
+            }
+          }}
+          components={{
               toolbar: CustomToolbar,
               event: CustomEventComponent,
               month: {
@@ -730,15 +744,6 @@ export const BookingCalendar = ({
               };
             }
             return {};
-          }}
-          onSelectSlot={(slotInfo) => {
-            // In month view, clicking anywhere in a day should navigate to day view
-            if (view === "month") {
-              onNavigate(slotInfo.start);
-              onViewChange("day");
-            } else {
-              onSelectSlot?.(slotInfo);
-            }
           }}
         />
       </CardContent>

@@ -59,12 +59,10 @@ const Header = () => {
    * Defines the main navigation links. Items with isRoute: true use React Router
    * Link components, while items with isRoute: false use anchor tags for smooth
    * scrolling to page sections.
-   * Properties link is only shown when user is logged in since it's a protected route.
    */
   const navigation = [
     { name: "Home", href: "/", isRoute: true },
     { name: "Services", href: "#services", isRoute: false },
-    ...(isLoggedIn ? [{ name: "Properties", href: "/properties", isRoute: true }] : []),
     { name: "AI Tools", href: "#ai-tools", isRoute: false },
     { name: "About", href: "/about", isRoute: true },
     { name: "Contact", href: "#contact-section", isRoute: false },

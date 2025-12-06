@@ -133,12 +133,12 @@ const Header = () => {
           <Link 
             to="/"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="flex items-center space-x-2"
+            className="flex items-center"
           >
             <img 
               src="/images/photos/leasap logo.jpg" 
               alt="Leasap Logo" 
-              className="h-10 sm:h-12 w-auto object-contain"
+              className="h-14 sm:h-16 md:h-20 w-auto object-contain"
             />
           </Link>
 

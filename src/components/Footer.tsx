@@ -197,7 +197,7 @@ const Footer = () => {
               <img 
                 src="/images/photos/leasap logo.jpg" 
                 alt="Leasap Logo" 
-                className="h-12 w-auto object-contain"
+                className="h-14 sm:h-16 md:h-20 w-auto object-contain"
               />
             </div>
             

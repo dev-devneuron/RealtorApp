@@ -3154,11 +3154,17 @@ const Dashboard = () => {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1">
               <motion.div 
-                className="bg-gradient-to-br from-amber-500 to-amber-600 p-3 rounded-2xl shadow-lg"
-                whileHover={{ scale: 1.05, rotate: 5 }}
+                className="flex items-center"
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Home className="h-6 w-6 text-white" />
+                <Link to="/">
+                  <img 
+                    src="/images/photos/leasap logo.jpg" 
+                    alt="Leasap Logo" 
+                    className="h-12 sm:h-14 md:h-16 w-auto object-contain"
+                  />
+                </Link>
               </motion.div>
               <div>
                 <motion.div 

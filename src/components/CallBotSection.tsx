@@ -236,19 +236,19 @@ const CallBotSection = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/book-demo">   
-              <Button variant="luxury" size="lg" className="flex-1">
-                <Phone className="mr-2 h-5 w-5" />
-                Get Your CallBot Companion
-              </Button>
+              <Link to="/book-demo" className="flex-1">   
+                <Button variant="luxury" size="lg" className="w-full">
+                  <Phone className="mr-2 h-5 w-5" />
+                  Get Your CallBot Companion
+                </Button>
               </Link>
 
-              <DemoScheduleModal>
-                <Button variant="premium" size="lg" className="flex-1">
+              <Link to="/book-demo" className="flex-1">
+                <Button variant="premium" size="lg" className="w-full">
                   <Mic className="mr-2 h-5 w-5" />
                   Schedule Demo Call
                 </Button>
-              </DemoScheduleModal>
+              </Link>
             </div>
           </div>
         </div>

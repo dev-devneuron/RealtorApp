@@ -55,19 +55,19 @@ const ContactSection = () => {
 
         <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           <div>
-            <h3 className="text-2xl font-semibold mb-6">Get in Touch</h3>
-            <div className="space-y-6">
+            <h3 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Get in Touch</h3>
+            <div className="space-y-4 sm:space-y-6">
               <div className="flex items-center space-x-4">
                 <Mail className="h-6 w-6 text-primary" />
-                <span>dev.devneuron@gmail.com</span>
+                <a href="mailto:ttahir@leasap.com" className="hover:text-primary transition-colors">ttahir@leasap.com</a>
               </div>
               <div className="flex items-center space-x-4">
                 <Phone className="h-6 w-6 text-primary" />
-                <span>+1 (555) 123-4567</span>
+                <a href="tel:+15419126397" className="hover:text-primary transition-colors">+1 (541) 912-6397</a>
               </div>
               <div className="flex items-center space-x-4">
                 <MapPin className="h-6 w-6 text-primary" />
-                <span>123 AI Street, Tech City, TC 12345</span>
+                <span>San Francisco Bay Area, CA</span>
               </div>
             </div>
           </div>

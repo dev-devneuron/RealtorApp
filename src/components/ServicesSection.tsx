@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import DemoScheduleModal from "@/components/DemoScheduleModal";
+import { Link } from "react-router-dom";
 import { 
   MessageCircle, 
   Phone, 
@@ -106,7 +106,7 @@ const ServicesSection = () => {
         </div>
 
         {/* Services Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12 md:mb-16">
           {services.map((service, index) => (
             <Card key={index} className="group hover:shadow-luxury transition-all duration-300 hover:-translate-y-2 border-0">
               <CardHeader>
@@ -131,22 +131,22 @@ const ServicesSection = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center bg-luxury-gradient rounded-3xl p-12 text-white">
-          <h3 className="text-3xl font-bold mb-4">
+        <div className="text-center bg-luxury-gradient rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-white">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
             Ready to Transform Your Business?
           </h3>
-          <p className="text-xl mb-8 text-white/90">
+          <p className="text-lg sm:text-xl mb-6 sm:mb-8 text-white/90">
             Join 500+ realtors already using our AI solutions to grow their business
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {/* <Button variant="gold" size="lg">
               Start Free Trial
             </Button> */}
-            <DemoScheduleModal>
+            <Link to="/book-demo">
               <Button variant="premium" size="lg">
                 Schedule Demo
               </Button>
-            </DemoScheduleModal>
+            </Link>
           </div>
         </div>
       </div>

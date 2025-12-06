@@ -91,11 +91,11 @@ const Footer = () => {
    * Quick links to main sections of the website
    */
   const quickLinks = [
-    { name: "Home", href: "#home" },
-    { name: "Services", href: "#services" },
-    { name: "AI Tools", href: "#ai-tools" },
-    { name: "About", href: "#about" },
-    { name: "Contact", href: "#contact" },
+    { name: "Home", href: "/", isRoute: true },
+    { name: "Services", href: "#services", isRoute: false },
+    { name: "AI Tools", href: "#ai-tools", isRoute: false },
+    { name: "About", href: "/about", isRoute: true },
+    { name: "Contact", href: "#contact-section", isRoute: false },
   ];
 
   /**
@@ -124,12 +124,10 @@ const Footer = () => {
   /**
    * Social media links
    * Configuration for social media platform links with icons
+   * Only LinkedIn is kept as per requirements
    */
   const socialLinks = [
-    { icon: Facebook, href: "#", name: "Facebook" },
-    { icon: Twitter, href: "#", name: "Twitter" },
-    { icon: Linkedin, href: "#", name: "LinkedIn" },
-    { icon: Instagram, href: "#", name: "Instagram" },
+    { icon: Linkedin, href: "https://www.linkedin.com/company/leasap", name: "LinkedIn" },
   ];
 
   return (
@@ -185,15 +183,15 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-gold" />
-                <span className="text-white/80">hello@leasap.com</span>
+                <a href="mailto:ttahir@leasap.com" className="text-white/80 hover:text-gold transition-colors">ttahir@leasap.com</a>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-gold" />
-                <span className="text-white/80">+1 (555) 123-4567</span>
+                <a href="tel:+15419126397" className="text-white/80 hover:text-gold transition-colors">+1 (541) 912-6397</a>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-5 w-5 text-gold" />
-                <span className="text-white/80">123 Tech Street, San Francisco, CA 94105</span>
+                <span className="text-white/80">San Francisco Bay Area, CA</span>
               </div>
             </div>
 
@@ -218,12 +216,30 @@ const Footer = () => {
             <ul className="space-y-3">
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <a 
-                    href={link.href} 
-                    className="text-white/80 hover:text-gold transition-colors"
-                  >
-                    {link.name}
-                  </a>
+                  {link.isRoute ? (
+                    <Link 
+                      to={link.href} 
+                      className="text-white/80 hover:text-gold transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  ) : (
+                    <a 
+                      href={link.href} 
+                      className="text-white/80 hover:text-gold transition-colors"
+                      onClick={(e) => {
+                        if (link.href.startsWith('#')) {
+                          e.preventDefault();
+                          const element = document.querySelector(link.href);
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }
+                      }}
+                    >
+                      {link.name}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

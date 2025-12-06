@@ -15,7 +15,7 @@ const About = () => {
       name: "Tayyab Tahir",
       role: "CEO & Founder",
       image:"/images/photos/ceo.jpg",
-      description: "3+ years in real estate with a vision for AI-powered property solutions."
+      description: "Tayyab Tahir is the visionary CEO and Founder of Leasap, bringing over 3 years of hands-on experience in the real estate industry. With a deep understanding of the challenges faced by property managers and realtors, Tayyab founded Leasap to revolutionize the industry through AI-powered solutions. His expertise spans property management, client relations, and technology innovation, making him uniquely positioned to bridge the gap between traditional real estate practices and cutting-edge AI technology. Under his leadership, Leasap has grown into a trusted platform that empowers realtors to automate routine tasks, enhance client engagement, and significantly increase lead conversions."
     }
   ];
 

@@ -116,17 +116,17 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 md:py-12">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
           {/* Left Column - Main Content */}
-          <div className="text-white space-y-6 animate-slide-up">
-            <div className="space-y-4">
-              <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-medium border border-white/20">
-                <Award className="mr-2 h-4 w-4 text-gold" />
+          <div className="text-white space-y-4 md:space-y-6 animate-slide-up">
+            <div className="space-y-3 md:space-y-4">
+              <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border border-white/20">
+                <Award className="mr-2 h-3 w-3 sm:h-4 sm:w-4 text-gold" />
                 #1 AI-Powered Real Estate Services
               </div>
               
-              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight">
                 Revolutionize Your
                 <span className="text-gold block bg-gradient-to-r from-gold to-yellow-200 bg-clip-text text-transparent">
                   Real Estate Business
@@ -134,7 +134,7 @@ const HeroSection = () => {
                 with AI
               </h1>
               
-              <p className="text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed">
+              <p className="text-base sm:text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed">
                 Experience the future of real estate with our AI-powered chatbot and callbot. 
                 Capture leads 24/7, provide instant property information, and close deals faster 
                 than ever before.
@@ -146,7 +146,7 @@ const HeroSection = () => {
               <Button 
                 variant="gold" 
                 size="lg" 
-                className="text-lg px-6 py-3 font-semibold hover:scale-105 transition-transform duration-200"
+                className="text-base sm:text-lg px-4 sm:px-6 py-2.5 sm:py-3 font-semibold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
                 onClick={() => {
                   const element = document.getElementById('ai-tools');
                   if (element) {
@@ -156,11 +156,11 @@ const HeroSection = () => {
               >
                 Experience the Results
               </Button>
-              <Link to="/book-demo">
+              <Link to="/book-demo" className="w-full sm:w-auto">
                 <Button 
                   variant="premium" 
                   size="lg" 
-                  className="text-lg px-6 py-3 font-semibold border-2 border-gold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
+                  className="text-base sm:text-lg px-4 sm:px-6 py-2.5 sm:py-3 font-semibold border-2 border-gold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
                 >
                   Schedule Demo
                 </Button>
@@ -168,38 +168,38 @@ const HeroSection = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-6">
-              <div className="text-center p-3 bg-white/5 rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-2xl font-bold text-gold">24/7</div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6">
+              <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
+                <div className="text-xl sm:text-2xl font-bold text-gold">24/7</div>
                 <div className="text-white/80 text-xs">AI Availability</div>
               </div>
-              <div className="text-center p-3 bg-white/5 rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-2xl font-bold text-gold">25-30%</div>
+              <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
+                <div className="text-xl sm:text-2xl font-bold text-gold">25-30%</div>
                 <div className="text-white/80 text-xs">Lead Conversion</div>
               </div>
-              <div className="text-center p-3 bg-white/5 rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-2xl font-bold text-gold">500+</div>
+              <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
+                <div className="text-xl sm:text-2xl font-bold text-gold">500+</div>
                 <div className="text-white/80 text-xs">Happy Realtors</div>
               </div>
             </div>
           </div>
 
           {/* Right Column - Premium WhatsApp Style Chat */}
-          <div className="relative animate-float">
-            <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-2 shadow-2xl border border-white/20 relative overflow-hidden">
+          <div className="relative animate-float mt-8 lg:mt-0">
+            <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 shadow-2xl border border-white/20 relative overflow-hidden">
               {/* WhatsApp Chat Container */}
-              <div className="bg-[#111b21] rounded-2xl overflow-hidden shadow-2xl border border-gray-600">
+              <div className="bg-[#111b21] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-gray-600">
                 {/* WhatsApp Header */}
-                <div className="bg-[#202c33] px-4 py-3 flex items-center justify-between border-b border-gray-700">
-                  <div className="flex items-center space-x-3">
+                <div className="bg-[#202c33] px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between border-b border-gray-700">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
                     <div className="relative">
-                      <div className="w-10 h-10 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                        <Bot className="h-5 w-5 text-[#111b21]" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                        <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-[#111b21]" />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#202c33]"></div>
+                      <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-[#202c33]"></div>
                     </div>
                     <div>
-                      <div className="text-white font-semibold">Leasap Property Assistant</div>
+                      <div className="text-white font-semibold text-sm sm:text-base">Leasap Property Assistant</div>
                       <div className="text-green-400 text-xs flex items-center">
                         {/* <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div> */}
                         Online 
@@ -207,16 +207,16 @@ const HeroSection = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <Search className="h-4 w-4 text-gray-300 hover:text-white cursor-pointer transition-colors" />
-                    <MoreVertical className="h-4 w-4 text-gray-300 hover:text-white cursor-pointer transition-colors" />
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300 hover:text-white cursor-pointer transition-colors" />
+                    <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300 hover:text-white cursor-pointer transition-colors" />
                   </div>
                 </div>
 
                 {/* WhatsApp Chat Area */}
                 <div 
                   ref={chatContainerRef}
-                  className="h-72 bg-[#0b141a] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-[#374248] scrollbar-track-[#202c33]"
+                  className="h-64 sm:h-72 bg-[#0b141a] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-y-auto p-2 sm:p-3 space-y-2 scrollbar-thin scrollbar-thumb-[#374248] scrollbar-track-[#202c33]"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%231a1a1a' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")`
                   }}
@@ -386,25 +386,25 @@ const HeroSection = () => {
               </div>
 
               {/* Enhanced Call Demo */}
-              <div className="mt-3 bg-gradient-to-r from-[#005c4b] to-[#202c33] rounded-xl p-3 border border-gold/40 shadow-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                      <Phone className="h-4 w-4 text-[#111b21]" />
+              <div className="mt-2 sm:mt-3 bg-gradient-to-r from-[#005c4b] to-[#202c33] rounded-lg sm:rounded-xl p-2 sm:p-3 border border-gold/40 shadow-lg">
+                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <div className="flex items-center space-x-1.5 sm:space-x-2">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                      <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-[#111b21]" />
                     </div>
                     <div>
-                      <span className="text-white font-semibold text-sm">AI Voice Assistant</span>
+                      <span className="text-white font-semibold text-xs sm:text-sm">AI Voice Assistant</span>
                       <div className="text-green-300 text-xs">Live call simulation</div>
                     </div>
                   </div>
-                  <div className="flex space-x-1">
-                    <div className="w-1.5 h-3 bg-gold rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-1.5 h-4 bg-gold rounded-full animate-pulse" style={{ animationDelay: '100ms' }}></div>
-                    <div className="w-1.5 h-2 bg-gold rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
-                    <div className="w-1.5 h-3.5 bg-gold rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+                  <div className="flex space-x-0.5 sm:space-x-1">
+                    <div className="w-1 h-2 sm:w-1.5 sm:h-3 bg-gold rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-1 h-2.5 sm:w-1.5 sm:h-4 bg-gold rounded-full animate-pulse" style={{ animationDelay: '100ms' }}></div>
+                    <div className="w-1 h-1.5 sm:w-1.5 sm:h-2 bg-gold rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
+                    <div className="w-1 h-2 sm:w-1.5 sm:h-3.5 bg-gold rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
                   </div>
                 </div>
-                <p className="text-white/90 text-xs bg-black/20 rounded-lg p-2 border border-gold/20">
+                <p className="text-white/90 text-xs bg-black/20 rounded-lg p-1.5 sm:p-2 border border-gold/20">
                   "Hello! I can help you schedule viewings, answer property questions, 
                   and connect you with the right agent in real-time."
                 </p>
@@ -412,7 +412,7 @@ const HeroSection = () => {
 
               {/* Enhanced Action Button */}
               <Button 
-                className="w-full mt-3 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-gold text-[#111b21] font-bold py-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl border-2 border-gold/50 text-sm"
+                className="w-full mt-2 sm:mt-3 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-gold text-[#111b21] font-bold py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-105 shadow-xl border-2 border-gold/50 text-xs sm:text-sm"
                 onClick={() => {
                   const element = document.getElementById('ai-tools');
                   if (element) {
@@ -420,7 +420,7 @@ const HeroSection = () => {
                   }
                 }}
               >
-                <TrendingUp className="mr-2 h-4 w-4" />
+                <TrendingUp className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 Experience the Results
               </Button>
             </div>

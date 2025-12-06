@@ -59,8 +59,6 @@ const App = () => (
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
-          <Route path="/properties" element={<Properties />} />
-          <Route path="/properties/:id" element={<PropertyDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/book-demo" element={<BookDemo />} />
@@ -68,6 +66,22 @@ const App = () => (
           <Route path="/confirmation" element={<ConfirmationPage />} />
           
           {/* Protected Routes - Require Authentication */}
+          <Route
+            path="/properties"
+            element={
+              <ProtectedRoute>
+                <Properties />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/properties/:id"
+            element={
+              <ProtectedRoute>
+                <PropertyDetails />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={

@@ -59,11 +59,12 @@ const Header = () => {
    * Defines the main navigation links. Items with isRoute: true use React Router
    * Link components, while items with isRoute: false use anchor tags for smooth
    * scrolling to page sections.
+   * Properties link is only shown when user is logged in since it's a protected route.
    */
   const navigation = [
     { name: "Home", href: "/", isRoute: true },
     { name: "Services", href: "#services", isRoute: false },
-    { name: "Properties", href: "/properties", isRoute: true },
+    ...(isLoggedIn ? [{ name: "Properties", href: "/properties", isRoute: true }] : []),
     { name: "AI Tools", href: "#ai-tools", isRoute: false },
     { name: "About", href: "/about", isRoute: true },
     { name: "Contact", href: "#contact-section", isRoute: false },
@@ -97,7 +98,7 @@ const Header = () => {
           : "bg-gold backdrop-blur-md"
       }`}
     >
-      <div className="container mx-auto px-6 py-4">
+      <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
@@ -118,7 +119,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navigation.map((item) => (
               item.isRoute ? (
                 <Link
@@ -203,7 +204,7 @@ const Header = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg shadow-luxury">
-            <nav className="p-6 space-y-4">
+            <nav className="p-4 sm:p-6 space-y-3 sm:space-y-4">
               {navigation.map((item) => (
                 item.isRoute ? (
                   <Link

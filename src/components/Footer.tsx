@@ -20,9 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Home, 
   MessageCircle, 
   Phone, 
   Mail, 
@@ -31,10 +30,40 @@ import {
 } from "lucide-react";
 
 const Footer = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
   // Newsletter subscription state (currently unused)
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  /**
+   * Handles navigation to anchor links
+   * If on home page, scrolls to section. Otherwise, navigates to home then scrolls.
+   */
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const sectionId = href.substring(1); // Remove the #
+    
+    if (location.pathname === '/') {
+      // Already on home page, just scroll
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      // Navigate to home page with hash, then scroll after navigation
+      navigate(`/${href}`);
+      // Use setTimeout to ensure page has loaded before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  };
 
   /**
    * Newsletter subscription handler (currently disabled)
@@ -164,13 +193,12 @@ const Footer = () => {
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Company Info */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center space-x-2">
-              <div className="bg-accent-gradient p-2 rounded-lg">
-                <Home className="h-6 w-6 text-navy" />
-              </div>
-              <div className="text-xl font-bold">
-                Leasap
-              </div>
+            <div className="flex items-center">
+              <img 
+                src="/images/photos/leasap logo.jpg" 
+                alt="Leasap Logo" 
+                className="h-12 w-auto object-contain"
+              />
             </div>
             
             <p className="text-white/80 max-w-md">
@@ -225,15 +253,7 @@ const Footer = () => {
                     <a 
                       href={link.href} 
                       className="text-white/80 hover:text-gold transition-colors"
-                      onClick={(e) => {
-                        if (link.href.startsWith('#')) {
-                          e.preventDefault();
-                          const element = document.querySelector(link.href);
-                          if (element) {
-                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }
-                        }
-                      }}
+                      onClick={(e) => handleAnchorClick(e, link.href)}
                     >
                       {link.name}
                     </a>

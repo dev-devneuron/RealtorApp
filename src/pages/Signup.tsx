@@ -202,7 +202,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -273,13 +273,12 @@ const Signup = () => {
             <span>Back to Home</span>
           </Link>
 
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="bg-accent-gradient p-2 rounded-lg">
-              <Home className="h-6 w-6 text-navy" />
-            </div>
-            <div className="text-xl font-bold text-white">
-              Leasap
-            </div>
+          <div className="flex items-center justify-center mb-4">
+            <img 
+              src="/images/photos/leasap logo.jpg" 
+              alt="Leasap Logo" 
+              className="h-12 sm:h-16 w-auto object-contain"
+            />
           </div>
 
           <h1 className="text-3xl font-bold text-white mb-2">Start Your Free Trial</h1>

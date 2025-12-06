@@ -12,10 +12,13 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Phone, Menu, X, Home, LogIn, UserPlus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { MessageCircle, Phone, Menu, X, LogIn, UserPlus } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
   // State for scroll-based styling
   const [isScrolled, setIsScrolled] = useState(false);
   
@@ -52,6 +55,34 @@ const Header = () => {
     // Cleanup: remove scroll listener on unmount
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  /**
+   * Handles navigation to anchor links
+   * If on home page, scrolls to section. Otherwise, navigates to home then scrolls.
+   */
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const sectionId = href.substring(1); // Remove the #
+    
+    if (location.pathname === '/') {
+      // Already on home page, just scroll
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      // Navigate to home page with hash, then scroll after navigation
+      navigate(`/${href}`);
+      // Use setTimeout to ensure page has loaded before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   /**
    * Navigation items configuration
@@ -99,22 +130,17 @@ const Header = () => {
       <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="bg-accent-gradient p-2 rounded-lg">
-              <Link to="/"
-               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              >
-              <Home className="h-6 w-6 text-navy" />
-              </Link>
-            </div>
-            <Link to="/"
-               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              >
-            <div className="text-xl font-bold text-navy">
-              Leasap
-            </div>
-            </Link>
-          </div>
+          <Link 
+            to="/"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="flex items-center space-x-2"
+          >
+            <img 
+              src="/images/photos/leasap logo.jpg" 
+              alt="Leasap Logo" 
+              className="h-10 sm:h-12 w-auto object-contain"
+            />
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
@@ -132,14 +158,7 @@ const Header = () => {
                   key={item.name}
                   href={item.href}
                   className="text-navy hover:text-orange-700 transition-colors duration-300 font-medium"
-                    onClick={(e) => {
-                      if (item.href.startsWith('#')) {
-                        e.preventDefault();
-                        const targetId = item.href.substring(1);
-                        const element = document.getElementById(targetId);
-                        element?.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
+                  onClick={(e) => handleAnchorClick(e, item.href)}
                 >
                   {item.name}
                 </a>
@@ -218,15 +237,7 @@ const Header = () => {
                     key={item.name}
                     href={item.href}
                     className="block text-navy hover:text-gold transition-colors duration-300 font-medium"
-                    onClick={(e) => {
-                      setIsMobileMenuOpen(false);
-                      if (item.href.startsWith('#')) {
-                        e.preventDefault();
-                        const targetId = item.href.substring(1);
-                        const element = document.getElementById(targetId);
-                        element?.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
+                    onClick={(e) => handleAnchorClick(e, item.href)}
                   >
                     {item.name}
                   </a>

@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Home, Calendar, Clock, Phone, Mail, User, Building2, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Phone, Mail, User, Building2, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 // Backend API base URL
@@ -274,13 +274,12 @@ const BookDemo = () => {
             <span>Back to Home</span>
           </Link>
 
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="bg-gradient-to-br from-gold to-amber-500 p-3 rounded-xl shadow-lg">
-              <Sparkles className="h-6 w-6 text-navy" />
-            </div>
-            <div className="text-2xl font-bold text-white">
-              Leasap
-            </div>
+          <div className="flex items-center justify-center mb-4">
+            <img 
+              src="/images/photos/leasap logo.jpg" 
+              alt="Leasap Logo" 
+              className="h-12 sm:h-16 w-auto object-contain"
+            />
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3">

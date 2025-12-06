@@ -16,8 +16,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Phone, TrendingUp, Users, Award, Bot, User, MoreVertical, Search, Paperclip, Mic } from "lucide-react";
-import heroBg from "@/assets/hero-bg.jpg";
 import { Link } from "react-router-dom";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const HeroSection = () => {
   // Chat animation state
@@ -100,11 +100,11 @@ const HeroSection = () => {
   };
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center overflow-hidden pt-16">
+    <section id="home" className="relative min-h-screen flex items-center overflow-hidden pt-16 bg-navy">
       {/* Background Image with Overlay */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBg})` }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50"
+        style={{ backgroundImage: heroBg ? `url(${heroBg})` : 'none' }}
       />
       <div className="absolute inset-0 bg-hero-gradient" />
 

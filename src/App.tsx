@@ -30,6 +30,7 @@ import NotFound from "./pages/NotFound";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Initialize React Query client for data fetching and caching
 const queryClient = new QueryClient({
@@ -49,62 +50,64 @@ const queryClient = new QueryClient({
  * come before catch-all routes.
  */
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      {/* Toast notification providers */}
-      <Toaster />
-      <Sonner />
-      
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/book-demo" element={<BookDemo />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/confirmation" element={<ConfirmationPage />} />
-          
-          {/* Protected Routes - Require Authentication */}
-          <Route
-            path="/properties"
-            element={
-              <ProtectedRoute>
-                <Properties />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/properties/:id"
-            element={
-              <ProtectedRoute>
-                <PropertyDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/uploadpage"
-            element={
-              <ProtectedRoute>
-                <Upload />
-              </ProtectedRoute>
-            }
-          />
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        {/* Toast notification providers */}
+        <Toaster />
+        <Sonner />
+        
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/book-demo" element={<BookDemo />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/confirmation" element={<ConfirmationPage />} />
+            
+            {/* Protected Routes - Require Authentication */}
+            <Route
+              path="/properties"
+              element={
+                <ProtectedRoute>
+                  <Properties />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/properties/:id"
+              element={
+                <ProtectedRoute>
+                  <PropertyDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/uploadpage"
+              element={
+                <ProtectedRoute>
+                  <Upload />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Catch-all route for 404 errors - Must be last */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+            {/* Catch-all route for 404 errors - Must be last */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

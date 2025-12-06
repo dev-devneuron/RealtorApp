@@ -2,7 +2,7 @@ services:
   - type: web
     name: ai-property-assistant
     env: static
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     routes:
       - type: rewrite

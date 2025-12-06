@@ -3162,7 +3162,7 @@ const Dashboard = () => {
                   <img 
                     src="/images/photos/leasap logo.jpg" 
                     alt="Leasap Logo" 
-                    className="h-12 sm:h-14 md:h-16 w-auto object-contain"
+                    className="h-12 sm:h-14 md:h-16 w-auto object-contain rounded-lg"
                   />
                 </Link>
               </motion.div>

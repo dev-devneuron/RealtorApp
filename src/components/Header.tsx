@@ -127,18 +127,18 @@ const Header = () => {
           : "bg-gold backdrop-blur-md"
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-2.5">
+      <div className="container mx-auto px-4 sm:px-6 py-1.5 sm:py-2">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link 
             to="/"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="flex items-center -my-2"
+            className="flex items-center -my-1"
           >
             <img 
               src="/images/photos/leasap logo.jpg" 
               alt="Leasap Logo" 
-              className="h-16 sm:h-20 md:h-24 w-auto object-contain"
+              className="h-14 sm:h-16 md:h-20 w-auto object-contain"
             />
           </Link>
 

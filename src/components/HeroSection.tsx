@@ -11,6 +11,7 @@
  * AI capabilities in a realistic scenario.
  * 
  * @module components/HeroSection
+ * 
  */
 
 import { useState, useEffect, useRef } from "react";

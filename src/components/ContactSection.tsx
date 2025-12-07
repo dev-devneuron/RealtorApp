@@ -5,13 +5,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+
+// Backend API base URL
+const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 const ContactSection = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    message: ""
+    message: "",
+    phone: "",
+    subject: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -21,21 +25,65 @@ const ContactSection = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.functions.invoke('send-contact-email', {
-        body: formData
+      // Prepare payload - only include optional fields if they have values
+      const payload: {
+        name: string;
+        email: string;
+        message: string;
+        phone?: string;
+        subject?: string;
+      } = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        message: formData.message.trim(),
+      };
+
+      // Add optional fields only if they have values
+      if (formData.phone.trim()) {
+        payload.phone = formData.phone.trim();
+      }
+      if (formData.subject.trim()) {
+        payload.subject = formData.subject.trim();
+      }
+
+      // Send POST request to backend API
+      const response = await fetch(`${API_BASE}/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
-      if (error) throw error;
+      // Handle error responses
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ 
+          detail: `HTTP ${response.status}: ${response.statusText}` 
+        }));
+        throw new Error(errorData.detail || "Failed to submit contact form");
+      }
+
+      // Handle successful response
+      const data = await response.json();
 
       toast({
         title: "Message sent!",
-        description: "We'll get back to you soon.",
+        description: data.message || "Thank you for contacting us! We'll get back to you soon.",
       });
-      setFormData({ name: "", email: "", message: "" });
-    } catch (error) {
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
+        phone: "",
+        subject: ""
+      });
+    } catch (error: any) {
+      console.error("Error submitting contact form:", error);
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: error.message || "Failed to send message. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -75,28 +123,88 @@ const ContactSection = () => {
           <Card>
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Input
-                  placeholder="Your Name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  required
-                />
-                <Input
-                  type="email"
-                  placeholder="Your Email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  required
-                />
-                <Textarea
-                  placeholder="Your Message"
-                  value={formData.message}
-                  onChange={(e) => setFormData({...formData, message: e.target.value})}
-                  required
-                  rows={4}
-                />
-                <Button type="submit" disabled={isSubmitting} className="w-full">
-                  {isSubmitting ? "Sending..." : "Send Message"}
+                <div>
+                  <label htmlFor="name" className="text-sm font-medium mb-1 block">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="name"
+                    placeholder="Your Name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    required
+                    minLength={2}
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="email" className="text-sm font-medium mb-1 block">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="phone" className="text-sm font-medium mb-1 block">
+                    Phone <span className="text-gray-500 text-xs">(Optional)</span>
+                  </label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="subject" className="text-sm font-medium mb-1 block">
+                    Subject <span className="text-gray-500 text-xs">(Optional)</span>
+                  </label>
+                  <Input
+                    id="subject"
+                    placeholder="General Inquiry"
+                    value={formData.subject}
+                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="message" className="text-sm font-medium mb-1 block">
+                    Message <span className="text-red-500">*</span>
+                  </label>
+                  <Textarea
+                    id="message"
+                    placeholder="Your Message"
+                    value={formData.message}
+                    onChange={(e) => setFormData({...formData, message: e.target.value})}
+                    required
+                    minLength={10}
+                    rows={4}
+                    className="resize-none"
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || !formData.name.trim() || !formData.email.trim() || !formData.message.trim()} 
+                  className="w-full"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Message"
+                  )}
                 </Button>
               </form>
             </CardContent>

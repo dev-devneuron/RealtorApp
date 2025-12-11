@@ -971,23 +971,30 @@ export const fetchCalendarPreferences = async (
     if (response.ok) {
       const data = await response.json();
       
-      // Handle API response format: { timezone, defaultSlotLengthMins, workingHours: { start, end }, working_days? }
-      // working_days can be at top level or in preferences object
+      // According to documentation, API response format is:
+      // { timezone, defaultSlotLengthMins, workingHours: { start, end }, working_days? }
+      // working_days is at top level: [0, 1, 2, 3, 4] where 0=Monday, 6=Sunday
+      
+      // Handle new API response format (documentation format)
       if (data.workingHours || data.preferences?.workingHours) {
         const prefs = data.preferences || data;
-        // Check for working_days in preferences first, then top level, then data.working_days
-        const apiWorkingDays = prefs.working_days || data.working_days;
+        // working_days is at top level in API response: [0, 1, 2, 3, 4] (0=Monday, 6=Sunday)
+        const apiWorkingDays = data.working_days || prefs.working_days;
         
-        return {
+        const result = {
           start_time: prefs.workingHours?.start || data.workingHours?.start || "09:00",
           end_time: prefs.workingHours?.end || data.workingHours?.end || "17:00",
           timezone: prefs.timezone || data.timezone || "America/New_York",
           slot_length: prefs.defaultSlotLengthMins || data.defaultSlotLengthMins || 30,
           working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : [1, 2, 3, 4, 5], // Convert API format (0=Mon) to JS format (0=Sun)
         };
+        
+        // Cache for 10 minutes
+        setCachedData(cacheKey, result, 10 * 60 * 1000);
+        return result;
       }
       
-      // Fallback: Handle legacy format if API returns it
+      // Fallback: Handle legacy format if API returns it (for backward compatibility)
       if (data.start_time && data.end_time) {
         const apiWorkingDays = data.working_days;
         const prefs = {
@@ -1090,24 +1097,27 @@ export const updateCalendarPreferences = async (
     // Clear cache after update
     clearCacheForEndpoint(`/api/users/${userId}/calendar-preferences`, { userType });
     
-    // Convert API response format back to internal format
-    if (data.preferences) {
-      const prefs = data.preferences;
-      const apiWorkingDays = prefs.working_days || data.working_days;
-      
-      return {
-        ...data,
-        preferences: {
-          start_time: prefs.workingHours?.start || preferences.start_time,
-          end_time: prefs.workingHours?.end || preferences.end_time,
-          timezone: prefs.timezone || preferences.timezone,
-          slot_length: prefs.defaultSlotLengthMins || preferences.slot_length,
-          working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : (preferences.working_days || [1, 2, 3, 4, 5]), // Convert API format to JS format
-        },
-      };
-    }
+    // According to documentation, API response format is:
+    // { message, preferences: { timezone, defaultSlotLengthMins, workingHours: { start, end }, working_days? } }
+    // OR: { timezone, defaultSlotLengthMins, workingHours: { start, end }, working_days? } (top level)
     
-    return data;
+    // Convert API response format back to internal format
+    const prefs = data.preferences || data;
+    // working_days is at top level in API response: [0, 1, 2, 3, 4] (0=Monday, 6=Sunday)
+    const apiWorkingDays = data.working_days || prefs.working_days;
+    
+    const convertedPreferences = {
+      start_time: prefs.workingHours?.start || preferences.start_time,
+      end_time: prefs.workingHours?.end || preferences.end_time,
+      timezone: prefs.timezone || preferences.timezone,
+      slot_length: prefs.defaultSlotLengthMins || preferences.slot_length,
+      working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : (preferences.working_days || [1, 2, 3, 4, 5]), // Convert API format to JS format
+    };
+    
+    return {
+      ...data,
+      preferences: convertedPreferences,
+    };
   } catch (error: any) {
     const errorMessage = extractErrorMessage(error);
     throw new Error(errorMessage);
@@ -1258,23 +1268,34 @@ export const addUnavailableSlot = async (
 /**
  * Remove unavailable slot
  */
+/**
+ * Remove/delete an availability slot (blocked time slot)
+ * API: DELETE /api/users/{user_id}/availability/{slot_id}?user_type={user_type}
+ * According to documentation: Users can only delete their own availability slots
+ */
 export const removeUnavailableSlot = async (
   userId: number,
-  slotId: number
+  slotId: number,
+  userType: string
 ): Promise<any> => {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetch(`${API_BASE}/api/users/${userId}/availability/${slotId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  // Include user_type query parameter as per documentation
+  const response = await fetch(
+    `${API_BASE}/api/users/${userId}/availability/${slotId}?user_type=${userType}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Failed to remove unavailable slot" }));
-    throw new Error(error.detail || "Failed to remove unavailable slot");
+    const errorMessage = extractErrorMessage(error);
+    throw new Error(errorMessage || "Failed to remove unavailable slot");
   }
 
   const data = await response.json();

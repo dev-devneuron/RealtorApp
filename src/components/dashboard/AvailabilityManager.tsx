@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, X, Plus, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { formatDate, formatTime, fetchCalendarPreferences, updateCalendarPreferences, fetchUnavailableSlots, addUnavailableSlot, removeUnavailableSlot } from "./utils";
+import { formatDate, formatTime, fetchCalendarPreferences, updateCalendarPreferences, fetchUnavailableSlots, addUnavailableSlot, removeUnavailableSlot, extractErrorMessage } from "./utils";
 import { clearCacheForEndpoint } from "../../utils/cache";
 import { API_BASE } from "./constants";
 import type { CalendarPreferences, AvailabilitySlot } from "./types";
@@ -35,13 +35,16 @@ export const AvailabilityManager = ({
   userType,
   onSave,
 }: AvailabilityManagerProps) => {
-  const [workingHours, setWorkingHours] = useState({
-    start_time: "09:00",
-    end_time: "17:00",
-    timezone: "America/New_York",
-    slot_length: 30,
-    working_days: [1, 2, 3, 4, 5], // Mon-Fri
-  });
+  // ⚠️ CRITICAL: Start with null to avoid hardcoded defaults
+  // According to documentation: "Always fetch preferences on component mount - Don't use hardcoded defaults"
+  // "Preferences persist across sessions - Always fetch from API, don't assume defaults"
+  const [workingHours, setWorkingHours] = useState<{
+    start_time: string;
+    end_time: string;
+    timezone: string;
+    slot_length: number;
+    working_days: number[];
+  } | null>(null);
 
   const [blockedSlots, setBlockedSlots] = useState<Array<{
     id: number | string;
@@ -74,35 +77,17 @@ export const AvailabilityManager = ({
     const loadData = async () => {
       try {
         // Always fetch from API first (not localStorage)
-        try {
-          const prefs = await fetchCalendarPreferences(userId, userType);
-          setWorkingHours({
-            start_time: prefs.start_time,
-            end_time: prefs.end_time,
-            timezone: prefs.timezone,
-            slot_length: prefs.slot_length,
-            working_days: prefs.working_days,
-          });
-          // Save to localStorage for caching (but API is source of truth)
-          localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
-        } catch (e) {
-          // API fetch failed - fetchCalendarPreferences already returns defaults, so use them
-          console.warn("Failed to fetch calendar preferences from API, using defaults:", e);
-          const prefs = await fetchCalendarPreferences(userId, userType).catch(() => ({
-            start_time: "09:00",
-            end_time: "17:00",
-            timezone: "America/New_York",
-            slot_length: 30,
-            working_days: [1, 2, 3, 4, 5],
-          }));
-          setWorkingHours({
-            start_time: prefs.start_time,
-            end_time: prefs.end_time,
-            timezone: prefs.timezone,
-            slot_length: prefs.slot_length,
-            working_days: prefs.working_days,
-          });
-        }
+        // fetchCalendarPreferences will return defaults only if API fails
+        const prefs = await fetchCalendarPreferences(userId, userType);
+        setWorkingHours({
+          start_time: prefs.start_time,
+          end_time: prefs.end_time,
+          timezone: prefs.timezone,
+          slot_length: prefs.slot_length,
+          working_days: prefs.working_days,
+        });
+        // Save to localStorage for caching (but API is source of truth)
+        localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
 
         // Fetch unavailable slots - fetch all slots (no date filter) for the list
         // Use calendar events endpoint directly since it works and is what the calendar uses
@@ -177,13 +162,16 @@ export const AvailabilityManager = ({
       if (e.key === `calendar_preferences_${userId}` && e.newValue) {
         try {
           const prefs = JSON.parse(e.newValue);
-          setWorkingHours({
-            start_time: prefs.start_time || "09:00",
-            end_time: prefs.end_time || "17:00",
-            timezone: prefs.timezone || "America/New_York",
-            slot_length: prefs.slot_length || 30,
-            working_days: prefs.working_days || [1, 2, 3, 4, 5],
-          });
+          // Only update if we have valid preferences
+          if (prefs && prefs.start_time && prefs.end_time) {
+            setWorkingHours({
+              start_time: prefs.start_time,
+              end_time: prefs.end_time,
+              timezone: prefs.timezone || "America/New_York",
+              slot_length: prefs.slot_length || 30,
+              working_days: prefs.working_days || [1, 2, 3, 4, 5],
+            });
+          }
         } catch (error) {
           console.error("Error parsing preferences:", error);
         }
@@ -195,6 +183,11 @@ export const AvailabilityManager = ({
   }, [userId]);
 
   const handleSavePreferences = async () => {
+    if (!workingHours) {
+      toast.error("Preferences not loaded yet");
+      return;
+    }
+    
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -203,7 +196,21 @@ export const AvailabilityManager = ({
         return;
       }
 
-      // Save to localStorage immediately for instant updates
+      // Save to API first (API is source of truth)
+      const updatedPrefs = await updateCalendarPreferences(userId, userType, workingHours);
+      
+      // Update local state with API response
+      if (updatedPrefs.preferences) {
+        setWorkingHours({
+          start_time: updatedPrefs.preferences.start_time,
+          end_time: updatedPrefs.preferences.end_time,
+          timezone: updatedPrefs.preferences.timezone,
+          slot_length: updatedPrefs.preferences.slot_length,
+          working_days: updatedPrefs.preferences.working_days,
+        });
+      }
+      
+      // Save to localStorage for caching
       const prefsKey = `calendar_preferences_${userId}`;
       localStorage.setItem(prefsKey, JSON.stringify(workingHours));
       
@@ -211,19 +218,12 @@ export const AvailabilityManager = ({
       window.dispatchEvent(new CustomEvent("calendarPreferencesUpdated", { 
         detail: { userId, preferences: workingHours } 
       }));
-
-      // Try to save to API
-      try {
-        await updateCalendarPreferences(userId, userType, workingHours);
-      } catch (apiError) {
-        // API save failed, but localStorage save succeeded, so continue
-        console.warn("API save failed, but preferences saved locally:", apiError);
-      }
       
       toast.success("Working hours updated successfully");
       onSave?.();
     } catch (error: any) {
-      toast.error(error.message || "Failed to update preferences");
+      const errorMessage = extractErrorMessage(error);
+      toast.error(errorMessage || "Failed to update preferences");
     } finally {
       setLoading(false);
     }
@@ -332,7 +332,8 @@ export const AvailabilityManager = ({
     try {
       setLoading(true);
       if (typeof id === "number") {
-        await removeUnavailableSlot(userId, id);
+        // Pass userType as required by the API endpoint
+        await removeUnavailableSlot(userId, id, userType);
       }
       
       // Clear cache before refreshing to get fresh data
@@ -380,15 +381,29 @@ export const AvailabilityManager = ({
   };
 
   const toggleWorkingDay = (day: number) => {
-    setWorkingHours((prev) => ({
-      ...prev,
-      working_days: prev.working_days.includes(day)
-        ? prev.working_days.filter((d) => d !== day)
-        : [...prev.working_days, day].sort(),
-    }));
+    if (!workingHours) return;
+    
+    setWorkingHours({
+      ...workingHours,
+      working_days: workingHours.working_days.includes(day)
+        ? workingHours.working_days.filter((d) => d !== day)
+        : [...workingHours.working_days, day].sort(),
+    });
   };
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // Don't render until preferences are loaded
+  if (!workingHours) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-amber-600 border-t-transparent mb-4"></div>
+          <p className="text-gray-600">Loading preferences...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -498,22 +513,22 @@ export const AvailabilityManager = ({
                   key={index}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all ${
-                    workingHours.working_days.includes(index)
+                    className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all ${
+                    workingHours?.working_days.includes(index)
                       ? "bg-gradient-to-br from-amber-100 to-amber-50 border-amber-400 shadow-md"
                       : "bg-white border-amber-200 hover:border-amber-300"
                   }`}
                 >
                   <Checkbox
                     id={`day-${index}`}
-                    checked={workingHours.working_days.includes(index)}
+                    checked={workingHours?.working_days.includes(index) || false}
                     onCheckedChange={() => toggleWorkingDay(index)}
                     className="border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
                   />
                   <Label
                     htmlFor={`day-${index}`}
                     className={`text-sm font-medium cursor-pointer ${
-                      workingHours.working_days.includes(index)
+                      workingHours?.working_days.includes(index)
                         ? "text-amber-900"
                         : "text-gray-600"
                     }`}

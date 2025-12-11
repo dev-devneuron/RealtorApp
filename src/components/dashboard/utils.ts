@@ -591,8 +591,6 @@ export const updateBooking = async (
     throw new Error("Network error. Please try again.");
   }
 };
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-read_file
 
 /**
  * Delete booking (DELETE /api/bookings/{booking_id})
@@ -640,8 +638,6 @@ export const deleteBooking = async (
     throw new Error("Network error. Please try again.");
   }
 };
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-read_file
 
 /**
  * Get property availability (Dashboard endpoint - uses GET)

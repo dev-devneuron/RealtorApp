@@ -1,4 +1,4 @@
-import { getCachedData, setCachedData, getCacheKey } from "../../utils/cache";
+import { getCachedData, setCachedData, getCacheKey, clearCacheForEndpoint } from "../../utils/cache";
 
 /**
  * Helper function to parse and extract metadata from property objects
@@ -1148,7 +1148,7 @@ export const fetchUnavailableSlots = async (
   if (fromDate) params.append("from_date", fromDate);
   if (toDate) params.append("to_date", toDate);
 
-  // Check cache first (cache for 2 minutes for availability slots)
+  // Check cache first (cache for 5 minutes for availability slots - they don't change frequently)
   // Use a consistent cache key whether dates are provided or not
   const cacheKey = getCacheKey(`/api/users/${userId}/availability`, { fromDate: fromDate || 'all', toDate: toDate || 'all' });
   const cached = getCachedData<Array<{
@@ -1203,8 +1203,8 @@ export const fetchUnavailableSlots = async (
         
         console.log(`Processed ${slotsArray.length} unavailable slots from ${endpoint}`, slotsArray);
         
-        // Cache the result for 2 minutes
-        setCachedData(cacheKey, slotsArray, 2 * 60 * 1000);
+        // Cache the result for 5 minutes (increased from 2 minutes to reduce API calls)
+        setCachedData(cacheKey, slotsArray, 5 * 60 * 1000);
         
         return slotsArray;
       } else {
@@ -1419,7 +1419,7 @@ export const fetchCalendarEvents = async (
     to_date: toDate,
   });
 
-  // Check cache first (cache for 1 minute for calendar events - they change frequently)
+  // Check cache first (cache for 2 minutes for calendar events - increased from 1 minute)
   const cacheKey = getCacheKey(`/api/users/${userId}/calendar-events`, { fromDate, toDate });
   const cached = getCachedData<{
     userId: number;
@@ -1432,6 +1432,7 @@ export const fetchCalendarEvents = async (
     total: number;
   }>(cacheKey);
   if (cached) {
+    console.log(`Using cached calendar events: ${cached.availabilitySlots?.length || 0} slots, ${cached.bookings?.length || 0} bookings`);
     return cached;
   }
 
@@ -1449,8 +1450,8 @@ export const fetchCalendarEvents = async (
 
   const data = await response.json();
   
-  // Cache the result for 1 minute
-  setCachedData(cacheKey, data, 1 * 60 * 1000);
+  // Cache the result for 2 minutes (increased from 1 minute to reduce API calls)
+  setCachedData(cacheKey, data, 2 * 60 * 1000);
   
   return data;
 };

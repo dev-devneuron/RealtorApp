@@ -260,18 +260,22 @@ export const BookingCalendar = ({
 
       try {
         // Calculate date range based on current view
+        // Add buffer days to ensure slots are visible when navigating
         let fromDate: Date;
         let toDate: Date;
 
         if (view === "day") {
-          fromDate = moment(date).startOf("day").toDate();
-          toDate = moment(date).endOf("day").toDate();
+          // Add 1 day buffer on each side for day view
+          fromDate = moment(date).subtract(1, 'day').startOf("day").toDate();
+          toDate = moment(date).add(1, 'day').endOf("day").toDate();
         } else if (view === "week") {
-          fromDate = moment(date).startOf("week").toDate();
-          toDate = moment(date).endOf("week").toDate();
+          // Add 3 days buffer on each side for week view
+          fromDate = moment(date).subtract(3, 'days').startOf("week").toDate();
+          toDate = moment(date).add(3, 'days').endOf("week").toDate();
         } else if (view === "month") {
-          fromDate = moment(date).startOf("month").toDate();
-          toDate = moment(date).endOf("month").toDate();
+          // Add 1 week buffer on each side for month view
+          fromDate = moment(date).subtract(1, 'week').startOf("month").toDate();
+          toDate = moment(date).add(1, 'week').endOf("month").toDate();
         } else {
           return; // List view doesn't need calendar events
         }

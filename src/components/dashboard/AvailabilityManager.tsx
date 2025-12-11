@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, X, Plus, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { formatDate, formatTime, fetchCalendarPreferences, updateCalendarPreferences, fetchUnavailableSlots, addUnavailableSlot, removeUnavailableSlot, extractErrorMessage } from "./utils";
+import { formatDate, formatTime, fetchCalendarPreferences, updateCalendarPreferences, fetchUnavailableSlots, addUnavailableSlot, removeUnavailableSlot, extractErrorMessage, fetchCalendarEvents } from "./utils";
 import { clearCacheForEndpoint } from "../../utils/cache";
 import { API_BASE } from "./constants";
 import type { CalendarPreferences, AvailabilitySlot } from "./types";
@@ -89,18 +89,22 @@ export const AvailabilityManager = ({
         // Save to localStorage for caching (but API is source of truth)
         localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
 
-        // Fetch unavailable slots - fetch all slots (no date filter) for the list
-        // Use calendar events endpoint directly since it works and is what the calendar uses
+        // Fetch unavailable slots - use optimized date range (3 months past, 6 months future)
+        // Reduced from 2 years to minimize latency and data transfer
         try {
-          // Get a wide date range to fetch all slots (2 years range)
+          // Optimized date range: 3 months past to 6 months future (9 months total)
           const now = new Date();
-          const fromDate = new Date(now.getFullYear() - 1, 0, 1); // 1 year ago
-          const toDate = new Date(now.getFullYear() + 1, 11, 31); // 1 year ahead
+          const fromDate = new Date(now);
+          fromDate.setMonth(now.getMonth() - 3); // 3 months ago
+          fromDate.setDate(1); // Start of month
+          fromDate.setHours(0, 0, 0, 0);
           
-          // Import fetchCalendarEvents statically to avoid dynamic import delay
-          const { fetchCalendarEvents } = await import("./utils");
+          const toDate = new Date(now);
+          toDate.setMonth(now.getMonth() + 6); // 6 months ahead
+          toDate.setDate(0); // Last day of previous month (end of target month)
+          toDate.setHours(23, 59, 59, 999);
           
-          // Fetch from calendar events (this is what works and shows slots in calendar)
+          // Use static import - no dynamic import delay
           const eventsData = await fetchCalendarEvents(
             userId,
             fromDate.toISOString(),
@@ -282,12 +286,18 @@ export const AvailabilityManager = ({
       );
       allCacheKeys.forEach(key => localStorage.removeItem(key));
       
-      // Refresh blocked slots using calendar events (same as initial load)
+      // Refresh blocked slots using calendar events (optimized date range)
       const now = new Date();
-      const fromDate = new Date(now.getFullYear() - 1, 0, 1);
-      const toDate = new Date(now.getFullYear() + 1, 11, 31);
+      const fromDate = new Date(now);
+      fromDate.setMonth(now.getMonth() - 3);
+      fromDate.setDate(1);
+      fromDate.setHours(0, 0, 0, 0);
       
-      const { fetchCalendarEvents } = await import("./utils");
+      const toDate = new Date(now);
+      toDate.setMonth(now.getMonth() + 6);
+      toDate.setDate(0);
+      toDate.setHours(23, 59, 59, 999);
+      
       const eventsData = await fetchCalendarEvents(
         userId,
         fromDate.toISOString(),
@@ -345,12 +355,18 @@ export const AvailabilityManager = ({
       );
       allCacheKeys.forEach(key => localStorage.removeItem(key));
       
-      // Refresh blocked slots using calendar events (same as initial load)
+      // Refresh blocked slots using calendar events (optimized date range)
       const now = new Date();
-      const fromDate = new Date(now.getFullYear() - 1, 0, 1);
-      const toDate = new Date(now.getFullYear() + 1, 11, 31);
+      const fromDate = new Date(now);
+      fromDate.setMonth(now.getMonth() - 3);
+      fromDate.setDate(1);
+      fromDate.setHours(0, 0, 0, 0);
       
-      const { fetchCalendarEvents } = await import("./utils");
+      const toDate = new Date(now);
+      toDate.setMonth(now.getMonth() + 6);
+      toDate.setDate(0);
+      toDate.setHours(23, 59, 59, 999);
+      
       const eventsData = await fetchCalendarEvents(
         userId,
         fromDate.toISOString(),

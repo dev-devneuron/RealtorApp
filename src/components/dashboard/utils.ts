@@ -1138,6 +1138,23 @@ export const fetchUnavailableSlots = async (
   if (fromDate) params.append("from_date", fromDate);
   if (toDate) params.append("to_date", toDate);
 
+  // Check cache first (cache for 2 minutes for availability slots)
+  // Use a consistent cache key whether dates are provided or not
+  const cacheKey = getCacheKey(`/api/users/${userId}/availability`, { fromDate: fromDate || 'all', toDate: toDate || 'all' });
+  const cached = getCachedData<Array<{
+    id: number;
+    startAt: string;
+    endAt: string;
+    slotType: string;
+    isFullDay: boolean;
+    reason?: string;
+    notes?: string;
+  }>>(cacheKey);
+  if (cached) {
+    console.log(`Using cached unavailable slots: ${cached.length} slots`);
+    return cached;
+  }
+
   const endpoints = [
     `${API_BASE}/api/users/${userId}/availability?${params}`,
     `${API_BASE}/api/users/${userId}/unavailable-slots?${params}`,
@@ -1154,15 +1171,26 @@ export const fetchUnavailableSlots = async (
       if (response.ok) {
         const data = await response.json();
         // Handle different response formats
-        const slots = data.unavailableSlots || data.slots || data.availabilitySlots || [];
-        console.log(`Fetched ${slots.length} unavailable slots from ${endpoint}`, slots); // Debug log
-        return slots;
+        const slots = data.unavailableSlots || data.slots || data.availabilitySlots || data || [];
+        
+        // Ensure slots is an array
+        const slotsArray = Array.isArray(slots) ? slots : [];
+        
+        console.log(`Fetched ${slotsArray.length} unavailable slots from ${endpoint}`, slotsArray);
+        
+        // Cache the result for 2 minutes
+        setCachedData(cacheKey, slotsArray, 2 * 60 * 1000);
+        
+        return slotsArray;
       }
     } catch (e) {
+      console.warn(`Error fetching from ${endpoint}:`, e);
       continue;
     }
   }
 
+  // Cache empty result for 30 seconds to avoid repeated failed requests
+  setCachedData(cacheKey, [], 30 * 1000);
   return [];
 };
 

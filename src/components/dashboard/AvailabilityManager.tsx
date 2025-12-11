@@ -106,10 +106,14 @@ export const AvailabilityManager = ({
 
         // Fetch unavailable slots - fetch all slots (no date filter) for the list
         try {
+          // Clear cache first to ensure we get fresh data on mount
+          clearCacheForEndpoint(`/api/users/${userId}/availability`);
+          
           const slots = await fetchUnavailableSlots(userId, userType);
-          console.log("Fetched unavailable slots:", slots); // Debug log
+          console.log("Fetched unavailable slots in AvailabilityManager:", slots); // Debug log
+          
           if (slots && Array.isArray(slots) && slots.length > 0) {
-            setBlockedSlots(slots.map(slot => ({
+            const mappedSlots = slots.map(slot => ({
               id: slot.id || `slot-${slot.startAt}-${slot.endAt}`,
               startAt: slot.startAt,
               endAt: slot.endAt,
@@ -117,9 +121,11 @@ export const AvailabilityManager = ({
               isFullDay: slot.isFullDay || false,
               reason: slot.reason || slot.notes || "",
               notes: slot.notes || slot.reason || "",
-            })));
+            }));
+            console.log("Mapped blocked slots:", mappedSlots);
+            setBlockedSlots(mappedSlots);
           } else {
-            console.log("No slots returned or empty array");
+            console.log("No slots returned or empty array, setting empty array");
             setBlockedSlots([]);
           }
         } catch (e) {

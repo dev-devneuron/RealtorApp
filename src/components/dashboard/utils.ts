@@ -152,37 +152,135 @@ export const formatDateTime = (dateString: string | Date): string => {
 };
 
 /**
+ * Convert a date string in a specific timezone to UTC Date object
+ * If dateString is "2025-12-16T12:00:00" and timezone is "America/New_York",
+ * this interprets it as 12:00 PM in New York and returns the equivalent UTC Date.
+ * 
+ * Uses a binary search approach to find the correct UTC time.
+ */
+const convertTzToUTC = (dateString: string, timezone: string): Date => {
+  // Parse date components
+  const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!match) return new Date(dateString);
+  
+  const [, year, month, day, hour, minute, second] = match;
+  const targetHour = parseInt(hour);
+  const targetMinute = parseInt(minute);
+  
+  // Create formatter for the timezone
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  
+  // Start with a guess: assume the time is in UTC and see what it becomes in the timezone
+  // Then adjust until we find the UTC time that gives us the target time in the timezone
+  let guessUTC = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
+  
+  // Try up to 24 hours of adjustment (timezone offsets are typically -12 to +14)
+  for (let attempt = 0; attempt < 48; attempt++) {
+    const parts = formatter.formatToParts(guessUTC);
+    const tzHour = parseInt(parts.find(p => p.type === "hour")?.value || "0");
+    const tzMinute = parseInt(parts.find(p => p.type === "minute")?.value || "0");
+    
+    if (tzHour === targetHour && tzMinute === targetMinute) {
+      // Found it!
+      return guessUTC;
+    }
+    
+    // Calculate difference and adjust
+    const hourDiff = targetHour - tzHour;
+    const minuteDiff = targetMinute - tzMinute;
+    const totalMinutesDiff = hourDiff * 60 + minuteDiff;
+    
+    // Adjust the UTC time
+    guessUTC = new Date(guessUTC.getTime() + totalMinutesDiff * 60 * 1000);
+    
+    // Check if we're close enough (within 1 minute)
+    const newParts = formatter.formatToParts(guessUTC);
+    const newTzHour = parseInt(newParts.find(p => p.type === "hour")?.value || "0");
+    const newTzMinute = parseInt(newParts.find(p => p.type === "minute")?.value || "0");
+    
+    if (newTzHour === targetHour && newTzMinute === targetMinute) {
+      return guessUTC;
+    }
+    
+    // If we're going in circles or the difference is too large, break
+    if (Math.abs(totalMinutesDiff) > 1440) { // More than 24 hours
+      break;
+    }
+  }
+  
+  // Fallback: return the original date
+  return new Date(dateString);
+};
+
+/**
  * Format customer-provided time in their local timezone
- * Assumes the time is in the provided timezone (or UTC if no timezone)
+ * CRITICAL: This function interprets the dateString as being in the customer's timezone,
+ * then converts it to UTC for display.
+ * 
+ * If dateString is "2025-12-16T12:00:00" and timezone is "America/New_York",
+ * it means 12:00 PM in New York, which is 5:00 PM UTC (in December, UTC-5).
  */
 export const formatCustomerTime = (
   dateString: string | Date,
   timezone: string = "UTC"
-): { localTime: string; utcTime: string; dateStr: string } => {
-  if (!dateString) return { localTime: "N/A", utcTime: "N/A", dateStr: "N/A" };
+): { localTime: string; utcTime: string; dateStr: string; utcDate: Date } => {
+  if (!dateString) return { localTime: "N/A", utcTime: "N/A", dateStr: "N/A", utcDate: new Date() };
   
-  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
-  if (isNaN(date.getTime())) return { localTime: "Invalid", utcTime: "Invalid", dateStr: "Invalid" };
+  let date: Date;
+  let hasTzInfo = false;
+  let originalDateStr = "";
   
-  // Get UTC time
-  const utcHours = date.getUTCHours();
-  const utcMinutes = date.getUTCMinutes();
-  const utcHour12 = utcHours % 12 || 12;
-  const utcAmpm = utcHours >= 12 ? "PM" : "AM";
-  const utcMinutesStr = String(utcMinutes).padStart(2, "0");
-  const utcTime = `${utcHour12}:${utcMinutesStr} ${utcAmpm} UTC`;
+  if (typeof dateString === "string") {
+    originalDateStr = dateString;
+    hasTzInfo = hasTimezoneInfo(dateString);
+    
+    if (hasTzInfo) {
+      // Has timezone info - parse directly
+      date = new Date(dateString);
+    } else if (timezone && timezone !== "UTC") {
+      // No timezone info - interpret as being in the customer's timezone
+      date = convertTzToUTC(dateString, timezone);
+    } else {
+      // No timezone info and no timezone provided - treat as UTC
+      date = new Date(dateString + "Z");
+    }
+  } else {
+    date = dateString;
+    originalDateStr = dateString.toISOString();
+  }
   
-  // Format date
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const dateStr = `${year}-${month}-${day}`;
+  if (isNaN(date.getTime())) return { localTime: "Invalid", utcTime: "Invalid", dateStr: "Invalid", utcDate: new Date() };
   
-  // For local time, try to convert if timezone is provided and not UTC
+  // Extract date from original string
+  const dateMatch = originalDateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const dateStr = dateMatch ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}` : formatDate(date);
+  
+  // Get local time (what customer said) - extract from original string
   let localTime: string;
-  if (timezone && timezone !== "UTC") {
+  if (typeof dateString === "string" && !hasTzInfo) {
+    // Extract time from original string - this is what the customer said
+    const timeMatch = dateString.match(/T(\d{2}):(\d{2}):(\d{2})/);
+    if (timeMatch) {
+      const [, hour, minute] = timeMatch;
+      const hourNum = parseInt(hour);
+      const hour12 = hourNum % 12 || 12;
+      const ampm = hourNum >= 12 ? "PM" : "AM";
+      localTime = `${hour12}:${minute} ${ampm}`;
+    } else {
+      localTime = "N/A";
+    }
+  } else {
+    // Has timezone info or is Date object - format in customer's timezone
     try {
-      // Use Intl.DateTimeFormat to convert to customer's timezone
       const formatter = new Intl.DateTimeFormat("en-US", {
         timeZone: timezone,
         hour: "numeric",
@@ -191,15 +289,21 @@ export const formatCustomerTime = (
       });
       localTime = formatter.format(date);
     } catch (e) {
-      // Fallback to UTC if timezone conversion fails
-      localTime = utcTime.replace(" UTC", "");
+      const hour12 = date.getUTCHours() % 12 || 12;
+      const ampm = date.getUTCHours() >= 12 ? "PM" : "AM";
+      localTime = `${hour12}:${String(date.getUTCMinutes()).padStart(2, "0")} ${ampm}`;
     }
-  } else {
-    // If no timezone or UTC, just show the time without UTC label
-    localTime = `${utcHour12}:${utcMinutesStr} ${utcAmpm}`;
   }
   
-  return { localTime, utcTime, dateStr };
+  // Get UTC time (converted from customer's timezone)
+  const utcHours = date.getUTCHours();
+  const utcMinutes = date.getUTCMinutes();
+  const utcHour12 = utcHours % 12 || 12;
+  const utcAmpm = utcHours >= 12 ? "PM" : "AM";
+  const utcMinutesStr = String(utcMinutes).padStart(2, "0");
+  const utcTime = `${utcHour12}:${utcMinutesStr} ${utcAmpm} UTC`;
+  
+  return { localTime, utcTime, dateStr, utcDate: date };
 };
 
 /**

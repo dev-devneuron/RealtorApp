@@ -492,11 +492,34 @@ export const BookingDetailModal = ({
                           <strong>Local Time ({booking.timezone || "UTC"}):</strong> {
                             booking.customerSentStartAt && booking.customerSentEndAt
                               ? `${formatCustomerTime(booking.customerSentStartAt, booking.timezone).localTime} – ${formatCustomerTime(booking.customerSentEndAt, booking.timezone).localTime}`
-                              : `${formatTime(booking.startAt, true)} – ${formatTime(booking.endAt, true)}`
+                              : (() => {
+                                  // Use booking.startAt/endAt and convert to local timezone
+                                  const startLocal = booking.timezone && booking.timezone !== "UTC"
+                                    ? new Intl.DateTimeFormat("en-US", {
+                                        timeZone: booking.timezone,
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                      }).format(new Date(booking.startAt))
+                                    : formatTime(booking.startAt, true);
+                                  const endLocal = booking.timezone && booking.timezone !== "UTC"
+                                    ? new Intl.DateTimeFormat("en-US", {
+                                        timeZone: booking.timezone,
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                      }).format(new Date(booking.endAt))
+                                    : formatTime(booking.endAt, true);
+                                  return `${startLocal} – ${endLocal}`;
+                                })()
                           }
                         </div>
                         <div>
-                          <strong>UTC Time:</strong> {formatTime(booking.startAt)} – {formatTime(booking.endAt)}
+                          <strong>UTC Time:</strong> {
+                            booking.customerSentStartAt && booking.customerSentEndAt
+                              ? `${formatCustomerTime(booking.customerSentStartAt, booking.timezone).utcTime.replace(" UTC", "")} – ${formatCustomerTime(booking.customerSentEndAt, booking.timezone).utcTime.replace(" UTC", "")}`
+                              : `${formatTime(booking.startAt).replace(" UTC", "")} – ${formatTime(booking.endAt).replace(" UTC", "")}`
+                          }
                         </div>
                       </div>
                     </div>

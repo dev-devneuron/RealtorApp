@@ -86,62 +86,258 @@ export const exportToPDF = async (bookings: Booking[], filename: string = "booki
     return;
   }
 
-  // For PDF, we'll use a simple HTML-to-PDF approach
-  // In production, you might want to use a library like jsPDF or pdfmake
-  
+  // Calculate statistics
+  const stats = {
+    total: bookings.length,
+    pending: bookings.filter(b => b.status === "pending").length,
+    approved: bookings.filter(b => b.status === "approved").length,
+    denied: bookings.filter(b => b.status === "denied").length,
+    cancelled: bookings.filter(b => b.status === "cancelled").length,
+    rescheduled: bookings.filter(b => b.status === "rescheduled").length,
+  };
+
+  // Group bookings by status for better organization
+  const groupedByStatus = {
+    pending: bookings.filter(b => b.status === "pending"),
+    approved: bookings.filter(b => b.status === "approved"),
+    denied: bookings.filter(b => b.status === "denied"),
+    cancelled: bookings.filter(b => b.status === "cancelled"),
+    rescheduled: bookings.filter(b => b.status === "rescheduled"),
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending": return "#fbbf24";
+      case "approved": return "#10b981";
+      case "denied": return "#ef4444";
+      case "cancelled": return "#6b7280";
+      case "rescheduled": return "#3b82f6";
+      default: return "#6b7280";
+    }
+  };
+
+  const formatBookingRow = (booking: Booking) => {
+    const startDateTime = formatDateTime(booking.startAt);
+    const endDateTime = formatDateTime(booking.endAt);
+    const customerTime = booking.customerSentStartAt 
+      ? `${booking.customerSentStartAt} - ${booking.customerSentEndAt || booking.customerSentEndAt}`
+      : "";
+    
+    return `
+      <tr>
+        <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: 600;">${booking.bookingId}</td>
+        <td style="padding: 10px; border: 1px solid #e5e7eb;">${(booking.propertyAddress || `Property #${booking.propertyId}`).replace(/"/g, '&quot;')}</td>
+        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+          <strong>${(booking.visitor.name || "").replace(/"/g, '&quot;')}</strong><br>
+          <small style="color: #6b7280;">${(booking.visitor.email || "").replace(/"/g, '&quot;')}</small>
+        </td>
+        <td style="padding: 10px; border: 1px solid #e5e7eb;">${(booking.visitor.phone || "").replace(/"/g, '&quot;')}</td>
+        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+          <strong>Start:</strong> ${startDateTime}<br>
+          <strong>End:</strong> ${endDateTime}<br>
+          ${customerTime ? `<small style="color: #6b7280;"><strong>Customer Time:</strong> ${customerTime.replace(/"/g, '&quot;')}</small>` : ""}
+        </td>
+        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+          <span style="color: ${getStatusColor(booking.status)}; font-weight: bold; text-transform: capitalize;">
+            ${booking.status}
+          </span>
+        </td>
+        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+          <strong>Timezone:</strong> ${(booking.timezone || "N/A").replace(/"/g, '&quot;')}<br>
+          <strong>Created:</strong> ${booking.createdBy || "N/A"}<br>
+          ${booking.requestedAt ? `<strong>Requested:</strong> ${formatDateTime(booking.requestedAt)}<br>` : ""}
+          ${booking.createdAt ? `<strong>Created At:</strong> ${formatDateTime(booking.createdAt)}<br>` : ""}
+          ${booking.updatedAt ? `<strong>Updated At:</strong> ${formatDateTime(booking.updatedAt)}` : ""}
+        </td>
+        <td style="padding: 10px; border: 1px solid #e5e7eb; max-width: 200px; word-wrap: break-word;">
+          ${(booking.notes || "-").replace(/"/g, '&quot;').replace(/\n/g, '<br>')}
+        </td>
+      </tr>
+    `;
+  };
+
   const htmlContent = `
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Bookings Report</title>
+        <title>Bookings Report - ${new Date().toLocaleDateString()}</title>
+        <meta charset="UTF-8">
         <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          h1 { color: #333; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f59e0b; color: white; }
-          tr:nth-child(even) { background-color: #f9fafb; }
-          .status-pending { color: #fbbf24; font-weight: bold; }
-          .status-approved { color: #10b981; font-weight: bold; }
-          .status-denied { color: #ef4444; font-weight: bold; }
-          .status-cancelled { color: #6b7280; font-weight: bold; }
-          .status-rescheduled { color: #3b82f6; font-weight: bold; }
+          @media print {
+            body { margin: 0; padding: 15px; }
+            .page-break { page-break-after: always; }
+          }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 30px; 
+            color: #1f2937;
+            line-height: 1.6;
+          }
+          .header {
+            border-bottom: 3px solid #f59e0b;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          h1 { 
+            color: #1f2937; 
+            margin: 0 0 10px 0;
+            font-size: 28px;
+          }
+          .meta-info {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 10px 0;
+          }
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+          }
+          .stat-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #fbbf24;
+          }
+          .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #92400e;
+            margin: 5px 0;
+          }
+          .stat-label {
+            font-size: 12px;
+            color: #78350f;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          }
+          th { 
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white; 
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border: 1px solid #b45309;
+          }
+          td { 
+            border: 1px solid #e5e7eb; 
+            padding: 10px; 
+            vertical-align: top;
+          }
+          tr:nth-child(even) { 
+            background-color: #f9fafb; 
+          }
+          tr:hover {
+            background-color: #fef3c7;
+          }
+          .status-section {
+            margin: 40px 0;
+            page-break-inside: avoid;
+          }
+          .status-header {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 12px 15px;
+            border-radius: 6px 6px 0 0;
+            font-weight: 600;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+            border-bottom: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+          }
+          small {
+            font-size: 11px;
+          }
         </style>
       </head>
       <body>
-        <h1>Bookings Report</h1>
-        <p>Generated: ${new Date().toLocaleString()}</p>
-        <p>Total Bookings: ${bookings.length}</p>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Property</th>
-              <th>Visitor</th>
-              <th>Phone</th>
-              <th>Date/Time</th>
-              <th>Status</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${bookings
-              .map(
-                (booking) => `
-              <tr>
-                <td>${booking.bookingId}</td>
-                <td>${booking.propertyAddress || `Property #${booking.propertyId}`}</td>
-                <td>${booking.visitor.name}</td>
-                <td>${booking.visitor.phone}</td>
-                <td>${formatDate(booking.startAt)} ${formatTime(booking.startAt)}</td>
-                <td class="status-${booking.status}">${booking.status}</td>
-                <td>${booking.notes || "-"}</td>
-              </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
+        <div class="header">
+          <h1>📅 Bookings Report</h1>
+          <div class="meta-info">
+            <strong>Generated:</strong> ${new Date().toLocaleString()}<br>
+            <strong>Total Bookings:</strong> ${bookings.length}
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total</div>
+            <div class="stat-value">${stats.total}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value">${stats.pending}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Approved</div>
+            <div class="stat-value">${stats.approved}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Denied</div>
+            <div class="stat-value">${stats.denied}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Cancelled</div>
+            <div class="stat-value">${stats.cancelled}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rescheduled</div>
+            <div class="stat-value">${stats.rescheduled}</div>
+          </div>
+        </div>
+
+        ${Object.entries(groupedByStatus).map(([status, statusBookings]) => {
+          if (statusBookings.length === 0) return "";
+          return `
+            <div class="status-section">
+              <div class="status-header">
+                ${status.charAt(0).toUpperCase() + status.slice(1)} Bookings (${statusBookings.length})
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Booking ID</th>
+                    <th>Property Address</th>
+                    <th>Visitor Information</th>
+                    <th>Contact</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${statusBookings.map(formatBookingRow).join("")}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }).join("")}
+
+        <div class="footer">
+          <p>This report was generated on ${new Date().toLocaleString()}</p>
+          <p>Leasap Booking Management System</p>
+        </div>
       </body>
     </html>
   `;

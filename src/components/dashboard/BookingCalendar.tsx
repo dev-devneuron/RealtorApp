@@ -102,6 +102,10 @@ const EventComponent = ({ event }: { event: Booking }) => {
             <div className="font-extrabold text-xs sm:text-sm leading-tight truncate mb-1 flex items-center gap-2">
               <span className="text-base sm:text-lg drop-shadow-lg filter drop-shadow-md">{getStatusIcon(event.status)}</span>
               <span className="truncate drop-shadow-md font-bold">{event.visitor.name}</span>
+              {/* Call record indicator */}
+              {event.callRecord && (event.callRecord.callRecordingUrl || event.callRecord.callTranscript) && (
+                <span className="text-xs opacity-90" title="Has call recording/transcript">📞</span>
+              )}
             </div>
             <div className="text-[10px] sm:text-xs opacity-95 truncate font-semibold mb-1.5 flex items-center gap-1.5 pl-1">
               <span className="opacity-90 text-xs filter drop-shadow-sm">📍</span>
@@ -401,7 +405,8 @@ export const BookingCalendar = ({
           title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
           start: startDate,
           end: endDate,
-          resource: booking,
+          resource: booking, // Store full booking object in resource
+          bookingId: booking.bookingId, // Also store bookingId directly for easier access
         };
       })
       .filter((event) => event !== null); // Remove null entries
@@ -421,43 +426,11 @@ export const BookingCalendar = ({
     }));
   }, [availabilitySlots]);
 
-  // Generate working hours events for day/week views
+  // Generate working hours events for day/week views - DISABLED (not displayed)
   const workingHoursEvents = useMemo(() => {
-    if (!calendarPreferences || (view !== "day" && view !== "week")) {
-      return [];
-    }
-
-    const events: any[] = [];
-    const startDate = view === "day" ? moment(date).startOf("day") : moment(date).startOf("week");
-    const endDate = view === "day" ? moment(date).endOf("day") : moment(date).endOf("week");
-
-    let currentDate = startDate.clone();
-    while (currentDate.isSameOrBefore(endDate, "day")) {
-      const dayOfWeek = currentDate.day(); // 0 = Sunday, 1 = Monday, etc.
-      
-      // Check if this day is a working day
-      if (calendarPreferences.working_days.includes(dayOfWeek)) {
-        const [startHour, startMinute] = calendarPreferences.start_time.split(":").map(Number);
-        const [endHour, endMinute] = calendarPreferences.end_time.split(":").map(Number);
-
-        const workingStart = currentDate.clone().hour(startHour).minute(startMinute).second(0);
-        const workingEnd = currentDate.clone().hour(endHour).minute(endMinute).second(0);
-
-        events.push({
-          id: `working-hours-${currentDate.format("YYYY-MM-DD")}`,
-          title: `Working Hours: ${calendarPreferences.start_time} - ${calendarPreferences.end_time}`,
-          start: workingStart.toDate(),
-          end: workingEnd.toDate(),
-          resource: { type: "working-hours", date: currentDate.toDate() },
-          allDay: false,
-        });
-      }
-
-      currentDate.add(1, "day");
-    }
-
-    return events;
-  }, [calendarPreferences, view, date]);
+    // Don't display working hours events - they were causing visual clutter
+    return [];
+  }, []);
 
   // Combine bookings, working hours, and availability slots
   const allEvents = useMemo(() => {
@@ -802,8 +775,11 @@ export const BookingCalendar = ({
             if (event.resource?.type === "working-hours" || event.resource?.type === "availability") {
               return;
             }
-            if (event.resource?.bookingId) {
-              onSelectEvent?.(event.resource);
+            // Check if it's a booking event - can be from event.resource or event itself
+            const booking = event.resource?.bookingId ? event.resource : 
+                           (event.bookingId ? event : null);
+            if (booking) {
+              onSelectEvent?.(booking);
             }
           }}
           onSelectSlot={(slotInfo) => {

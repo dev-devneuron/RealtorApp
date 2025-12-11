@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2, Headphones, Download, Play, Edit2, Trash2 } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2, Headphones, Download, Play, Edit2, Trash2, Copy, ChevronUp, ChevronDown } from "lucide-react";
 import { formatDateTime, formatDate, formatTime, getStatusColor, fetchPropertyAvailability, updateBooking, deleteBooking } from "./utils";
 import { toast } from "sonner";
 import type { Booking, AvailabilitySlot } from "./types";
@@ -114,8 +114,10 @@ export const BookingDetailModal = ({
     try {
       await onApprove(booking.bookingId);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error approving booking:", error);
+      const errorMessage = error?.message || error?.detail || "Failed to approve booking";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -128,8 +130,10 @@ export const BookingDetailModal = ({
       setShowDenyDialog(false);
       setDenyReason("");
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error denying booking:", error);
+      const errorMessage = error?.message || error?.detail || "Failed to deny booking";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -142,8 +146,10 @@ export const BookingDetailModal = ({
       setShowCancelDialog(false);
       setCancelReason("");
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cancelling booking:", error);
+      const errorMessage = error?.message || error?.detail || "Failed to cancel booking";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -161,8 +167,10 @@ export const BookingDetailModal = ({
       setRescheduleReason("");
       setSelectedSlots([]);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error rescheduling booking:", error);
+      const errorMessage = error?.message || error?.detail || "Failed to reschedule booking";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -344,67 +352,102 @@ export const BookingDetailModal = ({
             {/* Call Record (if booking came from phone call) */}
             {booking.callRecord && (booking.callRecord.callRecordingUrl || booking.callRecord.callTranscript || booking.callRecord.vapiCallId) && (
               <section className="space-y-2 sm:space-y-3 lg:space-y-3 xl:space-y-4">
-                <h3 className="text-base sm:text-lg lg:text-lg xl:text-xl font-semibold flex items-center gap-2 lg:gap-2.5 xl:gap-3">
-                  <Headphones className="h-4 w-4 sm:h-5 sm:w-5 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-amber-600 flex-shrink-0" />
-                  Call Record
-                </h3>
-                <div className="bg-gradient-to-br from-blue-50 to-amber-50 rounded-lg p-3 sm:p-4 lg:p-4 xl:p-5 space-y-3 border-2 border-amber-200">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Headphones className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <p className="text-base sm:text-lg font-bold text-gray-800">Call Information</p>
+                    </div>
+                    <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 font-semibold">
+                      📞 Phone Booking
+                    </Badge>
+                  </div>
+                  
                   {booking.callRecord.callRecordingUrl && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm sm:text-base font-medium text-gray-900">
-                        <Headphones className="h-4 w-4 text-amber-600" />
-                        Call Recording
+                    <div className="bg-white rounded-xl p-4 border border-blue-200 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Headphones className="h-4 w-4 text-blue-600" />
+                        <p className="text-sm font-semibold text-gray-700">Call Recording</p>
                       </div>
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <audio 
-                          controls 
-                          className="w-full sm:flex-1 h-10 rounded-lg"
-                          src={booking.callRecord.callRecordingUrl}
-                        >
-                          Your browser does not support the audio element.
-                        </audio>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = booking.callRecord!.callRecordingUrl!;
-                            link.download = `call-${booking.callRecord!.vapiCallId || booking.bookingId}.mp3`;
-                            link.click();
-                          }}
-                          className="border-amber-300 hover:bg-amber-50 hover:border-amber-400"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
+                      <audio
+                        controls
+                        className="w-full h-10 rounded-lg"
+                        src={booking.callRecord.callRecordingUrl}
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                      <a
+                        href={booking.callRecord.callRecordingUrl}
+                        download={`call-${booking.callRecord.vapiCallId || booking.bookingId}.mp3`}
+                        className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Recording
+                      </a>
                     </div>
                   )}
+                  
                   {booking.callRecord.callTranscript && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm sm:text-base font-medium text-gray-900">
-                          <FileText className="h-4 w-4 text-amber-600" />
-                          Call Transcript
+                    <div className="bg-white rounded-xl border border-blue-200 overflow-hidden">
+                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          <p className="text-sm font-bold text-gray-800">Call Transcript</p>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowTranscript(!showTranscript)}
-                          className="border-amber-300 hover:bg-amber-50 hover:border-amber-400 text-xs sm:text-sm"
-                        >
-                          {showTranscript ? "Hide" : "Show"} Transcript
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={async () => {
+                              if (!booking.callRecord?.callTranscript) return;
+                              try {
+                                await navigator.clipboard.writeText(booking.callRecord.callTranscript);
+                                toast.success("Transcript copied to clipboard");
+                              } catch (err) {
+                                toast.error("Failed to copy transcript");
+                              }
+                            }}
+                            className="h-8 px-3 text-xs"
+                          >
+                            <Copy className="h-3.5 w-3.5 mr-1.5" />
+                            Copy
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowTranscript(!showTranscript)}
+                            className="h-8 px-3 text-xs"
+                          >
+                            {showTranscript ? (
+                              <>
+                                <ChevronUp className="h-4 w-4 mr-1.5" />
+                                Hide
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="h-4 w-4 mr-1.5" />
+                                Show
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                       {showTranscript && (
-                        <div className="bg-white rounded-lg p-3 sm:p-4 max-h-60 overflow-y-auto border border-amber-200">
-                          <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{booking.callRecord.callTranscript}</p>
+                        <div className="p-4 max-h-96 overflow-y-auto bg-gray-50">
+                          <div className="bg-white rounded-lg p-4 border border-gray-200">
+                            <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
+                              {booking.callRecord.callTranscript}
+                            </p>
+                          </div>
                         </div>
                       )}
                     </div>
                   )}
+                  
                   {booking.callRecord.vapiCallId && (
-                    <div className="text-xs sm:text-sm text-gray-600">
+                    <div className="text-xs sm:text-sm text-gray-600 bg-white rounded-lg p-3 border border-blue-200">
                       <strong>Call ID:</strong> {booking.callRecord.vapiCallId}
                     </div>
                   )}

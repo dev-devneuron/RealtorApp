@@ -350,18 +350,38 @@ export const approveBooking = async (
     "Authorization": `Bearer ${token.trim()}`,
   };
 
-  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/approve`, {
-    method: "POST",
-    headers: headers,
-    body: JSON.stringify({ approver_id: approverId }),
-  });
+  try {
+    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/approve`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ approver_id: approverId }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to approve booking" }));
-    throw new Error(error.detail || "Failed to approve booking");
+    // IMPORTANT: Always parse JSON response first, even for errors
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // If response is not JSON, handle it
+      const text = await response.text();
+      throw new Error(`Server error: ${text || response.statusText}`);
+    }
+
+    if (!response.ok) {
+      // Extract error message properly - prevents [object Object] error
+      const errorMsg = data.detail || data.message || "Failed to approve booking";
+      throw new Error(errorMsg);
+    }
+
+    return data;
+  } catch (error) {
+    // Re-throw if it's already an Error with message
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Handle unexpected errors (network, JSON parsing, etc.)
+    throw new Error("Network error. Please try again.");
   }
-
-  return await response.json();
 };
 
 /**
@@ -380,18 +400,38 @@ export const denyBooking = async (
     "Authorization": `Bearer ${token.trim()}`,
   };
 
-  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/deny`, {
-    method: "POST",
-    headers: headers,
-    body: JSON.stringify({ approver_id: approverId, reason }),
-  });
+  try {
+    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/deny`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ approver_id: approverId, reason }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to deny booking" }));
-    throw new Error(error.detail || "Failed to deny booking");
+    // IMPORTANT: Always parse JSON response first, even for errors
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // If response is not JSON, handle it
+      const text = await response.text();
+      throw new Error(`Server error: ${text || response.statusText}`);
+    }
+
+    if (!response.ok) {
+      // Extract error message properly - prevents [object Object] error
+      const errorMsg = data.detail || data.message || "Failed to deny booking";
+      throw new Error(errorMsg);
+    }
+
+    return data;
+  } catch (error) {
+    // Re-throw if it's already an Error with message
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Handle unexpected errors (network, JSON parsing, etc.)
+    throw new Error("Network error. Please try again.");
   }
-
-  return await response.json();
 };
 
 /**
@@ -410,18 +450,38 @@ export const rescheduleBooking = async (
     "Authorization": `Bearer ${token.trim()}`,
   };
 
-  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/reschedule`, {
-    method: "POST",
-    headers: headers,
-    body: JSON.stringify({ proposed_slots: proposedSlots, reason }),
-  });
+  try {
+    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/reschedule`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ proposed_slots: proposedSlots, reason }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to reschedule booking" }));
-    throw new Error(error.detail || "Failed to reschedule booking");
+    // IMPORTANT: Always parse JSON response first, even for errors
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // If response is not JSON, handle it
+      const text = await response.text();
+      throw new Error(`Server error: ${text || response.statusText}`);
+    }
+
+    if (!response.ok) {
+      // Extract error message properly - prevents [object Object] error
+      const errorMsg = data.detail || data.message || "Failed to reschedule booking";
+      throw new Error(errorMsg);
+    }
+
+    return data;
+  } catch (error) {
+    // Re-throw if it's already an Error with message
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Handle unexpected errors (network, JSON parsing, etc.)
+    throw new Error("Network error. Please try again.");
   }
-
-  return await response.json();
 };
 
 /**
@@ -439,18 +499,38 @@ export const cancelBooking = async (
     "Authorization": `Bearer ${token.trim()}`,
   };
 
-  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/cancel`, {
-    method: "POST",
-    headers: headers,
-    body: JSON.stringify({ reason }),
-  });
+  try {
+    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/cancel`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ reason: reason || null }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to cancel booking" }));
-    throw new Error(error.detail || "Failed to cancel booking");
+    // IMPORTANT: Always parse JSON response first, even for errors
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // If response is not JSON, handle it
+      const text = await response.text();
+      throw new Error(`Server error: ${text || response.statusText}`);
+    }
+
+    if (!response.ok) {
+      // Extract error message properly - prevents [object Object] error
+      const errorMsg = data.detail || data.message || "Failed to cancel booking";
+      throw new Error(errorMsg);
+    }
+
+    return data;
+  } catch (error) {
+    // Re-throw if it's already an Error with message
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Handle unexpected errors (network, JSON parsing, etc.)
+    throw new Error("Network error. Please try again.");
   }
-
-  return await response.json();
 };
 
 /**
@@ -478,19 +558,41 @@ export const updateBooking = async (
     "Authorization": `Bearer ${token.trim()}`,
   };
 
-  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
-    method: "PUT",
-    headers: headers,
-    body: JSON.stringify(updates),
-  });
+  try {
+    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
+      method: "PUT",
+      headers: headers,
+      body: JSON.stringify(updates),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to update booking" }));
-    throw new Error(error.detail || "Failed to update booking");
+    // IMPORTANT: Always parse JSON response first, even for errors
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // If response is not JSON, handle it
+      const text = await response.text();
+      throw new Error(`Server error: ${text || response.statusText}`);
+    }
+
+    if (!response.ok) {
+      // Extract error message properly - prevents [object Object] error
+      const errorMsg = data.detail || data.message || "Failed to update booking";
+      throw new Error(errorMsg);
+    }
+
+    return data;
+  } catch (error) {
+    // Re-throw if it's already an Error with message
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Handle unexpected errors (network, JSON parsing, etc.)
+    throw new Error("Network error. Please try again.");
   }
-
-  return await response.json();
 };
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+read_file
 
 /**
  * Delete booking (DELETE /api/bookings/{booking_id})
@@ -506,18 +608,40 @@ export const deleteBooking = async (
     "Authorization": `Bearer ${token.trim()}`,
   };
 
-  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
-    method: "DELETE",
-    headers: headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
+      method: "DELETE",
+      headers: headers,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Failed to delete booking" }));
-    throw new Error(error.detail || "Failed to delete booking");
+    // IMPORTANT: Always parse JSON response first, even for errors
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // If response is not JSON, handle it
+      const text = await response.text();
+      throw new Error(`Server error: ${text || response.statusText}`);
+    }
+
+    if (!response.ok) {
+      // Extract error message properly - prevents [object Object] error
+      const errorMsg = data.detail || data.message || "Failed to delete booking";
+      throw new Error(errorMsg);
+    }
+
+    return data;
+  } catch (error) {
+    // Re-throw if it's already an Error with message
+    if (error instanceof Error) {
+      throw error;
+    }
+    // Handle unexpected errors (network, JSON parsing, etc.)
+    throw new Error("Network error. Please try again.");
   }
-
-  return await response.json();
 };
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+read_file
 
 /**
  * Get property availability (Dashboard endpoint - uses GET)

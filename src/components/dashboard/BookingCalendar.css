@@ -127,8 +127,39 @@
   border: 2px solid #fde68a;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 251, 235, 0.6));
+  box-shadow: 
+    0 8px 32px rgba(251, 191, 36, 0.2),
+    0 4px 16px rgba(251, 191, 36, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 251, 235, 0.05) 100%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 251, 235, 0.85));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+}
+
+/* CRITICAL: Ensure time view content allows events to be positioned correctly */
+.booking-calendar-enhanced .rbc-time-view .rbc-time-content {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+/* Ensure day slots allow events to overflow if needed */
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot {
+  position: relative;
+  overflow: visible;
+}
+
+/* Events container must be positioned absolutely by react-big-calendar */
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot .rbc-events-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: visible;
 }
 
 .booking-calendar-enhanced .rbc-month-view {
@@ -143,17 +174,28 @@
   border-top-color: #fef3c7;
 }
 
+/* CRITICAL: Event positioning - must allow react-big-calendar to position events */
 .booking-calendar-enhanced .rbc-event {
-  border-radius: 12px;
-  padding: 8px 12px;
+  border-radius: 14px;
+  padding: 10px 14px;
   font-weight: 700;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none !important;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   overflow: hidden;
-  position: relative;
   z-index: 1;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  /* DO NOT set position here - let react-big-calendar handle it */
+  cursor: pointer;
+  transform-origin: center;
+  width: calc(100% - 8px) !important;
+  margin-left: 4px !important;
+  margin-right: 4px !important;
 }
 
 .booking-calendar-enhanced .rbc-event::before {
@@ -164,12 +206,31 @@
   right: 0;
   height: 2px;
   background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+  z-index: 1;
+}
+
+.booking-calendar-enhanced .rbc-event::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.05) 100%);
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.8;
 }
 
 .booking-calendar-enhanced .rbc-event:hover {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25), 0 6px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transform: translateY(-3px) scale(1.03);
-  z-index: 25;
+  box-shadow: 
+    0 16px 48px rgba(0, 0, 0, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-4px) scale(1.02) !important;
+  z-index: 30 !important;
 }
 
 .booking-calendar-enhanced .rbc-event:active {
@@ -180,6 +241,9 @@
 .booking-calendar-enhanced .rbc-event-content {
   color: white;
   font-size: 0.875rem;
+  position: relative;
+  z-index: 2;
+  line-height: 1.4;
 }
 
 .booking-calendar-enhanced .rbc-selected {
@@ -334,6 +398,8 @@
 /* Time slot enhancements - Optimized for 16-hour view (6 AM - 10 PM) */
 .booking-calendar-enhanced .rbc-day-slot {
   position: relative;
+  min-height: 60px;
+  overflow: visible;
 }
 
 .booking-calendar-enhanced .rbc-day-slot .rbc-time-slot:nth-child(odd) {
@@ -348,6 +414,12 @@
   background: linear-gradient(to bottom, rgba(254, 243, 199, 0.6), rgba(251, 191, 36, 0.2)) !important;
   transition: all 0.3s ease;
   box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1);
+}
+
+/* CRITICAL: Events container positioning - let react-big-calendar handle it */
+.booking-calendar-enhanced .rbc-day-slot .rbc-events-container {
+  margin-right: 0;
+  /* Position is set by react-big-calendar - don't override */
 }
 
 .booking-calendar-enhanced .rbc-time-header-gutter {
@@ -527,20 +599,6 @@
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.15), 0 0 8px rgba(245, 158, 11, 0.3);
 }
 
-/* Better event spacing and alignment */
-.booking-calendar-enhanced .rbc-event-content {
-  line-height: 1.4;
-}
-
-.booking-calendar-enhanced .rbc-day-slot {
-  position: relative;
-  min-height: 60px;
-}
-
-.booking-calendar-enhanced .rbc-day-slot .rbc-events-container {
-  margin-right: 0;
-}
-
 /* Improved month view event display */
 .booking-calendar-enhanced .rbc-month-view .rbc-event {
   margin: 1px 2px;
@@ -564,10 +622,7 @@
 /* Additional creative enhancements */
 .booking-calendar-enhanced .rbc-time-content {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 251, 235, 0.8));
-}
-
-.booking-calendar-enhanced .rbc-day-slot {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6), rgba(255, 251, 235, 0.4));
+  position: relative;
 }
 
 /* Hour markers enhancement */
@@ -635,3 +690,52 @@
   }
 }
 
+/* CRITICAL FIX: Ensure events are positioned correctly in time slots */
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot .rbc-events-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow: visible !important;
+  pointer-events: none;
+}
+
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot .rbc-events-container .rbc-event {
+  pointer-events: auto;
+  position: absolute !important;
+  /* top, left, height are set by react-big-calendar based on event times */
+  /* We only control width and margins */
+  width: calc(100% - 8px) !important;
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+}
+
+/* Ensure time slots are properly positioned */
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Modern floating card effect for events */
+.booking-calendar-enhanced .rbc-event {
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Add subtle animation on event mount */
+@keyframes eventFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.booking-calendar-enhanced .rbc-event {
+  animation: eventFadeIn 0.3s ease-out;
+}

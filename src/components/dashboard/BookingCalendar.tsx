@@ -81,45 +81,50 @@ const EventComponent = ({ event }: { event: Booking }) => {
   const endTime = formatTime(event.endAt);
 
   return (
-    <div className={`${getStatusGradient(event.status)} text-white p-2 sm:p-2.5 rounded-xl shadow-xl border-l-4 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group relative overflow-hidden backdrop-blur-sm`}>
+    <div className={`${getStatusGradient(event.status)} text-white p-2.5 sm:p-3 rounded-2xl shadow-2xl border-l-[4px] hover:shadow-3xl hover:scale-[1.03] transition-all duration-400 cursor-pointer group relative overflow-hidden backdrop-blur-md`} style={{
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2), 0 5px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+    }}>
       {/* Animated shimmer effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer transition-opacity duration-500" />
       
       {/* Glow effect on hover */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300" />
+      <div className="absolute -inset-2 bg-gradient-to-r from-white/30 via-white/20 to-transparent opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-400" />
       
-      {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+      {/* Top accent line with gradient */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+      
+      {/* Status indicator dot */}
+      <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-white rounded-full animate-pulse opacity-90 shadow-lg ring-2 ring-white/50" />
       
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-1.5 mb-1.5">
+        <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-xs sm:text-sm leading-tight truncate mb-0.5 flex items-center gap-1.5">
-              <span className="text-sm sm:text-base drop-shadow-lg">{getStatusIcon(event.status)}</span>
-              <span className="truncate drop-shadow-sm">{event.visitor.name}</span>
+            <div className="font-extrabold text-xs sm:text-sm leading-tight truncate mb-1 flex items-center gap-2">
+              <span className="text-base sm:text-lg drop-shadow-lg filter drop-shadow-md">{getStatusIcon(event.status)}</span>
+              <span className="truncate drop-shadow-md font-bold">{event.visitor.name}</span>
             </div>
-            <div className="text-[10px] sm:text-xs opacity-95 truncate font-medium mb-1 flex items-center gap-1">
-              <span className="opacity-80 text-xs">📍</span>
-              <span className="truncate">{event.propertyAddress || `Property #${event.propertyId}`}</span>
+            <div className="text-[10px] sm:text-xs opacity-95 truncate font-semibold mb-1.5 flex items-center gap-1.5 pl-1">
+              <span className="opacity-90 text-xs filter drop-shadow-sm">📍</span>
+              <span className="truncate drop-shadow-sm">{event.propertyAddress || `Property #${event.propertyId}`}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-1.5 mt-1.5 pt-1.5 border-t border-white/30">
-          <div className="text-[10px] sm:text-xs opacity-95 flex items-center gap-1 font-semibold">
-            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 drop-shadow-sm flex-shrink-0" />
-            <span className="drop-shadow-sm">{startTime}</span>
+        <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-white/40">
+          <div className="text-[10px] sm:text-xs opacity-95 flex items-center gap-1.5 font-bold">
+            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 drop-shadow-md flex-shrink-0" />
+            <span className="drop-shadow-md">{startTime}</span>
             {startTime !== endTime && (
               <>
                 <span className="opacity-70">-</span>
-                <span className="drop-shadow-sm">{endTime}</span>
+                <span className="drop-shadow-md">{endTime}</span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-white rounded-full animate-pulse opacity-90 shadow-lg" />
-          </div>
         </div>
       </div>
+      
+      {/* Bottom gradient fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
     </div>
   );
 };
@@ -377,15 +382,29 @@ export const BookingCalendar = ({
     }
   }, [userId, userType, view, date]);
 
-  // Convert bookings to calendar events
+  // Convert bookings to calendar events - CRITICAL: Ensure dates are valid Date objects
   const bookingEvents = useMemo(() => {
-    return bookings.map((booking) => ({
-      ...booking,
-      title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
-      start: new Date(booking.startAt),
-      end: new Date(booking.endAt),
-      resource: booking,
-    }));
+    return bookings
+      .filter((booking) => booking.startAt && booking.endAt) // Filter out invalid bookings
+      .map((booking) => {
+        const startDate = new Date(booking.startAt);
+        const endDate = new Date(booking.endAt);
+        
+        // Validate dates
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.warn('Invalid booking date:', booking);
+          return null;
+        }
+        
+        return {
+          ...booking,
+          title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
+          start: startDate,
+          end: endDate,
+          resource: booking,
+        };
+      })
+      .filter((event) => event !== null); // Remove null entries
   }, [bookings]);
 
   // Convert availability slots to calendar events
@@ -828,7 +847,7 @@ export const BookingCalendar = ({
             }}
           eventPropGetter={eventStyleGetter}
           selectable={view !== "month"}
-          popup
+          popup={false}
           step={30}
           timeslots={2}
           min={minTime}
@@ -842,6 +861,11 @@ export const BookingCalendar = ({
               };
             }
             return {};
+          }}
+          formats={{
+            timeGutterFormat: (date: Date) => moment(date).format('h:mm A'),
+            eventTimeRangeFormat: ({ start, end }: { start: Date; end: Date }) => 
+              `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,
           }}
         />
       </CardContent>

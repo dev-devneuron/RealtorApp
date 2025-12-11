@@ -119,19 +119,22 @@ export const formatDate = (dateString: string | Date): string => {
 /**
  * Format time for display (HH:MM AM/PM UTC format)
  */
-export const formatTime = (dateString: string | Date): string => {
+export const formatTime = (dateString: string | Date, useLocalTime: boolean = false): string => {
   if (!dateString) return "N/A";
   const date = typeof dateString === "string" ? new Date(dateString) : dateString;
   if (isNaN(date.getTime())) return "Invalid Time";
   
-  const hours = date.getUTCHours();
-  const minutes = date.getUTCMinutes();
+  // Use local time for display (not UTC) - this matches how the calendar displays times
+  // The calendar view uses local time, so blocked slots should too
+  const hours = useLocalTime ? date.getHours() : date.getUTCHours();
+  const minutes = useLocalTime ? date.getMinutes() : date.getUTCMinutes();
   
   const hour12 = hours % 12 || 12;
   const ampm = hours >= 12 ? "PM" : "AM";
   const minutesStr = String(minutes).padStart(2, "0");
   
-  return `${hour12}:${minutesStr} ${ampm} UTC`;
+  // Only append UTC if we're using UTC time, otherwise use local time
+  return useLocalTime ? `${hour12}:${minutesStr} ${ampm}` : `${hour12}:${minutesStr} ${ampm} UTC`;
 };
 
 /**

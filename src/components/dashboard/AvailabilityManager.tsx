@@ -762,7 +762,7 @@ export const AvailabilityManager = ({
                     <div className="font-semibold text-base text-gray-900 mb-1">
                       {slot.isFullDay 
                         ? formatDate(slot.startAt)
-                        : `${formatDate(slot.startAt)} ${formatTime(slot.startAt)} - ${formatTime(slot.endAt)}`
+                        : `${formatDate(slot.startAt)} ${formatTime(slot.startAt, true)} - ${formatTime(slot.endAt, true)}`
                       }
                     </div>
                     {(slot.reason || slot.notes) && (

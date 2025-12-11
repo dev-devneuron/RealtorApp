@@ -120,7 +120,7 @@ export const exportToPDF = async (bookings: Booking[], filename: string = "booki
     const startDateTime = formatDateTime(booking.startAt);
     const endDateTime = formatDateTime(booking.endAt);
     const customerTime = booking.customerSentStartAt 
-      ? `${booking.customerSentStartAt} - ${booking.customerSentEndAt || booking.customerSentEndAt}`
+      ? `${booking.customerSentStartAt} - ${booking.customerSentEndAt || booking.endAt}`
       : "";
     
     return `

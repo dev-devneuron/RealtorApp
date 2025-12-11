@@ -78,8 +78,12 @@ const EventComponent = memo(({ event }: { event: Booking }) => {
     }
   };
 
-  const startTime = formatTime(event.startAt);
-  const endTime = formatTime(event.endAt);
+  // Display the time that was used for calendar positioning (customer-sent time if available)
+  // This ensures the displayed time matches where the booking appears on the calendar
+  const displayStartTime = event.customerSentStartAt || event.startAt;
+  const displayEndTime = event.customerSentEndAt || event.endAt;
+  const startTime = formatTime(displayStartTime);
+  const endTime = formatTime(displayEndTime);
 
   return (
     <div className={`${getStatusGradient(event.status)} text-white p-2.5 sm:p-3 rounded-2xl shadow-2xl border-l-[4px] hover:shadow-3xl hover:scale-[1.03] transition-all duration-400 cursor-pointer group relative overflow-hidden backdrop-blur-md`} style={{
@@ -403,12 +407,23 @@ export const BookingCalendar = ({
   }, [userId, userType, view, date, calendarPreferences]); // Added calendarPreferences as dependency to re-fetch when preferences change
 
   // Convert bookings to calendar events - CRITICAL: Ensure dates are valid Date objects
+  // Use customer-sent times if available (so booking appears at the time customer mentioned)
   const bookingEvents = useMemo(() => {
     return bookings
-      .filter((booking) => booking.startAt && booking.endAt) // Filter out invalid bookings
+      .filter((booking) => {
+        // Check if we have either customer-sent times or regular times
+        const hasCustomerTimes = booking.customerSentStartAt && booking.customerSentEndAt;
+        const hasRegularTimes = booking.startAt && booking.endAt;
+        return hasCustomerTimes || hasRegularTimes;
+      })
       .map((booking) => {
-        const startDate = new Date(booking.startAt);
-        const endDate = new Date(booking.endAt);
+        // Prefer customer-sent times for calendar positioning (what customer mentioned)
+        // Fall back to regular times if customer-sent times are not available
+        const startTimeString = booking.customerSentStartAt || booking.startAt;
+        const endTimeString = booking.customerSentEndAt || booking.endAt;
+        
+        const startDate = new Date(startTimeString);
+        const endDate = new Date(endTimeString);
         
         // Validate dates
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {

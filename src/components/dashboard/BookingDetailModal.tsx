@@ -19,6 +19,106 @@ import { formatDateTime, formatDate, formatTime, getStatusColor, fetchPropertyAv
 import { toast } from "sonner";
 import type { Booking, AvailabilitySlot } from "./types";
 
+// Helper function to format call transcript with better styling (chat-like interface)
+const formatCallTranscript = (transcript: string): JSX.Element[] => {
+  if (!transcript) return [];
+  
+  // Split transcript by lines and identify speaker changes
+  const lines = transcript.split('\n').filter(line => line.trim());
+  const elements: JSX.Element[] = [];
+  let currentSpeaker: 'assistant' | 'user' | null = null;
+  let currentMessage = '';
+  
+  lines.forEach((line, index) => {
+    const trimmedLine = line.trim();
+    
+    // Detect speaker changes (common patterns: "Assistant:", "User:", "Agent:", "Customer:", etc.)
+    const assistantPattern = /^(assistant|agent|ai|system|bot):\s*/i;
+    const userPattern = /^(user|customer|client|caller|visitor):\s*/i;
+    
+    if (assistantPattern.test(trimmedLine)) {
+      // Save previous message if exists
+      if (currentMessage && currentSpeaker) {
+        elements.push(createMessageBubble(currentMessage, currentSpeaker, elements.length));
+      }
+      currentSpeaker = 'assistant';
+      currentMessage = trimmedLine.replace(assistantPattern, '');
+    } else if (userPattern.test(trimmedLine)) {
+      // Save previous message if exists
+      if (currentMessage && currentSpeaker) {
+        elements.push(createMessageBubble(currentMessage, currentSpeaker, elements.length));
+      }
+      currentSpeaker = 'user';
+      currentMessage = trimmedLine.replace(userPattern, '');
+    } else {
+      // Continue current message or start new one
+      if (currentSpeaker) {
+        currentMessage += (currentMessage ? ' ' : '') + trimmedLine;
+      } else {
+        // If no speaker detected, try to infer from context or default to assistant
+        // Check if line looks like a question (user) or statement (assistant)
+        const isQuestion = /[?]/.test(trimmedLine);
+        currentSpeaker = isQuestion ? 'user' : 'assistant';
+        currentMessage = trimmedLine;
+      }
+    }
+    
+    // Push last message
+    if (index === lines.length - 1 && currentMessage && currentSpeaker) {
+      elements.push(createMessageBubble(currentMessage, currentSpeaker, elements.length));
+    }
+  });
+  
+  // If no speaker patterns found, treat entire transcript as alternating messages
+  if (elements.length === 0) {
+    const sentences = transcript.split(/(?<=[.!?])\s+/).filter(s => s.trim());
+    sentences.forEach((sentence, idx) => {
+      const speaker = idx % 2 === 0 ? 'user' : 'assistant';
+      elements.push(createMessageBubble(sentence.trim(), speaker, idx));
+    });
+  }
+  
+  return elements;
+};
+
+const createMessageBubble = (message: string, speaker: 'assistant' | 'user', index: number): JSX.Element => {
+  const isAssistant = speaker === 'assistant';
+  
+  return (
+    <motion.div
+      key={index}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className={`flex ${isAssistant ? 'justify-start' : 'justify-end'} mb-3`}
+    >
+      <div className={`max-w-[80%] sm:max-w-[75%] lg:max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${
+        isAssistant 
+          ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 text-blue-900' 
+          : 'bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 text-amber-900'
+      }`}>
+        <div className="flex items-start gap-2">
+          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+            isAssistant 
+              ? 'bg-blue-500 text-white' 
+              : 'bg-amber-500 text-white'
+          }`}>
+            {isAssistant ? 'A' : 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold mb-1 opacity-70">
+              {isAssistant ? 'Assistant' : 'Customer'}
+            </div>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+              {message}
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 interface BookingDetailModalProps {
   booking: Booking | null;
   open: boolean;
@@ -300,10 +400,14 @@ export const BookingDetailModal = ({
                     </div>
                     <div className="pl-6 space-y-1.5">
                       <div className="text-sm lg:text-base">
-                        <strong>Start:</strong> {booking.customerSentStartAt || booking.startAt}
+                        <strong>Start:</strong> {booking.customerSentStartAt 
+                          ? formatDateTime(booking.customerSentStartAt) 
+                          : formatDateTime(booking.startAt)}
                       </div>
                       <div className="text-sm lg:text-base">
-                        <strong>End:</strong> {booking.customerSentEndAt || booking.endAt}
+                        <strong>End:</strong> {booking.customerSentEndAt 
+                          ? formatDateTime(booking.customerSentEndAt) 
+                          : formatDateTime(booking.endAt)}
                       </div>
                     </div>
                     {/* Timezone Confirmation Notice */}
@@ -436,10 +540,8 @@ export const BookingDetailModal = ({
                       </div>
                       {showTranscript && (
                         <div className="p-4 max-h-96 overflow-y-auto bg-gray-50">
-                          <div className="bg-white rounded-lg p-4 border border-gray-200">
-                            <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
-                              {booking.callRecord.callTranscript}
-                            </p>
+                          <div className="space-y-3">
+                            {formatCallTranscript(booking.callRecord.callTranscript)}
                           </div>
                         </div>
                       )}

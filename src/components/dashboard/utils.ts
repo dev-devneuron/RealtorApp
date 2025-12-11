@@ -100,34 +100,50 @@ export const formatCallDuration = (seconds: number | null | undefined): string =
 };
 
 /**
- * Format date for display
+ * Format date for display (YYYY-MM-DD format)
  */
 export const formatDate = (dateString: string | Date): string => {
+  if (!dateString) return "N/A";
   const date = typeof dateString === "string" ? new Date(dateString) : dateString;
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  if (isNaN(date.getTime())) return "Invalid Date";
+  
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  
+  return `${year}-${month}-${day}`;
 };
 
 /**
- * Format time for display
+ * Format time for display (HH:MM AM/PM UTC format)
  */
 export const formatTime = (dateString: string | Date): string => {
+  if (!dateString) return "N/A";
   const date = typeof dateString === "string" ? new Date(dateString) : dateString;
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  if (isNaN(date.getTime())) return "Invalid Time";
+  
+  const hours = date.getUTCHours();
+  const minutes = date.getUTCMinutes();
+  
+  const hour12 = hours % 12 || 12;
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const minutesStr = String(minutes).padStart(2, "0");
+  
+  return `${hour12}:${minutesStr} ${ampm} UTC`;
 };
 
 /**
- * Format date and time for display
+ * Format date and time for display (YYYY-MM-DD at HH:MM AM/PM UTC format)
  */
 export const formatDateTime = (dateString: string | Date): string => {
-  return `${formatDate(dateString)} at ${formatTime(dateString)}`;
+  if (!dateString) return "N/A";
+  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+  if (isNaN(date.getTime())) return "Invalid Date/Time";
+  
+  const dateStr = formatDate(date);
+  const timeStr = formatTime(date);
+  
+  return `${dateStr} at ${timeStr}`;
 };
 
 /**

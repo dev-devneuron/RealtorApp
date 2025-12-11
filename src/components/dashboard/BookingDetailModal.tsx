@@ -56,6 +56,7 @@ export const BookingDetailModal = ({
   const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedSlots, setSelectedSlots] = useState<Array<{ startAt: string; endAt: string }>>([]);
+  const [showTranscript, setShowTranscript] = useState(false);
   const [updateForm, setUpdateForm] = useState({
     visitor_name: "",
     visitor_phone: "",
@@ -326,7 +327,7 @@ export const BookingDetailModal = ({
                 <div className="flex items-start gap-2">
                   <Clock className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 text-gray-500 mt-0.5 flex-shrink-0" />
                   <span className="text-sm lg:text-base xl:text-base break-words">
-                    <strong>Time:</strong> {formatTime(booking.startAt)} - {formatTime(booking.endAt)}
+                    <strong>Time (UTC):</strong> {formatTime(booking.startAt)} - {formatTime(booking.endAt)}
                   </span>
                 </div>
                 <div className="text-sm lg:text-base xl:text-base text-gray-600">
@@ -381,13 +382,25 @@ export const BookingDetailModal = ({
                   )}
                   {booking.callRecord.callTranscript && (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm sm:text-base font-medium text-gray-900">
-                        <FileText className="h-4 w-4 text-amber-600" />
-                        Call Transcript
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm sm:text-base font-medium text-gray-900">
+                          <FileText className="h-4 w-4 text-amber-600" />
+                          Call Transcript
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowTranscript(!showTranscript)}
+                          className="border-amber-300 hover:bg-amber-50 hover:border-amber-400 text-xs sm:text-sm"
+                        >
+                          {showTranscript ? "Hide" : "Show"} Transcript
+                        </Button>
                       </div>
-                      <div className="bg-white rounded-lg p-3 sm:p-4 max-h-60 overflow-y-auto border border-amber-200">
-                        <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap">{booking.callRecord.callTranscript}</p>
-                      </div>
+                      {showTranscript && (
+                        <div className="bg-white rounded-lg p-3 sm:p-4 max-h-60 overflow-y-auto border border-amber-200">
+                          <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{booking.callRecord.callTranscript}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                   {booking.callRecord.vapiCallId && (

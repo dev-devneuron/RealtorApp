@@ -200,10 +200,18 @@ export const AvailabilityManager = ({
         return;
       }
 
+      // Clear ALL related caches BEFORE updating (ensures fresh data)
+      // This prevents stale cache from being used
+      const { clearCacheForEndpoint, clearCacheByPattern } = await import("../../utils/cache");
+      clearCacheForEndpoint(`/api/users/${userId}/calendar-preferences`, { userType });
+      clearCacheByPattern(`/api/users/${userId}/calendar-events`);
+      clearCacheByPattern(`/api/users/${userId}/availability`);
+      
       // Save to API first (API is source of truth)
       const updatedPrefs = await updateCalendarPreferences(userId, userType, workingHours);
       
       // Reload preferences from API to ensure we have the latest data (robust approach)
+      // Cache is already cleared, so this will fetch fresh data
       const freshPrefs = await fetchCalendarPreferences(userId, userType);
       
       // Update local state with fresh API data

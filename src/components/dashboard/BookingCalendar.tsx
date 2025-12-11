@@ -212,6 +212,11 @@ export const BookingCalendar = ({
   useEffect(() => {
     const handlePreferenceUpdate = async (e: CustomEvent) => {
       if (e.detail?.userId === userId) {
+        // Clear cache first to ensure fresh data
+        const { clearCacheForEndpoint, clearCacheByPattern } = await import("../../utils/cache");
+        clearCacheForEndpoint(`/api/users/${userId}/calendar-preferences`, { userType: userType || "" });
+        clearCacheByPattern(`/api/users/${userId}/calendar-events`);
+        
         // Reload preferences from API to ensure we have the latest data
         try {
           const prefs = await fetchCalendarPreferences(userId, userType || "");
@@ -222,6 +227,13 @@ export const BookingCalendar = ({
             slot_length: prefs.slot_length,
             working_days: prefs.working_days,
           });
+          
+          // Also reload calendar events to reflect preference changes
+          // This will trigger the useEffect that fetches calendar events
+          if (view !== "list" && view !== "stats" && view !== "availability") {
+            // Force re-fetch by clearing availability slots state
+            setAvailabilitySlots([]);
+          }
         } catch (error) {
           // Fallback to event data if API fails
           if (e.detail?.preferences) {
@@ -234,6 +246,11 @@ export const BookingCalendar = ({
     const handleStorageChange = async (e: StorageEvent) => {
       if (e.key === `calendar_preferences_${userId}` && e.newValue) {
         try {
+          // Clear cache first to ensure fresh data
+          const { clearCacheForEndpoint, clearCacheByPattern } = await import("../../utils/cache");
+          clearCacheForEndpoint(`/api/users/${userId}/calendar-preferences`, { userType: userType || "" });
+          clearCacheByPattern(`/api/users/${userId}/calendar-events`);
+          
           // Reload from API to ensure consistency
           const prefs = await fetchCalendarPreferences(userId, userType || "");
           setCalendarPreferences({
@@ -243,6 +260,10 @@ export const BookingCalendar = ({
             slot_length: prefs.slot_length,
             working_days: prefs.working_days,
           });
+          
+          // Clear calendar events cache and force re-fetch
+          clearCacheByPattern(`/api/users/${userId}/calendar-events`);
+          setAvailabilitySlots([]);
         } catch (error) {
           // Fallback to localStorage if API fails
           try {
@@ -281,7 +302,7 @@ export const BookingCalendar = ({
     reason?: string;
   }>>([]);
 
-  // Fetch calendar events (bookings + availability slots) when view or date changes
+  // Fetch calendar events (bookings + availability slots) when view, date, or preferences change
   useEffect(() => {
     const loadCalendarEvents = async () => {
       if (!userId || !userType) return;
@@ -327,6 +348,8 @@ export const BookingCalendar = ({
               isFullDay: slot.isFullDay,
               reason: slot.notes || slot.reason,
             })));
+          } else {
+            setAvailabilitySlots([]);
           }
         } catch (error) {
           // Fallback: fetch unavailable slots directly
@@ -347,6 +370,8 @@ export const BookingCalendar = ({
                 isFullDay: slot.isFullDay,
                 reason: slot.reason || slot.notes,
               })));
+            } else {
+              setAvailabilitySlots([]);
             }
           } catch (e) {
             console.error("Error fetching unavailable slots:", e);
@@ -367,7 +392,7 @@ export const BookingCalendar = ({
       // Clear availability slots when not in calendar view
       setAvailabilitySlots([]);
     }
-  }, [userId, userType, view, date]);
+  }, [userId, userType, view, date, calendarPreferences]); // Added calendarPreferences as dependency to re-fetch when preferences change
 
   // Convert bookings to calendar events - CRITICAL: Ensure dates are valid Date objects
   const bookingEvents = useMemo(() => {

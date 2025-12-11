@@ -140,6 +140,23 @@ export const clearCacheForEndpoint = (endpoint: string, params?: Record<string, 
 };
 
 /**
+ * Clear all cache entries matching a pattern (e.g., all calendar-events entries)
+ */
+export const clearCacheByPattern = (pattern: string): void => {
+  try {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith(CACHE_PREFIX) && key.includes(pattern)) {
+        localStorage.removeItem(key);
+        console.log(`Cleared cache entry: ${key}`);
+      }
+    });
+  } catch (error) {
+    console.warn('Error clearing cache by pattern:', error);
+  }
+};
+
+/**
  * Debounce function for search/filter operations
  */
 export const debounce = <T extends (...args: any[]) => any>(

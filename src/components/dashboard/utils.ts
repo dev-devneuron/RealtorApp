@@ -1,4 +1,4 @@
-import { getCachedData, setCachedData, getCacheKey, clearCacheForEndpoint } from "../../utils/cache";
+import { getCachedData, setCachedData, getCacheKey, clearCacheForEndpoint, clearCacheByPattern } from "../../utils/cache";
 
 /**
  * Helper function to parse and extract metadata from property objects
@@ -1073,6 +1073,12 @@ export const updateCalendarPreferences = async (
     requestBody.working_days = convertJsDaysToApi(preferences.working_days);
   }
 
+  // Clear ALL related caches BEFORE making the API call (critical for fresh data)
+  // This ensures that any subsequent fetches will get fresh data from the API
+  clearCacheForEndpoint(`/api/users/${userId}/calendar-preferences`, { userType });
+  clearCacheByPattern(`/api/users/${userId}/calendar-events`);
+  clearCacheByPattern(`/api/users/${userId}/availability`);
+
   try {
     const response = await fetch(
       `${API_BASE}/api/users/${userId}/calendar-preferences?user_type=${userType}`,
@@ -1094,25 +1100,37 @@ export const updateCalendarPreferences = async (
 
     const data = await response.json();
     
-    // Clear cache after update
-    clearCacheForEndpoint(`/api/users/${userId}/calendar-preferences`, { userType });
-    
     // According to documentation, API response format is:
     // { message, preferences: { timezone, defaultSlotLengthMins, workingHours: { start, end }, working_days? } }
     // OR: { timezone, defaultSlotLengthMins, workingHours: { start, end }, working_days? } (top level)
     
     // Convert API response format back to internal format
     const prefs = data.preferences || data;
-    // working_days is at top level in API response: [0, 1, 2, 3, 4] (0=Monday, 6=Sunday)
-    const apiWorkingDays = data.working_days || prefs.working_days;
+    
+    // Debug: Log the API response to see what we're getting
+    console.log("API response after updateCalendarPreferences:", data);
+    console.log("Extracted prefs:", prefs);
+    console.log("data.working_days:", data.working_days);
+    console.log("prefs.working_days:", prefs.working_days);
+    
+    // working_days can be at top level (data.working_days) or in preferences (prefs.working_days)
+    // Check both locations
+    const apiWorkingDays = data.working_days !== undefined ? data.working_days : (prefs.working_days !== undefined ? prefs.working_days : null);
+    
+    console.log("Final apiWorkingDays:", apiWorkingDays);
     
     const convertedPreferences = {
-      start_time: prefs.workingHours?.start || preferences.start_time,
-      end_time: prefs.workingHours?.end || preferences.end_time,
-      timezone: prefs.timezone || preferences.timezone,
-      slot_length: prefs.defaultSlotLengthMins || preferences.slot_length,
-      working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : (preferences.working_days || [1, 2, 3, 4, 5]), // Convert API format to JS format
+      start_time: prefs.workingHours?.start || data.workingHours?.start || preferences.start_time,
+      end_time: prefs.workingHours?.end || data.workingHours?.end || preferences.end_time,
+      timezone: prefs.timezone || data.timezone || preferences.timezone,
+      slot_length: prefs.defaultSlotLengthMins || data.defaultSlotLengthMins || preferences.slot_length,
+      // Convert API format to JS format, or use provided preferences if API doesn't return working_days
+      working_days: apiWorkingDays !== null && apiWorkingDays !== undefined 
+        ? convertApiDaysToJs(apiWorkingDays) 
+        : (preferences.working_days || [1, 2, 3, 4, 5]), // Fallback to provided preferences or defaults
     };
+    
+    console.log("Converted preferences:", convertedPreferences);
     
     return {
       ...data,

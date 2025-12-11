@@ -532,6 +532,11 @@
   line-height: 1.4;
 }
 
+.booking-calendar-enhanced .rbc-day-slot {
+  position: relative;
+  min-height: 60px;
+}
+
 .booking-calendar-enhanced .rbc-day-slot .rbc-events-container {
   margin-right: 0;
 }

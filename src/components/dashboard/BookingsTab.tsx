@@ -347,8 +347,8 @@ export const BookingsTab = ({
             </div>
             <Sparkles className="h-5 w-5 text-white/30 group-hover:text-white/50 transition-colors" />
           </div>
-          <div className="text-white/90 text-sm font-semibold mb-2 uppercase tracking-wide">{label}</div>
-          <div className="text-white text-4xl lg:text-5xl font-bold tracking-tight">{value}</div>
+          <div className="text-white/90 text-xs sm:text-sm font-semibold mb-2 uppercase tracking-wide">{label}</div>
+          <div className="text-white text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">{value}</div>
         </CardContent>
       </Card>
     </motion.div>
@@ -401,10 +401,10 @@ export const BookingsTab = ({
                 </div>
               </div>
               <div>
-                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
+                <CardTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
                   Property Tour Bookings
                 </CardTitle>
-                <p className="text-gray-600 mt-1 text-sm">
+                <p className="text-gray-600 mt-1 text-xs sm:text-sm">
                   Manage property tour bookings and availability
                 </p>
               </div>
@@ -531,7 +531,7 @@ export const BookingsTab = ({
                         <div className="p-2 bg-amber-500 rounded-lg shadow-md">
                           <Clock className="h-5 w-5 text-white" />
                         </div>
-                        <span className="bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent font-bold">
+                        <span className="bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent font-bold text-base sm:text-lg">
                           Pending Bookings ({pendingBookings.length})
                         </span>
                       </CardTitle>
@@ -553,7 +553,7 @@ export const BookingsTab = ({
                                   <Badge className="bg-amber-500 text-white border-0 shadow-sm">
                                     {booking.status}
                                   </Badge>
-                                  <span className="font-bold text-lg text-gray-900">{booking.visitor.name}</span>
+                                  <span className="font-bold text-base sm:text-lg text-gray-900">{booking.visitor.name}</span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
                                   <div className="flex items-center gap-2">
@@ -742,7 +742,7 @@ export const BookingsTab = ({
                                 {booking.status}
                               </Badge>
                             </div>
-                            <h3 className="font-bold text-lg mb-3 text-gray-900">{booking.visitor.name}</h3>
+                            <h3 className="font-bold text-base sm:text-lg mb-3 text-gray-900">{booking.visitor.name}</h3>
                             <div className="space-y-2 text-sm text-gray-600">
                               <div className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-amber-600" />

@@ -81,7 +81,7 @@ const EventComponent = ({ event }: { event: Booking }) => {
   const endTime = formatTime(event.endAt);
 
   return (
-    <div className={`${getStatusGradient(event.status)} text-white p-3 rounded-2xl shadow-xl border-l-4 hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 cursor-pointer group relative overflow-hidden backdrop-blur-sm`}>
+    <div className={`${getStatusGradient(event.status)} text-white p-2 sm:p-2.5 rounded-xl shadow-xl border-l-4 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group relative overflow-hidden backdrop-blur-sm`}>
       {/* Animated shimmer effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer transition-opacity duration-500" />
       
@@ -89,24 +89,24 @@ const EventComponent = ({ event }: { event: Booking }) => {
       <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300" />
       
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
       
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex items-start justify-between gap-1.5 mb-1.5">
           <div className="flex-1 min-w-0">
-            <div className="font-extrabold text-sm leading-tight truncate mb-1 flex items-center gap-2">
-              <span className="text-lg drop-shadow-lg">{getStatusIcon(event.status)}</span>
+            <div className="font-bold text-xs sm:text-sm leading-tight truncate mb-0.5 flex items-center gap-1.5">
+              <span className="text-sm sm:text-base drop-shadow-lg">{getStatusIcon(event.status)}</span>
               <span className="truncate drop-shadow-sm">{event.visitor.name}</span>
             </div>
-            <div className="text-xs opacity-95 truncate font-semibold mb-1.5 flex items-center gap-1">
-              <span className="opacity-80">📍</span>
+            <div className="text-[10px] sm:text-xs opacity-95 truncate font-medium mb-1 flex items-center gap-1">
+              <span className="opacity-80 text-xs">📍</span>
               <span className="truncate">{event.propertyAddress || `Property #${event.propertyId}`}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-2 mt-2.5 pt-2 border-t border-white/30">
-          <div className="text-xs opacity-95 flex items-center gap-1.5 font-bold">
-            <Clock className="h-3.5 w-3.5 drop-shadow-sm" />
+        <div className="flex items-center justify-between gap-1.5 mt-1.5 pt-1.5 border-t border-white/30">
+          <div className="text-[10px] sm:text-xs opacity-95 flex items-center gap-1 font-semibold">
+            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 drop-shadow-sm flex-shrink-0" />
             <span className="drop-shadow-sm">{startTime}</span>
             {startTime !== endTime && (
               <>
@@ -115,9 +115,8 @@ const EventComponent = ({ event }: { event: Booking }) => {
               </>
             )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse opacity-90 shadow-lg" />
-            <div className="w-1.5 h-1.5 bg-white/60 rounded-full animate-pulse opacity-70" style={{ animationDelay: '0.2s' }} />
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-white rounded-full animate-pulse opacity-90 shadow-lg" />
           </div>
         </div>
       </div>
@@ -137,6 +136,15 @@ export const BookingCalendar = ({
   userType,
 }: BookingCalendarProps) => {
   const [calendarPreferences, setCalendarPreferences] = useState<CalendarPreferences | null>(null);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Load preferences from localStorage and listen for updates
   const loadPreferences = () => {
@@ -453,10 +461,10 @@ export const BookingCalendar = ({
             </div>
           </div>
           <div>
-            <h3 className="text-3xl font-extrabold bg-gradient-to-r from-amber-700 via-amber-800 via-blue-700 to-indigo-800 bg-clip-text text-transparent tracking-tight">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-amber-700 via-amber-800 via-blue-700 to-indigo-800 bg-clip-text text-transparent tracking-tight">
               {label}
             </h3>
-            <p className="text-sm text-gray-600 mt-1 font-medium">View and manage your bookings with ease</p>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1 font-medium">View and manage your bookings with ease</p>
           </div>
         </div>
         
@@ -732,8 +740,8 @@ export const BookingCalendar = ({
                 <Clock className="h-5 w-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-amber-900 mb-1 text-base">Working Hours</div>
-                <div className="text-sm text-amber-700 font-medium">
+                <div className="font-bold text-amber-900 mb-1 text-sm sm:text-base">Working Hours</div>
+                <div className="text-xs sm:text-sm text-amber-700 font-medium">
                   {calendarPreferences.start_time} - {calendarPreferences.end_time}
                   {calendarPreferences.working_days.length > 0 && (
                     <span className="ml-2 text-xs">
@@ -755,8 +763,8 @@ export const BookingCalendar = ({
               <Clock className="h-5 w-5 text-white" />
             </div>
             <div className="relative z-10 flex-1">
-              <div className="font-bold text-blue-900 mb-1 text-base">Calendar View</div>
-              <div className="text-sm text-blue-700 font-medium">Showing 16-hour day view (6:00 AM - 10:00 PM)</div>
+              <div className="font-bold text-blue-900 mb-1 text-sm sm:text-base">Calendar View</div>
+              <div className="text-xs sm:text-sm text-blue-700 font-medium">Showing 16-hour day view (6:00 AM - 10:00 PM)</div>
             </div>
           </div>
         )}
@@ -765,7 +773,7 @@ export const BookingCalendar = ({
           events={allEvents}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: view === "day" ? 1000 : view === "week" ? 900 : 700 }}
+          style={{ height: view === "day" ? (windowWidth < 768 ? 800 : 1000) : view === "week" ? (windowWidth < 768 ? 700 : 900) : 700 }}
           view={view}
           date={date}
           onView={onViewChange}

@@ -409,33 +409,41 @@ const Dashboard = () => {
     // Trigger staggered animations after component mount (reduced delay for faster perceived performance)
     setTimeout(() => setAnimateCards(true), 100);
     
-    // Fetch critical user information immediately
-    fetchUserInfo();
-    fetchNumber();
+    // Fetch critical user information immediately (parallel)
+    Promise.all([
+      fetchUserInfo(),
+      fetchNumber(),
+    ]).catch(err => console.error("Error fetching user info:", err));
 
-    // Fetch initial data for default tab (defer non-critical)
+    // Fetch initial data for default tab (parallel for better performance)
     if (storedUserType === "property_manager") {
       // Only fetch what's needed for the initial tab (realtors)
       fetchRealtors();
-      // Defer other data fetching until tabs are accessed
+      // Defer other data fetching until tabs are accessed (batch in parallel)
       setTimeout(() => {
-      fetchPropertiesForAssignment();
-      fetchAssignments();
-      fetchPhoneNumberRequests();
-      fetchPurchasedPhoneNumbers();
-        fetchTenants(); // Load tenants for stats card
-      }, 500);
+        Promise.all([
+          fetchPropertiesForAssignment(),
+          fetchAssignments(),
+          fetchPhoneNumberRequests(),
+          fetchPurchasedPhoneNumbers(),
+          fetchTenants(), // Load tenants for stats card
+        ]).catch(err => console.error("Error fetching PM data:", err));
+      }, 300); // Reduced from 500ms
     }
     
-    // Fetch properties and bookings (visible on default tab for realtors)
-    fetchApartments();
-    fetchBookings();
+    // Fetch properties and bookings in parallel (visible on default tab for realtors)
+    Promise.all([
+      fetchApartments(),
+      fetchBookings(),
+    ]).catch(err => console.error("Error fetching properties/bookings:", err));
     
-    // Defer non-critical data
+    // Defer non-critical data (batch in parallel)
     setTimeout(() => {
-      fetchChats();
-    fetchForwardingCarriers();
-    }, 800);
+      Promise.all([
+        fetchChats(),
+        fetchForwardingCarriers(),
+      ]).catch(err => console.error("Error fetching deferred data:", err));
+    }, 500); // Reduced from 800ms
   }, []);
 
   // Refresh forwarding controls whenever auth role changes or PM selects a different realtor target
@@ -581,63 +589,11 @@ const Dashboard = () => {
         "Authorization": `Bearer ${token.trim()}`,
       };
 
-      // Debug logging (remove in production)
-      console.log("Fetching bookings for user:", userIdNum);
-      console.log("Authorization header present:", !!headers.Authorization);
-      console.log("Token length:", token.length);
-
-      // Use the new booking API endpoint
-      const res = await fetch(`${API_BASE}/api/users/${userIdNum}/bookings`, {
-        method: "GET",
-        headers: headers,
-      });
-
-      // Handle token expiration
-      if (res.status === 401) {
-        handleTokenExpiration();
-        return;
-      }
-
-      if (!res.ok) {
-        let errorData: any = {};
-        try {
-          errorData = await res.json();
-        } catch {
-          // If response is not JSON, use status text
-          errorData = { detail: res.statusText || "Failed to fetch bookings" };
-        }
-        
-        // Extract error message properly (handle both string and object)
-        let errorMessage = "Failed to fetch bookings";
-        if (errorData.detail) {
-          errorMessage = typeof errorData.detail === 'string' 
-            ? errorData.detail 
-            : JSON.stringify(errorData.detail);
-        } else if (errorData.message) {
-          errorMessage = typeof errorData.message === 'string'
-            ? errorData.message
-            : JSON.stringify(errorData.message);
-        } else if (errorData.error) {
-          errorMessage = typeof errorData.error === 'string'
-            ? errorData.error
-            : JSON.stringify(errorData.error);
-        }
-        
-        // Handle 422 validation errors
-        if (res.status === 422) {
-          console.error("Validation error (422):", errorData);
-          console.warn("Error message:", errorMessage);
-          // Still try to set empty array to prevent UI errors
-          setBookings([]);
-          // Don't show error toast for validation errors - might be expected (e.g., user has no bookings yet)
-          return;
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      const data = await res.json();
-      setBookings(Array.isArray(data.bookings) ? data.bookings : []);
+      // Use the cached utility function for consistency and performance
+      // This ensures we use the same caching logic as other components
+      const { fetchUserBookings } = await import("../components/dashboard/utils");
+      const bookings = await fetchUserBookings(userIdNum, storedUserType || "");
+      setBookings(bookings);
     } catch (err: any) {
       console.error("Error fetching bookings:", err);
       // Only show error if it's not a token expiration (already handled)

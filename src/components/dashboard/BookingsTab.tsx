@@ -53,6 +53,7 @@ import {
   getStatusColor,
   extractErrorMessage,
 } from "./utils";
+import { debounce } from "../../utils/cache";
 import { BookingDetailModal } from "./BookingDetailModal";
 import { BookingCalendar } from "./BookingCalendar";
 import { BookingStatistics } from "./BookingStatistics";
@@ -84,6 +85,7 @@ export const BookingsTab = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -129,7 +131,16 @@ export const BookingsTab = ({
     };
   }, [bookings]);
 
-  // Filter bookings based on status and search
+  // Debounce search query to reduce filtering overhead
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Filter bookings based on status and search (use debounced query)
   const filteredBookings = useMemo(() => {
     let filtered = bookings;
 
@@ -137,8 +148,8 @@ export const BookingsTab = ({
       filtered = filtered.filter((b) => b.status === statusFilter);
     }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    if (debouncedSearchQuery) {
+      const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(
         (b) =>
           b.visitor.name.toLowerCase().includes(query) ||
@@ -150,7 +161,7 @@ export const BookingsTab = ({
     }
 
     return filtered;
-  }, [bookings, statusFilter, searchQuery]);
+  }, [bookings, statusFilter, debouncedSearchQuery]);
 
   // Separate pending bookings
   const pendingBookings = useMemo(

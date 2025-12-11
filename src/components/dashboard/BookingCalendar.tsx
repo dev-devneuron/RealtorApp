@@ -5,7 +5,7 @@
  * Includes working hours visualization for PMs
  */
 
-import { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect, useState, useCallback, memo } from "react";
 import { Calendar as BigCalendar, momentLocalizer, View, SlotInfo } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -42,7 +42,8 @@ interface BookingCalendarProps {
 }
 
 // Enhanced event component with beautiful styling and better information density
-const EventComponent = ({ event }: { event: Booking }) => {
+// Memoized to prevent unnecessary re-renders
+const EventComponent = memo(({ event }: { event: Booking }) => {
   const getStatusGradient = (status: string) => {
     switch (status) {
       case "pending":
@@ -131,7 +132,8 @@ const EventComponent = ({ event }: { event: Booking }) => {
       <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
     </div>
   );
-};
+});
+EventComponent.displayName = "EventComponent";
 
 export const BookingCalendar = ({
   bookings,
@@ -147,12 +149,20 @@ export const BookingCalendar = ({
   const [calendarPreferences, setCalendarPreferences] = useState<CalendarPreferences | null>(null);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
+  // Throttle resize handler for better performance
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
     const handleResize = () => {
-      setWindowWidth(window.innerWidth);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setWindowWidth(window.innerWidth);
+      }, 150); // Throttle to 150ms
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // ⚠️ CRITICAL: Always fetch preferences from API first - don't use localStorage or hardcoded defaults
@@ -553,16 +563,17 @@ export const BookingCalendar = ({
           },
         };
       }
-      // unavailable, personal
+      // unavailable, personal - Make them clearly visible with red background
       return {
         style: {
-          backgroundColor: "rgba(107, 114, 128, 0.15)",
-          border: "1px dashed #6b7280",
-          color: "#374151",
-          opacity: 0.6,
-          borderRadius: "4px",
-          padding: "2px 4px",
-          fontWeight: "500",
+          backgroundColor: "rgba(239, 68, 68, 0.25)", // Red background for better visibility
+          border: "2px solid #ef4444", // Red border
+          color: "#7f1d1d", // Dark red text
+          opacity: 0.95, // More opaque for better visibility
+          borderRadius: "6px",
+          padding: "4px 8px",
+          fontWeight: "700", // Bolder text
+          boxShadow: "0 2px 6px rgba(239, 68, 68, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)", // Red shadow
         },
       };
     }
@@ -620,17 +631,22 @@ export const BookingCalendar = ({
     if (event.resource?.type === "availability") {
       const slotType = event.resource.slotType || "unavailable";
       const isFullDay = event.resource.isFullDay;
-      const bgColor = slotType === "holiday" ? "bg-red-100" 
-        : slotType === "off_day" ? "bg-purple-100"
-        : slotType === "busy" ? "bg-orange-100"
-        : "bg-gray-100";
-      const textColor = slotType === "holiday" ? "text-red-800"
-        : slotType === "off_day" ? "text-purple-800"
-        : slotType === "busy" ? "text-orange-800"
-        : "text-gray-800";
+      // Make all blocked/unavailable slots show with red background for better visibility
+      const bgColor = slotType === "holiday" ? "bg-red-200" 
+        : slotType === "off_day" ? "bg-purple-200"
+        : slotType === "busy" ? "bg-orange-200"
+        : slotType === "unavailable" ? "bg-red-200" // Red background for unavailable slots
+        : slotType === "personal" ? "bg-pink-200"
+        : "bg-red-200"; // Default to red for any other blocked slots
+      const textColor = slotType === "holiday" ? "text-red-900"
+        : slotType === "off_day" ? "text-purple-900"
+        : slotType === "busy" ? "text-orange-900"
+        : slotType === "unavailable" ? "text-red-900" // Dark red text for unavailable slots
+        : slotType === "personal" ? "text-pink-900"
+        : "text-red-900"; // Default to dark red text
       
       return (
-        <div className={`flex items-center gap-1 text-xs font-medium px-1 ${bgColor} ${textColor} rounded border border-current/20`}>
+        <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 ${bgColor} ${textColor} rounded-md border-2 border-red-300 shadow-sm`}>
           <span className="truncate">{isFullDay ? event.title : event.title.split(":")[0]}</span>
         </div>
       );

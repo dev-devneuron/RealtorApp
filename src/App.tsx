@@ -15,29 +15,37 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Page components
-import Index from "./pages/Index";
-import Properties from "./pages/Properties";
-import About from "./pages/About";
-import Signup from "./pages/Signup";
-import SignIn from "./pages/SignIn";
-import BookDemo from "./pages/BookDemo";
-import Upload from "./pages/UploadPage";
-import Dashboard from "./pages/Dashboard";
-import ConfirmationPage from "./pages/ConfirmationPage";
-import PropertyDetails from "./pages/PropertyDetails";
-import NotFound from "./pages/NotFound";
+// Page components - Lazy loaded for code splitting and better performance
+import { lazy, Suspense } from "react";
+
+const Index = lazy(() => import("./pages/Index"));
+const Properties = lazy(() => import("./pages/Properties"));
+const About = lazy(() => import("./pages/About"));
+const Signup = lazy(() => import("./pages/Signup"));
+const SignIn = lazy(() => import("./pages/SignIn"));
+const BookDemo = lazy(() => import("./pages/BookDemo"));
+const Upload = lazy(() => import("./pages/UploadPage"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ConfirmationPage = lazy(() => import("./pages/ConfirmationPage"));
+const PropertyDetails = lazy(() => import("./pages/PropertyDetails"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-// Initialize React Query client for data fetching and caching
+// Initialize React Query client with aggressive caching for better performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
       retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache garbage collection (formerly cacheTime)
+      // Enable request deduplication - multiple components requesting same data will share one request
+      structuralSharing: true,
     },
   },
 });
@@ -58,52 +66,61 @@ const App = () => (
         <Sonner />
         
         <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/book-demo" element={<BookDemo />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/confirmation" element={<ConfirmationPage />} />
-            
-            {/* Protected Routes - Require Authentication */}
-            <Route
-              path="/properties"
-              element={
-                <ProtectedRoute>
-                  <Properties />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/properties/:id"
-              element={
-                <ProtectedRoute>
-                  <PropertyDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/uploadpage"
-              element={
-                <ProtectedRoute>
-                  <Upload />
-                </ProtectedRoute>
-              }
-            />
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-blue-50">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-600 border-t-transparent mb-4"></div>
+                <p className="text-gray-600 font-medium">Loading...</p>
+              </div>
+            </div>
+          }>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/book-demo" element={<BookDemo />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/confirmation" element={<ConfirmationPage />} />
+              
+              {/* Protected Routes - Require Authentication */}
+              <Route
+                path="/properties"
+                element={
+                  <ProtectedRoute>
+                    <Properties />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/properties/:id"
+                element={
+                  <ProtectedRoute>
+                    <PropertyDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/uploadpage"
+                element={
+                  <ProtectedRoute>
+                    <Upload />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Catch-all route for 404 errors - Must be last */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* Catch-all route for 404 errors - Must be last */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

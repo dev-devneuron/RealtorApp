@@ -1,3 +1,5 @@
+import { getCachedData, setCachedData, getCacheKey } from "../../utils/cache";
+
 /**
  * Helper function to parse and extract metadata from property objects
  * 
@@ -253,6 +255,13 @@ export const fetchUserBookings = async (
     params.append("to", dateRange.to);
   }
 
+  // Check cache first (cache for 2 minutes for bookings)
+  const cacheKey = getCacheKey(`/api/users/${userId}/bookings`, { status, dateRange });
+  const cached = getCachedData<Booking[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   // Ensure token is valid and properly formatted
   if (!token || token.trim() === "") {
     throw new Error("Authentication token is missing");
@@ -307,7 +316,12 @@ export const fetchUserBookings = async (
   }
 
   const data = await response.json();
-  return data.bookings || [];
+  const bookings = data.bookings || [];
+  
+  // Cache the result for 2 minutes
+  setCachedData(cacheKey, bookings, 2 * 60 * 1000);
+  
+  return bookings;
 };
 
 /**
@@ -373,6 +387,9 @@ export const approveBooking = async (
       throw new Error(errorMsg);
     }
 
+    // Clear bookings cache after mutation
+    clearCacheForEndpoint(`/api/users/${approverId}/bookings`);
+    
     return data;
   } catch (error) {
     // Re-throw if it's already an Error with message
@@ -423,6 +440,9 @@ export const denyBooking = async (
       throw new Error(errorMsg);
     }
 
+    // Clear bookings cache after mutation
+    clearCacheForEndpoint(`/api/users/${approverId}/bookings`);
+    
     return data;
   } catch (error) {
     // Re-throw if it's already an Error with message
@@ -473,6 +493,9 @@ export const rescheduleBooking = async (
       throw new Error(errorMsg);
     }
 
+    // Clear bookings cache after mutation
+    clearCacheForEndpoint(`/api/users/${approverId}/bookings`);
+    
     return data;
   } catch (error) {
     // Re-throw if it's already an Error with message
@@ -522,6 +545,13 @@ export const cancelBooking = async (
       throw new Error(errorMsg);
     }
 
+    // Clear bookings cache after mutation - need to get approverId from booking
+    // We'll clear all booking caches to be safe
+    const cacheKeys = Object.keys(localStorage).filter(key => 
+      key.startsWith('api_cache_') && key.includes('/bookings')
+    );
+    cacheKeys.forEach(key => localStorage.removeItem(key));
+    
     return data;
   } catch (error) {
     // Re-throw if it's already an Error with message
@@ -628,6 +658,12 @@ export const deleteBooking = async (
       throw new Error(errorMsg);
     }
 
+    // Clear bookings cache after mutation
+    const cacheKeys = Object.keys(localStorage).filter(key => 
+      key.startsWith('api_cache_') && key.includes('/bookings')
+    );
+    cacheKeys.forEach(key => localStorage.removeItem(key));
+    
     return data;
   } catch (error) {
     // Re-throw if it's already an Error with message
@@ -909,6 +945,19 @@ export const fetchCalendarPreferences = async (
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
+  // Check cache first (cache for 10 minutes for preferences - they don't change often)
+  const cacheKey = getCacheKey(`/api/users/${userId}/calendar-preferences`, { userType });
+  const cached = getCachedData<{
+    start_time: string;
+    end_time: string;
+    timezone: string;
+    slot_length: number;
+    working_days: number[];
+  }>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
     const response = await fetch(
       `${API_BASE}/api/users/${userId}/calendar-preferences?user_type=${userType}`,
@@ -941,13 +990,16 @@ export const fetchCalendarPreferences = async (
       // Fallback: Handle legacy format if API returns it
       if (data.start_time && data.end_time) {
         const apiWorkingDays = data.working_days;
-        return {
+        const prefs = {
           start_time: data.start_time,
           end_time: data.end_time,
           timezone: data.timezone || "America/New_York",
           slot_length: data.slot_length || data.defaultSlotLengthMins || 30,
           working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : [1, 2, 3, 4, 5], // Convert API format to JS format
         };
+        // Cache for 10 minutes
+        setCachedData(cacheKey, prefs, 10 * 60 * 1000);
+        return prefs;
       }
     }
   } catch (e) {
@@ -955,13 +1007,16 @@ export const fetchCalendarPreferences = async (
   }
 
   // Return defaults if API fails
-  return {
+  const defaults = {
     start_time: "09:00",
     end_time: "17:00",
     timezone: "America/New_York",
     slot_length: 30,
     working_days: [1, 2, 3, 4, 5],
   };
+  // Cache defaults for shorter time (1 minute) in case API is temporarily down
+  setCachedData(cacheKey, defaults, 1 * 60 * 1000);
+  return defaults;
 };
 
 /**
@@ -1032,6 +1087,9 @@ export const updateCalendarPreferences = async (
 
     const data = await response.json();
     
+    // Clear cache after update
+    clearCacheForEndpoint(`/api/users/${userId}/calendar-preferences`, { userType });
+    
     // Convert API response format back to internal format
     if (data.preferences) {
       const prefs = data.preferences;
@@ -1095,7 +1153,10 @@ export const fetchUnavailableSlots = async (
 
       if (response.ok) {
         const data = await response.json();
-        return data.unavailableSlots || data.slots || [];
+        // Handle different response formats
+        const slots = data.unavailableSlots || data.slots || data.availabilitySlots || [];
+        console.log(`Fetched ${slots.length} unavailable slots from ${endpoint}`, slots); // Debug log
+        return slots;
       }
     } catch (e) {
       continue;
@@ -1165,7 +1226,13 @@ export const removeUnavailableSlot = async (
     throw new Error(error.detail || "Failed to remove unavailable slot");
   }
 
-  return await response.json();
+  const data = await response.json();
+  
+  // Clear cache after mutation
+  clearCacheForEndpoint(`/api/users/${userId}/availability`);
+  clearCacheForEndpoint(`/api/users/${userId}/calendar-events`);
+  
+  return data;
 };
 
 /**
@@ -1218,7 +1285,20 @@ export const createManualBooking = async (
     throw new Error(errorMessage);
   }
 
-  return await response.json();
+  const data = await response.json();
+  
+  // Clear bookings cache after creating a new booking
+  const cacheKeys = Object.keys(localStorage).filter(key => 
+    key.startsWith('api_cache_') && key.includes('/bookings')
+  );
+  cacheKeys.forEach(key => localStorage.removeItem(key));
+  // Also clear calendar events cache
+  const calendarCacheKeys = Object.keys(localStorage).filter(key => 
+    key.startsWith('api_cache_') && key.includes('/calendar-events')
+  );
+  calendarCacheKeys.forEach(key => localStorage.removeItem(key));
+  
+  return data;
 };
 
 /**
@@ -1267,6 +1347,22 @@ export const fetchCalendarEvents = async (
     to_date: toDate,
   });
 
+  // Check cache first (cache for 1 minute for calendar events - they change frequently)
+  const cacheKey = getCacheKey(`/api/users/${userId}/calendar-events`, { fromDate, toDate });
+  const cached = getCachedData<{
+    userId: number;
+    userType: string;
+    fromDate: string;
+    toDate: string;
+    events: any[];
+    bookings: Booking[];
+    availabilitySlots: any[];
+    total: number;
+  }>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const response = await fetch(`${API_BASE}/api/users/${userId}/calendar-events?${params}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -1279,7 +1375,12 @@ export const fetchCalendarEvents = async (
     throw new Error(errorMessage);
   }
 
-  return await response.json();
+  const data = await response.json();
+  
+  // Cache the result for 1 minute
+  setCachedData(cacheKey, data, 1 * 60 * 1000);
+  
+  return data;
 };
 
 /**

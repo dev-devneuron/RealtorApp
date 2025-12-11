@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, X, Plus, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, formatTime, fetchCalendarPreferences, updateCalendarPreferences, fetchUnavailableSlots, addUnavailableSlot, removeUnavailableSlot } from "./utils";
+import { clearCacheForEndpoint } from "../../utils/cache";
 import { API_BASE } from "./constants";
 import type { CalendarPreferences, AvailabilitySlot } from "./types";
 
@@ -103,20 +104,27 @@ export const AvailabilityManager = ({
           });
         }
 
-        // Fetch unavailable slots
+        // Fetch unavailable slots - fetch all slots (no date filter) for the list
         try {
           const slots = await fetchUnavailableSlots(userId, userType);
-          setBlockedSlots(slots.map(slot => ({
-            id: slot.id,
-            startAt: slot.startAt,
-            endAt: slot.endAt,
-            slotType: slot.slotType,
-            isFullDay: slot.isFullDay,
-            reason: slot.reason,
-            notes: slot.notes,
-          })));
+          console.log("Fetched unavailable slots:", slots); // Debug log
+          if (slots && Array.isArray(slots) && slots.length > 0) {
+            setBlockedSlots(slots.map(slot => ({
+              id: slot.id || `slot-${slot.startAt}-${slot.endAt}`,
+              startAt: slot.startAt,
+              endAt: slot.endAt,
+              slotType: slot.slotType || "unavailable",
+              isFullDay: slot.isFullDay || false,
+              reason: slot.reason || slot.notes || "",
+              notes: slot.notes || slot.reason || "",
+            })));
+          } else {
+            console.log("No slots returned or empty array");
+            setBlockedSlots([]);
+          }
         } catch (e) {
           console.error("Error fetching unavailable slots:", e);
+          setBlockedSlots([]);
         }
       } catch (error) {
         console.error("Error loading data:", error);
@@ -228,17 +236,24 @@ export const AvailabilityManager = ({
         notes: newBlock.notes || undefined,
       });
 
-      // Refresh blocked slots
+      // Clear cache before refreshing to get fresh data
+      clearCacheForEndpoint(`/api/users/${userId}/availability`);
+      
+      // Refresh blocked slots - fetch all slots (no date filter)
       const slots = await fetchUnavailableSlots(userId, userType);
-      setBlockedSlots(slots.map(slot => ({
-        id: slot.id,
-        startAt: slot.startAt,
-        endAt: slot.endAt,
-        slotType: slot.slotType,
-        isFullDay: slot.isFullDay,
-        reason: slot.reason,
-        notes: slot.notes,
-      })));
+      if (slots && Array.isArray(slots)) {
+        setBlockedSlots(slots.map(slot => ({
+          id: slot.id || `slot-${slot.startAt}-${slot.endAt}`,
+          startAt: slot.startAt,
+          endAt: slot.endAt,
+          slotType: slot.slotType || "unavailable",
+          isFullDay: slot.isFullDay || false,
+          reason: slot.reason || slot.notes || "",
+          notes: slot.notes || slot.reason || "",
+        })));
+      } else {
+        setBlockedSlots([]);
+      }
 
       setNewBlock({
         startDate: "",
@@ -266,17 +281,24 @@ export const AvailabilityManager = ({
         await removeUnavailableSlot(userId, id);
       }
       
-      // Refresh blocked slots
+      // Clear cache before refreshing to get fresh data
+      clearCacheForEndpoint(`/api/users/${userId}/availability`);
+      
+      // Refresh blocked slots - fetch all slots (no date filter)
       const slots = await fetchUnavailableSlots(userId, userType);
-      setBlockedSlots(slots.map(slot => ({
-        id: slot.id,
-        startAt: slot.startAt,
-        endAt: slot.endAt,
-        slotType: slot.slotType,
-        isFullDay: slot.isFullDay,
-        reason: slot.reason,
-        notes: slot.notes,
-      })));
+      if (slots && Array.isArray(slots)) {
+        setBlockedSlots(slots.map(slot => ({
+          id: slot.id || `slot-${slot.startAt}-${slot.endAt}`,
+          startAt: slot.startAt,
+          endAt: slot.endAt,
+          slotType: slot.slotType || "unavailable",
+          isFullDay: slot.isFullDay || false,
+          reason: slot.reason || slot.notes || "",
+          notes: slot.notes || slot.reason || "",
+        })));
+      } else {
+        setBlockedSlots([]);
+      }
 
       toast.success("Block removed successfully");
     } catch (error: any) {

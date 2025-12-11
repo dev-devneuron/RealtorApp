@@ -669,7 +669,8 @@ const Dashboard = () => {
       setLoadingChats(true);
       const token = localStorage.getItem("access_token");
       if (!token) {
-        toast.error("You must be signed in");
+        // Don't show error if not signed in - this is expected
+        setChats({});
         return;
       }
 
@@ -677,13 +678,27 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch chats");
+      // Handle 404 gracefully - endpoint is temporarily disabled
+      if (res.status === 404) {
+        console.log("Chat history endpoint not available (404) - endpoint temporarily disabled");
+        setChats({});
+        return;
+      }
+
+      if (!res.ok) {
+        // Only log error, don't show toast for non-critical endpoint
+        console.warn("Failed to fetch chats:", res.status, res.statusText);
+        setChats({});
+        return;
+      }
 
       const data = await res.json();
       // FIX: unwrap .chats
       setChats(data.chats || {});
     } catch (err) {
-      toast.error("Could not load chats");
+      // Silently handle errors - endpoint is temporarily disabled
+      console.warn("Error fetching chats (endpoint may be disabled):", err);
+      setChats({});
     } finally {
       setLoadingChats(false);
     }

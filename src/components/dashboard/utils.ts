@@ -1198,6 +1198,12 @@ export const fetchUnavailableSlots = async (
         
         return slotsArray;
       } else {
+        // Handle 422 and 404 gracefully - these are expected for some endpoints
+        if (response.status === 422 || response.status === 404) {
+          // These are valid responses - endpoint might not support the request format or doesn't exist
+          // Continue to next endpoint or return empty array
+          continue;
+        }
         console.warn(`Response not OK from ${endpoint}:`, response.status, response.statusText);
       }
     } catch (e) {

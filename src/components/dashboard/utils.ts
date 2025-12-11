@@ -1170,18 +1170,35 @@ export const fetchUnavailableSlots = async (
 
       if (response.ok) {
         const data = await response.json();
-        // Handle different response formats
-        const slots = data.unavailableSlots || data.slots || data.availabilitySlots || data || [];
+        console.log(`Raw response from ${endpoint}:`, data);
+        
+        // Handle different response formats - check if data itself is an array
+        let slots;
+        if (Array.isArray(data)) {
+          slots = data;
+        } else if (data.unavailableSlots) {
+          slots = data.unavailableSlots;
+        } else if (data.slots) {
+          slots = data.slots;
+        } else if (data.availabilitySlots) {
+          slots = data.availabilitySlots;
+        } else if (data.data && Array.isArray(data.data)) {
+          slots = data.data;
+        } else {
+          slots = [];
+        }
         
         // Ensure slots is an array
         const slotsArray = Array.isArray(slots) ? slots : [];
         
-        console.log(`Fetched ${slotsArray.length} unavailable slots from ${endpoint}`, slotsArray);
+        console.log(`Processed ${slotsArray.length} unavailable slots from ${endpoint}`, slotsArray);
         
         // Cache the result for 2 minutes
         setCachedData(cacheKey, slotsArray, 2 * 60 * 1000);
         
         return slotsArray;
+      } else {
+        console.warn(`Response not OK from ${endpoint}:`, response.status, response.statusText);
       }
     } catch (e) {
       console.warn(`Error fetching from ${endpoint}:`, e);

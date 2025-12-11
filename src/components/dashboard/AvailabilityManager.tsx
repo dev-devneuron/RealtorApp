@@ -106,15 +106,59 @@ export const AvailabilityManager = ({
 
         // Fetch unavailable slots - fetch all slots (no date filter) for the list
         try {
-          // Clear cache first to ensure we get fresh data on mount
-          clearCacheForEndpoint(`/api/users/${userId}/availability`);
+          // Clear ALL availability-related caches to ensure fresh data
+          const allCacheKeys = Object.keys(localStorage).filter(key => 
+            key.startsWith('api_cache_') && (
+              key.includes('/availability') || 
+              key.includes('/unavailable-slots') ||
+              key.includes('/calendar-events')
+            )
+          );
+          allCacheKeys.forEach(key => {
+            console.log("Clearing cache key:", key);
+            localStorage.removeItem(key);
+          });
           
-          const slots = await fetchUnavailableSlots(userId, userType);
-          console.log("Fetched unavailable slots in AvailabilityManager:", slots); // Debug log
+          // Try fetching from the availability endpoint first
+          let slots = await fetchUnavailableSlots(userId, userType);
+          console.log("Fetched unavailable slots from availability endpoint:", slots);
+          
+          // If no slots found, try fetching from calendar events (like the calendar does)
+          if (!slots || slots.length === 0) {
+            console.log("No slots from availability endpoint, trying calendar events...");
+            try {
+              // Get a wide date range to fetch all slots
+              const now = new Date();
+              const fromDate = new Date(now.getFullYear() - 1, 0, 1); // 1 year ago
+              const toDate = new Date(now.getFullYear() + 1, 11, 31); // 1 year ahead
+              
+              const { fetchCalendarEvents } = await import("./utils");
+              const eventsData = await fetchCalendarEvents(
+                userId,
+                fromDate.toISOString(),
+                toDate.toISOString()
+              );
+              
+              if (eventsData && eventsData.availabilitySlots && eventsData.availabilitySlots.length > 0) {
+                console.log("Found slots in calendar events:", eventsData.availabilitySlots);
+                slots = eventsData.availabilitySlots.map((slot: any) => ({
+                  id: slot.slotId || slot.id || `slot-${slot.startAt}`,
+                  startAt: slot.startAt,
+                  endAt: slot.endAt,
+                  slotType: slot.slotType || "unavailable",
+                  isFullDay: slot.isFullDay || false,
+                  reason: slot.reason || slot.notes || "",
+                  notes: slot.notes || slot.reason || "",
+                }));
+              }
+            } catch (calendarError) {
+              console.warn("Error fetching from calendar events:", calendarError);
+            }
+          }
           
           if (slots && Array.isArray(slots) && slots.length > 0) {
             const mappedSlots = slots.map(slot => ({
-              id: slot.id || `slot-${slot.startAt}-${slot.endAt}`,
+              id: slot.id || slot.slotId || `slot-${slot.startAt}-${slot.endAt}`,
               startAt: slot.startAt,
               endAt: slot.endAt,
               slotType: slot.slotType || "unavailable",
@@ -122,10 +166,10 @@ export const AvailabilityManager = ({
               reason: slot.reason || slot.notes || "",
               notes: slot.notes || slot.reason || "",
             }));
-            console.log("Mapped blocked slots:", mappedSlots);
+            console.log("Mapped blocked slots for display:", mappedSlots);
             setBlockedSlots(mappedSlots);
           } else {
-            console.log("No slots returned or empty array, setting empty array");
+            console.log("No slots found from any endpoint, setting empty array");
             setBlockedSlots([]);
           }
         } catch (e) {

@@ -978,15 +978,24 @@ export const fetchCalendarPreferences = async (
       // Handle new API response format (documentation format)
       if (data.workingHours || data.preferences?.workingHours) {
         const prefs = data.preferences || data;
-        // working_days is at top level in API response: [0, 1, 2, 3, 4] (0=Monday, 6=Sunday)
-        const apiWorkingDays = data.working_days || prefs.working_days;
+        
+        // API returns workingDays (camelCase) - check both camelCase and snake_case for compatibility
+        // Check in order: data.workingDays, data.working_days, prefs.workingDays, prefs.working_days
+        const apiWorkingDays = 
+          (data.workingDays !== undefined && data.workingDays !== null) ? data.workingDays :
+          (data.working_days !== undefined && data.working_days !== null) ? data.working_days :
+          (prefs.workingDays !== undefined && prefs.workingDays !== null) ? prefs.workingDays :
+          (prefs.working_days !== undefined && prefs.working_days !== null) ? prefs.working_days :
+          null;
         
         const result = {
           start_time: prefs.workingHours?.start || data.workingHours?.start || "09:00",
           end_time: prefs.workingHours?.end || data.workingHours?.end || "17:00",
           timezone: prefs.timezone || data.timezone || "America/New_York",
           slot_length: prefs.defaultSlotLengthMins || data.defaultSlotLengthMins || 30,
-          working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : [1, 2, 3, 4, 5], // Convert API format (0=Mon) to JS format (0=Sun)
+          working_days: apiWorkingDays !== null && apiWorkingDays !== undefined && Array.isArray(apiWorkingDays)
+            ? convertApiDaysToJs(apiWorkingDays) 
+            : [1, 2, 3, 4, 5], // Default to Mon-Fri if not provided
         };
         
         // Cache for 10 minutes
@@ -996,13 +1005,19 @@ export const fetchCalendarPreferences = async (
       
       // Fallback: Handle legacy format if API returns it (for backward compatibility)
       if (data.start_time && data.end_time) {
-        const apiWorkingDays = data.working_days;
+        // Check both camelCase and snake_case for working days
+        const apiWorkingDays = 
+          (data.workingDays !== undefined && data.workingDays !== null) ? data.workingDays :
+          (data.working_days !== undefined && data.working_days !== null) ? data.working_days :
+          null;
         const prefs = {
           start_time: data.start_time,
           end_time: data.end_time,
           timezone: data.timezone || "America/New_York",
           slot_length: data.slot_length || data.defaultSlotLengthMins || 30,
-          working_days: apiWorkingDays ? convertApiDaysToJs(apiWorkingDays) : [1, 2, 3, 4, 5], // Convert API format to JS format
+          working_days: apiWorkingDays !== null && apiWorkingDays !== undefined && Array.isArray(apiWorkingDays)
+            ? convertApiDaysToJs(apiWorkingDays) 
+            : [1, 2, 3, 4, 5], // Convert API format to JS format
         };
         // Cache for 10 minutes
         setCachedData(cacheKey, prefs, 10 * 60 * 1000);
@@ -1110,24 +1125,27 @@ export const updateCalendarPreferences = async (
     // Debug: Log the API response to see what we're getting
     console.log("API response after updateCalendarPreferences:", data);
     console.log("Extracted prefs:", prefs);
-    console.log("data.working_days:", data.working_days);
-    console.log("prefs.working_days:", prefs.working_days);
     
-    // working_days can be at top level (data.working_days) or in preferences (prefs.working_days)
-    // Check both locations
-    const apiWorkingDays = data.working_days !== undefined ? data.working_days : (prefs.working_days !== undefined ? prefs.working_days : null);
+    // API returns workingDays (camelCase) - check both camelCase and snake_case for compatibility
+    // Check in order: data.workingDays, data.working_days, prefs.workingDays, prefs.working_days
+    const apiWorkingDays = 
+      (data.workingDays !== undefined && data.workingDays !== null) ? data.workingDays :
+      (data.working_days !== undefined && data.working_days !== null) ? data.working_days :
+      (prefs.workingDays !== undefined && prefs.workingDays !== null) ? prefs.workingDays :
+      (prefs.working_days !== undefined && prefs.working_days !== null) ? prefs.working_days :
+      null;
     
-    console.log("Final apiWorkingDays:", apiWorkingDays);
+    console.log("Extracted apiWorkingDays:", apiWorkingDays);
     
     const convertedPreferences = {
       start_time: prefs.workingHours?.start || data.workingHours?.start || preferences.start_time,
       end_time: prefs.workingHours?.end || data.workingHours?.end || preferences.end_time,
       timezone: prefs.timezone || data.timezone || preferences.timezone,
       slot_length: prefs.defaultSlotLengthMins || data.defaultSlotLengthMins || preferences.slot_length,
-      // Convert API format to JS format, or use provided preferences if API doesn't return working_days
-      working_days: apiWorkingDays !== null && apiWorkingDays !== undefined 
+      // Convert API format to JS format, or use provided preferences if API doesn't return workingDays
+      working_days: apiWorkingDays !== null && apiWorkingDays !== undefined && Array.isArray(apiWorkingDays)
         ? convertApiDaysToJs(apiWorkingDays) 
-        : (preferences.working_days || [1, 2, 3, 4, 5]), // Fallback to provided preferences or defaults
+        : (preferences.working_days && preferences.working_days.length > 0 ? preferences.working_days : [1, 2, 3, 4, 5]), // Use provided preferences or defaults
     };
     
     console.log("Converted preferences:", convertedPreferences);

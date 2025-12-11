@@ -228,12 +228,12 @@ export const BookingCalendar = ({
             working_days: prefs.working_days,
           });
           
-          // Also reload calendar events to reflect preference changes
-          // This will trigger the useEffect that fetches calendar events
-          if (view !== "list" && view !== "stats" && view !== "availability") {
-            // Force re-fetch by clearing availability slots state
-            setAvailabilitySlots([]);
-          }
+          // Clear ALL calendar events cache to force fresh fetch
+          clearCacheByPattern(`/api/users/${userId}/calendar-events`);
+          
+          // Force re-fetch calendar events by clearing state
+          // The useEffect with calendarPreferences dependency will trigger a re-fetch
+          setAvailabilitySlots([]);
         } catch (error) {
           // Fallback to event data if API fails
           if (e.detail?.preferences) {
@@ -330,6 +330,14 @@ export const BookingCalendar = ({
           return; // List view doesn't need calendar events
         }
 
+        // Clear cache for this specific date range to ensure fresh data
+        // This is important when preferences change
+        const { clearCacheForEndpoint } = await import("../../utils/cache");
+        clearCacheForEndpoint(`/api/users/${userId}/calendar-events`, { 
+          fromDate: fromDate.toISOString(), 
+          toDate: toDate.toISOString() 
+        });
+
         // Try to fetch from calendar events endpoint
         try {
           const eventsData = await fetchCalendarEvents(
@@ -341,11 +349,11 @@ export const BookingCalendar = ({
           // Update availability slots from calendar events
           if (eventsData && eventsData.availabilitySlots) {
             setAvailabilitySlots(eventsData.availabilitySlots.map((slot: any) => ({
-              id: slot.slotId || slot.id || `slot-${slot.startAt}`,
-              startAt: slot.startAt,
-              endAt: slot.endAt,
-              slotType: slot.slotType,
-              isFullDay: slot.isFullDay,
+              id: slot.slotId || slot.id || `slot-${slot.startAt || slot.start_at}`,
+              startAt: slot.startAt || slot.start_at,
+              endAt: slot.endAt || slot.end_at,
+              slotType: slot.slotType || slot.slot_type || "unavailable",
+              isFullDay: slot.isFullDay !== undefined ? slot.isFullDay : (slot.is_full_day || false),
               reason: slot.notes || slot.reason,
             })));
           } else {

@@ -45,6 +45,8 @@ import {
   denyBooking, 
   rescheduleBooking, 
   cancelBooking,
+  updateBooking,
+  deleteBooking,
   formatDate,
   formatTime,
   formatDateTime,
@@ -224,6 +226,36 @@ export const BookingsTab = ({
     } catch (error: any) {
       const errorMessage = extractErrorMessage(error) || "Failed to cancel booking";
       toast.error(errorMessage);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUpdate = async (bookingId: number, updates: any) => {
+    setActionLoading(bookingId);
+    try {
+      await updateBooking(bookingId, updates);
+      toast.success("Booking updated successfully");
+      onRefresh();
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error) || "Failed to update booking";
+      toast.error(errorMessage);
+      throw error; // Re-throw so modal can handle it
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (bookingId: number) => {
+    setActionLoading(bookingId);
+    try {
+      await deleteBooking(bookingId);
+      toast.success("Booking deleted successfully");
+      onRefresh();
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error) || "Failed to delete booking";
+      toast.error(errorMessage);
+      throw error; // Re-throw so modal can handle it
     } finally {
       setActionLoading(null);
     }
@@ -838,6 +870,8 @@ export const BookingsTab = ({
           onDeny={handleDeny}
           onReschedule={handleReschedule}
           onCancel={handleCancel}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
           approverId={userId}
         />
       )}

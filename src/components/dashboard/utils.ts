@@ -438,6 +438,72 @@ export const cancelBooking = async (
 };
 
 /**
+ * Update booking (PUT /api/bookings/{booking_id})
+ * Only assigned approver can update
+ */
+export const updateBooking = async (
+  bookingId: number,
+  updates: {
+    visitor_name?: string;
+    visitor_phone?: string;
+    visitor_email?: string;
+    start_at?: string;
+    end_at?: string;
+    timezone?: string;
+    notes?: string;
+    status?: string;
+  }
+): Promise<Booking> => {
+  const token = getAuthToken();
+  if (!token || token.trim() === "") throw new Error("Not authenticated");
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token.trim()}`,
+  };
+
+  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
+    method: "PUT",
+    headers: headers,
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to update booking" }));
+    throw new Error(error.detail || "Failed to update booking");
+  }
+
+  return await response.json();
+};
+
+/**
+ * Delete booking (DELETE /api/bookings/{booking_id})
+ * Only assigned approver can delete - this is a HARD DELETE
+ */
+export const deleteBooking = async (
+  bookingId: number
+): Promise<{ bookingId: number; message: string }> => {
+  const token = getAuthToken();
+  if (!token || token.trim() === "") throw new Error("Not authenticated");
+
+  const headers: HeadersInit = {
+    "Authorization": `Bearer ${token.trim()}`,
+  };
+
+  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
+    method: "DELETE",
+    headers: headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Failed to delete booking" }));
+    throw new Error(error.detail || "Failed to delete booking");
+  }
+
+  return await response.json();
+};
+
+/**
  * Get property availability (Dashboard endpoint - uses GET)
  */
 export const fetchPropertyAvailability = async (

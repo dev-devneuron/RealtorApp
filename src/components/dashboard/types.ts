@@ -90,8 +90,10 @@ export interface Booking {
     phone: string;
     email?: string;
   };
-  startAt: string; // ISO date string
-  endAt: string; // ISO date string
+  startAt: string; // ISO date string (UTC datetime for internal calculations)
+  endAt: string; // ISO date string (UTC datetime for internal calculations)
+  customerSentStartAt?: string; // Original time string as customer sent it (no timezone conversion)
+  customerSentEndAt?: string; // Original time string as customer sent it (no timezone conversion)
   timezone: string;
   status: "pending" | "approved" | "denied" | "cancelled" | "rescheduled";
   createdBy: "vapi" | "dashboard";

@@ -46,17 +46,17 @@ const EventComponent = ({ event }: { event: Booking }) => {
   const getStatusGradient = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 border-amber-700 shadow-amber-500/30";
+        return "bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 border-amber-800 shadow-amber-500/40";
       case "approved":
-        return "bg-gradient-to-br from-emerald-500 via-emerald-500 to-emerald-600 border-emerald-700 shadow-emerald-500/30";
+        return "bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 border-emerald-800 shadow-emerald-500/40";
       case "denied":
-        return "bg-gradient-to-br from-red-500 via-red-500 to-red-600 border-red-700 shadow-red-500/30";
+        return "bg-gradient-to-br from-red-500 via-red-600 to-red-700 border-red-800 shadow-red-500/40";
       case "cancelled":
-        return "bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 border-gray-700 shadow-gray-500/30";
+        return "bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700 border-gray-800 shadow-gray-500/40";
       case "rescheduled":
-        return "bg-gradient-to-br from-blue-500 via-blue-500 to-blue-600 border-blue-700 shadow-blue-500/30";
+        return "bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 border-blue-800 shadow-blue-500/40";
       default:
-        return "bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 border-gray-700 shadow-gray-500/30";
+        return "bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700 border-gray-800 shadow-gray-500/40";
     }
   };
 
@@ -81,34 +81,44 @@ const EventComponent = ({ event }: { event: Booking }) => {
   const endTime = formatTime(event.endAt);
 
   return (
-    <div className={`${getStatusGradient(event.status)} text-white p-2.5 rounded-xl shadow-lg border-l-4 hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 cursor-pointer group relative overflow-hidden`}>
-      {/* Animated background effect */}
-      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+    <div className={`${getStatusGradient(event.status)} text-white p-3 rounded-2xl shadow-xl border-l-4 hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 cursor-pointer group relative overflow-hidden backdrop-blur-sm`}>
+      {/* Animated shimmer effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer transition-opacity duration-500" />
+      
+      {/* Glow effect on hover */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300" />
+      
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
       
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-sm leading-tight truncate mb-0.5 flex items-center gap-1.5">
-              <span className="text-base">{getStatusIcon(event.status)}</span>
-              <span className="truncate">{event.visitor.name}</span>
+            <div className="font-extrabold text-sm leading-tight truncate mb-1 flex items-center gap-2">
+              <span className="text-lg drop-shadow-lg">{getStatusIcon(event.status)}</span>
+              <span className="truncate drop-shadow-sm">{event.visitor.name}</span>
             </div>
-            <div className="text-xs opacity-95 truncate font-medium mb-1">
-              {event.propertyAddress || `Property #${event.propertyId}`}
+            <div className="text-xs opacity-95 truncate font-semibold mb-1.5 flex items-center gap-1">
+              <span className="opacity-80">📍</span>
+              <span className="truncate">{event.propertyAddress || `Property #${event.propertyId}`}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-2 mt-2 pt-1.5 border-t border-white/20">
-          <div className="text-xs opacity-90 flex items-center gap-1.5 font-medium">
-            <Clock className="h-3 w-3" />
-            <span>{startTime}</span>
+        <div className="flex items-center justify-between gap-2 mt-2.5 pt-2 border-t border-white/30">
+          <div className="text-xs opacity-95 flex items-center gap-1.5 font-bold">
+            <Clock className="h-3.5 w-3.5 drop-shadow-sm" />
+            <span className="drop-shadow-sm">{startTime}</span>
             {startTime !== endTime && (
               <>
                 <span className="opacity-70">-</span>
-                <span>{endTime}</span>
+                <span className="drop-shadow-sm">{endTime}</span>
               </>
             )}
           </div>
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse opacity-80" />
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse opacity-90 shadow-lg" />
+            <div className="w-1.5 h-1.5 bg-white/60 rounded-full animate-pulse opacity-70" style={{ animationDelay: '0.2s' }} />
+          </div>
         </div>
       </div>
     </div>
@@ -430,37 +440,41 @@ export const BookingCalendar = ({
   // Enhanced custom toolbar with beautiful design
   const CustomToolbar = ({ label, onNavigate: nav, onView }: any) => {
     return (
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 p-5 bg-gradient-to-br from-white via-amber-50/30 to-white rounded-2xl border border-amber-100/50 shadow-xl backdrop-blur-sm">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl blur-md opacity-50" />
-            <div className="relative p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-              <CalendarIcon className="h-6 w-6 text-white" />
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 p-6 bg-gradient-to-br from-white via-amber-50/40 to-blue-50/30 rounded-3xl border-2 border-amber-200/50 shadow-2xl backdrop-blur-md relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-blue-200/20 rounded-full blur-3xl -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-200/20 to-amber-200/20 rounded-full blur-2xl -ml-24 -mb-24" />
+        
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity" />
+            <div className="relative p-4 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-2xl shadow-xl group-hover:shadow-2xl transition-all group-hover:scale-105">
+              <CalendarIcon className="h-7 w-7 text-white drop-shadow-lg" />
             </div>
           </div>
           <div>
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent">
+            <h3 className="text-3xl font-extrabold bg-gradient-to-r from-amber-700 via-amber-800 via-blue-700 to-indigo-800 bg-clip-text text-transparent tracking-tight">
               {label}
             </h3>
-            <p className="text-sm text-gray-600 mt-0.5">View and manage your bookings</p>
+            <p className="text-sm text-gray-600 mt-1 font-medium">View and manage your bookings with ease</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm p-1 rounded-xl border border-amber-200 shadow-md">
+        <div className="flex items-center gap-3 flex-wrap relative z-10">
+          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border-2 border-amber-200/60 shadow-lg">
             <Button
               variant="outline"
               size="sm"
               onClick={() => nav("PREV")}
-              className="h-9 w-9 p-0 rounded-lg border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm transition-all hover:scale-105"
+              className="h-10 w-10 p-0 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm transition-all hover:scale-110 active:scale-95"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5 text-amber-700" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => nav("TODAY")}
-              className="h-9 px-4 rounded-lg border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm font-medium transition-all hover:scale-105"
+              className="h-10 px-5 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm font-semibold transition-all hover:scale-105 active:scale-95 text-amber-800"
             >
               Today
             </Button>
@@ -468,21 +482,21 @@ export const BookingCalendar = ({
               variant="outline"
               size="sm"
               onClick={() => nav("NEXT")}
-              className="h-9 w-9 p-0 rounded-lg border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm transition-all hover:scale-105"
+              className="h-10 w-10 p-0 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm transition-all hover:scale-110 active:scale-95"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5 text-amber-700" />
             </Button>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm p-1 rounded-xl border border-amber-200 shadow-md">
+          <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border-2 border-amber-200/60 shadow-lg">
             <Button
               variant={view === "day" ? "default" : "ghost"}
               size="sm"
               onClick={() => onView("day")}
-              className={`h-9 px-4 rounded-lg font-semibold transition-all ${
+              className={`h-10 px-5 rounded-xl font-bold transition-all ${
                 view === "day" 
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg hover:scale-105" 
-                  : "hover:bg-amber-50 text-gray-700"
+                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
+                  : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
               }`}
             >
               Day
@@ -491,10 +505,10 @@ export const BookingCalendar = ({
               variant={view === "week" ? "default" : "ghost"}
               size="sm"
               onClick={() => onView("week")}
-              className={`h-9 px-4 rounded-lg font-semibold transition-all ${
+              className={`h-10 px-5 rounded-xl font-bold transition-all ${
                 view === "week" 
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg hover:scale-105" 
-                  : "hover:bg-amber-50 text-gray-700"
+                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
+                  : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
               }`}
             >
               Week
@@ -503,10 +517,10 @@ export const BookingCalendar = ({
               variant={view === "month" ? "default" : "ghost"}
               size="sm"
               onClick={() => onView("month")}
-              className={`h-9 px-4 rounded-lg font-semibold transition-all ${
+              className={`h-10 px-5 rounded-xl font-bold transition-all ${
                 view === "month" 
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg hover:scale-105" 
-                  : "hover:bg-amber-50 text-gray-700"
+                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
+                  : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
               }`}
             >
               Month
@@ -684,9 +698,9 @@ export const BookingCalendar = ({
     return <EventComponent event={event.resource} />;
   };
 
-  // Calculate min/max times - 14-hour day view (6 AM - 8 PM)
+  // Calculate min/max times - 16-hour day view (6 AM - 10 PM)
   const minTime = useMemo(() => {
-    // Always show 6 AM to 8 PM (14 hours) for day and week views
+    // Always show 6 AM to 10 PM (16 hours) for day and week views
     if (view === "day" || view === "week") {
       return new Date(2024, 0, 1, 6, 0); // 6:00 AM
     }
@@ -694,47 +708,55 @@ export const BookingCalendar = ({
   }, [view]);
 
   const maxTime = useMemo(() => {
-    // Always show 6 AM to 8 PM (14 hours) for day and week views
+    // Always show 6 AM to 10 PM (16 hours) for day and week views
     if (view === "day" || view === "week") {
-      return new Date(2024, 0, 1, 20, 0); // 8:00 PM
+      return new Date(2024, 0, 1, 22, 0); // 10:00 PM
     }
-    return new Date(2024, 0, 1, 20, 0);
+    return new Date(2024, 0, 1, 22, 0);
   }, [view]);
 
   return (
-    <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden relative">
+    <Card className="bg-gradient-to-br from-white via-amber-50/40 to-blue-50/30 border-0 shadow-2xl overflow-hidden relative group">
+      {/* Animated background gradients */}
       <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400" />
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-amber-500 via-blue-500 to-indigo-500 animate-gradient-x" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.1),transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(59,130,246,0.1),transparent_50%)] pointer-events-none" />
+      
       <CardContent className="relative p-6 lg:p-8">
         {calendarPreferences && (view === "day" || view === "week") && (
-          <div className="mb-4 p-4 bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-sm text-amber-800 shadow-sm">
-            <div className="p-2 bg-amber-500 rounded-lg shadow-md">
-              <Clock className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="font-semibold text-amber-900 mb-0.5">Working Hours</div>
-              <div className="text-xs text-amber-700">
-                {calendarPreferences.start_time} - {calendarPreferences.end_time}
-                {calendarPreferences.working_days.length > 0 && (
-                  <span className="ml-2">
-                    • {calendarPreferences.working_days.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}
-                  </span>
-                )}
+          <div className="mb-6 p-5 bg-gradient-to-r from-amber-50 via-yellow-50/80 to-amber-50 border-2 border-amber-300/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-4 text-sm text-amber-800 shadow-lg backdrop-blur-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 rounded-full blur-2xl -mr-16 -mt-16" />
+            <div className="relative z-10 flex items-center gap-4 w-full sm:w-auto">
+              <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                <Clock className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-amber-900 mb-1 text-base">Working Hours</div>
+                <div className="text-sm text-amber-700 font-medium">
+                  {calendarPreferences.start_time} - {calendarPreferences.end_time}
+                  {calendarPreferences.working_days.length > 0 && (
+                    <span className="ml-2 text-xs">
+                      • {calendarPreferences.working_days.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="px-3 py-1.5 bg-white/60 rounded-lg border border-amber-200 text-xs font-medium text-amber-900">
-              Calendar View: 6:00 AM - 8:00 PM
+            <div className="relative z-10 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl border-2 border-amber-300/50 text-xs font-bold text-amber-900 shadow-md">
+              📅 Calendar View: 6:00 AM - 10:00 PM
             </div>
           </div>
         )}
         {(!calendarPreferences || view === "month") && (view === "day" || view === "week") && (
-          <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border border-blue-200 rounded-xl flex items-center gap-3 text-sm text-blue-800 shadow-sm">
-            <div className="p-2 bg-blue-500 rounded-lg shadow-md">
-              <Clock className="h-4 w-4 text-white" />
+          <div className="mb-6 p-5 bg-gradient-to-r from-blue-50 via-indigo-50/80 to-blue-50 border-2 border-blue-300/50 rounded-2xl flex items-center gap-4 text-sm text-blue-800 shadow-lg backdrop-blur-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-2xl -mr-16 -mt-16" />
+            <div className="relative z-10 p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+              <Clock className="h-5 w-5 text-white" />
             </div>
-            <div className="flex-1">
-              <div className="font-semibold text-blue-900 mb-0.5">Calendar View</div>
-              <div className="text-xs text-blue-700">Showing 14-hour day view (6:00 AM - 8:00 PM)</div>
+            <div className="relative z-10 flex-1">
+              <div className="font-bold text-blue-900 mb-1 text-base">Calendar View</div>
+              <div className="text-sm text-blue-700 font-medium">Showing 16-hour day view (6:00 AM - 10:00 PM)</div>
             </div>
           </div>
         )}
@@ -743,7 +765,7 @@ export const BookingCalendar = ({
           events={allEvents}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: view === "day" ? 900 : view === "week" ? 800 : 700 }}
+          style={{ height: view === "day" ? 1000 : view === "week" ? 900 : 700 }}
           view={view}
           date={date}
           onView={onViewChange}

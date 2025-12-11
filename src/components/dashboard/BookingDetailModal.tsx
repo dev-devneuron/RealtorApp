@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2, Headphones, Download, Play } from "lucide-react";
-import { formatDateTime, formatDate, formatTime, getStatusColor, fetchPropertyAvailability } from "./utils";
+import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2, Headphones, Download, Play, Edit2, Trash2 } from "lucide-react";
+import { formatDateTime, formatDate, formatTime, getStatusColor, fetchPropertyAvailability, updateBooking, deleteBooking } from "./utils";
 import { toast } from "sonner";
 import type { Booking, AvailabilitySlot } from "./types";
 
@@ -26,6 +27,8 @@ interface BookingDetailModalProps {
   onDeny: (bookingId: number, reason?: string) => Promise<void>;
   onReschedule: (bookingId: number, proposedSlots: Array<{ startAt: string; endAt: string }>, reason?: string) => Promise<void>;
   onCancel: (bookingId: number, reason?: string) => Promise<void>;
+  onUpdate?: (bookingId: number, updates: any) => Promise<void>;
+  onDelete?: (bookingId: number) => Promise<void>;
   approverId: number;
 }
 
@@ -37,6 +40,8 @@ export const BookingDetailModal = ({
   onDeny,
   onReschedule,
   onCancel,
+  onUpdate,
+  onDelete,
   approverId,
 }: BookingDetailModalProps) => {
   const [denyReason, setDenyReason] = useState("");
@@ -45,10 +50,21 @@ export const BookingDetailModal = ({
   const [showDenyDialog, setShowDenyDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedSlots, setSelectedSlots] = useState<Array<{ startAt: string; endAt: string }>>([]);
+  const [updateForm, setUpdateForm] = useState({
+    visitor_name: "",
+    visitor_phone: "",
+    visitor_email: "",
+    start_at: "",
+    end_at: "",
+    timezone: "",
+    notes: "",
+  });
 
   if (!booking) return null;
 
@@ -151,6 +167,53 @@ export const BookingDetailModal = ({
     }
   };
 
+  // Initialize update form when booking changes
+  useEffect(() => {
+    if (booking && showUpdateDialog) {
+      setUpdateForm({
+        visitor_name: booking.visitor.name,
+        visitor_phone: booking.visitor.phone,
+        visitor_email: booking.visitor.email || "",
+        start_at: booking.customerSentStartAt || booking.startAt,
+        end_at: booking.customerSentEndAt || booking.endAt,
+        timezone: booking.timezone,
+        notes: booking.notes || "",
+      });
+    }
+  }, [booking, showUpdateDialog]);
+
+  const handleUpdate = async () => {
+    if (!onUpdate) return;
+    setLoading(true);
+    try {
+      await onUpdate(booking.bookingId, updateForm);
+      setShowUpdateDialog(false);
+      toast.success("Booking updated successfully");
+      onClose();
+    } catch (error: any) {
+      console.error("Error updating booking:", error);
+      toast.error(error.message || "Failed to update booking");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    setLoading(true);
+    try {
+      await onDelete(booking.bookingId);
+      setShowDeleteDialog(false);
+      toast.success("Booking deleted successfully");
+      onClose();
+    } catch (error: any) {
+      console.error("Error deleting booking:", error);
+      toast.error(error.message || "Failed to delete booking");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
@@ -219,6 +282,41 @@ export const BookingDetailModal = ({
                 Booking Details
               </h3>
               <div className="bg-gray-50 rounded-lg p-3 sm:p-4 lg:p-4 xl:p-5 space-y-2 lg:space-y-2.5 xl:space-y-3">
+                {/* Original Customer Time - Display exactly as customer sent it */}
+                {(booking.customerSentStartAt || booking.customerSentEndAt) && (
+                  <div className="space-y-2 pb-3 border-b border-gray-200">
+                    <div className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-900">
+                      <Clock className="h-4 w-4 text-amber-600" />
+                      Time (as customer mentioned):
+                    </div>
+                    <div className="pl-6 space-y-1.5">
+                      <div className="text-sm lg:text-base">
+                        <strong>Start:</strong> {booking.customerSentStartAt || booking.startAt}
+                      </div>
+                      <div className="text-sm lg:text-base">
+                        <strong>End:</strong> {booking.customerSentEndAt || booking.endAt}
+                      </div>
+                    </div>
+                    {/* Timezone Confirmation Notice */}
+                    {booking.customerSentStartAt && (
+                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <span className="text-yellow-600 text-lg">⚠️</span>
+                          <div className="flex-1">
+                            <strong className="text-sm sm:text-base text-yellow-900 block mb-1">
+                              Timezone Confirmation Needed:
+                            </strong>
+                            <p className="text-xs sm:text-sm text-yellow-800">
+                              The customer mentioned this time: <strong>{booking.customerSentStartAt}</strong>
+                              <br />
+                              Please confirm with the customer that this time is correct for their timezone ({booking.timezone}).
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-start gap-2">
                   <Calendar className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 text-gray-500 mt-0.5 flex-shrink-0" />
                   <span className="text-sm lg:text-base xl:text-base">
@@ -377,15 +475,39 @@ export const BookingDetailModal = ({
               </>
             )}
             {booking.status === "approved" && (
-              <Button
-                onClick={() => setShowCancelDialog(true)}
-                disabled={loading}
-                variant="destructive"
-                className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] order-1 px-4 lg:px-5 xl:px-6 text-sm lg:text-base xl:text-base"
-              >
-                <X className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2" />
-                Cancel Booking
-              </Button>
+              <>
+                {onUpdate && (
+                  <Button
+                    onClick={() => setShowUpdateDialog(true)}
+                    disabled={loading}
+                    variant="outline"
+                    className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] order-1 px-4 lg:px-5 xl:px-6 text-sm lg:text-base xl:text-base"
+                  >
+                    <Edit2 className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2" />
+                    Update
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    onClick={() => setShowDeleteDialog(true)}
+                    disabled={loading}
+                    variant="destructive"
+                    className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] order-2 px-4 lg:px-5 xl:px-6 text-sm lg:text-base xl:text-base"
+                  >
+                    <X className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2" />
+                    Delete
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setShowCancelDialog(true)}
+                  disabled={loading}
+                  variant="destructive"
+                  className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] order-3 px-4 lg:px-5 xl:px-6 text-sm lg:text-base xl:text-base"
+                >
+                  <X className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2" />
+                  Cancel Booking
+                </Button>
+              </>
             )}
             <Button 
               onClick={onClose} 
@@ -609,6 +731,183 @@ export const BookingDetailModal = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Update Booking Dialog */}
+      {onUpdate && (
+        <Dialog open={showUpdateDialog} onOpenChange={(open) => {
+          setShowUpdateDialog(open);
+          if (!open) {
+            setUpdateForm({
+              visitor_name: "",
+              visitor_phone: "",
+              visitor_email: "",
+              start_at: "",
+              end_at: "",
+              timezone: "",
+              notes: "",
+            });
+          }
+        }}>
+          <DialogContent className="w-[95vw] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl">Update Booking</DialogTitle>
+              <DialogDescription className="text-sm sm:text-base">
+                Update booking details. Changes will be saved immediately.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="update-visitor-name" className="text-sm sm:text-base">Visitor Name</Label>
+                  <Input
+                    id="update-visitor-name"
+                    value={updateForm.visitor_name}
+                    onChange={(e) => setUpdateForm({ ...updateForm, visitor_name: e.target.value })}
+                    className="mt-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="update-visitor-phone" className="text-sm sm:text-base">Visitor Phone</Label>
+                  <Input
+                    id="update-visitor-phone"
+                    type="tel"
+                    value={updateForm.visitor_phone}
+                    onChange={(e) => setUpdateForm({ ...updateForm, visitor_phone: e.target.value })}
+                    className="mt-2"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="update-visitor-email" className="text-sm sm:text-base">Visitor Email</Label>
+                <Input
+                  id="update-visitor-email"
+                  type="email"
+                  value={updateForm.visitor_email}
+                  onChange={(e) => setUpdateForm({ ...updateForm, visitor_email: e.target.value })}
+                  className="mt-2"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="update-start-at" className="text-sm sm:text-base">Start Time (as customer sent)</Label>
+                  <Input
+                    id="update-start-at"
+                    type="text"
+                    value={updateForm.start_at}
+                    onChange={(e) => setUpdateForm({ ...updateForm, start_at: e.target.value })}
+                    className="mt-2"
+                    placeholder="2025-12-01T16:00:00"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="update-end-at" className="text-sm sm:text-base">End Time (as customer sent)</Label>
+                  <Input
+                    id="update-end-at"
+                    type="text"
+                    value={updateForm.end_at}
+                    onChange={(e) => setUpdateForm({ ...updateForm, end_at: e.target.value })}
+                    className="mt-2"
+                    placeholder="2025-12-01T17:00:00"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="update-timezone" className="text-sm sm:text-base">Timezone</Label>
+                <Input
+                  id="update-timezone"
+                  type="text"
+                  value={updateForm.timezone}
+                  onChange={(e) => setUpdateForm({ ...updateForm, timezone: e.target.value })}
+                  className="mt-2"
+                  placeholder="America/New_York"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="update-notes" className="text-sm sm:text-base">Notes</Label>
+                <Textarea
+                  id="update-notes"
+                  value={updateForm.notes}
+                  onChange={(e) => setUpdateForm({ ...updateForm, notes: e.target.value })}
+                  className="mt-2"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button 
+                onClick={() => setShowUpdateDialog(false)} 
+                variant="outline"
+                className="w-full sm:w-auto min-h-[44px] order-2 sm:order-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleUpdate} 
+                disabled={loading}
+                className="w-full sm:w-auto min-h-[44px] order-1 sm:order-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete Booking Dialog */}
+      {onDelete && (
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="w-[95vw] sm:w-full p-4 sm:p-6">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl">Delete Booking</DialogTitle>
+              <DialogDescription className="text-sm sm:text-base">
+                Are you sure you want to permanently delete this booking? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button 
+                onClick={() => setShowDeleteDialog(false)} 
+                variant="outline"
+                className="w-full sm:w-auto min-h-[44px] order-2 sm:order-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleDelete} 
+                disabled={loading}
+                variant="destructive"
+                className="w-full sm:w-auto min-h-[44px] order-1 sm:order-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Permanently
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };

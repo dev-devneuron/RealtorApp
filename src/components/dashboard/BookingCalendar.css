@@ -70,6 +70,39 @@
   opacity: 0.5;
 }
 
+/* Off days styling - Saturday, Sunday, and non-working days */
+.booking-calendar-enhanced .rbc-off-day {
+  background: #ffffff !important;
+  opacity: 0.7;
+  border-left: 3px solid #e5e7eb !important;
+  position: relative;
+}
+
+.booking-calendar-enhanced .rbc-off-day::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(229, 231, 235, 0.3) 10px,
+    rgba(229, 231, 235, 0.3) 20px
+  );
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Off day time slots */
+.booking-calendar-enhanced .rbc-off-day-slot {
+  background: #fafafa !important;
+  opacity: 0.5;
+  border-top: 1px dashed #e5e7eb !important;
+}
+
 .booking-calendar-enhanced .rbc-day-bg {
   border-color: #fde68a;
   transition: all 0.3s ease;

@@ -203,24 +203,25 @@ export const AvailabilityManager = ({
       // Save to API first (API is source of truth)
       const updatedPrefs = await updateCalendarPreferences(userId, userType, workingHours);
       
-      // Update local state with API response
-      if (updatedPrefs.preferences) {
-        setWorkingHours({
-          start_time: updatedPrefs.preferences.start_time,
-          end_time: updatedPrefs.preferences.end_time,
-          timezone: updatedPrefs.preferences.timezone,
-          slot_length: updatedPrefs.preferences.slot_length,
-          working_days: updatedPrefs.preferences.working_days,
-        });
-      }
+      // Reload preferences from API to ensure we have the latest data (robust approach)
+      const freshPrefs = await fetchCalendarPreferences(userId, userType);
       
-      // Save to localStorage for caching
+      // Update local state with fresh API data
+      setWorkingHours({
+        start_time: freshPrefs.start_time,
+        end_time: freshPrefs.end_time,
+        timezone: freshPrefs.timezone,
+        slot_length: freshPrefs.slot_length,
+        working_days: freshPrefs.working_days,
+      });
+      
+      // Save to localStorage for caching (use fresh data from API)
       const prefsKey = `calendar_preferences_${userId}`;
-      localStorage.setItem(prefsKey, JSON.stringify(workingHours));
+      localStorage.setItem(prefsKey, JSON.stringify(freshPrefs));
       
-      // Trigger custom event for same-window updates
+      // Trigger custom event for same-window updates (use fresh data)
       window.dispatchEvent(new CustomEvent("calendarPreferencesUpdated", { 
-        detail: { userId, preferences: workingHours } 
+        detail: { userId, preferences: freshPrefs } 
       }));
       
       toast.success("Working hours updated successfully");

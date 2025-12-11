@@ -210,25 +210,53 @@ export const BookingCalendar = ({
 
   // Listen for preference updates from AvailabilityManager
   useEffect(() => {
-    const handlePreferenceUpdate = (e: CustomEvent) => {
+    const handlePreferenceUpdate = async (e: CustomEvent) => {
       if (e.detail?.userId === userId) {
-        setCalendarPreferences(e.detail.preferences);
+        // Reload preferences from API to ensure we have the latest data
+        try {
+          const prefs = await fetchCalendarPreferences(userId, userType || "");
+          setCalendarPreferences({
+            start_time: prefs.start_time,
+            end_time: prefs.end_time,
+            timezone: prefs.timezone,
+            slot_length: prefs.slot_length,
+            working_days: prefs.working_days,
+          });
+        } catch (error) {
+          // Fallback to event data if API fails
+          if (e.detail?.preferences) {
+            setCalendarPreferences(e.detail.preferences);
+          }
+        }
       }
     };
 
-    const handleStorageChange = (e: StorageEvent) => {
+    const handleStorageChange = async (e: StorageEvent) => {
       if (e.key === `calendar_preferences_${userId}` && e.newValue) {
         try {
-          const prefs = JSON.parse(e.newValue);
+          // Reload from API to ensure consistency
+          const prefs = await fetchCalendarPreferences(userId, userType || "");
           setCalendarPreferences({
-            start_time: prefs.start_time || "09:00",
-            end_time: prefs.end_time || "17:00",
-            timezone: prefs.timezone || "America/New_York",
-            slot_length: prefs.slot_length || 30,
-            working_days: prefs.working_days || [1, 2, 3, 4, 5],
+            start_time: prefs.start_time,
+            end_time: prefs.end_time,
+            timezone: prefs.timezone,
+            slot_length: prefs.slot_length,
+            working_days: prefs.working_days,
           });
         } catch (error) {
-          console.error("Error parsing preferences:", error);
+          // Fallback to localStorage if API fails
+          try {
+            const prefs = JSON.parse(e.newValue);
+            setCalendarPreferences({
+              start_time: prefs.start_time || "09:00",
+              end_time: prefs.end_time || "17:00",
+              timezone: prefs.timezone || "America/New_York",
+              slot_length: prefs.slot_length || 30,
+              working_days: prefs.working_days || [1, 2, 3, 4, 5],
+            });
+          } catch (parseError) {
+            console.error("Error parsing preferences:", parseError);
+          }
         }
       }
     };
@@ -242,7 +270,7 @@ export const BookingCalendar = ({
       window.removeEventListener("calendarPreferencesUpdated", handlePreferenceUpdate as EventListener);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [userId]);
+  }, [userId, userType]);
 
   const [availabilitySlots, setAvailabilitySlots] = useState<Array<{
     id: number | string;
@@ -269,9 +297,10 @@ export const BookingCalendar = ({
           fromDate = moment(date).subtract(1, 'day').startOf("day").toDate();
           toDate = moment(date).add(1, 'day').endOf("day").toDate();
         } else if (view === "week") {
-          // Add 3 days buffer on each side for week view
-          fromDate = moment(date).subtract(3, 'days').startOf("week").toDate();
-          toDate = moment(date).add(3, 'days').endOf("week").toDate();
+          // For week view, use the actual week range (no buffer needed for blocked slots)
+          // Buffer was causing issues - use exact week range
+          fromDate = moment(date).startOf("week").toDate();
+          toDate = moment(date).endOf("week").toDate();
         } else if (view === "month") {
           // Add 1 week buffer on each side for month view
           fromDate = moment(date).subtract(1, 'week').startOf("month").toDate();
@@ -695,11 +724,15 @@ export const BookingCalendar = ({
                 <div className="font-bold text-amber-900 mb-1 text-sm sm:text-base">Working Hours</div>
                 <div className="text-xs sm:text-sm text-amber-700 font-medium">
                   {calendarPreferences.start_time} - {calendarPreferences.end_time}
-              {calendarPreferences.working_days.length > 0 && (
+                  {calendarPreferences.working_days && calendarPreferences.working_days.length > 0 && (
                     <span className="ml-2 text-xs">
-                      • {calendarPreferences.working_days.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}
-                </span>
-              )}
+                      • {calendarPreferences.working_days
+                        .slice() // Create a copy to avoid mutating original
+                        .sort((a, b) => a - b) // Sort days to ensure consistent order
+                        .map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
+                        .join(", ")}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -790,12 +823,69 @@ export const BookingCalendar = ({
           max={maxTime}
           className="booking-calendar-enhanced"
           dayPropGetter={(date) => {
-            // Make whole day clickable in month view
+            // Style off days (Saturday, Sunday, and non-working days) differently
+            if (!calendarPreferences) {
+              // Make whole day clickable in month view
+              if (view === "month") {
+                return {
+                  className: "rbc-day-bg cursor-pointer hover:bg-amber-50/50 transition-colors",
+                };
+              }
+              return {};
+            }
+            
+            const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+            const isWorkingDay = calendarPreferences.working_days.includes(dayOfWeek);
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
+            
+            // Check if this day has any full-day unavailable slots (holiday, off_day)
+            const hasFullDayUnavailable = availabilitySlots.some(slot => {
+              if (!slot.isFullDay) return false;
+              const slotDate = moment(slot.startAt);
+              return slotDate.isSame(date, 'day') && 
+                     (slot.slotType === 'holiday' || slot.slotType === 'off_day' || slot.slotType === 'unavailable');
+            });
+            
+            // Off days: weekend or non-working days or full-day unavailable
+            if (isWeekend || !isWorkingDay || hasFullDayUnavailable) {
+              return {
+                className: 'rbc-off-day cursor-pointer',
+                style: {
+                  backgroundColor: '#ffffff', // White background for off days
+                  opacity: 0.7,
+                  position: 'relative',
+                  borderLeft: '3px solid #e5e7eb', // Light gray border to indicate off day
+                }
+              };
+            }
+            
+            // Working days - keep default styling
             if (view === "month") {
               return {
                 className: "rbc-day-bg cursor-pointer hover:bg-amber-50/50 transition-colors",
               };
             }
+            return {};
+          }}
+          slotPropGetter={(date) => {
+            // Style time slots for off days
+            if (!calendarPreferences) return {};
+            
+            const dayOfWeek = date.getDay();
+            const isWorkingDay = calendarPreferences.working_days.includes(dayOfWeek);
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            
+            // Off day time slots - make them appear grayed out
+            if (isWeekend || !isWorkingDay) {
+              return {
+                className: 'rbc-off-day-slot',
+                style: {
+                  backgroundColor: '#fafafa', // Very light gray
+                  opacity: 0.5,
+                }
+              };
+            }
+            
             return {};
           }}
           formats={{

@@ -66,24 +66,13 @@ export const AvailabilityManager = ({
   const [loading, setLoading] = useState(false);
   const [showBlockForm, setShowBlockForm] = useState(false);
 
-  // Load preferences and unavailable slots on mount
+  // ⚠️ CRITICAL: Always fetch preferences from API first - don't use localStorage or hardcoded defaults
+  // According to documentation: "Always fetch preferences on component mount - Don't use hardcoded defaults"
+  // "Preferences persist across sessions - Always fetch from API, don't assume defaults"
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load preferences from localStorage first
-        const stored = localStorage.getItem(`calendar_preferences_${userId}`);
-        if (stored) {
-          const prefs = JSON.parse(stored);
-          setWorkingHours({
-            start_time: prefs.start_time || "09:00",
-            end_time: prefs.end_time || "17:00",
-            timezone: prefs.timezone || "America/New_York",
-            slot_length: prefs.slot_length || 30,
-            working_days: prefs.working_days || [1, 2, 3, 4, 5],
-          });
-        }
-
-        // Try to fetch from API
+        // Always fetch from API first (not localStorage)
         try {
           const prefs = await fetchCalendarPreferences(userId, userType);
           setWorkingHours({
@@ -93,10 +82,25 @@ export const AvailabilityManager = ({
             slot_length: prefs.slot_length,
             working_days: prefs.working_days,
           });
-          // Save to localStorage
+          // Save to localStorage for caching (but API is source of truth)
           localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
         } catch (e) {
-          // API fetch failed, use localStorage defaults
+          // API fetch failed - fetchCalendarPreferences already returns defaults, so use them
+          console.warn("Failed to fetch calendar preferences from API, using defaults:", e);
+          const prefs = await fetchCalendarPreferences(userId, userType).catch(() => ({
+            start_time: "09:00",
+            end_time: "17:00",
+            timezone: "America/New_York",
+            slot_length: 30,
+            working_days: [1, 2, 3, 4, 5],
+          }));
+          setWorkingHours({
+            start_time: prefs.start_time,
+            end_time: prefs.end_time,
+            timezone: prefs.timezone,
+            slot_length: prefs.slot_length,
+            working_days: prefs.working_days,
+          });
         }
 
         // Fetch unavailable slots

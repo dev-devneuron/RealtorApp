@@ -12,7 +12,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from "lucide-react";
-import { formatTime, fetchCalendarEvents, fetchUnavailableSlots } from "./utils";
+import { formatTime, fetchCalendarEvents, fetchUnavailableSlots, fetchCalendarPreferences } from "./utils";
 import { API_BASE } from "./constants";
 import type { Booking } from "./types";
 import "./BookingCalendar.css";
@@ -155,105 +155,45 @@ export const BookingCalendar = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Load preferences from localStorage and listen for updates
-  const loadPreferences = () => {
-    if (userType === "property_manager" && userId) {
-      try {
-        const stored = localStorage.getItem(`calendar_preferences_${userId}`);
-        if (stored) {
-          const prefs = JSON.parse(stored);
-          setCalendarPreferences({
-            start_time: prefs.start_time || "09:00",
-            end_time: prefs.end_time || "17:00",
-            timezone: prefs.timezone || "America/New_York",
-            slot_length: prefs.slot_length || 30,
-            working_days: prefs.working_days || [1, 2, 3, 4, 5],
-          });
-          return;
-        }
-      } catch (error) {
-        console.error("Error loading preferences from localStorage:", error);
-      }
+  // ⚠️ CRITICAL: Always fetch preferences from API first - don't use localStorage or hardcoded defaults
+  // According to documentation: "Always fetch preferences on component mount - Don't use hardcoded defaults"
+  // "Preferences persist across sessions - Always fetch from API, don't assume defaults"
+  const loadPreferences = async () => {
+    if (!userId || !userType) return;
 
-      // Try to fetch from API if not in localStorage
-      const fetchFromAPI = async () => {
-        try {
-          const token = localStorage.getItem("access_token");
-          if (!token) return;
-
-          const endpoints = [
-            `${API_BASE}/calendar-preferences?user_id=${userId}&user_type=${userType}`,
-            `${API_BASE}/api/calendar-preferences?user_id=${userId}&user_type=${userType}`,
-            `${API_BASE}/property-manager/calendar-preferences`,
-          ];
-
-          let preferences = null;
-          for (const endpoint of endpoints) {
-            try {
-              const response = await fetch(endpoint, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (data.start_time && data.end_time) {
-                  preferences = data;
-                } else if (data.workingHours) {
-                  preferences = {
-                    start_time: data.workingHours.start || "09:00",
-                    end_time: data.workingHours.end || "17:00",
-                    timezone: data.workingHours.timezone || "America/New_York",
-                    slot_length: data.workingHours.defaultSlotLength || 30,
-                    working_days: data.working_days || [1, 2, 3, 4, 5],
-                  };
-                }
-                if (preferences) {
-                  // Save to localStorage for future use
-                  localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(preferences));
-                }
-                break;
-              }
-            } catch (e) {
-              continue;
-            }
-          }
-
-          if (preferences) {
-            setCalendarPreferences(preferences);
-          } else {
-            // Use defaults
-            const defaults = {
-              start_time: "09:00",
-              end_time: "17:00",
-              timezone: "America/New_York",
-              slot_length: 30,
-              working_days: [1, 2, 3, 4, 5],
-            };
-            setCalendarPreferences(defaults);
-            localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(defaults));
-          }
-        } catch (error) {
-          console.error("Error fetching calendar preferences:", error);
-          const defaults = {
-            start_time: "09:00",
-            end_time: "17:00",
-            timezone: "America/New_York",
-            slot_length: 30,
-            working_days: [1, 2, 3, 4, 5],
-          };
-          setCalendarPreferences(defaults);
-        }
+    try {
+      // Always fetch from API first (fetchCalendarPreferences already handles defaults if API fails)
+      const prefs = await fetchCalendarPreferences(userId, userType);
+      
+      // Use the fetched preferences (they already have defaults if API fails)
+      setCalendarPreferences({
+        start_time: prefs.start_time,
+        end_time: prefs.end_time,
+        timezone: prefs.timezone,
+        slot_length: prefs.slot_length,
+        working_days: prefs.working_days,
+      });
+      
+      // Save to localStorage for caching (but API is source of truth)
+      localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
+    } catch (error) {
+      console.error("Error fetching calendar preferences:", error);
+      // Only use defaults if fetch completely fails
+      const defaults = {
+        start_time: "09:00",
+        end_time: "17:00",
+        timezone: "America/New_York",
+        slot_length: 30,
+        working_days: [1, 2, 3, 4, 5],
       };
-
-      fetchFromAPI();
+      setCalendarPreferences(defaults);
     }
   };
 
   // Load preferences on mount and when userId/userType changes
+  // ⚠️ CRITICAL: Always fetch from API, not localStorage
   useEffect(() => {
-    if (userType === "property_manager" && userId) {
+    if (userId && userType) {
       loadPreferences();
     }
   }, [userId, userType]);
@@ -401,8 +341,8 @@ export const BookingCalendar = ({
         }
         
         return {
-          ...booking,
-          title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
+      ...booking,
+      title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
           start: startDate,
           end: endDate,
           resource: booking, // Store full booking object in resource
@@ -429,7 +369,7 @@ export const BookingCalendar = ({
   // Generate working hours events for day/week views - DISABLED (not displayed)
   const workingHoursEvents = useMemo(() => {
     // Don't display working hours events - they were causing visual clutter
-    return [];
+      return [];
   }, []);
 
   // Combine bookings, working hours, and availability slots
@@ -462,69 +402,69 @@ export const BookingCalendar = ({
         
         <div className="flex items-center gap-3 flex-wrap relative z-10">
           <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border-2 border-amber-200/60 shadow-lg">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => nav("PREV")}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => nav("PREV")}
               className="h-10 w-10 p-0 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm transition-all hover:scale-110 active:scale-95"
-            >
+          >
               <ChevronLeft className="h-5 w-5 text-amber-700" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => nav("TODAY")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => nav("TODAY")}
               className="h-10 px-5 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm font-semibold transition-all hover:scale-105 active:scale-95 text-amber-800"
-            >
-              Today
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => nav("NEXT")}
+          >
+            Today
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => nav("NEXT")}
               className="h-10 w-10 p-0 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm transition-all hover:scale-110 active:scale-95"
-            >
+          >
               <ChevronRight className="h-5 w-5 text-amber-700" />
-            </Button>
-          </div>
+          </Button>
+        </div>
 
           <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border-2 border-amber-200/60 shadow-lg">
-            <Button
-              variant={view === "day" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onView("day")}
+          <Button
+            variant={view === "day" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onView("day")}
               className={`h-10 px-5 rounded-xl font-bold transition-all ${
-                view === "day" 
+              view === "day" 
                   ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
                   : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
-              }`}
-            >
-              Day
-            </Button>
-            <Button
-              variant={view === "week" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onView("week")}
+            }`}
+          >
+            Day
+          </Button>
+          <Button
+            variant={view === "week" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onView("week")}
               className={`h-10 px-5 rounded-xl font-bold transition-all ${
-                view === "week" 
+              view === "week" 
                   ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
                   : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
-              }`}
-            >
-              Week
-            </Button>
-            <Button
-              variant={view === "month" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onView("month")}
+            }`}
+          >
+            Week
+          </Button>
+          <Button
+            variant={view === "month" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onView("month")}
               className={`h-10 px-5 rounded-xl font-bold transition-all ${
-                view === "month" 
+              view === "month" 
                   ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
                   : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
-              }`}
-            >
-              Month
-            </Button>
+            }`}
+          >
+            Month
+          </Button>
           </div>
         </div>
       </div>
@@ -735,11 +675,11 @@ export const BookingCalendar = ({
                 <div className="font-bold text-amber-900 mb-1 text-sm sm:text-base">Working Hours</div>
                 <div className="text-xs sm:text-sm text-amber-700 font-medium">
                   {calendarPreferences.start_time} - {calendarPreferences.end_time}
-                  {calendarPreferences.working_days.length > 0 && (
+              {calendarPreferences.working_days.length > 0 && (
                     <span className="ml-2 text-xs">
                       • {calendarPreferences.working_days.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}
-                    </span>
-                  )}
+                </span>
+              )}
                 </div>
               </div>
             </div>

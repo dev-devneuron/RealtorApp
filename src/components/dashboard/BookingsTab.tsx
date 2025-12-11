@@ -302,20 +302,21 @@ export const BookingsTab = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02, y: -2 }}
-      transition={{ duration: 0.2 }}
+      whileHover={{ scale: 1.03, y: -4 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <Card className={`${gradient} border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden relative`}>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
-        <CardContent className="p-6 relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className={`${iconBg} p-3 rounded-xl shadow-md`}>
+      <Card className={`${gradient} border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden relative group`}>
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl pointer-events-none group-hover:bg-white/15 transition-colors" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16 blur-2xl pointer-events-none" />
+        <CardContent className="p-6 lg:p-7 relative z-10">
+          <div className="flex items-center justify-between mb-5">
+            <div className={`${iconBg} p-3.5 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
               {icon}
             </div>
-            <Sparkles className="h-5 w-5 text-white/30" />
+            <Sparkles className="h-5 w-5 text-white/30 group-hover:text-white/50 transition-colors" />
           </div>
-          <div className="text-white/80 text-sm font-medium mb-1">{label}</div>
-          <div className="text-white text-3xl font-bold">{value}</div>
+          <div className="text-white/90 text-sm font-semibold mb-2 uppercase tracking-wide">{label}</div>
+          <div className="text-white text-4xl lg:text-5xl font-bold tracking-tight">{value}</div>
         </CardContent>
       </Card>
     </motion.div>
@@ -324,7 +325,7 @@ export const BookingsTab = ({
   return (
     <div className="space-y-6">
       {/* Enhanced Statistics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6">
         <StatCard
           icon={<Calendar className="h-6 w-6 text-white" />}
           label="Total Bookings"
@@ -399,26 +400,34 @@ export const BookingsTab = ({
           {/* Enhanced Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mt-6">
             <div className="flex-1 relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors z-10" />
               <Input
-                placeholder="Search bookings by name, phone, property..."
+                placeholder="Search bookings by name, phone, property, or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 bg-white/80 backdrop-blur-sm border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl shadow-sm"
+                className="pl-12 pr-4 h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[200px] h-12 bg-white/80 backdrop-blur-sm border-amber-200 focus:border-amber-400 rounded-xl shadow-sm">
+              <SelectTrigger className="w-full sm:w-[220px] h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all">
                 <Filter className="h-4 w-4 mr-2 text-amber-600" />
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="denied">Denied</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-                <SelectItem value="rescheduled">Rescheduled</SelectItem>
+              <SelectContent className="rounded-xl border-amber-200 shadow-xl">
+                <SelectItem value="all" className="rounded-lg">All Statuses</SelectItem>
+                <SelectItem value="pending" className="rounded-lg">Pending</SelectItem>
+                <SelectItem value="approved" className="rounded-lg">Approved</SelectItem>
+                <SelectItem value="denied" className="rounded-lg">Denied</SelectItem>
+                <SelectItem value="cancelled" className="rounded-lg">Cancelled</SelectItem>
+                <SelectItem value="rescheduled" className="rounded-lg">Rescheduled</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -429,41 +438,41 @@ export const BookingsTab = ({
           <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                <TabsList className={`inline-flex h-12 items-center justify-center rounded-xl bg-amber-50/50 p-1.5 ${hasAssignedPropertiesOrBookings ? 'w-full sm:w-auto' : ''}`}>
+                <TabsList className={`inline-flex h-12 items-center justify-center rounded-xl bg-amber-50/70 backdrop-blur-sm p-1.5 border border-amber-200 shadow-md ${hasAssignedPropertiesOrBookings ? 'w-full sm:w-auto' : ''}`}>
                   <TabsTrigger 
                     value="list" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
                   >
                     List
                   </TabsTrigger>
                   <TabsTrigger 
                     value="day" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
                   >
                     Day
                   </TabsTrigger>
                   <TabsTrigger 
                     value="week" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
                   >
                     Week
                   </TabsTrigger>
                   <TabsTrigger 
                     value="month" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
                   >
                     Month
                   </TabsTrigger>
                   <TabsTrigger 
                     value="stats" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
                   >
                     Stats
                   </TabsTrigger>
                   {hasAssignedPropertiesOrBookings && (
                     <TabsTrigger 
                       value="availability" 
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg px-6 font-medium transition-all"
+                      className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
                     >
                       Availability
                     </TabsTrigger>

@@ -41,32 +41,75 @@ interface BookingCalendarProps {
   userType?: string;
 }
 
-// Enhanced event component with beautiful styling
+// Enhanced event component with beautiful styling and better information density
 const EventComponent = ({ event }: { event: Booking }) => {
   const getStatusGradient = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-gradient-to-r from-amber-400 to-amber-500 border-amber-600";
+        return "bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 border-amber-700 shadow-amber-500/30";
       case "approved":
-        return "bg-gradient-to-r from-emerald-400 to-emerald-500 border-emerald-600";
+        return "bg-gradient-to-br from-emerald-500 via-emerald-500 to-emerald-600 border-emerald-700 shadow-emerald-500/30";
       case "denied":
-        return "bg-gradient-to-r from-red-400 to-red-500 border-red-600";
+        return "bg-gradient-to-br from-red-500 via-red-500 to-red-600 border-red-700 shadow-red-500/30";
       case "cancelled":
-        return "bg-gradient-to-r from-gray-400 to-gray-500 border-gray-600";
+        return "bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 border-gray-700 shadow-gray-500/30";
       case "rescheduled":
-        return "bg-gradient-to-r from-blue-400 to-blue-500 border-blue-600";
+        return "bg-gradient-to-br from-blue-500 via-blue-500 to-blue-600 border-blue-700 shadow-blue-500/30";
       default:
-        return "bg-gradient-to-r from-gray-400 to-gray-500 border-gray-600";
+        return "bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 border-gray-700 shadow-gray-500/30";
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "⏳";
+      case "approved":
+        return "✅";
+      case "denied":
+        return "❌";
+      case "cancelled":
+        return "🚫";
+      case "rescheduled":
+        return "🔄";
+      default:
+        return "📅";
+    }
+  };
+
+  const startTime = formatTime(event.startAt);
+  const endTime = formatTime(event.endAt);
+
   return (
-    <div className={`${getStatusGradient(event.status)} text-white p-2 rounded-lg shadow-lg border-l-4 hover:shadow-xl transition-all cursor-pointer group`}>
-      <div className="font-bold text-sm truncate mb-1">{event.visitor.name}</div>
-      <div className="text-xs opacity-95 truncate mb-1">{event.propertyAddress || `Property #${event.propertyId}`}</div>
-      <div className="text-xs opacity-90 flex items-center gap-1">
-        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-        {formatTime(event.startAt)}
+    <div className={`${getStatusGradient(event.status)} text-white p-2.5 rounded-xl shadow-lg border-l-4 hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 cursor-pointer group relative overflow-hidden`}>
+      {/* Animated background effect */}
+      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+      
+      <div className="relative z-10">
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-sm leading-tight truncate mb-0.5 flex items-center gap-1.5">
+              <span className="text-base">{getStatusIcon(event.status)}</span>
+              <span className="truncate">{event.visitor.name}</span>
+            </div>
+            <div className="text-xs opacity-95 truncate font-medium mb-1">
+              {event.propertyAddress || `Property #${event.propertyId}`}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-2 mt-2 pt-1.5 border-t border-white/20">
+          <div className="text-xs opacity-90 flex items-center gap-1.5 font-medium">
+            <Clock className="h-3 w-3" />
+            <span>{startTime}</span>
+            {startTime !== endTime && (
+              <>
+                <span className="opacity-70">-</span>
+                <span>{endTime}</span>
+              </>
+            )}
+          </div>
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse opacity-80" />
+        </div>
       </div>
     </div>
   );
@@ -387,83 +430,88 @@ export const BookingCalendar = ({
   // Enhanced custom toolbar with beautiful design
   const CustomToolbar = ({ label, onNavigate: nav, onView }: any) => {
     return (
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 p-4 bg-gradient-to-r from-amber-50 via-white to-blue-50 rounded-2xl border border-amber-100 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-md">
-            <CalendarIcon className="h-5 w-5 text-white" />
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 p-5 bg-gradient-to-br from-white via-amber-50/30 to-white rounded-2xl border border-amber-100/50 shadow-xl backdrop-blur-sm">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl blur-md opacity-50" />
+            <div className="relative p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+              <CalendarIcon className="h-6 w-6 text-white" />
+            </div>
           </div>
           <div>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent">
               {label}
             </h3>
-            <p className="text-sm text-gray-500">View and manage your bookings</p>
+            <p className="text-sm text-gray-600 mt-0.5">View and manage your bookings</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => nav("PREV")}
-            className="h-10 w-10 p-0 rounded-xl border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => nav("TODAY")}
-            className="h-10 px-4 rounded-xl border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm font-medium"
-          >
-            Today
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => nav("NEXT")}
-            className="h-10 w-10 p-0 rounded-xl border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm p-1 rounded-xl border border-amber-200 shadow-md">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => nav("PREV")}
+              className="h-9 w-9 p-0 rounded-lg border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm transition-all hover:scale-105"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => nav("TODAY")}
+              className="h-9 px-4 rounded-lg border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm font-medium transition-all hover:scale-105"
+            >
+              Today
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => nav("NEXT")}
+              className="h-9 w-9 p-0 rounded-lg border-amber-200 hover:bg-amber-50 hover:border-amber-300 shadow-sm transition-all hover:scale-105"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
 
-        <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm p-1.5 rounded-xl border border-amber-200 shadow-sm">
-          <Button
-            variant={view === "day" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => onView("day")}
-            className={`h-9 px-4 rounded-lg font-medium transition-all ${
-              view === "day" 
-                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md" 
-                : "hover:bg-amber-50"
-            }`}
-          >
-            Day
-          </Button>
-          <Button
-            variant={view === "week" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => onView("week")}
-            className={`h-9 px-4 rounded-lg font-medium transition-all ${
-              view === "week" 
-                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md" 
-                : "hover:bg-amber-50"
-            }`}
-          >
-            Week
-          </Button>
-          <Button
-            variant={view === "month" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => onView("month")}
-            className={`h-9 px-4 rounded-lg font-medium transition-all ${
-              view === "month" 
-                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md" 
-                : "hover:bg-amber-50"
-            }`}
-          >
-            Month
-          </Button>
+          <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm p-1 rounded-xl border border-amber-200 shadow-md">
+            <Button
+              variant={view === "day" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => onView("day")}
+              className={`h-9 px-4 rounded-lg font-semibold transition-all ${
+                view === "day" 
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg hover:scale-105" 
+                  : "hover:bg-amber-50 text-gray-700"
+              }`}
+            >
+              Day
+            </Button>
+            <Button
+              variant={view === "week" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => onView("week")}
+              className={`h-9 px-4 rounded-lg font-semibold transition-all ${
+                view === "week" 
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg hover:scale-105" 
+                  : "hover:bg-amber-50 text-gray-700"
+              }`}
+            >
+              Week
+            </Button>
+            <Button
+              variant={view === "month" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => onView("month")}
+              className={`h-9 px-4 rounded-lg font-semibold transition-all ${
+                view === "month" 
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg hover:scale-105" 
+                  : "hover:bg-amber-50 text-gray-700"
+              }`}
+            >
+              Month
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -636,38 +684,58 @@ export const BookingCalendar = ({
     return <EventComponent event={event.resource} />;
   };
 
-  // Calculate min/max times based on working hours
+  // Calculate min/max times - 14-hour day view (6 AM - 8 PM)
   const minTime = useMemo(() => {
-    if (calendarPreferences && (view === "day" || view === "week")) {
-      const [hour, minute] = calendarPreferences.start_time.split(":").map(Number);
-      return new Date(2024, 0, 1, Math.max(0, hour - 1), minute);
+    // Always show 6 AM to 8 PM (14 hours) for day and week views
+    if (view === "day" || view === "week") {
+      return new Date(2024, 0, 1, 6, 0); // 6:00 AM
     }
-    return new Date(2024, 0, 1, 8, 0);
-  }, [calendarPreferences, view]);
+    return new Date(2024, 0, 1, 6, 0);
+  }, [view]);
 
   const maxTime = useMemo(() => {
-    if (calendarPreferences && (view === "day" || view === "week")) {
-      const [hour, minute] = calendarPreferences.end_time.split(":").map(Number);
-      return new Date(2024, 0, 1, Math.min(23, hour + 1), minute);
+    // Always show 6 AM to 8 PM (14 hours) for day and week views
+    if (view === "day" || view === "week") {
+      return new Date(2024, 0, 1, 20, 0); // 8:00 PM
     }
     return new Date(2024, 0, 1, 20, 0);
-  }, [calendarPreferences, view]);
+  }, [view]);
 
   return (
-    <Card className="bg-gradient-to-br from-white via-amber-50/20 to-white border-0 shadow-2xl overflow-hidden">
+    <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden relative">
       <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400" />
       <CardContent className="relative p-6 lg:p-8">
         {calendarPreferences && (view === "day" || view === "week") && (
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-sm text-amber-800">
-            <Clock className="h-4 w-4" />
-            <span>
-              Working Hours: {calendarPreferences.start_time} - {calendarPreferences.end_time} 
-              {calendarPreferences.working_days.length > 0 && (
-                <span className="ml-2">
-                  ({calendarPreferences.working_days.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")})
-                </span>
-              )}
-            </span>
+          <div className="mb-4 p-4 bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-sm text-amber-800 shadow-sm">
+            <div className="p-2 bg-amber-500 rounded-lg shadow-md">
+              <Clock className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-amber-900 mb-0.5">Working Hours</div>
+              <div className="text-xs text-amber-700">
+                {calendarPreferences.start_time} - {calendarPreferences.end_time}
+                {calendarPreferences.working_days.length > 0 && (
+                  <span className="ml-2">
+                    • {calendarPreferences.working_days.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="px-3 py-1.5 bg-white/60 rounded-lg border border-amber-200 text-xs font-medium text-amber-900">
+              Calendar View: 6:00 AM - 8:00 PM
+            </div>
+          </div>
+        )}
+        {(!calendarPreferences || view === "month") && (view === "day" || view === "week") && (
+          <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border border-blue-200 rounded-xl flex items-center gap-3 text-sm text-blue-800 shadow-sm">
+            <div className="p-2 bg-blue-500 rounded-lg shadow-md">
+              <Clock className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-blue-900 mb-0.5">Calendar View</div>
+              <div className="text-xs text-blue-700">Showing 14-hour day view (6:00 AM - 8:00 PM)</div>
+            </div>
           </div>
         )}
         <BigCalendar
@@ -675,7 +743,7 @@ export const BookingCalendar = ({
           events={allEvents}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: 700 }}
+          style={{ height: view === "day" ? 900 : view === "week" ? 800 : 700 }}
           view={view}
           date={date}
           onView={onViewChange}

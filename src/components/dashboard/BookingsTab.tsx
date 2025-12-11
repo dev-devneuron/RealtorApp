@@ -184,11 +184,20 @@ export const BookingsTab = ({
 
   const handleApprove = async (bookingId: number) => {
     setActionLoading(bookingId);
+    // Optimistic update - update UI immediately
+    const previousBookings = bookings;
+    setBookings(prev => prev.map(b => 
+      b.bookingId === bookingId ? { ...b, status: 'approved' as const } : b
+    ));
+    
     try {
       await approveBooking(bookingId, userId);
       toast.success("Booking approved successfully");
+      // Refresh in background without blocking UI
       onRefresh();
     } catch (error: any) {
+      // Revert optimistic update on error
+      setBookings(previousBookings);
       const errorMessage = extractErrorMessage(error) || "Failed to approve booking";
       toast.error(errorMessage);
     } finally {
@@ -198,11 +207,20 @@ export const BookingsTab = ({
 
   const handleDeny = async (bookingId: number, reason?: string) => {
     setActionLoading(bookingId);
+    // Optimistic update - update UI immediately
+    const previousBookings = bookings;
+    setBookings(prev => prev.map(b => 
+      b.bookingId === bookingId ? { ...b, status: 'denied' as const } : b
+    ));
+    
     try {
       await denyBooking(bookingId, userId, reason);
       toast.success("Booking denied");
+      // Refresh in background without blocking UI
       onRefresh();
     } catch (error: any) {
+      // Revert optimistic update on error
+      setBookings(previousBookings);
       const errorMessage = extractErrorMessage(error) || "Failed to deny booking";
       toast.error(errorMessage);
     } finally {
@@ -216,11 +234,20 @@ export const BookingsTab = ({
     reason?: string
   ) => {
     setActionLoading(bookingId);
+    // Optimistic update - update UI immediately
+    const previousBookings = bookings;
+    setBookings(prev => prev.map(b => 
+      b.bookingId === bookingId ? { ...b, status: 'rescheduled' as const } : b
+    ));
+    
     try {
       await rescheduleBooking(bookingId, proposedSlots, reason);
       toast.success("Reschedule proposal sent");
+      // Refresh in background without blocking UI
       onRefresh();
     } catch (error: any) {
+      // Revert optimistic update on error
+      setBookings(previousBookings);
       const errorMessage = extractErrorMessage(error) || "Failed to reschedule booking";
       toast.error(errorMessage);
     } finally {
@@ -230,11 +257,20 @@ export const BookingsTab = ({
 
   const handleCancel = async (bookingId: number, reason?: string) => {
     setActionLoading(bookingId);
+    // Optimistic update - update UI immediately
+    const previousBookings = bookings;
+    setBookings(prev => prev.map(b => 
+      b.bookingId === bookingId ? { ...b, status: 'cancelled' as const } : b
+    ));
+    
     try {
       await cancelBooking(bookingId, reason);
       toast.success("Booking cancelled");
+      // Refresh in background without blocking UI
       onRefresh();
     } catch (error: any) {
+      // Revert optimistic update on error
+      setBookings(previousBookings);
       const errorMessage = extractErrorMessage(error) || "Failed to cancel booking";
       toast.error(errorMessage);
     } finally {
@@ -316,7 +352,8 @@ export const BookingsTab = ({
       }
     };
 
-    const interval = setInterval(checkForNewBookings, 30000);
+    // Increase polling interval from 30s to 60s to reduce API calls
+    const interval = setInterval(checkForNewBookings, 60000);
     checkForNewBookings();
 
     return () => clearInterval(interval);

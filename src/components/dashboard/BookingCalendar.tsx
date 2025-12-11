@@ -334,13 +334,8 @@ export const BookingCalendar = ({
           return; // List view doesn't need calendar events
         }
 
-        // Clear cache for this specific date range to ensure fresh data
-        // This is important when preferences change
-        const { clearCacheForEndpoint } = await import("../../utils/cache");
-        clearCacheForEndpoint(`/api/users/${userId}/calendar-events`, { 
-          fromDate: fromDate.toISOString(), 
-          toDate: toDate.toISOString() 
-        });
+        // Only clear cache if preferences changed - otherwise use cached data
+        // Cache is already managed by fetchCalendarEvents function
 
         // Try to fetch from calendar events endpoint
         try {
@@ -427,7 +422,7 @@ export const BookingCalendar = ({
         
         // Validate dates
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          console.warn('Invalid booking date:', booking);
+          // Invalid booking date - skipping
           return null;
         }
         

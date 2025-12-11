@@ -89,18 +89,18 @@ export const AvailabilityManager = ({
         // Save to localStorage for caching (but API is source of truth)
         localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
 
-        // Fetch unavailable slots - use optimized date range (3 months past, 6 months future)
-        // Reduced from 2 years to minimize latency and data transfer
+        // Fetch unavailable slots - use optimized date range (2 months past, 4 months future)
+        // Reduced from 9 months to 6 months to minimize latency and data transfer
         try {
-          // Optimized date range: 3 months past to 6 months future (9 months total)
+          // Optimized date range: 2 months past to 4 months future (6 months total)
           const now = new Date();
           const fromDate = new Date(now);
-          fromDate.setMonth(now.getMonth() - 3); // 3 months ago
+          fromDate.setMonth(now.getMonth() - 2); // 2 months ago (reduced from 3)
           fromDate.setDate(1); // Start of month
           fromDate.setHours(0, 0, 0, 0);
           
           const toDate = new Date(now);
-          toDate.setMonth(now.getMonth() + 6); // 6 months ahead
+          toDate.setMonth(now.getMonth() + 4); // 4 months ahead (reduced from 6)
           toDate.setDate(0); // Last day of previous month (end of target month)
           toDate.setHours(23, 59, 59, 999);
           

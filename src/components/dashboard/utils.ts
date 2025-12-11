@@ -152,6 +152,66 @@ export const formatDateTime = (dateString: string | Date): string => {
 };
 
 /**
+ * Format customer-provided time in their local timezone
+ * Assumes the time is in the provided timezone (or UTC if no timezone)
+ */
+export const formatCustomerTime = (
+  dateString: string | Date,
+  timezone: string = "UTC"
+): { localTime: string; utcTime: string; dateStr: string } => {
+  if (!dateString) return { localTime: "N/A", utcTime: "N/A", dateStr: "N/A" };
+  
+  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+  if (isNaN(date.getTime())) return { localTime: "Invalid", utcTime: "Invalid", dateStr: "Invalid" };
+  
+  // Get UTC time
+  const utcHours = date.getUTCHours();
+  const utcMinutes = date.getUTCMinutes();
+  const utcHour12 = utcHours % 12 || 12;
+  const utcAmpm = utcHours >= 12 ? "PM" : "AM";
+  const utcMinutesStr = String(utcMinutes).padStart(2, "0");
+  const utcTime = `${utcHour12}:${utcMinutesStr} ${utcAmpm} UTC`;
+  
+  // Format date
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const dateStr = `${year}-${month}-${day}`;
+  
+  // For local time, try to convert if timezone is provided and not UTC
+  let localTime: string;
+  if (timezone && timezone !== "UTC") {
+    try {
+      // Use Intl.DateTimeFormat to convert to customer's timezone
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone,
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+      localTime = formatter.format(date);
+    } catch (e) {
+      // Fallback to UTC if timezone conversion fails
+      localTime = utcTime.replace(" UTC", "");
+    }
+  } else {
+    // If no timezone or UTC, just show the time without UTC label
+    localTime = `${utcHour12}:${utcMinutesStr} ${utcAmpm}`;
+  }
+  
+  return { localTime, utcTime, dateStr };
+};
+
+/**
+ * Check if a date string has timezone information
+ */
+export const hasTimezoneInfo = (dateString: string): boolean => {
+  if (!dateString) return false;
+  // Check if it ends with Z (UTC) or has +/- timezone offset
+  return /[+-]\d{2}:?\d{2}$|Z$/.test(dateString);
+};
+
+/**
  * Get status badge color
  */
 export const getStatusColor = (status: string): string => {
@@ -258,7 +318,7 @@ export const fetchUserBookings = async (
     params.append("to", dateRange.to);
   }
 
-  // Check cache first (cache for 2 minutes for bookings)
+  // Check cache first (cache for 3 minutes for bookings - increased to reduce API calls)
   const cacheKey = getCacheKey(`/api/users/${userId}/bookings`, { status, dateRange });
   const cached = getCachedData<Booking[]>(cacheKey);
   if (cached) {
@@ -321,8 +381,8 @@ export const fetchUserBookings = async (
   const data = await response.json();
   const bookings = data.bookings || [];
   
-  // Cache the result for 2 minutes
-  setCachedData(cacheKey, bookings, 2 * 60 * 1000);
+  // Cache the result for 3 minutes (increased from 2 minutes to reduce API calls)
+  setCachedData(cacheKey, bookings, 3 * 60 * 1000);
   
   return bookings;
 };
@@ -390,8 +450,11 @@ export const approveBooking = async (
       throw new Error(errorMsg);
     }
 
-    // Clear bookings cache after mutation
-    clearCacheForEndpoint(`/api/users/${approverId}/bookings`);
+    // Clear all related caches in parallel for faster updates
+    Promise.all([
+      clearCacheForEndpoint(`/api/users/${approverId}/bookings`),
+      clearCacheByPattern(`/api/users/${approverId}/calendar-events`),
+    ]).catch(() => {}); // Fire and forget - don't block response
     
     return data;
   } catch (error) {
@@ -443,8 +506,11 @@ export const denyBooking = async (
       throw new Error(errorMsg);
     }
 
-    // Clear bookings cache after mutation
-    clearCacheForEndpoint(`/api/users/${approverId}/bookings`);
+    // Clear all related caches in parallel for faster updates
+    Promise.all([
+      clearCacheForEndpoint(`/api/users/${approverId}/bookings`),
+      clearCacheByPattern(`/api/users/${approverId}/calendar-events`),
+    ]).catch(() => {}); // Fire and forget - don't block response
     
     return data;
   } catch (error) {
@@ -496,8 +562,11 @@ export const rescheduleBooking = async (
       throw new Error(errorMsg);
     }
 
-    // Clear bookings cache after mutation
-    clearCacheForEndpoint(`/api/users/${approverId}/bookings`);
+    // Clear all related caches in parallel for faster updates
+    Promise.all([
+      clearCacheForEndpoint(`/api/users/${approverId}/bookings`),
+      clearCacheByPattern(`/api/users/${approverId}/calendar-events`),
+    ]).catch(() => {}); // Fire and forget - don't block response
     
     return data;
   } catch (error) {
@@ -548,12 +617,12 @@ export const cancelBooking = async (
       throw new Error(errorMsg);
     }
 
-    // Clear bookings cache after mutation - need to get approverId from booking
-    // We'll clear all booking caches to be safe
-    const cacheKeys = Object.keys(localStorage).filter(key => 
-      key.startsWith('api_cache_') && key.includes('/bookings')
-    );
-    cacheKeys.forEach(key => localStorage.removeItem(key));
+    // Clear all related caches in parallel for faster updates
+    // Clear all booking and calendar event caches
+    Promise.all([
+      clearCacheByPattern('/bookings'),
+      clearCacheByPattern('/calendar-events'),
+    ]).catch(() => {}); // Fire and forget - don't block response
     
     return data;
   } catch (error) {
@@ -1125,10 +1194,6 @@ export const updateCalendarPreferences = async (
     // Convert API response format back to internal format
     const prefs = data.preferences || data;
     
-    // Debug: Log the API response to see what we're getting
-    console.log("API response after updateCalendarPreferences:", data);
-    console.log("Extracted prefs:", prefs);
-    
     // API returns workingDays (camelCase) - check both camelCase and snake_case for compatibility
     // Check in order: data.workingDays, data.working_days, prefs.workingDays, prefs.working_days
     const apiWorkingDays = 
@@ -1137,8 +1202,6 @@ export const updateCalendarPreferences = async (
       (prefs.workingDays !== undefined && prefs.workingDays !== null) ? prefs.workingDays :
       (prefs.working_days !== undefined && prefs.working_days !== null) ? prefs.working_days :
       null;
-    
-    console.log("Extracted apiWorkingDays:", apiWorkingDays);
     
     const convertedPreferences = {
       start_time: prefs.workingHours?.start || data.workingHours?.start || preferences.start_time,
@@ -1150,8 +1213,6 @@ export const updateCalendarPreferences = async (
         ? convertApiDaysToJs(apiWorkingDays) 
         : (preferences.working_days && preferences.working_days.length > 0 ? preferences.working_days : [1, 2, 3, 4, 5]), // Use provided preferences or defaults
     };
-    
-    console.log("Converted preferences:", convertedPreferences);
     
     return {
       ...data,
@@ -1187,7 +1248,7 @@ export const fetchUnavailableSlots = async (
   if (fromDate) params.append("from_date", fromDate);
   if (toDate) params.append("to_date", toDate);
 
-  // Check cache first (cache for 5 minutes for availability slots - they don't change frequently)
+  // Check cache first (cache for 6 minutes for availability slots - increased from 5 minutes)
   // Use a consistent cache key whether dates are provided or not
   const cacheKey = getCacheKey(`/api/users/${userId}/availability`, { fromDate: fromDate || 'all', toDate: toDate || 'all' });
   const cached = getCachedData<Array<{
@@ -1200,7 +1261,6 @@ export const fetchUnavailableSlots = async (
     notes?: string;
   }>>(cacheKey);
   if (cached) {
-    console.log(`Using cached unavailable slots: ${cached.length} slots`);
     return cached;
   }
 
@@ -1219,8 +1279,6 @@ export const fetchUnavailableSlots = async (
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`Raw response from ${endpoint}:`, data);
-        
         // Handle different response formats - check if data itself is an array
         let slots;
         if (Array.isArray(data)) {
@@ -1240,10 +1298,8 @@ export const fetchUnavailableSlots = async (
         // Ensure slots is an array
         const slotsArray = Array.isArray(slots) ? slots : [];
         
-        console.log(`Processed ${slotsArray.length} unavailable slots from ${endpoint}`, slotsArray);
-        
-        // Cache the result for 5 minutes (increased from 2 minutes to reduce API calls)
-        setCachedData(cacheKey, slotsArray, 5 * 60 * 1000);
+        // Cache the result for 6 minutes (increased from 5 minutes to reduce API calls)
+        setCachedData(cacheKey, slotsArray, 6 * 60 * 1000);
         
         return slotsArray;
       } else {
@@ -1253,10 +1309,10 @@ export const fetchUnavailableSlots = async (
           // Continue to next endpoint or return empty array
           continue;
         }
-        console.warn(`Response not OK from ${endpoint}:`, response.status, response.statusText);
+        // Response not OK - continue to next endpoint silently
       }
     } catch (e) {
-      console.warn(`Error fetching from ${endpoint}:`, e);
+      // Error fetching from endpoint - continue to next endpoint silently
       continue;
     }
   }
@@ -1458,7 +1514,7 @@ export const fetchCalendarEvents = async (
     to_date: toDate,
   });
 
-  // Check cache first (cache for 2 minutes for calendar events - increased from 1 minute)
+  // Check cache first (cache for 3 minutes for calendar events - increased from 2 minutes)
   const cacheKey = getCacheKey(`/api/users/${userId}/calendar-events`, { fromDate, toDate });
   const cached = getCachedData<{
     userId: number;
@@ -1471,7 +1527,6 @@ export const fetchCalendarEvents = async (
     total: number;
   }>(cacheKey);
   if (cached) {
-    console.log(`Using cached calendar events: ${cached.availabilitySlots?.length || 0} slots, ${cached.bookings?.length || 0} bookings`);
     return cached;
   }
 
@@ -1489,8 +1544,8 @@ export const fetchCalendarEvents = async (
 
   const data = await response.json();
   
-  // Cache the result for 2 minutes (increased from 1 minute to reduce API calls)
-  setCachedData(cacheKey, data, 2 * 60 * 1000);
+  // Cache the result for 3 minutes (increased from 2 minutes to reduce API calls)
+  setCachedData(cacheKey, data, 3 * 60 * 1000);
   
   return data;
 };

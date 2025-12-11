@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2, Headphones, Download, Play, Edit2, Trash2, Copy, ChevronUp, ChevronDown } from "lucide-react";
-import { formatDateTime, formatDate, formatTime, getStatusColor, fetchPropertyAvailability, updateBooking, deleteBooking } from "./utils";
+import { formatDateTime, formatDate, formatTime, formatCustomerTime, hasTimezoneInfo, getStatusColor, fetchPropertyAvailability, updateBooking, deleteBooking } from "./utils";
 import { toast } from "sonner";
 import type { Booking, AvailabilitySlot } from "./types";
 
@@ -390,60 +390,120 @@ export const BookingDetailModal = ({
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-amber-600 flex-shrink-0" />
                 Booking Details
               </h3>
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 lg:p-4 xl:p-5 space-y-2 lg:space-y-2.5 xl:space-y-3">
-                {/* Original Customer Time - Display exactly as customer sent it */}
-                {(booking.customerSentStartAt || booking.customerSentEndAt) && (
-                  <div className="space-y-2 pb-3 border-b border-gray-200">
-                    <div className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-900">
-                      <Clock className="h-4 w-4 text-amber-600" />
-                      Time (as customer mentioned):
-                    </div>
-                    <div className="pl-6 space-y-1.5">
-                      <div className="text-sm lg:text-base">
-                        <strong>Start:</strong> {booking.customerSentStartAt 
-                          ? formatDateTime(booking.customerSentStartAt) 
-                          : formatDateTime(booking.startAt)}
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 lg:p-4 xl:p-5 space-y-3 lg:space-y-3.5 xl:space-y-4">
+                {/* STEP 1: Customer-Provided Time - Display exactly as customer sent it */}
+                {(booking.customerSentStartAt || booking.customerSentEndAt) && (() => {
+                  const customerStart = booking.customerSentStartAt ? formatCustomerTime(booking.customerSentStartAt, booking.timezone) : null;
+                  const customerEnd = booking.customerSentEndAt ? formatCustomerTime(booking.customerSentEndAt, booking.timezone) : null;
+                  const hasTzInfo = booking.customerSentStartAt ? hasTimezoneInfo(booking.customerSentStartAt) : false;
+                  const assumedTimezone = booking.timezone || "UTC";
+                  
+                  return (
+                    <div className="space-y-3 pb-4 border-b-2 border-gray-300">
+                      <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-gray-900">
+                        <Clock className="h-4 w-4 text-amber-600" />
+                        1. Customer-Provided Time
                       </div>
-                      <div className="text-sm lg:text-base">
-                        <strong>End:</strong> {booking.customerSentEndAt 
-                          ? formatDateTime(booking.customerSentEndAt) 
-                          : formatDateTime(booking.endAt)}
+                      <div className="pl-6 space-y-2 bg-white rounded-lg p-3 border border-gray-200">
+                        <div className="text-sm lg:text-base">
+                          <strong>Customer Mentioned:</strong>
+                        </div>
+                        <div className="pl-4 space-y-1.5">
+                          <div className="text-sm lg:text-base">
+                            <strong>Start:</strong> {customerStart ? `${customerStart.dateStr} at ${customerStart.localTime}` : "N/A"}
+                          </div>
+                          <div className="text-sm lg:text-base">
+                            <strong>End:</strong> {customerEnd ? `${customerEnd.dateStr} at ${customerEnd.localTime}` : "N/A"}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100">
+                          <strong>Timezone Provided:</strong> {hasTzInfo ? "Yes (included in time)" : "No"}
+                        </div>
                       </div>
-                    </div>
-                    {/* Timezone Confirmation Notice */}
-                    {booking.customerSentStartAt && (
-                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <span className="text-yellow-600 text-lg">⚠️</span>
-                          <div className="flex-1">
-                            <strong className="text-sm sm:text-base text-yellow-900 block mb-1">
-                              Timezone Confirmation Needed:
-                            </strong>
-                            <p className="text-xs sm:text-sm text-yellow-800">
-                              The customer mentioned this time: <strong>{booking.customerSentStartAt}</strong>
-                              <br />
-                              Please confirm with the customer that this time is correct for their timezone ({booking.timezone}).
+                      
+                      {/* STEP 2: Timezone Assumption (only if needed) */}
+                      {!hasTzInfo && assumedTimezone && (
+                        <div className="pl-6 space-y-2">
+                          <div className="text-sm sm:text-base font-bold text-gray-900">
+                            2. Timezone Assumption
+                          </div>
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p className="text-xs sm:text-sm text-blue-900">
+                              <strong>Assumption:</strong> Interpreting the customer's time as <strong>{assumedTimezone}</strong>.
                             </p>
                           </div>
                         </div>
+                      )}
+                      
+                      {/* STEP 3: Converted to UTC */}
+                      <div className="pl-6 space-y-2">
+                        <div className="text-sm sm:text-base font-bold text-gray-900">
+                          {!hasTzInfo ? "3. " : "2. "}Converted to UTC
+                        </div>
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5">
+                          <div className="text-sm lg:text-base">
+                            <strong>Start:</strong> {customerStart ? customerStart.utcTime : formatTime(booking.startAt)}
+                          </div>
+                          <div className="text-sm lg:text-base">
+                            <strong>End:</strong> {customerEnd ? customerEnd.utcTime : formatTime(booking.endAt)}
+                          </div>
+                        </div>
                       </div>
-                    )}
+                      
+                      {/* Confirmation Notice if timezone was assumed */}
+                      {!hasTzInfo && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-start gap-2">
+                            <span className="text-yellow-600 text-lg">⚠️</span>
+                            <div className="flex-1">
+                              <strong className="text-sm sm:text-base text-yellow-900 block mb-1">
+                                Status: Pending confirmation
+                              </strong>
+                              <p className="text-xs sm:text-sm text-yellow-800">
+                                The customer's timezone was not explicitly provided. We assumed <strong>{assumedTimezone}</strong>.
+                                <br />
+                                Please confirm with the customer that this time is correct for their timezone.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+                
+                {/* STEP 4: Final Booking Summary (Clear & Non-Contradictory) */}
+                <div className="space-y-2 pt-2 border-t border-gray-200">
+                  <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-gray-900">
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                    {booking.customerSentStartAt ? "4. " : ""}Final Booking Summary
                   </div>
-                )}
-                <div className="flex items-start gap-2">
-                  <Calendar className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 text-gray-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm lg:text-base xl:text-base">
-                    <strong>Date:</strong> {formatDate(booking.startAt)}
-                  </span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Clock className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 text-gray-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm lg:text-base xl:text-base break-words">
-                    <strong>Time (UTC):</strong> {formatTime(booking.startAt)} - {formatTime(booking.endAt)}
-                  </span>
-                </div>
-                <div className="text-sm lg:text-base xl:text-base text-gray-600">
-                  <strong>Timezone:</strong> {booking.timezone}
+                  <div className="pl-6 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Calendar className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm lg:text-base xl:text-base">
+                        <strong>Date:</strong> {formatDate(booking.startAt)}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Clock className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm lg:text-base xl:text-base break-words space-y-1">
+                        <div>
+                          <strong>Local Time ({booking.timezone || "UTC"}):</strong> {
+                            booking.customerSentStartAt && booking.customerSentEndAt
+                              ? `${formatCustomerTime(booking.customerSentStartAt, booking.timezone).localTime} – ${formatCustomerTime(booking.customerSentEndAt, booking.timezone).localTime}`
+                              : `${formatTime(booking.startAt, true)} – ${formatTime(booking.endAt, true)}`
+                          }
+                        </div>
+                        <div>
+                          <strong>UTC Time:</strong> {formatTime(booking.startAt)} – {formatTime(booking.endAt)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-sm lg:text-base xl:text-base text-gray-600">
+                      <strong>Timezone:</strong> {booking.timezone || "UTC"}
+                    </div>
+                  </div>
                 </div>
                 {booking.requestedAt && (
                   <div className="text-sm lg:text-base xl:text-base text-gray-600 break-words">

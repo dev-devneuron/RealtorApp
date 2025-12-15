@@ -92,21 +92,28 @@ export const BookingsTab = ({
   const [lastNotificationCheck, setLastNotificationCheck] = useState<Date>(new Date());
   const [pendingCount, setPendingCount] = useState(0);
   const [showManualBookingModal, setShowManualBookingModal] = useState(false);
+  // Local copy to allow optimistic updates without mutating props
+  const [bookingsState, setBookingsState] = useState<Booking[]>(bookings || []);
+
+  // Keep local state in sync when parent provides fresh bookings
+  useEffect(() => {
+    setBookingsState(bookings || []);
+  }, [bookings]);
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const total = bookings.length;
-    const pending = bookings.filter((b) => b.status === "pending").length;
-    const approved = bookings.filter((b) => b.status === "approved").length;
-    const denied = bookings.filter((b) => b.status === "denied").length;
-    const cancelled = bookings.filter((b) => b.status === "cancelled").length;
-    const rescheduled = bookings.filter((b) => b.status === "rescheduled").length;
+    const total = bookingsState.length;
+    const pending = bookingsState.filter((b) => b.status === "pending").length;
+    const approved = bookingsState.filter((b) => b.status === "approved").length;
+    const denied = bookingsState.filter((b) => b.status === "denied").length;
+    const cancelled = bookingsState.filter((b) => b.status === "cancelled").length;
+    const rescheduled = bookingsState.filter((b) => b.status === "rescheduled").length;
     
     const approvalRate = total > 0 
       ? Math.round((approved / (approved + denied)) * 100) 
       : 0;
 
-    const respondedBookings = bookings.filter(
+    const respondedBookings = bookingsState.filter(
       (b) => (b.status === "approved" || b.status === "denied") && b.requestedAt && b.updatedAt
     );
     const avgResponseTime = respondedBookings.length > 0
@@ -129,7 +136,7 @@ export const BookingsTab = ({
       approvalRate,
       avgResponseTime,
     };
-  }, [bookings]);
+  }, [bookingsState]);
 
   // Debounce search query to reduce filtering overhead
   useEffect(() => {
@@ -142,7 +149,7 @@ export const BookingsTab = ({
 
   // Filter bookings based on status and search (use debounced query)
   const filteredBookings = useMemo(() => {
-    let filtered = bookings;
+    let filtered = bookingsState;
 
     if (statusFilter !== "all") {
       filtered = filtered.filter((b) => b.status === statusFilter);
@@ -161,7 +168,7 @@ export const BookingsTab = ({
     }
 
     return filtered;
-  }, [bookings, statusFilter, debouncedSearchQuery]);
+  }, [bookingsState, statusFilter, debouncedSearchQuery]);
 
   // Separate pending bookings
   const pendingBookings = useMemo(
@@ -185,8 +192,8 @@ export const BookingsTab = ({
   const handleApprove = async (bookingId: number) => {
     setActionLoading(bookingId);
     // Optimistic update - update UI immediately
-    const previousBookings = bookings;
-    setBookings(prev => prev.map(b => 
+    const previousBookings = bookingsState;
+    setBookingsState(prev => prev.map(b => 
       b.bookingId === bookingId ? { ...b, status: 'approved' as const } : b
     ));
     
@@ -197,7 +204,7 @@ export const BookingsTab = ({
       onRefresh();
     } catch (error: any) {
       // Revert optimistic update on error
-      setBookings(previousBookings);
+      setBookingsState(previousBookings);
       const errorMessage = extractErrorMessage(error) || "Failed to approve booking";
       toast.error(errorMessage);
     } finally {
@@ -208,8 +215,8 @@ export const BookingsTab = ({
   const handleDeny = async (bookingId: number, reason?: string) => {
     setActionLoading(bookingId);
     // Optimistic update - update UI immediately
-    const previousBookings = bookings;
-    setBookings(prev => prev.map(b => 
+    const previousBookings = bookingsState;
+    setBookingsState(prev => prev.map(b => 
       b.bookingId === bookingId ? { ...b, status: 'denied' as const } : b
     ));
     
@@ -220,7 +227,7 @@ export const BookingsTab = ({
       onRefresh();
     } catch (error: any) {
       // Revert optimistic update on error
-      setBookings(previousBookings);
+      setBookingsState(previousBookings);
       const errorMessage = extractErrorMessage(error) || "Failed to deny booking";
       toast.error(errorMessage);
     } finally {
@@ -235,8 +242,8 @@ export const BookingsTab = ({
   ) => {
     setActionLoading(bookingId);
     // Optimistic update - update UI immediately
-    const previousBookings = bookings;
-    setBookings(prev => prev.map(b => 
+    const previousBookings = bookingsState;
+    setBookingsState(prev => prev.map(b => 
       b.bookingId === bookingId ? { ...b, status: 'rescheduled' as const } : b
     ));
     
@@ -247,7 +254,7 @@ export const BookingsTab = ({
       onRefresh();
     } catch (error: any) {
       // Revert optimistic update on error
-      setBookings(previousBookings);
+      setBookingsState(previousBookings);
       const errorMessage = extractErrorMessage(error) || "Failed to reschedule booking";
       toast.error(errorMessage);
     } finally {
@@ -258,8 +265,8 @@ export const BookingsTab = ({
   const handleCancel = async (bookingId: number, reason?: string) => {
     setActionLoading(bookingId);
     // Optimistic update - update UI immediately
-    const previousBookings = bookings;
-    setBookings(prev => prev.map(b => 
+    const previousBookings = bookingsState;
+    setBookingsState(prev => prev.map(b => 
       b.bookingId === bookingId ? { ...b, status: 'cancelled' as const } : b
     ));
     
@@ -270,7 +277,7 @@ export const BookingsTab = ({
       onRefresh();
     } catch (error: any) {
       // Revert optimistic update on error
-      setBookings(previousBookings);
+      setBookingsState(previousBookings);
       const errorMessage = extractErrorMessage(error) || "Failed to cancel booking";
       toast.error(errorMessage);
     } finally {
@@ -319,7 +326,7 @@ export const BookingsTab = ({
       return true;
     }
     
-    if (bookings.length > 0) {
+    if (bookingsState.length > 0) {
       return true;
     }
     
@@ -332,13 +339,13 @@ export const BookingsTab = ({
     }
     
     return false;
-  }, [userType, bookings, properties, userId]);
+  }, [userType, bookingsState, properties, userId]);
 
   // Real-time notifications with polling
   useEffect(() => {
     const checkForNewBookings = async () => {
       try {
-        const pending = bookings.filter((b) => b.status === "pending").length;
+        const pending = bookingsState.filter((b) => b.status === "pending").length;
         if (pending > pendingCount && pendingCount > 0) {
           const newCount = pending - pendingCount;
           toast.success(`You have ${newCount} new pending booking${newCount > 1 ? "s" : ""}!`, {
@@ -357,7 +364,7 @@ export const BookingsTab = ({
     checkForNewBookings();
 
     return () => clearInterval(interval);
-  }, [bookings, pendingCount]);
+  }, [bookingsState, pendingCount]);
 
   // Navigate dates
   const navigateDate = (direction: "prev" | "next") => {
@@ -894,7 +901,7 @@ export const BookingsTab = ({
 
             {/* Statistics View */}
             <TabsContent value="stats" className="mt-0">
-              <BookingStatistics bookings={bookings} />
+              <BookingStatistics bookings={bookingsState} />
             </TabsContent>
 
             {/* Availability Management View */}

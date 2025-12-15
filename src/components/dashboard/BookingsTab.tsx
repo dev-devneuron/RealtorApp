@@ -95,9 +95,20 @@ export const BookingsTab = ({
   // Local copy to allow optimistic updates without mutating props
   const [bookingsState, setBookingsState] = useState<Booking[]>(bookings || []);
 
-  // Keep local state in sync when parent provides fresh bookings
+  // Keep local state in sync when parent provides fresh bookings, but don't overwrite optimistic non-pending changes with stale pending data
   useEffect(() => {
-    setBookingsState(bookings || []);
+    setBookingsState((prev) => {
+      const prevMap = new Map(prev.map((b) => [b.bookingId, b]));
+      return (bookings || []).map((incoming) => {
+        const existing = prevMap.get(incoming.bookingId);
+        if (!existing) return incoming;
+        // If we previously moved it out of pending and incoming is still pending, keep our optimistic/non-pending state
+        if (existing.status !== "pending" && incoming.status === "pending") {
+          return existing;
+        }
+        return incoming;
+      });
+    });
   }, [bookings]);
 
   // Calculate statistics

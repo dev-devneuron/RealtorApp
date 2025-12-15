@@ -781,6 +781,18 @@ export const BookingsTab = ({
                                     <X className="h-4 w-4" />
                                   </Button>
                                 )}
+                                {booking.status === "denied" && (
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDelete(booking.bookingId)}
+                                    disabled={actionLoading === booking.bookingId}
+                                    className="h-9 w-9 p-0 shadow-md"
+                                    title="Delete permanently"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </motion.tr>

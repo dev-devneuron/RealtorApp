@@ -758,7 +758,7 @@ export const BookingDetailModal = ({
                 </Button>
               </>
             )}
-            {booking.status === "denied" && (
+            {(booking.status === "denied" || booking.status === "cancelled") && (
               <>
                 <Button
                   onClick={() => setShowDeleteDialog(true)}
@@ -767,7 +767,7 @@ export const BookingDetailModal = ({
                   className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] order-1 px-4 lg:px-5 xl:px-6 text-sm lg:text-base xl:text-base"
                 >
                   <X className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2" />
-                  Delete Denied Booking
+                  Delete Permanently
                 </Button>
               </>
             )}

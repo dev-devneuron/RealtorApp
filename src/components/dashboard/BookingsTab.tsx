@@ -448,8 +448,8 @@ export const BookingsTab = ({
         />
         <StatCard
           icon={<XCircle className="h-6 w-6 text-white" />}
-          label="Denied"
-          value={stats.denied}
+          label="Cancelled"
+          value={stats.cancelled}
           gradient="bg-gradient-to-br from-red-500 via-red-600 to-red-700"
           iconBg="bg-red-400/30"
         />

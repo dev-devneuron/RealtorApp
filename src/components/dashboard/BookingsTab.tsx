@@ -25,6 +25,7 @@ import {
   XCircle, 
   RefreshCw as RescheduleIcon,
   X,
+  Trash2,
   ChevronLeft,
   ChevronRight,
   Filter,

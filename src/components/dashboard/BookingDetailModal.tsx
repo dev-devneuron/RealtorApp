@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Phone, Mail, MapPin, Calendar, Clock, User, FileText, CheckCircle2, XCircle, RefreshCw, X, Loader2, Headphones, Download, Play, Edit2, Trash2, Copy, ChevronUp, ChevronDown } from "lucide-react";
-import { formatDateTime, formatDate, formatTime, formatCustomerTime, hasTimezoneInfo, getStatusColor, fetchPropertyAvailability, updateBooking, deleteBooking } from "./utils";
+import { formatDateTime, formatDate, formatTime, formatCustomerTime, hasTimezoneInfo, getStatusColor, fetchPropertyAvailability, updateBooking, deleteBooking, deleteDeniedBooking } from "./utils";
 import { toast } from "sonner";
 import type { Booking, AvailabilitySlot } from "./types";
 
@@ -308,10 +308,18 @@ export const BookingDetailModal = ({
   };
 
   const handleDelete = async () => {
-    if (!onDelete) return;
     setLoading(true);
     try {
-      await onDelete(booking.bookingId);
+      if (booking.status === "denied") {
+        // Use dedicated endpoint for denied bookings
+        await deleteDeniedBooking(booking.bookingId);
+      } else {
+        if (!onDelete) {
+          setLoading(false);
+          return;
+        }
+        await onDelete(booking.bookingId);
+      }
       setShowDeleteDialog(false);
       toast.success("Booking deleted successfully");
       onClose();
@@ -747,6 +755,19 @@ export const BookingDetailModal = ({
                 >
                   <X className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2" />
                   Cancel Booking
+                </Button>
+              </>
+            )}
+            {booking.status === "denied" && (
+              <>
+                <Button
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={loading}
+                  variant="destructive"
+                  className="w-full sm:w-auto min-h-[44px] lg:min-h-[48px] xl:min-h-[52px] order-1 px-4 lg:px-5 xl:px-6 text-sm lg:text-base xl:text-base"
+                >
+                  <X className="h-4 w-4 lg:h-4 lg:w-4 xl:h-5 xl:w-5 mr-2" />
+                  Delete Denied Booking
                 </Button>
               </>
             )}

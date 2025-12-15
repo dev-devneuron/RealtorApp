@@ -209,7 +209,7 @@ export const BookingsTab = ({
     ));
     
     try {
-      await approveBooking(bookingId, userId);
+      await approveBooking(bookingId);
       toast.success("Booking approved successfully");
       // Refresh in background without blocking UI
       onRefresh();
@@ -232,7 +232,7 @@ export const BookingsTab = ({
     ));
     
     try {
-      await denyBooking(bookingId, userId, reason);
+      await denyBooking(bookingId, reason);
       toast.success("Booking denied");
       // Refresh in background without blocking UI
       onRefresh();

@@ -283,10 +283,10 @@ export const formatCustomerTime = (
     try {
       const formatter = new Intl.DateTimeFormat("en-US", {
         timeZone: timezone,
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
       localTime = formatter.format(date);
     } catch (e) {
       const hour12 = date.getUTCHours() % 12 || 12;
@@ -518,10 +518,10 @@ export const fetchBookingDetail = async (bookingId: number): Promise<Booking> =>
 
 /**
  * Approve booking
+* Backend now infers approver from auth token; no approver_id body needed.
  */
 export const approveBooking = async (
-  bookingId: number,
-  approverId: number
+  bookingId: number
 ): Promise<Booking> => {
   const token = getAuthToken();
   if (!token || token.trim() === "") throw new Error("Not authenticated");
@@ -532,10 +532,11 @@ export const approveBooking = async (
   };
 
   try {
-    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/approve`, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({ approver_id: approverId }),
+  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/approve`, {
+    method: "POST",
+    headers: headers,
+      // No body needed; approver inferred from token
+      body: JSON.stringify({}),
     });
 
     // IMPORTANT: Always parse JSON response first, even for errors
@@ -548,16 +549,18 @@ export const approveBooking = async (
       throw new Error(`Server error: ${text || response.statusText}`);
     }
 
-    if (!response.ok) {
+  if (!response.ok) {
       // Extract error message properly - prevents [object Object] error
       const errorMsg = data.detail || data.message || "Failed to approve booking";
       throw new Error(errorMsg);
     }
 
     // Clear all related caches in parallel for faster updates
+    // Use pattern-based clearing so we don't depend on approver_id
     Promise.all([
-      clearCacheForEndpoint(`/api/users/${approverId}/bookings`),
-      clearCacheByPattern(`/api/users/${approverId}/calendar-events`),
+      clearCacheByPattern("/api/users/"),
+      clearCacheByPattern("/bookings"),
+      clearCacheByPattern("/calendar-events"),
     ]).catch(() => {}); // Fire and forget - don't block response
     
     return data;
@@ -573,10 +576,10 @@ export const approveBooking = async (
 
 /**
  * Deny booking
+* Backend infers approver from auth token; approver_id not required.
  */
 export const denyBooking = async (
   bookingId: number,
-  approverId: number,
   reason?: string
 ): Promise<Booking> => {
   const token = getAuthToken();
@@ -588,10 +591,10 @@ export const denyBooking = async (
   };
 
   try {
-    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/deny`, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({ approver_id: approverId, reason }),
+  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/deny`, {
+    method: "POST",
+    headers: headers,
+      body: JSON.stringify({ reason }),
     });
 
     // IMPORTANT: Always parse JSON response first, even for errors
@@ -604,7 +607,7 @@ export const denyBooking = async (
       throw new Error(`Server error: ${text || response.statusText}`);
     }
 
-    if (!response.ok) {
+  if (!response.ok) {
       // Extract error message properly - prevents [object Object] error
       const errorMsg = data.detail || data.message || "Failed to deny booking";
       throw new Error(errorMsg);
@@ -612,8 +615,9 @@ export const denyBooking = async (
 
     // Clear all related caches in parallel for faster updates
     Promise.all([
-      clearCacheForEndpoint(`/api/users/${approverId}/bookings`),
-      clearCacheByPattern(`/api/users/${approverId}/calendar-events`),
+      clearCacheByPattern("/api/users/"),
+      clearCacheByPattern("/bookings"),
+      clearCacheByPattern("/calendar-events"),
     ]).catch(() => {}); // Fire and forget - don't block response
     
     return data;
@@ -644,11 +648,11 @@ export const rescheduleBooking = async (
   };
 
   try {
-    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/reschedule`, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({ proposed_slots: proposedSlots, reason }),
-    });
+  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/reschedule`, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify({ proposed_slots: proposedSlots, reason }),
+  });
 
     // IMPORTANT: Always parse JSON response first, even for errors
     let data;
@@ -660,7 +664,7 @@ export const rescheduleBooking = async (
       throw new Error(`Server error: ${text || response.statusText}`);
     }
 
-    if (!response.ok) {
+  if (!response.ok) {
       // Extract error message properly - prevents [object Object] error
       const errorMsg = data.detail || data.message || "Failed to reschedule booking";
       throw new Error(errorMsg);
@@ -668,8 +672,9 @@ export const rescheduleBooking = async (
 
     // Clear all related caches in parallel for faster updates
     Promise.all([
-      clearCacheForEndpoint(`/api/users/${approverId}/bookings`),
-      clearCacheByPattern(`/api/users/${approverId}/calendar-events`),
+      clearCacheByPattern("/api/users/"),
+      clearCacheByPattern("/bookings"),
+      clearCacheByPattern("/calendar-events"),
     ]).catch(() => {}); // Fire and forget - don't block response
     
     return data;
@@ -699,9 +704,9 @@ export const cancelBooking = async (
   };
 
   try {
-    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/cancel`, {
-      method: "POST",
-      headers: headers,
+  const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/cancel`, {
+    method: "POST",
+    headers: headers,
       body: JSON.stringify({ reason: reason || null }),
     });
 
@@ -715,7 +720,7 @@ export const cancelBooking = async (
       throw new Error(`Server error: ${text || response.statusText}`);
     }
 
-    if (!response.ok) {
+  if (!response.ok) {
       // Extract error message properly - prevents [object Object] error
       const errorMsg = data.detail || data.message || "Failed to cancel booking";
       throw new Error(errorMsg);
@@ -847,6 +852,56 @@ export const deleteBooking = async (
       throw error;
     }
     // Handle unexpected errors (network, JSON parsing, etc.)
+    throw new Error("Network error. Please try again.");
+  }
+};
+
+/**
+ * Delete denied booking (DELETE /api/bookings/{booking_id}/delete)
+ * Backend docs: "Delete denied booking: DELETE /api/bookings/{id}/delete (show button only when status === 'denied')"
+ */
+export const deleteDeniedBooking = async (
+  bookingId: number
+): Promise<{ bookingId: number; message: string }> => {
+  const token = getAuthToken();
+  if (!token || token.trim() === "") throw new Error("Not authenticated");
+
+  const headers: HeadersInit = {
+    "Authorization": `Bearer ${token.trim()}`,
+  };
+
+  try {
+    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/delete`, {
+      method: "DELETE",
+      headers: headers,
+    });
+
+    // IMPORTANT: Always parse JSON response first, even for errors
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      const text = await response.text();
+      throw new Error(`Server error: ${text || response.statusText}`);
+    }
+
+    if (!response.ok) {
+      const errorMsg = data.detail || data.message || "Failed to delete denied booking";
+      throw new Error(errorMsg);
+    }
+
+    // Clear bookings/calendar caches broadly to ensure UI sync
+    Promise.all([
+      clearCacheByPattern("/api/users/"),
+      clearCacheByPattern("/bookings"),
+      clearCacheByPattern("/calendar-events"),
+    ]).catch(() => {});
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
     throw new Error("Network error. Please try again.");
   }
 };
@@ -1317,9 +1372,9 @@ export const updateCalendarPreferences = async (
         ? convertApiDaysToJs(apiWorkingDays) 
         : (preferences.working_days && preferences.working_days.length > 0 ? preferences.working_days : [1, 2, 3, 4, 5]), // Use provided preferences or defaults
     };
-    
-    return {
-      ...data,
+      
+      return {
+        ...data,
       preferences: convertedPreferences,
     };
   } catch (error: any) {
@@ -1484,10 +1539,10 @@ export const removeUnavailableSlot = async (
   const response = await fetch(
     `${API_BASE}/api/users/${userId}/availability/${slotId}?user_type=${userType}`,
     {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     }
   );
 

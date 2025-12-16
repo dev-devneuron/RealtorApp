@@ -158,7 +158,7 @@ export const formatDateTime = (dateString: string | Date): string => {
  * 
  * Uses a binary search approach to find the correct UTC time.
  */
-const convertTzToUTC = (dateString: string, timezone: string): Date => {
+export const convertTzToUTC = (dateString: string, timezone: string): Date => {
   // Parse date components
   const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
   if (!match) return new Date(dateString);

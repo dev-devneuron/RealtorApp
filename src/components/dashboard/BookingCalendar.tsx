@@ -12,7 +12,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from "lucide-react";
-import { formatTime, fetchCalendarEvents, fetchUnavailableSlots, fetchCalendarPreferences, formatCustomerTime, hasTimezoneInfo } from "./utils";
+import { formatTime, fetchCalendarEvents, fetchUnavailableSlots, fetchCalendarPreferences, formatCustomerTime, hasTimezoneInfo, convertTzToUTC } from "./utils";
 import { API_BASE } from "./constants";
 import type { Booking } from "./types";
 import "./BookingCalendar.css";
@@ -554,38 +554,31 @@ export const BookingCalendar = ({
       const endTimeString = String(booking.customerSentEndAt).trim();
       const bookingTimezone = booking.timezone || "UTC";
       
-      // CRITICAL: Parse customer's mentioned time as naive local time (no timezone conversion)
-      // react-big-calendar will display it in the user's local timezone, showing the customer's mentioned time
-      // Example: Customer says "12:00 PM" -> Parse as "12:00 PM" in browser timezone -> Calendar shows "12:00 PM"
-      // This ensures the calendar shows the customer's mentioned time, not UTC-converted time
+      // CRITICAL: Parse customer's mentioned time in THEIR timezone, not browser's timezone
+      // We need to create a Date object that represents the customer's time in their timezone
+      // Then convert it to UTC for react-big-calendar (which works with UTC internally)
+      // The calendar will then display it correctly in the user's timezone
       let startDate: Date;
       let endDate: Date;
       
-      // Parse as naive local time - JavaScript will interpret in browser's timezone
-      // When react-big-calendar displays it, it will show the same time (customer's mentioned time)
       if (hasTimezoneInfo(startTimeString)) {
-        // Has timezone info - remove timezone info and parse as local time
-        // Extract just the date/time part without timezone
-        const dateTimeMatch = startTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
-        if (dateTimeMatch) {
-          startDate = new Date(dateTimeMatch[1]); // Parse without timezone
-        } else {
-          startDate = new Date(startTimeString);
-        }
-      } else {
-        // No timezone info - parse as naive local time (what customer mentioned)
+        // Has timezone info - parse directly (will be in UTC after parsing)
         startDate = new Date(startTimeString);
+      } else if (bookingTimezone && bookingTimezone !== "UTC") {
+        // No timezone info - interpret as being in the customer's timezone
+        // Use convertTzToUTC to properly convert customer's time to UTC
+        startDate = convertTzToUTC(startTimeString, bookingTimezone);
+      } else {
+        // No timezone info and no booking timezone - treat as UTC
+        startDate = new Date(startTimeString + "Z");
       }
       
       if (hasTimezoneInfo(endTimeString)) {
-        const dateTimeMatch = endTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
-        if (dateTimeMatch) {
-          endDate = new Date(dateTimeMatch[1]); // Parse without timezone
-        } else {
-          endDate = new Date(endTimeString);
-        }
-      } else {
         endDate = new Date(endTimeString);
+      } else if (bookingTimezone && bookingTimezone !== "UTC") {
+        endDate = convertTzToUTC(endTimeString, bookingTimezone);
+      } else {
+        endDate = new Date(endTimeString + "Z");
       }
 
       // Final validation - if this fails, something is very wrong

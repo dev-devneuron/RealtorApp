@@ -41,16 +41,17 @@ const About = () => {
     }
   ];
 
-  const team = [
-    {
-      name: "Tayyab Tahir",
-      role: "CEO & Founder",
-      image: "/images/photos/ceo.jpg",
-      description: "Tayyab Tahir is the visionary CEO and Founder of Leasap, bringing over 3 years of hands-on experience in the real estate industry. With a deep understanding of the challenges faced by property managers and realtors, Tayyab founded Leasap to revolutionize the industry through AI-powered solutions. His expertise spans property management, client relations, and technology innovation, making him uniquely positioned to bridge the gap between traditional real estate practices and cutting-edge AI technology. Under his leadership, Leasap has grown into a trusted platform that empowers realtors to automate routine tasks, enhance client engagement, and significantly increase lead conversions.",
-      linkedin: "https://www.linkedin.com/in/tayyabtahir",
-      email: "ttahir@leasap.com"
-    }
-  ];
+  // Temporarily commented out - Team section
+  // const team = [
+  //   {
+  //     name: "Tayyab Tahir",
+  //     role: "CEO & Founder",
+  //     image: "/images/photos/ceo.jpg",
+  //     description: "Tayyab Tahir is the visionary CEO and Founder of Leasap, bringing over 3 years of hands-on experience in the real estate industry. With a deep understanding of the challenges faced by property managers and realtors, Tayyab founded Leasap to revolutionize the industry through AI-powered solutions. His expertise spans property management, client relations, and technology innovation, making him uniquely positioned to bridge the gap between traditional real estate practices and cutting-edge AI technology. Under his leadership, Leasap has grown into a trusted platform that empowers realtors to automate routine tasks, enhance client engagement, and significantly increase lead conversions.",
+  //     linkedin: "https://www.linkedin.com/in/tayyabtahir",
+  //     email: "ttahir@leasap.com"
+  //   }
+  // ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -317,8 +318,8 @@ const About = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-white">
+      {/* Team Section - Temporarily commented out */}
+      {/* <section className="py-12 sm:py-16 md:py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -345,7 +346,6 @@ const About = () => {
                 transition={{ duration: 0.6 }}
               >
                 <Card className="p-6 sm:p-8 md:p-10 bg-gradient-to-br from-navy via-navy/95 to-navy text-white border-0 shadow-2xl overflow-hidden relative">
-                  {/* Decorative Elements */}
                   <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
                   <div className="absolute bottom-0 left-0 w-48 h-48 bg-gold/5 rounded-full blur-2xl -ml-24 -mb-24"></div>
                   
@@ -402,7 +402,7 @@ const About = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-navy via-navy/95 to-navy relative overflow-hidden">

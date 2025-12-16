@@ -406,16 +406,38 @@ export const BookingCalendar = ({
   const bookingEvents = useMemo(() => {
     // DEBUG: Log what we're receiving
     console.log(`[BookingCalendar] INPUT: Received ${bookings.length} bookings`);
-    bookings.forEach((b, idx) => {
-      if (b.bookingId) {
-        console.log(`[BookingCalendar] Booking ${idx}: ID=${b.bookingId}, hasCustomerSent=${!!b.customerSentStartAt}, customerSentStartAt="${b.customerSentStartAt}", startAt="${b.startAt}"`);
+    
+    // STEP 0: FIRST - Deduplicate by bookingId, ALWAYS preferring the one with customerSentStartAt
+    // This prevents showing the same booking twice (once with customerSentStartAt, once without)
+    const deduplicatedBookingsMap = new Map<number, Booking>();
+    bookings.forEach((booking) => {
+      if (!booking.bookingId) return;
+      
+      const existing = deduplicatedBookingsMap.get(booking.bookingId);
+      const hasCustomerSent = !!(booking.customerSentStartAt && booking.customerSentEndAt);
+      const existingHasCustomerSent = !!(existing?.customerSentStartAt && existing?.customerSentEndAt);
+      
+      // Always prefer the booking with customerSentStartAt
+      if (!existing || (hasCustomerSent && !existingHasCustomerSent)) {
+        deduplicatedBookingsMap.set(booking.bookingId, booking);
+      } else if (hasCustomerSent && existingHasCustomerSent) {
+        // Both have customerSentStartAt - keep the existing one (first occurrence)
+        // Don't replace to avoid unnecessary updates
       }
     });
+    
+    const deduplicatedBookings = Array.from(deduplicatedBookingsMap.values());
+    console.log(`[BookingCalendar] After initial deduplication: ${bookings.length} → ${deduplicatedBookings.length} unique bookings`);
+    
+    const bookingsWithoutCustomerSent = deduplicatedBookings.filter(b => !b.customerSentStartAt || !b.customerSentEndAt);
+    if (bookingsWithoutCustomerSent.length > 0) {
+      console.warn(`[BookingCalendar] WARNING: Found ${bookingsWithoutCustomerSent.length} bookings WITHOUT customerSentStartAt:`, bookingsWithoutCustomerSent.map(b => ({ id: b.bookingId, startAt: b.startAt })));
+    }
     
     // FILTER: Only keep bookings that have customer-sent times
     // We will use customerSentStartAt for display, regardless of whether it matches startAt
     // The key is: if customerSentStartAt exists, use it. If not, don't show the booking.
-    const validBookings = bookings.filter((booking) => {
+    const validBookings = deduplicatedBookings.filter((booking) => {
       // STEP 1: Must have both customer-sent times - if not, REJECT IMMEDIATELY
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
         console.log(`[BookingCalendar] Rejecting booking ${booking.bookingId}: missing customer-sent times`);
@@ -602,14 +624,32 @@ export const BookingCalendar = ({
       
       const booking = event.resource as Booking;
       
-      // CRITICAL: If this event's start time matches the UTC startAt time, it's a UTC event - REJECT
-      if (booking.startAt && booking.customerSentStartAt) {
-        const utcStart = new Date(String(booking.startAt).trim()).getTime();
-        const eventStart = event.start.getTime();
+      // CRITICAL: Must have customerSentStartAt - if not, this is a UTC-only booking - REJECT
+      if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
+        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - missing customerSentStartAt`);
+        return false;
+      }
+      
+      // CRITICAL: Verify event is positioned using customerSentStartAt, not startAt
+      const customerStartTime = new Date(String(booking.customerSentStartAt).trim()).getTime();
+      const eventStartTime = event.start.getTime();
+      const timeDiffFromCustomer = Math.abs(eventStartTime - customerStartTime);
+      
+      // Event should be positioned at customerSentStartAt (within reasonable tolerance)
+      // Allow up to 1 hour difference to account for timezone parsing differences
+      if (timeDiffFromCustomer > 3600000) { // 1 hour in milliseconds
+        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - event not positioned at customerSentStartAt (diff: ${timeDiffFromCustomer}ms)`);
+        return false;
+      }
+      
+      // If booking has startAt, verify event is NOT positioned at startAt (UTC)
+      if (booking.startAt) {
+        const utcStartTime = new Date(String(booking.startAt).trim()).getTime();
+        const timeDiffFromUtc = Math.abs(eventStartTime - utcStartTime);
         
-        // If they're the same (within 1 second), this is a UTC event - REJECT
-        if (Math.abs(utcStart - eventStart) < 1000) {
-          console.error(`[BookingCalendar] FINAL FILTER: Rejecting UTC event for booking ${event.bookingId}`);
+        // If event is closer to UTC than customer time, it's wrong - REJECT
+        if (timeDiffFromUtc < timeDiffFromCustomer && timeDiffFromUtc < 1000) {
+          console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - event positioned at UTC time (${timeDiffFromUtc}ms) instead of customer time (${timeDiffFromCustomer}ms)`);
           return false;
         }
       }

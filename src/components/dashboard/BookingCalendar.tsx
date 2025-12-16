@@ -554,31 +554,38 @@ export const BookingCalendar = ({
       const endTimeString = String(booking.customerSentEndAt).trim();
       const bookingTimezone = booking.timezone || "UTC";
       
-      // CRITICAL: Parse customer's mentioned time in THEIR timezone, not browser's timezone
-      // We need to create a Date object that represents the customer's time in their timezone
-      // Then convert it to UTC for react-big-calendar (which works with UTC internally)
-      // The calendar will then display it correctly in the user's timezone
+      // CRITICAL: Parse customer's mentioned time as naive local time (no timezone conversion)
+      // react-big-calendar will convert dates to the user's local timezone for display
+      // By parsing as naive local time, the calendar will show the customer's mentioned time
+      // Example: Customer says "12:00 PM" -> Parse as "12:00 PM" in browser timezone -> Calendar shows "12:00 PM"
+      // This ensures the calendar displays the customer's mentioned time, not a timezone-converted version
       let startDate: Date;
       let endDate: Date;
       
+      // Parse as naive local time - JavaScript will interpret in browser's timezone
+      // When react-big-calendar displays it, it will show the same time string (customer's mentioned time)
       if (hasTimezoneInfo(startTimeString)) {
-        // Has timezone info - parse directly (will be in UTC after parsing)
-        startDate = new Date(startTimeString);
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        // No timezone info - interpret as being in the customer's timezone
-        // Use convertTzToUTC to properly convert customer's time to UTC
-        startDate = convertTzToUTC(startTimeString, bookingTimezone);
+        // Has timezone info - remove timezone and parse as local time
+        const dateTimeMatch = startTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+        if (dateTimeMatch) {
+          startDate = new Date(dateTimeMatch[1]); // Parse without timezone
+        } else {
+          startDate = new Date(startTimeString);
+        }
       } else {
-        // No timezone info and no booking timezone - treat as UTC
-        startDate = new Date(startTimeString + "Z");
+        // No timezone info - parse as naive local time (what customer mentioned)
+        startDate = new Date(startTimeString);
       }
       
       if (hasTimezoneInfo(endTimeString)) {
-        endDate = new Date(endTimeString);
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        endDate = convertTzToUTC(endTimeString, bookingTimezone);
+        const dateTimeMatch = endTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+        if (dateTimeMatch) {
+          endDate = new Date(dateTimeMatch[1]); // Parse without timezone
+        } else {
+          endDate = new Date(endTimeString);
+        }
       } else {
-        endDate = new Date(endTimeString + "Z");
+        endDate = new Date(endTimeString);
       }
 
       // Final validation - if this fails, something is very wrong
@@ -645,27 +652,30 @@ export const BookingCalendar = ({
       }
       
       // Additional safeguard: Verify the event was created from customerSentStartAt
-      // by checking that the event time matches customerSentStartAt (converted to UTC using booking timezone)
-      const bookingTimezone = booking.timezone || "UTC";
+      // by checking that the event time matches customerSentStartAt (parsed as naive local time)
       const customerStartTimeString = String(booking.customerSentStartAt).trim();
       let expectedCustomerStartTime: number;
       
       if (hasTimezoneInfo(customerStartTimeString)) {
-        expectedCustomerStartTime = new Date(customerStartTimeString).getTime();
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        const expectedDate = convertTzToUTC(customerStartTimeString, bookingTimezone);
-        expectedCustomerStartTime = expectedDate.getTime();
+        // Has timezone info - remove timezone and parse as local time (same as event creation)
+        const dateTimeMatch = customerStartTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+        if (dateTimeMatch) {
+          expectedCustomerStartTime = new Date(dateTimeMatch[1]).getTime();
+        } else {
+          expectedCustomerStartTime = new Date(customerStartTimeString).getTime();
+        }
       } else {
-        expectedCustomerStartTime = new Date(customerStartTimeString + "Z").getTime();
+        // No timezone info - parse as naive local time (same as event creation)
+        expectedCustomerStartTime = new Date(customerStartTimeString).getTime();
       }
       
       const eventStartTime = event.start.getTime();
       const timeDiff = Math.abs(eventStartTime - expectedCustomerStartTime);
       
-      // Event should match customerSentStartAt (converted to UTC) - allow 1 minute tolerance
+      // Event should match customerSentStartAt (parsed as naive local time) - allow 1 minute tolerance
       if (timeDiff > 60000) { // 1 minute in milliseconds
         utcRejectedEvents.push(event.bookingId);
-        console.error(`[BookingCalendar] REJECTING event for booking ${event.bookingId} - event not created from customerSentStartAt. event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" (timezone: ${bookingTimezone}) -> expected ${new Date(expectedCustomerStartTime).toISOString()}, diff: ${timeDiff}ms`);
+        console.error(`[BookingCalendar] REJECTING event for booking ${event.bookingId} - event not created from customerSentStartAt. event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" -> expected ${new Date(expectedCustomerStartTime).toISOString()}, diff: ${timeDiff}ms`);
         return;
       }
       
@@ -753,29 +763,30 @@ export const BookingCalendar = ({
       }
       
       const customerStartTimeString = String(booking.customerSentStartAt).trim();
-      const bookingTimezone = booking.timezone || "UTC";
       
-      // Parse customer time the SAME way we created the event - using convertTzToUTC with booking's timezone
+      // Parse customer time the SAME way we created the event - as naive local time
       // This ensures the comparison is correct
       let customerStartTime: number;
       if (hasTimezoneInfo(customerStartTimeString)) {
-        customerStartTime = new Date(customerStartTimeString).getTime();
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        // No timezone info - interpret as being in the customer's timezone (same as event creation)
-        const customerStartDate = convertTzToUTC(customerStartTimeString, bookingTimezone);
-        customerStartTime = customerStartDate.getTime();
+        // Has timezone info - remove timezone and parse as local time (same as event creation)
+        const dateTimeMatch = customerStartTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+        if (dateTimeMatch) {
+          customerStartTime = new Date(dateTimeMatch[1]).getTime();
+        } else {
+          customerStartTime = new Date(customerStartTimeString).getTime();
+        }
       } else {
-        // No timezone info and no booking timezone - treat as UTC
-        customerStartTime = new Date(customerStartTimeString + "Z").getTime();
+        // No timezone info - parse as naive local time (same as event creation)
+        customerStartTime = new Date(customerStartTimeString).getTime();
       }
       
       const eventStartTime = event.start.getTime();
       const timeDiff = Math.abs(eventStartTime - customerStartTime);
       
-      // Event should be positioned at customer's mentioned time (converted to UTC using their timezone)
+      // Event should be positioned at customer's mentioned time (as naive local time)
       // Allow up to 1 minute difference to account for rounding/parsing differences
       if (timeDiff > 60000) { // 1 minute in milliseconds
-        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - event not positioned at customerSentStartAt (diff: ${timeDiff}ms). event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" (timezone: ${bookingTimezone}) -> ${new Date(customerStartTime).toISOString()}`);
+        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - event not positioned at customerSentStartAt (diff: ${timeDiff}ms). event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" -> ${new Date(customerStartTime).toISOString()}`);
         return false;
       }
       
@@ -797,9 +808,10 @@ export const BookingCalendar = ({
     const utcRejectedInFinal: number[] = [];
     
     combined.forEach((event) => {
-      // CRITICAL: For booking events, ensure they were created from customerSentStartAt, not startAt
-      // This is the final safeguard to prevent UTC-only events from appearing
-      if (event.bookingId && event.resource) {
+      // CRITICAL: Only check booking events - availability events are separate and should not be filtered
+      // Availability events have resource.type === "availability" and no bookingId
+      // They are UTC-based but that's expected for blocked slots - they are NOT booking events
+      if (event.bookingId && event.resource && (!event.resource.type || (event.resource as any).type !== "availability")) {
         const booking = event.resource as Booking;
         
         // MUST have customerSentStartAt - if not, this is a UTC-only event - REJECT
@@ -810,28 +822,31 @@ export const BookingCalendar = ({
         }
         
         // Additional safeguard: Verify the event was created from customerSentStartAt
-        // by checking that the event time matches customerSentStartAt (converted to UTC using booking timezone)
-        // NOT by checking if it matches startAt (which might be the same if backend calculated correctly)
-        const bookingTimezone = booking.timezone || "UTC";
+        // by checking that the event time matches customerSentStartAt (parsed as naive local time)
+        // NOT by checking if it matches startAt (which is UTC and will be different)
         const customerStartTimeString = String(booking.customerSentStartAt).trim();
         let expectedCustomerStartTime: number;
         
         if (hasTimezoneInfo(customerStartTimeString)) {
-          expectedCustomerStartTime = new Date(customerStartTimeString).getTime();
-        } else if (bookingTimezone && bookingTimezone !== "UTC") {
-          const expectedDate = convertTzToUTC(customerStartTimeString, bookingTimezone);
-          expectedCustomerStartTime = expectedDate.getTime();
+          // Has timezone info - remove timezone and parse as local time (same as event creation)
+          const dateTimeMatch = customerStartTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+          if (dateTimeMatch) {
+            expectedCustomerStartTime = new Date(dateTimeMatch[1]).getTime();
+          } else {
+            expectedCustomerStartTime = new Date(customerStartTimeString).getTime();
+          }
         } else {
-          expectedCustomerStartTime = new Date(customerStartTimeString + "Z").getTime();
+          // No timezone info - parse as naive local time (same as event creation)
+          expectedCustomerStartTime = new Date(customerStartTimeString).getTime();
         }
         
         const eventStartTime = event.start.getTime();
         const timeDiff = Math.abs(eventStartTime - expectedCustomerStartTime);
         
-        // Event should match customerSentStartAt (converted to UTC) - allow 1 minute tolerance
+        // Event should match customerSentStartAt (parsed as naive local time) - allow 1 minute tolerance
         if (timeDiff > 60000) { // 1 minute in milliseconds
           utcRejectedInFinal.push(event.bookingId);
-          console.error(`[BookingCalendar] FINAL: Rejecting booking ${event.bookingId} - event not created from customerSentStartAt. event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" (timezone: ${bookingTimezone}) -> expected ${new Date(expectedCustomerStartTime).toISOString()}, diff: ${timeDiff}ms`);
+          console.error(`[BookingCalendar] FINAL: Rejecting booking ${event.bookingId} - event not created from customerSentStartAt. event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" -> expected ${new Date(expectedCustomerStartTime).toISOString()}, diff: ${timeDiff}ms`);
           return;
         }
       }

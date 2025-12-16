@@ -87,6 +87,8 @@ export const BookingsTab = ({
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [startDateFilter, setStartDateFilter] = useState<string>("");
+  const [endDateFilter, setEndDateFilter] = useState<string>("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -159,7 +161,7 @@ export const BookingsTab = ({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Filter bookings based on status and search (use debounced query)
+  // Filter bookings based on status, search, and date range (use debounced query)
   const filteredBookings = useMemo(() => {
     let filtered = bookingsState;
 
@@ -179,8 +181,37 @@ export const BookingsTab = ({
       );
     }
 
+    // Date range filtering - filter by booking start date
+    if (startDateFilter || endDateFilter) {
+      filtered = filtered.filter((b) => {
+        if (!b.startAt) return false;
+        
+        const bookingDate = new Date(b.startAt);
+        if (isNaN(bookingDate.getTime())) return false;
+        
+        // Normalize to start of day for comparison (ignore time)
+        const bookingDateOnly = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate());
+        
+        if (startDateFilter) {
+          const startDate = new Date(startDateFilter);
+          if (isNaN(startDate.getTime())) return true; // Invalid start date, skip this filter
+          const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+          if (bookingDateOnly < startDateOnly) return false;
+        }
+        
+        if (endDateFilter) {
+          const endDate = new Date(endDateFilter);
+          if (isNaN(endDate.getTime())) return true; // Invalid end date, skip this filter
+          const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+          if (bookingDateOnly > endDateOnly) return false;
+        }
+        
+        return true;
+      });
+    }
+
     return filtered;
-  }, [bookingsState, statusFilter, debouncedSearchQuery]);
+  }, [bookingsState, statusFilter, debouncedSearchQuery, startDateFilter, endDateFilter]);
 
   // Separate pending bookings
   const pendingBookings = useMemo(
@@ -497,38 +528,118 @@ export const BookingsTab = ({
           </div>
 
           {/* Enhanced Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-6">
-            <div className="flex-1 relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors z-10" />
-              <Input
-                placeholder="Search bookings by name, phone, property, or ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-4 h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+          <div className="space-y-4 mt-6">
+            {/* First Row: Search and Status */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative group">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors z-10" />
+                <Input
+                  placeholder="Search bookings by name, phone, property, or ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-12 pr-4 h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[220px] h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all">
+                  <Filter className="h-4 w-4 mr-2 text-amber-600" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-amber-200 shadow-xl">
+                  <SelectItem value="all" className="rounded-lg">All Statuses</SelectItem>
+                  <SelectItem value="pending" className="rounded-lg">Pending</SelectItem>
+                  <SelectItem value="approved" className="rounded-lg">Approved</SelectItem>
+                  <SelectItem value="denied" className="rounded-lg">Denied</SelectItem>
+                  <SelectItem value="cancelled" className="rounded-lg">Cancelled</SelectItem>
+                  <SelectItem value="rescheduled" className="rounded-lg">Rescheduled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Second Row: Date Range Filter */}
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
+              <div className="flex-1 sm:flex-initial sm:w-auto">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <Calendar className="h-4 w-4 inline mr-1 text-amber-600" />
+                  Start Date
+                </label>
+                <div className="relative">
+                  <Input
+                    type="date"
+                    value={startDateFilter}
+                    onChange={(e) => {
+                      const newStartDate = e.target.value;
+                      setStartDateFilter(newStartDate);
+                      // If end date is before new start date, clear it
+                      if (endDateFilter && newStartDate && new Date(endDateFilter) < new Date(newStartDate)) {
+                        setEndDateFilter("");
+                      }
+                    }}
+                    max={endDateFilter || undefined}
+                    className="h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all"
+                  />
+                  {startDateFilter && (
+                    <button
+                      onClick={() => setStartDateFilter("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 sm:flex-initial sm:w-auto">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <Calendar className="h-4 w-4 inline mr-1 text-amber-600" />
+                  End Date
+                </label>
+                <div className="relative">
+                  <Input
+                    type="date"
+                    value={endDateFilter}
+                    onChange={(e) => {
+                      const newEndDate = e.target.value;
+                      setEndDateFilter(newEndDate);
+                      // If start date is after new end date, clear it
+                      if (startDateFilter && newEndDate && new Date(startDateFilter) > new Date(newEndDate)) {
+                        setStartDateFilter("");
+                      }
+                    }}
+                    min={startDateFilter || undefined}
+                    className="h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all"
+                  />
+                  {endDateFilter && (
+                    <button
+                      onClick={() => setEndDateFilter("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              {(startDateFilter || endDateFilter) && (
+                <Button
+                  onClick={() => {
+                    setStartDateFilter("");
+                    setEndDateFilter("");
+                  }}
+                  variant="outline"
+                  className="h-12 px-4 bg-white/90 backdrop-blur-sm border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-50 rounded-xl shadow-md hover:shadow-lg transition-all"
                 >
-                  <X className="h-4 w-4" />
-                </button>
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Dates
+                </Button>
               )}
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[220px] h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all">
-                <Filter className="h-4 w-4 mr-2 text-amber-600" />
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-amber-200 shadow-xl">
-                <SelectItem value="all" className="rounded-lg">All Statuses</SelectItem>
-                <SelectItem value="pending" className="rounded-lg">Pending</SelectItem>
-                <SelectItem value="approved" className="rounded-lg">Approved</SelectItem>
-                <SelectItem value="denied" className="rounded-lg">Denied</SelectItem>
-                <SelectItem value="cancelled" className="rounded-lg">Cancelled</SelectItem>
-                <SelectItem value="rescheduled" className="rounded-lg">Rescheduled</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardHeader>
 
@@ -579,7 +690,15 @@ export const BookingsTab = ({
                 </TabsList>
               </div>
               <div className="flex gap-2">
-                <BookingExport bookings={filteredBookings} filters={{ status: statusFilter, search: searchQuery }} />
+                <BookingExport 
+                  bookings={filteredBookings} 
+                  filters={{ 
+                    status: statusFilter, 
+                    search: searchQuery,
+                    startDate: startDateFilter,
+                    endDate: endDateFilter,
+                  }} 
+                />
               </div>
             </div>
 

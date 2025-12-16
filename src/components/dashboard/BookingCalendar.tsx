@@ -420,26 +420,52 @@ export const BookingCalendar = ({
       return !isNaN(startDate.getTime()) && !isNaN(endDate.getTime());
     };
 
-    // Step 1: Deduplicate bookings by bookingId, ALWAYS preferring entries that have customer-sent times
-    const byId = new Map<number, Booking>();
-
+    // Step 1: First pass - Remove any obvious duplicates by bookingId
+    // Create a map to track unique bookings by ID
+    const uniqueBookingsMap = new Map<number, Booking>();
+    const duplicateIds = new Set<number>();
+    
+    // Track initial count for debugging
+    const initialCount = bookings.length;
+    const bookingIdCounts = new Map<number, number>();
     bookings.forEach((booking) => {
-      const existing = byId.get(booking.bookingId);
+      if (booking.bookingId) {
+        bookingIdCounts.set(booking.bookingId, (bookingIdCounts.get(booking.bookingId) || 0) + 1);
+        if (bookingIdCounts.get(booking.bookingId)! > 1) {
+          duplicateIds.add(booking.bookingId);
+        }
+      }
+    });
+    
+    if (duplicateIds.size > 0) {
+      console.log(`[BookingCalendar] Found ${duplicateIds.size} booking IDs with duplicates in input:`, Array.from(duplicateIds));
+    }
+    
+    bookings.forEach((booking) => {
+      // Skip if bookingId is invalid
+      if (!booking.bookingId || typeof booking.bookingId !== 'number') {
+        console.warn('Invalid booking ID:', booking);
+        return;
+      }
+
+      const existing = uniqueBookingsMap.get(booking.bookingId);
       const hasCustomerTimes = hasValidCustomerTimes(booking);
       const existingHasCustomerTimes = existing ? hasValidCustomerTimes(existing) : false;
 
       // Priority: Always prefer bookings with customer-sent times
-      // If existing has customer times, keep it unless new one also has customer times (then replace to get latest)
-      // If existing doesn't have customer times but new one does, replace
-      // If neither has customer times, keep existing (first one seen)
       if (!existing) {
-        byId.set(booking.bookingId, booking);
+        uniqueBookingsMap.set(booking.bookingId, booking);
       } else if (hasCustomerTimes && !existingHasCustomerTimes) {
         // New one has customer times, existing doesn't - replace
-        byId.set(booking.bookingId, booking);
+        uniqueBookingsMap.set(booking.bookingId, booking);
       } else if (hasCustomerTimes && existingHasCustomerTimes) {
-        // Both have customer times - replace to ensure we have the latest version
-        byId.set(booking.bookingId, booking);
+        // Both have customer times - keep the one with more complete data or replace to get latest
+        // Prefer the one that has more fields populated
+        const existingFields = Object.keys(existing).length;
+        const newFields = Object.keys(booking).length;
+        if (newFields >= existingFields) {
+          uniqueBookingsMap.set(booking.bookingId, booking);
+        }
       }
       // If existing has customer times and new one doesn't, keep existing (do nothing)
     });
@@ -447,10 +473,10 @@ export const BookingCalendar = ({
     // Step 2: Filter to ONLY bookings with valid customer-sent times
     // CRITICAL: Do NOT show bookings that only have UTC times (startAt/endAt)
     // This ensures we only display bookings at the time the customer mentioned, not UTC times
-    const bookingsWithCustomerTimes = Array.from(byId.values()).filter(hasValidCustomerTimes);
+    const bookingsWithCustomerTimes = Array.from(uniqueBookingsMap.values()).filter(hasValidCustomerTimes);
 
     // Step 3: Convert to calendar events using ONLY customer-sent times
-    return bookingsWithCustomerTimes.map((booking) => {
+    const events = bookingsWithCustomerTimes.map((booking) => {
       // Use ONLY customer-sent times for calendar positioning (what customer mentioned)
       // We've already validated these exist and are valid above
       const startTimeString = booking.customerSentStartAt!.trim();
@@ -476,7 +502,41 @@ export const BookingCalendar = ({
         resource: booking, // Store full booking object in resource
         bookingId: booking.bookingId, // Also store bookingId directly for easier access
       };
-    }).filter((event) => event !== null); // Remove null entries
+    }).filter((event) => event !== null) as Array<{
+      bookingId: number;
+      title: string;
+      start: Date;
+      end: Date;
+      resource: Booking;
+      [key: string]: any;
+    }>;
+
+    // Step 4: Final deduplication pass - ensure no duplicate events by bookingId
+    // This is a safety net to catch any edge cases
+    const finalEventsMap = new Map<number, typeof events[0]>();
+    const duplicateEvents: number[] = [];
+    
+    events.forEach((event) => {
+      if (event && event.bookingId) {
+        // If we already have an event for this bookingId, keep the first one
+        // (they should be identical at this point, but this ensures no duplicates)
+        if (!finalEventsMap.has(event.bookingId)) {
+          finalEventsMap.set(event.bookingId, event);
+        } else {
+          duplicateEvents.push(event.bookingId);
+          console.warn(`[BookingCalendar] Duplicate event detected for booking ${event.bookingId}, keeping first occurrence`);
+        }
+      }
+    });
+
+    if (duplicateEvents.length > 0) {
+      console.warn(`[BookingCalendar] Removed ${duplicateEvents.length} duplicate events:`, duplicateEvents);
+    }
+
+    const finalEvents = Array.from(finalEventsMap.values());
+    console.log(`[BookingCalendar] Event creation summary: ${initialCount} input bookings → ${uniqueBookingsMap.size} unique bookings → ${bookingsWithCustomerTimes.length} with customer times → ${events.length} events → ${finalEvents.length} final events`);
+    
+    return finalEvents;
   }, [bookings]);
 
   // Convert availability slots to calendar events
@@ -500,8 +560,29 @@ export const BookingCalendar = ({
   }, []);
 
   // Combine bookings, working hours, and availability slots
+  // Final safety check: Deduplicate by bookingId to ensure no duplicate booking events
   const allEvents = useMemo(() => {
-    return [...bookingEvents, ...workingHoursEvents, ...availabilityEvents];
+    const combined = [...bookingEvents, ...workingHoursEvents, ...availabilityEvents];
+    
+    // Final deduplication pass: Remove any duplicate booking events by bookingId
+    // This is a safety net in case any duplicates slipped through
+    const seenBookingIds = new Set<number>();
+    const deduplicated: typeof combined = [];
+    
+    combined.forEach((event) => {
+      // For booking events, check by bookingId
+      if (event.bookingId && typeof event.bookingId === 'number') {
+        if (seenBookingIds.has(event.bookingId)) {
+          console.warn(`Duplicate booking event detected in final array for booking ${event.bookingId}, removing duplicate`);
+          return; // Skip this duplicate
+        }
+        seenBookingIds.add(event.bookingId);
+      }
+      // For non-booking events (availability, working hours), always include
+      deduplicated.push(event);
+    });
+    
+    return deduplicated;
   }, [bookingEvents, workingHoursEvents, availabilityEvents]);
 
   // Enhanced custom toolbar with beautiful design

@@ -719,17 +719,88 @@ export const BookingCalendar = ({
   }, [bookings]);
 
   // Convert availability slots to calendar events
+  // CRITICAL: Availability slots are stored in UTC, but we need to display them at the time the user entered
+  // Parse UTC times as naive local time so the calendar shows the correct time
+  // FILTER: Exclude blocked time slots that are labeled as "booking" since they already have booking events
   const availabilityEvents = useMemo(() => {
-    return availabilitySlots.map((slot) => ({
-      id: `availability-${slot.id}`,
-      title: slot.isFullDay 
-        ? `${slot.slotType === "holiday" ? "Holiday" : slot.slotType === "off_day" ? "Off Day" : slot.slotType || "Unavailable"}: ${slot.reason || ""}`
-        : `${slot.slotType || "Unavailable"}: ${slot.reason || ""}`,
-      start: new Date(slot.startAt),
-      end: new Date(slot.endAt),
-      resource: { type: "availability", ...slot },
-      allDay: slot.isFullDay || false,
-    }));
+    // Filter out slots labeled as "booking" - these already have corresponding booking events
+    const filteredSlots = availabilitySlots.filter((slot) => {
+      // Check if slotType is "booking"
+      if (slot.slotType?.toLowerCase() === "booking") {
+        console.log(`[BookingCalendar] Filtering out availability slot ${slot.id} - slotType is "booking"`);
+        return false;
+      }
+      
+      // Check if reason or notes contains "booking" (case-insensitive)
+      const reason = (slot.reason || "").toLowerCase();
+      const notes = (slot.notes || "").toLowerCase();
+      if (reason.includes("booking") || notes.includes("booking")) {
+        console.log(`[BookingCalendar] Filtering out availability slot ${slot.id} - reason/notes contains "booking"`, { reason: slot.reason, notes: slot.notes });
+        return false;
+      }
+      
+      return true;
+    });
+    
+    const filteredCount = availabilitySlots.length - filteredSlots.length;
+    if (filteredCount > 0) {
+      console.log(`[BookingCalendar] Filtered out ${filteredCount} availability slot(s) labeled as "booking" (already have booking events)`);
+    }
+    
+    return filteredSlots.map((slot) => {
+      // Parse UTC times - but we need to extract the local time component
+      // If slot.startAt is "2025-12-16T19:00:00.000Z" (UTC), we want to show "2:00 PM" (local)
+      // The issue is that when stored, local "2:00 PM" becomes UTC "7:00 PM" (if EST, UTC-5)
+      // So we need to parse it and adjust to show the original local time
+      const startDate = new Date(slot.startAt);
+      const endDate = new Date(slot.endAt);
+      
+      // Extract the date/time components from the UTC string
+      // If the user entered "2:00 PM" and it's stored as "2025-12-16T19:00:00.000Z" (UTC),
+      // we need to create a Date that represents "2:00 PM" in local time
+      // The calendar will then display it correctly
+      
+      // For availability slots, the times are already in UTC from the backend
+      // We need to parse them and create dates that represent the local time the user entered
+      // Since we don't know the user's timezone when they created it, we'll parse as-is
+      // and let the calendar convert to the current user's timezone
+      
+      // Actually, the better approach: Parse the UTC time, but create a Date object
+      // that represents the same time in the browser's local timezone
+      // This way, if the user is in the same timezone, it will show correctly
+      
+      // Extract hour/minute from UTC date and create a local date with those values
+      const startYear = startDate.getUTCFullYear();
+      const startMonth = startDate.getUTCMonth();
+      const startDay = startDate.getUTCDate();
+      const startHour = startDate.getUTCHours();
+      const startMinute = startDate.getUTCMinutes();
+      const startSecond = startDate.getUTCSeconds();
+      
+      // Create a date in local timezone with the UTC hour/minute values
+      // This will show the time as entered (assuming user is in same timezone as when created)
+      const localStartDate = new Date(startYear, startMonth, startDay, startHour, startMinute, startSecond);
+      
+      const endYear = endDate.getUTCFullYear();
+      const endMonth = endDate.getUTCMonth();
+      const endDay = endDate.getUTCDate();
+      const endHour = endDate.getUTCHours();
+      const endMinute = endDate.getUTCMinutes();
+      const endSecond = endDate.getUTCSeconds();
+      
+      const localEndDate = new Date(endYear, endMonth, endDay, endHour, endMinute, endSecond);
+      
+      return {
+        id: `availability-${slot.id}`,
+        title: slot.isFullDay 
+          ? `${slot.slotType === "holiday" ? "Holiday" : slot.slotType === "off_day" ? "Off Day" : slot.slotType || "Unavailable"}: ${slot.reason || ""}`
+          : `${slot.slotType || "Unavailable"}: ${slot.reason || ""}`,
+        start: localStartDate,
+        end: localEndDate,
+        resource: { type: "availability", ...slot },
+        allDay: slot.isFullDay || false,
+      };
+    });
   }, [availabilitySlots]);
 
   // Generate working hours events for day/week views - DISABLED (not displayed)

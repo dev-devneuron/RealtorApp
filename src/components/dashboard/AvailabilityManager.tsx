@@ -144,16 +144,13 @@ export const AvailabilityManager = ({
                 setBlockedSlots([]);
               }
             } catch (availabilityError) {
-              console.warn("Error fetching from availability endpoint:", availabilityError);
               setBlockedSlots([]);
             }
           }
         } catch (e) {
-          console.error("Error fetching unavailable slots:", e);
           setBlockedSlots([]);
         }
       } catch (error) {
-        console.error("Error loading data:", error);
       }
     };
 
@@ -177,7 +174,6 @@ export const AvailabilityManager = ({
             });
           }
         } catch (error) {
-          console.error("Error parsing preferences:", error);
         }
       }
     };
@@ -608,6 +604,26 @@ export const AvailabilityManager = ({
           </div>
         </CardHeader>
         <CardContent className="relative p-6 lg:p-8 space-y-4">
+          {/* UTC Timezone Notice */}
+          {blockedSlots.length > 0 && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900 mb-1">
+                    Time Display Notice
+                  </p>
+                  <p className="text-sm text-blue-800">
+                    The times shown below are displayed in <strong>UTC (Coordinated Universal Time)</strong>. 
+                    Please convert these times to your local timezone when viewing.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {showBlockForm && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}

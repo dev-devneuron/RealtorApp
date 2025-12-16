@@ -193,7 +193,6 @@ export const BookingCalendar = ({
       // Save to localStorage for caching (but API is source of truth)
       localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
         } catch (error) {
-          console.error("Error fetching calendar preferences:", error);
       // Only use defaults if fetch completely fails
           const defaults = {
             start_time: "09:00",
@@ -282,7 +281,6 @@ export const BookingCalendar = ({
             working_days: prefs.working_days || [1, 2, 3, 4, 5],
           });
           } catch (parseError) {
-            console.error("Error parsing preferences:", parseError);
           }
         }
       }
@@ -362,7 +360,6 @@ export const BookingCalendar = ({
           }
         } catch (error) {
           // Fallback: fetch unavailable slots directly
-          console.warn("Failed to fetch calendar events, trying unavailable slots:", error);
           try {
             const slots = await fetchUnavailableSlots(
               userId,
@@ -383,13 +380,11 @@ export const BookingCalendar = ({
               setAvailabilitySlots([]);
             }
           } catch (e) {
-            console.error("Error fetching unavailable slots:", e);
             // Don't crash - just leave availability slots empty
             setAvailabilitySlots([]);
           }
         }
       } catch (error) {
-        console.error("Error loading calendar events:", error);
         // Don't crash - just leave availability slots empty
         setAvailabilitySlots([]);
       }
@@ -406,16 +401,12 @@ export const BookingCalendar = ({
   // Convert bookings to calendar events - CRITICAL: Only show bookings with customer-sent times
   // ABSOLUTELY NO UTC TIMES - If a booking doesn't have customer-sent times, it doesn't appear
   const bookingEvents = useMemo(() => {
-    // DEBUG: Log what we're receiving
-    console.log(`[BookingCalendar] INPUT: Received ${bookings.length} bookings`);
-    
     // STEP 0: FIRST - Deduplicate by bookingId at the INPUT level
     // This prevents duplicate bookings from entering the processing pipeline
     const inputDeduplicationMap = new Map<number, Booking>();
     const duplicateInputIds: number[] = [];
     bookings.forEach((booking) => {
       if (!booking.bookingId) {
-        console.warn(`[BookingCalendar] Skipping booking without bookingId:`, booking);
         return;
       }
       
@@ -424,22 +415,16 @@ export const BookingCalendar = ({
         inputDeduplicationMap.set(booking.bookingId, booking);
       } else {
         duplicateInputIds.push(booking.bookingId);
-        console.warn(`[BookingCalendar] INPUT DEDUP: Duplicate booking ID ${booking.bookingId} in input array, keeping first occurrence. Has customerSentStartAt: ${!!booking.customerSentStartAt}, existing has: ${!!inputDeduplicationMap.get(booking.bookingId)?.customerSentStartAt}`);
       }
     });
     
     const deduplicatedInput = Array.from(inputDeduplicationMap.values());
-    if (duplicateInputIds.length > 0) {
-      console.warn(`[BookingCalendar] INPUT DEDUP: Found ${duplicateInputIds.length} duplicate booking IDs in input:`, duplicateInputIds);
-    }
-    console.log(`[BookingCalendar] INPUT DEDUP: ${bookings.length} bookings → ${deduplicatedInput.length} unique bookings`);
     
     // STEP 0.5: SECOND - Deduplicate by bookingId, ALWAYS preferring the one with customerSentStartAt
     // This prevents showing the same booking twice (once with customerSentStartAt, once without)
     const deduplicatedBookingsMap = new Map<number, Booking>();
     deduplicatedInput.forEach((booking) => {
       if (!booking.bookingId) {
-        console.warn(`[BookingCalendar] Skipping booking without bookingId:`, booking);
         return;
       }
       
@@ -452,27 +437,17 @@ export const BookingCalendar = ({
         deduplicatedBookingsMap.set(booking.bookingId, booking);
       } else if (hasCustomerSent && !existingHasCustomerSent) {
         // New one has customerSentStartAt, existing doesn't - replace
-        console.log(`[BookingCalendar] Replacing booking ${booking.bookingId} - new one has customerSentStartAt`);
         deduplicatedBookingsMap.set(booking.bookingId, booking);
       } else if (!hasCustomerSent && existingHasCustomerSent) {
         // Existing has customerSentStartAt, new one doesn't - keep existing
-        console.log(`[BookingCalendar] Keeping existing booking ${booking.bookingId} - it has customerSentStartAt`);
       } else if (hasCustomerSent && existingHasCustomerSent) {
         // Both have customerSentStartAt - keep the existing one (first occurrence)
-        console.log(`[BookingCalendar] Keeping first occurrence of booking ${booking.bookingId} (both have customerSentStartAt)`);
       } else {
         // Neither has customerSentStartAt - keep existing (first occurrence)
-        console.log(`[BookingCalendar] Keeping first occurrence of booking ${booking.bookingId} (neither has customerSentStartAt - will be filtered out)`);
       }
     });
     
     const deduplicatedBookings = Array.from(deduplicatedBookingsMap.values());
-    console.log(`[BookingCalendar] After initial deduplication: ${deduplicatedInput.length} → ${deduplicatedBookings.length} unique bookings`);
-    
-    const bookingsWithoutCustomerSent = deduplicatedBookings.filter(b => !b.customerSentStartAt || !b.customerSentEndAt);
-    if (bookingsWithoutCustomerSent.length > 0) {
-      console.warn(`[BookingCalendar] WARNING: Found ${bookingsWithoutCustomerSent.length} bookings WITHOUT customerSentStartAt:`, bookingsWithoutCustomerSent.map(b => ({ id: b.bookingId, startAt: b.startAt, customerSentStartAt: b.customerSentStartAt })));
-    }
     
     // FILTER: Only keep bookings that have customer-sent times
     // CRITICAL: Reject any booking that doesn't have BOTH customerSentStartAt AND customerSentEndAt
@@ -481,7 +456,6 @@ export const BookingCalendar = ({
     const validBookings = deduplicatedBookings.filter((booking) => {
       // STEP 1: Must have both customer-sent times - if not, REJECT IMMEDIATELY
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
-        console.log(`[BookingCalendar] Rejecting booking ${booking.bookingId}: missing customer-sent times`);
         return false;
       }
       
@@ -490,7 +464,6 @@ export const BookingCalendar = ({
       
       // STEP 2: Must not be empty - if empty, REJECT
       if (customerStart === "" || customerEnd === "") {
-        console.log(`[BookingCalendar] Rejecting booking ${booking.bookingId}: empty customer-sent times`);
         return false;
       }
       
@@ -498,7 +471,6 @@ export const BookingCalendar = ({
       const customerStartDate = new Date(customerStart);
       const customerEndDate = new Date(customerEnd);
       if (isNaN(customerStartDate.getTime()) || isNaN(customerEndDate.getTime())) {
-        console.log(`[BookingCalendar] Rejecting booking ${booking.bookingId}: invalid date format`);
         return false;
       }
       
@@ -506,15 +478,11 @@ export const BookingCalendar = ({
       // But if customerSentStartAt exists and is valid, we KEEP it and use it for display
       // We don't care if it matches startAt - we just use customerSentStartAt for the calendar position
       
-      console.log(`[BookingCalendar] ACCEPTING booking ${booking.bookingId}: has valid customerSentStartAt="${customerStart}" - will use for calendar display`);
       return true;
     });
     
-    console.log(`[BookingCalendar] STRICT FILTER: ${bookings.length} total → ${validBookings.length} with valid customer-sent times`);
-    
     // If no valid bookings, return empty array immediately
     if (validBookings.length === 0) {
-      console.log(`[BookingCalendar] No bookings with valid customer-sent times - returning empty array`);
       return [];
     }
     
@@ -522,20 +490,16 @@ export const BookingCalendar = ({
     const uniqueBookingsMap = new Map<number, Booking>();
     validBookings.forEach((booking) => {
       if (!booking.bookingId || typeof booking.bookingId !== 'number') {
-        console.warn(`[BookingCalendar] Skipping booking with invalid ID:`, booking);
         return;
       }
       
       // If we already have this bookingId, skip it (keep first occurrence)
       if (!uniqueBookingsMap.has(booking.bookingId)) {
         uniqueBookingsMap.set(booking.bookingId, booking);
-      } else {
-        console.log(`[BookingCalendar] Skipping duplicate booking ID: ${booking.bookingId}`);
       }
     });
     
     const uniqueBookings = Array.from(uniqueBookingsMap.values());
-    console.log(`[BookingCalendar] After deduplication: ${uniqueBookings.length} unique bookings`);
 
     // Step 2: Convert to calendar events
     // CRITICAL: Use customerSentStartAt/customerSentEndAt for calendar positioning
@@ -546,7 +510,6 @@ export const BookingCalendar = ({
       // CRITICAL: Use customerSentStartAt/customerSentEndAt for calendar positioning
       // Parse as local time (no timezone conversion) - calendar will display it as-is
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
-        console.error(`[BookingCalendar] Booking ${booking.bookingId} missing customerSentStartAt/customerSentEndAt - cannot create calendar event`);
         return null;
       }
       
@@ -590,13 +553,6 @@ export const BookingCalendar = ({
 
       // Final validation - if this fails, something is very wrong
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        console.error(`[BookingCalendar] CRITICAL: Invalid dates for booking ${booking.bookingId} after filtering:`, {
-          customerSentStartAt: startTimeString,
-          customerSentEndAt: endTimeString,
-          bookingTimezone: bookingTimezone,
-          startAt: booking.startAt,
-          endAt: booking.endAt,
-        });
         return null;
       }
       
@@ -605,9 +561,6 @@ export const BookingCalendar = ({
       // 2. If the backend calculated startAt correctly from customerSentStartAt, they will match
       // 3. The important check is that we're using customerSentStartAt (which we verify above)
       // 4. The final filters will catch any UTC-only events that slip through
-      
-      // Log the dates being used for calendar positioning
-      console.log(`[BookingCalendar] Creating event for booking ${booking.bookingId}: using customerSentStartAt="${startTimeString}" (timezone: ${bookingTimezone}) -> startDate=${startDate.toISOString()} (will display at customer's mentioned time: ${startTimeString})`);
 
       return {
         id: `booking-${booking.bookingId}`, // CRITICAL: Unique ID for react-big-calendar
@@ -635,7 +588,6 @@ export const BookingCalendar = ({
     
     events.forEach((event) => {
       if (!event || !event.bookingId) {
-        console.warn(`[BookingCalendar] Skipping event without bookingId:`, event);
         return;
       }
       
@@ -647,7 +599,6 @@ export const BookingCalendar = ({
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
         // This event was created from UTC time (startAt/endAt) - REJECT it
         utcRejectedEvents.push(event.bookingId);
-        console.error(`[BookingCalendar] REJECTING event for booking ${event.bookingId} - missing customerSentStartAt, was created from UTC time (startAt). event.start=${event.start.toISOString()}, startAt=${booking.startAt}`);
         return;
       }
       
@@ -675,7 +626,6 @@ export const BookingCalendar = ({
       // Event should match customerSentStartAt (parsed as naive local time) - allow 1 minute tolerance
       if (timeDiff > 60000) { // 1 minute in milliseconds
         utcRejectedEvents.push(event.bookingId);
-        console.error(`[BookingCalendar] REJECTING event for booking ${event.bookingId} - event not created from customerSentStartAt. event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" -> expected ${new Date(expectedCustomerStartTime).toISOString()}, diff: ${timeDiff}ms`);
         return;
       }
       
@@ -684,36 +634,10 @@ export const BookingCalendar = ({
         finalEventsMap.set(event.bookingId, event);
       } else {
         duplicateEvents.push(event.bookingId);
-        const existing = finalEventsMap.get(event.bookingId);
-        console.warn(`[BookingCalendar] Duplicate event detected for booking ${event.bookingId}, keeping first occurrence. Existing event.start=${existing?.start.toISOString()}, new event.start=${event.start.toISOString()}`);
       }
     });
-
-    if (duplicateEvents.length > 0) {
-      console.warn(`[BookingCalendar] Removed ${duplicateEvents.length} duplicate events:`, duplicateEvents);
-    }
-    
-    if (utcRejectedEvents.length > 0) {
-      console.warn(`[BookingCalendar] Rejected ${utcRejectedEvents.length} events positioned at UTC time:`, utcRejectedEvents);
-    }
 
     const finalEvents = Array.from(finalEventsMap.values());
-    console.log(`[BookingCalendar] FINAL SUMMARY: ${bookings.length} total bookings → ${validBookings.length} passed filter → ${uniqueBookings.length} after dedup → ${events.length} events created → ${finalEvents.length} final events displayed (${utcRejectedEvents.length} UTC events rejected)`);
-    
-    // CRITICAL FINAL CHECK: Log any events that might be using UTC times
-    finalEvents.forEach((event) => {
-      if (event.resource?.startAt && event.resource?.customerSentStartAt) {
-        const utcTime = new Date(String(event.resource.startAt).trim()).getTime();
-        const customerTime = event.start.getTime();
-        if (Math.abs(utcTime - customerTime) < 1000) {
-          console.error(`[BookingCalendar] WARNING: Event for booking ${event.bookingId} appears to be using UTC time!`, {
-            eventStart: event.start,
-            customerSentStartAt: event.resource.customerSentStartAt,
-            startAt: event.resource.startAt,
-          });
-        }
-      }
-    });
     
     return finalEvents;
   }, [bookings]);
@@ -727,7 +651,6 @@ export const BookingCalendar = ({
     const filteredSlots = availabilitySlots.filter((slot) => {
       // Check if slotType is "booking"
       if (slot.slotType?.toLowerCase() === "booking") {
-        console.log(`[BookingCalendar] Filtering out availability slot ${slot.id} - slotType is "booking"`);
         return false;
       }
       
@@ -735,17 +658,11 @@ export const BookingCalendar = ({
       const reason = (slot.reason || "").toLowerCase();
       const notes = (slot.notes || "").toLowerCase();
       if (reason.includes("booking") || notes.includes("booking")) {
-        console.log(`[BookingCalendar] Filtering out availability slot ${slot.id} - reason/notes contains "booking"`, { reason: slot.reason, notes: slot.notes });
         return false;
       }
       
       return true;
     });
-    
-    const filteredCount = availabilitySlots.length - filteredSlots.length;
-    if (filteredCount > 0) {
-      console.log(`[BookingCalendar] Filtered out ${filteredCount} availability slot(s) labeled as "booking" (already have booking events)`);
-    }
     
     return filteredSlots.map((slot) => {
       // Parse UTC times - but we need to extract the local time component
@@ -822,14 +739,12 @@ export const BookingCalendar = ({
       
       // CRITICAL: Must have customerSentStartAt - if not, this is a UTC-only booking - REJECT
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
-        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - missing customerSentStartAt`);
         return false;
       }
       
       // CRITICAL: Verify event is positioned using customerSentStartAt (as local time, no UTC conversion)
       // We parse customerSentStartAt as local time, same as event creation
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
-        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - missing customerSentStartAt/customerSentEndAt`);
         return false;
       }
       
@@ -857,18 +772,13 @@ export const BookingCalendar = ({
       // Event should be positioned at customer's mentioned time (as naive local time)
       // Allow up to 1 minute difference to account for rounding/parsing differences
       if (timeDiff > 60000) { // 1 minute in milliseconds
-        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - event not positioned at customerSentStartAt (diff: ${timeDiff}ms). event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" -> ${new Date(customerStartTime).toISOString()}`);
         return false;
       }
       
       return true;
     });
     
-    console.log(`[BookingCalendar] FINAL FILTER: ${bookingEvents.length} booking events → ${filteredBookingEvents.length} after UTC removal`);
-    
     // Step 2: Combine all events
-    // DEBUG: Log what we're combining
-    console.log(`[BookingCalendar] COMBINING: ${filteredBookingEvents.length} booking events + ${workingHoursEvents.length} working hours events + ${availabilityEvents.length} availability events = ${filteredBookingEvents.length + workingHoursEvents.length + availabilityEvents.length} total`);
     const combined = [...filteredBookingEvents, ...workingHoursEvents, ...availabilityEvents];
     
     // Step 3: Final deduplication by unique ID and bookingId
@@ -888,7 +798,6 @@ export const BookingCalendar = ({
         // MUST have customerSentStartAt - if not, this is a UTC-only event - REJECT
         if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
           utcRejectedInFinal.push(event.bookingId);
-          console.error(`[BookingCalendar] FINAL: Rejecting booking ${event.bookingId} - missing customerSentStartAt/customerSentEndAt (UTC-only event). event.start=${event.start.toISOString()}, startAt=${booking.startAt}`);
           return;
         }
         
@@ -917,7 +826,6 @@ export const BookingCalendar = ({
         // Event should match customerSentStartAt (parsed as naive local time) - allow 1 minute tolerance
         if (timeDiff > 60000) { // 1 minute in milliseconds
           utcRejectedInFinal.push(event.bookingId);
-          console.error(`[BookingCalendar] FINAL: Rejecting booking ${event.bookingId} - event not created from customerSentStartAt. event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" -> expected ${new Date(expectedCustomerStartTime).toISOString()}, diff: ${timeDiff}ms`);
           return;
         }
       }
@@ -927,14 +835,12 @@ export const BookingCalendar = ({
       
       // Check by unique ID first
       if (seenIds.has(eventId)) {
-        console.warn(`[BookingCalendar] Duplicate event ID detected: ${eventId}, removing`);
         return;
       }
       
       // For booking events, also check by bookingId
       if (event.bookingId && typeof event.bookingId === 'number') {
         if (seenBookingIds.has(event.bookingId)) {
-          console.warn(`[BookingCalendar] Duplicate booking ID detected: ${event.bookingId}, removing`);
           return;
         }
         seenBookingIds.add(event.bookingId);
@@ -943,12 +849,6 @@ export const BookingCalendar = ({
       seenIds.add(eventId);
       deduplicated.push(event);
     });
-    
-    if (utcRejectedInFinal.length > 0) {
-      console.warn(`[BookingCalendar] FINAL: Rejected ${utcRejectedInFinal.length} UTC-based events:`, utcRejectedInFinal);
-    }
-    
-    console.log(`[BookingCalendar] FINAL: ${combined.length} combined events → ${deduplicated.length} after deduplication (${utcRejectedInFinal.length} UTC events rejected)`);
     
     return deduplicated;
   }, [bookingEvents, workingHoursEvents, availabilityEvents]);

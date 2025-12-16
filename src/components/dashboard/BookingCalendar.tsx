@@ -401,9 +401,9 @@ export const BookingCalendar = ({
     }
   }, [userId, userType, view, date, calendarPreferences]); // Added calendarPreferences as dependency to re-fetch when preferences change
 
-  // Convert bookings to calendar events - CRITICAL: Ensure dates are valid Date objects
-  // Use customer-sent times if available (so booking appears at the time customer mentioned)
-  // Also deduplicate by bookingId to avoid showing both UTC and customer-time variants
+  // Convert bookings to calendar events - CRITICAL: Only show bookings with customer-sent times
+  // Do NOT show bookings that only have UTC times (startAt/endAt) - only show customer-sent times
+  // Also deduplicate by bookingId to avoid showing duplicates
   const bookingEvents = useMemo(() => {
     // Deduplicate bookings by bookingId, preferring entries that have customer-sent times
     const byId = new Map<number, Booking>();
@@ -424,16 +424,16 @@ export const BookingCalendar = ({
 
     return Array.from(byId.values())
       .filter((booking) => {
-        // Check if we have either customer-sent times or regular times
-        const hasCustomerTimes = booking.customerSentStartAt && booking.customerSentEndAt;
-        const hasRegularTimes = booking.startAt && booking.endAt;
-        return hasCustomerTimes || hasRegularTimes;
+        // CRITICAL: Only show bookings that have customer-sent times
+        // Do NOT show bookings that only have UTC times (startAt/endAt)
+        // This ensures we only display bookings at the time the customer mentioned, not UTC times
+        return !!(booking.customerSentStartAt && booking.customerSentEndAt);
       })
       .map((booking) => {
-        // Prefer customer-sent times for calendar positioning (what customer mentioned)
-        // Fall back to regular times if customer-sent times are not available
-        const startTimeString = booking.customerSentStartAt || booking.startAt;
-        const endTimeString = booking.customerSentEndAt || booking.endAt;
+        // Use ONLY customer-sent times for calendar positioning (what customer mentioned)
+        // Do NOT fall back to regular times - if there's no customer-sent time, the booking was filtered out above
+        const startTimeString = booking.customerSentStartAt!;
+        const endTimeString = booking.customerSentEndAt!;
 
         const startDate = new Date(startTimeString);
         const endDate = new Date(endTimeString);

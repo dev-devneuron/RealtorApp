@@ -404,6 +404,14 @@ export const BookingCalendar = ({
   // Convert bookings to calendar events - CRITICAL: Only show bookings with customer-sent times
   // ABSOLUTELY NO UTC TIMES - If a booking doesn't have customer-sent times, it doesn't appear
   const bookingEvents = useMemo(() => {
+    // DEBUG: Log what we're receiving
+    console.log(`[BookingCalendar] INPUT: Received ${bookings.length} bookings`);
+    bookings.forEach((b, idx) => {
+      if (b.bookingId) {
+        console.log(`[BookingCalendar] Booking ${idx}: ID=${b.bookingId}, hasCustomerSent=${!!b.customerSentStartAt}, customerSentStartAt="${b.customerSentStartAt}", startAt="${b.startAt}"`);
+      }
+    });
+    
     // AGGRESSIVE FILTER: Only keep bookings that have valid, non-UTC customer-sent times
     const validBookings = bookings.filter((booking) => {
       // STEP 1: Must have both customer-sent times - if not, REJECT IMMEDIATELY
@@ -517,6 +525,7 @@ export const BookingCalendar = ({
       }
 
       return {
+        id: `booking-${booking.bookingId}`, // CRITICAL: Unique ID for react-big-calendar
         ...booking,
         title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
         start: startDate,
@@ -597,27 +606,65 @@ export const BookingCalendar = ({
   }, []);
 
   // Combine bookings, working hours, and availability slots
-  // Final safety check: Deduplicate by bookingId to ensure no duplicate booking events
+  // CRITICAL FINAL FILTER: Remove ALL UTC-based events and ensure no duplicates
   const allEvents = useMemo(() => {
-    const combined = [...bookingEvents, ...workingHoursEvents, ...availabilityEvents];
+    // Step 1: Filter bookingEvents one more time to remove any UTC-based events
+    const filteredBookingEvents = bookingEvents.filter((event) => {
+      if (!event.resource || !event.bookingId) {
+        return false;
+      }
+      
+      const booking = event.resource as Booking;
+      
+      // CRITICAL: If this event's start time matches the UTC startAt time, it's a UTC event - REJECT
+      if (booking.startAt && booking.customerSentStartAt) {
+        const utcStart = new Date(String(booking.startAt).trim()).getTime();
+        const eventStart = event.start.getTime();
+        
+        // If they're the same (within 1 second), this is a UTC event - REJECT
+        if (Math.abs(utcStart - eventStart) < 1000) {
+          console.error(`[BookingCalendar] FINAL FILTER: Rejecting UTC event for booking ${event.bookingId}`);
+          return false;
+        }
+      }
+      
+      return true;
+    });
     
-    // Final deduplication pass: Remove any duplicate booking events by bookingId
-    // This is a safety net in case any duplicates slipped through
+    console.log(`[BookingCalendar] FINAL FILTER: ${bookingEvents.length} booking events → ${filteredBookingEvents.length} after UTC removal`);
+    
+    // Step 2: Combine all events
+    const combined = [...filteredBookingEvents, ...workingHoursEvents, ...availabilityEvents];
+    
+    // Step 3: Final deduplication by unique ID and bookingId
+    const seenIds = new Set<string>();
     const seenBookingIds = new Set<number>();
     const deduplicated: typeof combined = [];
     
     combined.forEach((event) => {
-      // For booking events, check by bookingId
+      // Use event.id if available, otherwise create one
+      const eventId = event.id || (event.bookingId ? `booking-${event.bookingId}` : `event-${Math.random()}`);
+      
+      // Check by unique ID first
+      if (seenIds.has(eventId)) {
+        console.warn(`[BookingCalendar] Duplicate event ID detected: ${eventId}, removing`);
+        return;
+      }
+      
+      // For booking events, also check by bookingId
       if (event.bookingId && typeof event.bookingId === 'number') {
         if (seenBookingIds.has(event.bookingId)) {
-          console.warn(`Duplicate booking event detected in final array for booking ${event.bookingId}, removing duplicate`);
-          return; // Skip this duplicate
+          console.warn(`[BookingCalendar] Duplicate booking ID detected: ${event.bookingId}, removing`);
+          return;
         }
         seenBookingIds.add(event.bookingId);
       }
-      // For non-booking events (availability, working hours), always include
+      
+      seenIds.add(eventId);
       deduplicated.push(event);
     });
+    
+    console.log(`[BookingCalendar] FINAL: ${combined.length} combined events → ${deduplicated.length} after deduplication`);
     
     return deduplicated;
   }, [bookingEvents, workingHoursEvents, availabilityEvents]);

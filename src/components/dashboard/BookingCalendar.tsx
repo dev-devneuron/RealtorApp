@@ -12,7 +12,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from "lucide-react";
-import { formatTime, fetchCalendarEvents, fetchUnavailableSlots, fetchCalendarPreferences } from "./utils";
+import { formatTime, fetchCalendarEvents, fetchUnavailableSlots, fetchCalendarPreferences, formatCustomerTime, hasTimezoneInfo } from "./utils";
 import { API_BASE } from "./constants";
 import type { Booking } from "./types";
 import "./BookingCalendar.css";
@@ -411,18 +411,31 @@ export const BookingCalendar = ({
     // This prevents showing the same booking twice (once with customerSentStartAt, once without)
     const deduplicatedBookingsMap = new Map<number, Booking>();
     bookings.forEach((booking) => {
-      if (!booking.bookingId) return;
+      if (!booking.bookingId) {
+        console.warn(`[BookingCalendar] Skipping booking without bookingId:`, booking);
+        return;
+      }
       
       const existing = deduplicatedBookingsMap.get(booking.bookingId);
       const hasCustomerSent = !!(booking.customerSentStartAt && booking.customerSentEndAt);
       const existingHasCustomerSent = !!(existing?.customerSentStartAt && existing?.customerSentEndAt);
       
       // Always prefer the booking with customerSentStartAt
-      if (!existing || (hasCustomerSent && !existingHasCustomerSent)) {
+      if (!existing) {
         deduplicatedBookingsMap.set(booking.bookingId, booking);
+      } else if (hasCustomerSent && !existingHasCustomerSent) {
+        // New one has customerSentStartAt, existing doesn't - replace
+        console.log(`[BookingCalendar] Replacing booking ${booking.bookingId} - new one has customerSentStartAt`);
+        deduplicatedBookingsMap.set(booking.bookingId, booking);
+      } else if (!hasCustomerSent && existingHasCustomerSent) {
+        // Existing has customerSentStartAt, new one doesn't - keep existing
+        console.log(`[BookingCalendar] Keeping existing booking ${booking.bookingId} - it has customerSentStartAt`);
       } else if (hasCustomerSent && existingHasCustomerSent) {
         // Both have customerSentStartAt - keep the existing one (first occurrence)
-        // Don't replace to avoid unnecessary updates
+        console.log(`[BookingCalendar] Keeping first occurrence of booking ${booking.bookingId} (both have customerSentStartAt)`);
+      } else {
+        // Neither has customerSentStartAt - keep existing (first occurrence)
+        console.log(`[BookingCalendar] Keeping first occurrence of booking ${booking.bookingId} (neither has customerSentStartAt - will be filtered out)`);
       }
     });
     
@@ -498,14 +511,40 @@ export const BookingCalendar = ({
 
     // Step 2: Convert to calendar events using ONLY customer-sent times
     // NEVER use startAt/endAt - only customerSentStartAt/customerSentEndAt
+    // CRITICAL: Parse customerSentStartAt in the booking's timezone, not browser's local timezone
     const events = uniqueBookings.map((booking) => {
       // CRITICAL: Use ONLY customer-sent times - NEVER use startAt/endAt
       // We've already validated these exist and are valid above
       const startTimeString = String(booking.customerSentStartAt).trim();
       const endTimeString = String(booking.customerSentEndAt).trim();
+      const bookingTimezone = booking.timezone || "UTC";
 
-      const startDate = new Date(startTimeString);
-      const endDate = new Date(endTimeString);
+      // CRITICAL: Parse customerSentStartAt in the booking's timezone
+      // If it has timezone info, parse directly. Otherwise, interpret it in booking.timezone
+      let startDate: Date;
+      let endDate: Date;
+      
+      if (hasTimezoneInfo(startTimeString)) {
+        // Has timezone info - parse directly
+        startDate = new Date(startTimeString);
+      } else if (bookingTimezone && bookingTimezone !== "UTC") {
+        // No timezone info - interpret as being in the booking's timezone
+        // Use formatCustomerTime to get the UTC date
+        const startTimeData = formatCustomerTime(startTimeString, bookingTimezone);
+        startDate = startTimeData.utcDate;
+      } else {
+        // No timezone info and no booking timezone - treat as UTC
+        startDate = new Date(startTimeString + "Z");
+      }
+      
+      if (hasTimezoneInfo(endTimeString)) {
+        endDate = new Date(endTimeString);
+      } else if (bookingTimezone && bookingTimezone !== "UTC") {
+        const endTimeData = formatCustomerTime(endTimeString, bookingTimezone);
+        endDate = endTimeData.utcDate;
+      } else {
+        endDate = new Date(endTimeString + "Z");
+      }
 
       // Final validation - if this fails, something is very wrong
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {

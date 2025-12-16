@@ -406,29 +406,77 @@ export const BookingCalendar = ({
   // Also deduplicate by bookingId to avoid showing duplicates
   const bookingEvents = useMemo(() => {
     // Helper function to check if a booking has valid customer-sent times
+    // CRITICAL: Must be different from UTC times (startAt/endAt) to ensure it's not a UTC time
     const hasValidCustomerTimes = (booking: Booking): boolean => {
+      // Must have both customer-sent times
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
         return false;
       }
+      
       // Check they're not empty strings
+      const customerStart = booking.customerSentStartAt.trim();
+      const customerEnd = booking.customerSentEndAt.trim();
+      if (customerStart === "" || customerEnd === "") {
+        return false;
+      }
+      
+      // CRITICAL: Ensure customer-sent times are DIFFERENT from UTC times
+      // If they're the same, it means customerSentStartAt is actually a UTC time, not a customer-sent time
+      if (booking.startAt && booking.endAt) {
+        const utcStart = booking.startAt.trim();
+        const utcEnd = booking.endAt.trim();
+        
+        // If customer-sent times match UTC times exactly, reject it (it's a UTC time, not customer time)
+        if (customerStart === utcStart && customerEnd === utcEnd) {
+          console.log(`[BookingCalendar] Rejecting booking ${booking.bookingId}: customerSentStartAt matches startAt (UTC time)`);
+          return false;
+        }
+      }
+      
+      // Validate they can be parsed as dates
+      const startDate = new Date(customerStart);
+      const endDate = new Date(customerEnd);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return false;
+      }
+      
+      // All checks passed - this is a valid customer-sent time
+      return true;
+    };
+
+    // CRITICAL FIRST STEP: Filter out ALL bookings without customer-sent times IMMEDIATELY
+    // This prevents any UTC-only bookings from entering the processing pipeline
+    const bookingsWithCustomerTimesOnly = bookings.filter((booking) => {
+      // Must have both customer-sent times
+      if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
+        return false;
+      }
+      // Must not be empty
       if (booking.customerSentStartAt.trim() === "" || booking.customerSentEndAt.trim() === "") {
         return false;
       }
-      // Validate they can be parsed as dates
-      const startDate = new Date(booking.customerSentStartAt);
-      const endDate = new Date(booking.customerSentEndAt);
-      return !isNaN(startDate.getTime()) && !isNaN(endDate.getTime());
-    };
-
+      // Must be different from UTC times (if UTC times exist)
+      if (booking.startAt && booking.endAt) {
+        if (booking.customerSentStartAt.trim() === booking.startAt.trim() && 
+            booking.customerSentEndAt.trim() === booking.endAt.trim()) {
+          // This is a UTC time masquerading as customer time - reject it
+          return false;
+        }
+      }
+      return true;
+    });
+    
+    console.log(`[BookingCalendar] Filtered ${bookings.length} bookings → ${bookingsWithCustomerTimesOnly.length} with customer-sent times`);
+    
     // Step 1: First pass - Remove any obvious duplicates by bookingId
     // Create a map to track unique bookings by ID
     const uniqueBookingsMap = new Map<number, Booking>();
     const duplicateIds = new Set<number>();
     
     // Track initial count for debugging
-    const initialCount = bookings.length;
+    const initialCount = bookingsWithCustomerTimesOnly.length;
     const bookingIdCounts = new Map<number, number>();
-    bookings.forEach((booking) => {
+    bookingsWithCustomerTimesOnly.forEach((booking) => {
       if (booking.bookingId) {
         bookingIdCounts.set(booking.bookingId, (bookingIdCounts.get(booking.bookingId) || 0) + 1);
         if (bookingIdCounts.get(booking.bookingId)! > 1) {
@@ -441,7 +489,7 @@ export const BookingCalendar = ({
       console.log(`[BookingCalendar] Found ${duplicateIds.size} booking IDs with duplicates in input:`, Array.from(duplicateIds));
     }
     
-    bookings.forEach((booking) => {
+    bookingsWithCustomerTimesOnly.forEach((booking) => {
       // Skip if bookingId is invalid
       if (!booking.bookingId || typeof booking.bookingId !== 'number') {
         console.warn('Invalid booking ID:', booking);
@@ -1063,3 +1111,4 @@ export const BookingCalendar = ({
     </Card>
   );
 };
+

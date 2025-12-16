@@ -78,12 +78,14 @@ const EventComponent = memo(({ event }: { event: Booking }) => {
     }
   };
 
-  // Display the time that was used for calendar positioning (customer-sent time if available)
-  // This ensures the displayed time matches where the booking appears on the calendar
-  const displayStartTime = event.customerSentStartAt || event.startAt;
-  const displayEndTime = event.customerSentEndAt || event.endAt;
-  const startTime = formatTime(displayStartTime);
-  const endTime = formatTime(displayEndTime);
+  // Display ONLY customer's mentioned time in the event card (no UTC)
+  // UTC time is only shown in the modal, not in calendar event cards
+  const customerStartTime = event.customerSentStartAt 
+    ? formatCustomerTime(event.customerSentStartAt, event.timezone || "UTC").localTime
+    : formatTime(event.startAt, true);
+  const customerEndTime = event.customerSentEndAt
+    ? formatCustomerTime(event.customerSentEndAt, event.timezone || "UTC").localTime
+    : formatTime(event.endAt, true);
 
   return (
     <div className={`${getStatusGradient(event.status)} text-white p-2.5 sm:p-3 rounded-2xl shadow-2xl border-l-[4px] hover:shadow-3xl hover:scale-[1.03] transition-all duration-400 cursor-pointer group relative overflow-hidden backdrop-blur-md`} style={{
@@ -121,11 +123,11 @@ const EventComponent = memo(({ event }: { event: Booking }) => {
         <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-white/40">
           <div className="text-[10px] sm:text-xs opacity-95 flex items-center gap-1.5 font-bold">
             <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 drop-shadow-md flex-shrink-0" />
-            <span className="drop-shadow-md">{startTime}</span>
-            {startTime !== endTime && (
+            <span className="drop-shadow-md">{customerStartTime}</span>
+            {customerStartTime !== customerEndTime && (
               <>
                 <span className="opacity-70">-</span>
-                <span className="drop-shadow-md">{endTime}</span>
+                <span className="drop-shadow-md">{customerEndTime}</span>
               </>
             )}
           </div>
@@ -511,11 +513,12 @@ export const BookingCalendar = ({
 
     // Step 2: Convert to calendar events
     // CRITICAL: Use customerSentStartAt/customerSentEndAt for calendar positioning
-    // Parse customer time in their timezone to show booking at the time customer mentioned
-    // The calendar will display it at the customer's mentioned time
+    // Parse customer's mentioned time as-is (no UTC conversion)
+    // react-big-calendar will display it in the user's local timezone
+    // We want the calendar to show the booking at the customer's mentioned time
     const events = uniqueBookings.map((booking) => {
       // CRITICAL: Use customerSentStartAt/customerSentEndAt for calendar positioning
-      // Parse in the booking's timezone to show at customer's mentioned time
+      // Parse as local time (no timezone conversion) - calendar will display it as-is
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
         console.error(`[BookingCalendar] Booking ${booking.bookingId} missing customerSentStartAt/customerSentEndAt - cannot create calendar event`);
         return null;
@@ -523,32 +526,26 @@ export const BookingCalendar = ({
       
       const startTimeString = String(booking.customerSentStartAt).trim();
       const endTimeString = String(booking.customerSentEndAt).trim();
-      const bookingTimezone = booking.timezone || "UTC";
       
-      // Parse customer time in their timezone
+      // Parse customer's mentioned time as local time (no UTC conversion)
+      // If it has timezone info, parse it. Otherwise, parse as local time.
+      // The calendar will display it at this time in the user's local timezone
       let startDate: Date;
       let endDate: Date;
       
       if (hasTimezoneInfo(startTimeString)) {
         // Has timezone info - parse directly
         startDate = new Date(startTimeString);
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        // No timezone info - interpret as being in the booking's timezone
-        // Use formatCustomerTime to convert to UTC (calendar libraries need UTC)
-        const startTimeData = formatCustomerTime(startTimeString, bookingTimezone);
-        startDate = startTimeData.utcDate;
       } else {
-        // No timezone info and no booking timezone - treat as UTC
-        startDate = new Date(startTimeString + "Z");
+        // No timezone info - parse as local time (this is what the customer mentioned)
+        // The calendar will display it at this time
+        startDate = new Date(startTimeString);
       }
       
       if (hasTimezoneInfo(endTimeString)) {
         endDate = new Date(endTimeString);
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        const endTimeData = formatCustomerTime(endTimeString, bookingTimezone);
-        endDate = endTimeData.utcDate;
       } else {
-        endDate = new Date(endTimeString + "Z");
+        endDate = new Date(endTimeString);
       }
 
       // Final validation - if this fails, something is very wrong
@@ -564,7 +561,7 @@ export const BookingCalendar = ({
       }
       
       // Log the dates being used for calendar positioning
-      console.log(`[BookingCalendar] Creating event for booking ${booking.bookingId}: using customerSentStartAt="${startTimeString}" (timezone: ${bookingTimezone}) -> startDate=${startDate.toISOString()}, startAt (UTC)="${booking.startAt || 'N/A'}" (for reference)`);
+      console.log(`[BookingCalendar] Creating event for booking ${booking.bookingId}: using customerSentStartAt="${startTimeString}" -> startDate=${startDate.toISOString()} (customer's mentioned time, no UTC conversion)`);
 
       return {
         id: `booking-${booking.bookingId}`, // CRITICAL: Unique ID for react-big-calendar
@@ -664,34 +661,31 @@ export const BookingCalendar = ({
         return false;
       }
       
-      // CRITICAL: Verify event is positioned using customerSentStartAt (in customer's timezone)
-      // We parse customerSentStartAt in the booking's timezone and convert to UTC for calendar
+      // CRITICAL: Verify event is positioned using customerSentStartAt (as local time, no UTC conversion)
+      // We parse customerSentStartAt as local time, same as event creation
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
         console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - missing customerSentStartAt/customerSentEndAt`);
         return false;
       }
       
       const customerStartTimeString = String(booking.customerSentStartAt).trim();
-      const bookingTimezone = booking.timezone || "UTC";
       
-      // Parse customer time in their timezone (same as event creation)
+      // Parse customer time as local time (same as event creation, no UTC conversion)
       let customerStartTime: number;
       if (hasTimezoneInfo(customerStartTimeString)) {
         customerStartTime = new Date(customerStartTimeString).getTime();
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        const customerTimeData = formatCustomerTime(customerStartTimeString, bookingTimezone);
-        customerStartTime = customerTimeData.utcDate.getTime();
       } else {
-        customerStartTime = new Date(customerStartTimeString + "Z").getTime();
+        // No timezone info - parse as local time
+        customerStartTime = new Date(customerStartTimeString).getTime();
       }
       
       const eventStartTime = event.start.getTime();
       const timeDiff = Math.abs(eventStartTime - customerStartTime);
       
-      // Event should be positioned at customer's mentioned time (converted to UTC)
+      // Event should be positioned at customer's mentioned time (as local time)
       // Allow up to 1 minute difference to account for rounding/parsing differences
       if (timeDiff > 60000) { // 1 minute in milliseconds
-        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - event not positioned at customerSentStartAt (diff: ${timeDiff}ms). event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" (timezone: ${bookingTimezone}) -> ${new Date(customerStartTime).toISOString()}`);
+        console.error(`[BookingCalendar] FINAL FILTER: Rejecting booking ${event.bookingId} - event not positioned at customerSentStartAt (diff: ${timeDiff}ms). event.start=${event.start.toISOString()}, customerSentStartAt="${customerStartTimeString}" -> ${new Date(customerStartTime).toISOString()}`);
         return false;
       }
       

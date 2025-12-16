@@ -403,8 +403,26 @@ export const BookingCalendar = ({
 
   // Convert bookings to calendar events - CRITICAL: Ensure dates are valid Date objects
   // Use customer-sent times if available (so booking appears at the time customer mentioned)
+  // Also deduplicate by bookingId to avoid showing both UTC and customer-time variants
   const bookingEvents = useMemo(() => {
-    return bookings
+    // Deduplicate bookings by bookingId, preferring entries that have customer-sent times
+    const byId = new Map<number, Booking>();
+
+    bookings.forEach((booking) => {
+      const existing = byId.get(booking.bookingId);
+      const hasCustomerTimes = !!(booking.customerSentStartAt && booking.customerSentEndAt);
+      const existingHasCustomerTimes = !!(
+        existing && existing.customerSentStartAt && existing.customerSentEndAt
+      );
+
+      // If we don't have this booking yet, or the new one has customer times and the existing one doesn't,
+      // replace the existing entry.
+      if (!existing || (hasCustomerTimes && !existingHasCustomerTimes)) {
+        byId.set(booking.bookingId, booking);
+      }
+    });
+
+    return Array.from(byId.values())
       .filter((booking) => {
         // Check if we have either customer-sent times or regular times
         const hasCustomerTimes = booking.customerSentStartAt && booking.customerSentEndAt;
@@ -416,19 +434,19 @@ export const BookingCalendar = ({
         // Fall back to regular times if customer-sent times are not available
         const startTimeString = booking.customerSentStartAt || booking.startAt;
         const endTimeString = booking.customerSentEndAt || booking.endAt;
-        
+
         const startDate = new Date(startTimeString);
         const endDate = new Date(endTimeString);
-        
+
         // Validate dates
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
           // Invalid booking date - skipping
           return null;
         }
-        
+
         return {
-      ...booking,
-      title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
+          ...booking,
+          title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
           start: startDate,
           end: endDate,
           resource: booking, // Store full booking object in resource

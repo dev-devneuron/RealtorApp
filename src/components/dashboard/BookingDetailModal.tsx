@@ -450,10 +450,20 @@ export const BookingDetailModal = ({
                         </div>
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5">
                           <div className="text-sm lg:text-base">
-                            <strong>Start:</strong> {customerStart ? customerStart.utcTime : formatTime(booking.startAt)}
+                            <strong>Start (UTC):</strong> {customerStart ? customerStart.utcTime : formatTime(booking.startAt)}
+                            {booking.startAt && (
+                              <span className="text-xs text-gray-600 ml-2">
+                                ({new Date(booking.startAt).toISOString()})
+                              </span>
+                            )}
                           </div>
                           <div className="text-sm lg:text-base">
-                            <strong>End:</strong> {customerEnd ? customerEnd.utcTime : formatTime(booking.endAt)}
+                            <strong>End (UTC):</strong> {customerEnd ? customerEnd.utcTime : formatTime(booking.endAt)}
+                            {booking.endAt && (
+                              <span className="text-xs text-gray-600 ml-2">
+                                ({new Date(booking.endAt).toISOString()})
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -528,6 +538,11 @@ export const BookingDetailModal = ({
                               ? `${formatCustomerTime(booking.customerSentStartAt, booking.timezone).utcTime.replace(" UTC", "")} – ${formatCustomerTime(booking.customerSentEndAt, booking.timezone).utcTime.replace(" UTC", "")}`
                               : `${formatTime(booking.startAt).replace(" UTC", "")} – ${formatTime(booking.endAt).replace(" UTC", "")}`
                           }
+                          {booking.startAt && booking.endAt && (
+                            <span className="text-xs text-gray-600 ml-2 block mt-1">
+                              ({new Date(booking.startAt).toISOString()} – {new Date(booking.endAt).toISOString()})
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

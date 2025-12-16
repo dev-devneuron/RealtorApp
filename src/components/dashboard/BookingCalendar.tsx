@@ -548,32 +548,38 @@ export const BookingCalendar = ({
       const endTimeString = String(booking.customerSentEndAt).trim();
       const bookingTimezone = booking.timezone || "UTC";
       
-      // CRITICAL: Parse customer's mentioned time in THEIR timezone, not browser's local timezone
-      // If customer said "12:00 PM" in EST, we want to show it at 12:00 PM EST, not 12:00 PM in browser's timezone
-      // We need to convert customer's time to UTC for the calendar library, but preserve the customer's timezone context
+      // CRITICAL: Parse customer's mentioned time as naive local time (no timezone conversion)
+      // react-big-calendar will display it in the user's local timezone, showing the customer's mentioned time
+      // Example: Customer says "12:00 PM" -> Parse as "12:00 PM" in browser timezone -> Calendar shows "12:00 PM"
+      // This ensures the calendar shows the customer's mentioned time, not UTC-converted time
       let startDate: Date;
       let endDate: Date;
       
+      // Parse as naive local time - JavaScript will interpret in browser's timezone
+      // When react-big-calendar displays it, it will show the same time (customer's mentioned time)
       if (hasTimezoneInfo(startTimeString)) {
-        // Has timezone info - parse directly (will be in UTC after parsing)
-        startDate = new Date(startTimeString);
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        // No timezone info - interpret as being in the customer's timezone
-        // Convert to UTC for calendar library, but calendar will display it correctly
-        const startTimeData = formatCustomerTime(startTimeString, bookingTimezone);
-        startDate = startTimeData.utcDate;
+        // Has timezone info - remove timezone info and parse as local time
+        // Extract just the date/time part without timezone
+        const dateTimeMatch = startTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+        if (dateTimeMatch) {
+          startDate = new Date(dateTimeMatch[1]); // Parse without timezone
+        } else {
+          startDate = new Date(startTimeString);
+        }
       } else {
-        // No timezone info and no booking timezone - treat as UTC
-        startDate = new Date(startTimeString + "Z");
+        // No timezone info - parse as naive local time (what customer mentioned)
+        startDate = new Date(startTimeString);
       }
       
       if (hasTimezoneInfo(endTimeString)) {
-        endDate = new Date(endTimeString);
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        const endTimeData = formatCustomerTime(endTimeString, bookingTimezone);
-        endDate = endTimeData.utcDate;
+        const dateTimeMatch = endTimeString.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+        if (dateTimeMatch) {
+          endDate = new Date(dateTimeMatch[1]); // Parse without timezone
+        } else {
+          endDate = new Date(endTimeString);
+        }
       } else {
-        endDate = new Date(endTimeString + "Z");
+        endDate = new Date(endTimeString);
       }
 
       // Final validation - if this fails, something is very wrong
@@ -603,7 +609,7 @@ export const BookingCalendar = ({
       }
       
       // Log the dates being used for calendar positioning
-      console.log(`[BookingCalendar] Creating event for booking ${booking.bookingId}: using customerSentStartAt="${startTimeString}" (timezone: ${bookingTimezone}) -> startDate=${startDate.toISOString()} (converted to UTC for calendar, will display at customer's mentioned time)`);
+      console.log(`[BookingCalendar] Creating event for booking ${booking.bookingId}: using customerSentStartAt="${startTimeString}" (timezone: ${bookingTimezone}) -> startDate=${startDate.toISOString()} (will display at customer's mentioned time: ${startTimeString})`);
 
       return {
         id: `booking-${booking.bookingId}`, // CRITICAL: Unique ID for react-big-calendar
@@ -732,19 +738,15 @@ export const BookingCalendar = ({
       }
       
       const customerStartTimeString = String(booking.customerSentStartAt).trim();
-      const bookingTimezone = booking.timezone || "UTC";
       
-      // Parse customer time in their timezone (same as event creation)
+      // Parse customer time as naive local time (same as event creation)
+      // This matches how we create the event - parse as local time
       let customerStartTime: number;
       if (hasTimezoneInfo(customerStartTimeString)) {
         customerStartTime = new Date(customerStartTimeString).getTime();
-      } else if (bookingTimezone && bookingTimezone !== "UTC") {
-        // No timezone info - interpret as being in the customer's timezone
-        const customerTimeData = formatCustomerTime(customerStartTimeString, bookingTimezone);
-        customerStartTime = customerTimeData.utcDate.getTime();
       } else {
-        // No timezone info and no booking timezone - treat as UTC
-        customerStartTime = new Date(customerStartTimeString + "Z").getTime();
+        // No timezone info - parse as naive local time (what customer mentioned)
+        customerStartTime = new Date(customerStartTimeString).getTime();
       }
       
       const eventStartTime = event.start.getTime();
@@ -763,6 +765,8 @@ export const BookingCalendar = ({
     console.log(`[BookingCalendar] FINAL FILTER: ${bookingEvents.length} booking events → ${filteredBookingEvents.length} after UTC removal`);
     
     // Step 2: Combine all events
+    // DEBUG: Log what we're combining
+    console.log(`[BookingCalendar] COMBINING: ${filteredBookingEvents.length} booking events + ${workingHoursEvents.length} working hours events + ${availabilityEvents.length} availability events = ${filteredBookingEvents.length + workingHoursEvents.length + availabilityEvents.length} total`);
     const combined = [...filteredBookingEvents, ...workingHoursEvents, ...availabilityEvents];
     
     // Step 3: Final deduplication by unique ID and bookingId

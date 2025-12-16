@@ -929,44 +929,55 @@ export const BookingsTab = ({
             </TabsContent>
 
             {/* Calendar Views */}
-            <TabsContent value="day" className="mt-0">
-              <BookingCalendar
-                bookings={filteredBookings}
-                view="day"
-                date={selectedDate}
-                onViewChange={(v) => setView(v)}
-                onNavigate={setSelectedDate}
-                onSelectEvent={(booking) => handleBookingClick(booking)}
-                userId={userId}
-                userType={userType}
-              />
-            </TabsContent>
+            {/* CRITICAL: Only pass bookings with customerSentStartAt to calendar - filter out UTC-only bookings */}
+            {(() => {
+              const calendarBookings = filteredBookings.filter((b) => {
+                // Only include bookings that have customerSentStartAt and customerSentEndAt
+                return !!(b.customerSentStartAt && b.customerSentEndAt);
+              });
+              return (
+                <>
+                  <TabsContent value="day" className="mt-0">
+                    <BookingCalendar
+                      bookings={calendarBookings}
+                      view="day"
+                      date={selectedDate}
+                      onViewChange={(v) => setView(v)}
+                      onNavigate={setSelectedDate}
+                      onSelectEvent={(booking) => handleBookingClick(booking)}
+                      userId={userId}
+                      userType={userType}
+                    />
+                  </TabsContent>
 
-            <TabsContent value="week" className="mt-0">
-              <BookingCalendar
-                bookings={filteredBookings}
-                view="week"
-                date={selectedDate}
-                onViewChange={(v) => setView(v)}
-                onNavigate={setSelectedDate}
-                onSelectEvent={(booking) => handleBookingClick(booking)}
-                userId={userId}
-                userType={userType}
-              />
-            </TabsContent>
+                  <TabsContent value="week" className="mt-0">
+                    <BookingCalendar
+                      bookings={calendarBookings}
+                      view="week"
+                      date={selectedDate}
+                      onViewChange={(v) => setView(v)}
+                      onNavigate={setSelectedDate}
+                      onSelectEvent={(booking) => handleBookingClick(booking)}
+                      userId={userId}
+                      userType={userType}
+                    />
+                  </TabsContent>
 
-            <TabsContent value="month" className="mt-0">
-              <BookingCalendar
-                bookings={filteredBookings}
-                view="month"
-                date={selectedDate}
-                onViewChange={(v) => setView(v)}
-                onNavigate={setSelectedDate}
-                onSelectEvent={(booking) => handleBookingClick(booking)}
-                userId={userId}
-                userType={userType}
-              />
-            </TabsContent>
+                  <TabsContent value="month" className="mt-0">
+                    <BookingCalendar
+                      bookings={calendarBookings}
+                      view="month"
+                      date={selectedDate}
+                      onViewChange={(v) => setView(v)}
+                      onNavigate={setSelectedDate}
+                      onSelectEvent={(booking) => handleBookingClick(booking)}
+                      userId={userId}
+                      userType={userType}
+                    />
+                  </TabsContent>
+                </>
+              );
+            })()}
 
             {/* Statistics View */}
             <TabsContent value="stats" className="mt-0">

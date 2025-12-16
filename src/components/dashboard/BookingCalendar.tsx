@@ -518,15 +518,18 @@ export const BookingCalendar = ({
         return null;
       }
       
+      // CRITICAL: Log the dates being used to verify we're using customerSentStartAt
+      console.log(`[BookingCalendar] Creating event for booking ${booking.bookingId}: using customerSentStartAt="${startTimeString}" -> startDate=${startDate.toISOString()}, startAt="${booking.startAt}" -> would be ${booking.startAt ? new Date(booking.startAt).toISOString() : 'N/A'}`);
+      
       // ABSOLUTE SAFETY CHECK: Ensure we're not accidentally using UTC times
-      if (booking.startAt && booking.endAt) {
+      // If the event start date matches startAt (UTC), something is wrong
+      if (booking.startAt) {
         const utcStart = new Date(String(booking.startAt).trim());
-        const utcEnd = new Date(String(booking.endAt).trim());
-        if (!isNaN(utcStart.getTime()) && !isNaN(utcEnd.getTime())) {
-          // If the dates are the same (within 1 second), this is a UTC time - REJECT
-          if (Math.abs(startDate.getTime() - utcStart.getTime()) < 1000 && 
-              Math.abs(endDate.getTime() - utcEnd.getTime()) < 1000) {
-            console.error(`[BookingCalendar] CRITICAL: Booking ${booking.bookingId} passed filter but dates match UTC - REJECTING`);
+        if (!isNaN(utcStart.getTime())) {
+          const timeDiff = Math.abs(startDate.getTime() - utcStart.getTime());
+          // If they're the same (within 1 second), we're accidentally using UTC - REJECT
+          if (timeDiff < 1000) {
+            console.error(`[BookingCalendar] CRITICAL: Booking ${booking.bookingId} - event date matches UTC startAt! Rejecting. customerSentStartAt="${startTimeString}" -> ${startDate.toISOString()}, startAt="${booking.startAt}" -> ${utcStart.toISOString()}`);
             return null;
           }
         }

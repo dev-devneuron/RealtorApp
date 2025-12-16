@@ -412,6 +412,7 @@ export const BookingCalendar = ({
     // STEP 0: FIRST - Deduplicate by bookingId at the INPUT level
     // This prevents duplicate bookings from entering the processing pipeline
     const inputDeduplicationMap = new Map<number, Booking>();
+    const duplicateInputIds: number[] = [];
     bookings.forEach((booking) => {
       if (!booking.bookingId) {
         console.warn(`[BookingCalendar] Skipping booking without bookingId:`, booking);
@@ -422,11 +423,15 @@ export const BookingCalendar = ({
       if (!inputDeduplicationMap.has(booking.bookingId)) {
         inputDeduplicationMap.set(booking.bookingId, booking);
       } else {
-        console.warn(`[BookingCalendar] INPUT DEDUP: Duplicate booking ID ${booking.bookingId} in input array, keeping first occurrence`);
+        duplicateInputIds.push(booking.bookingId);
+        console.warn(`[BookingCalendar] INPUT DEDUP: Duplicate booking ID ${booking.bookingId} in input array, keeping first occurrence. Has customerSentStartAt: ${!!booking.customerSentStartAt}, existing has: ${!!inputDeduplicationMap.get(booking.bookingId)?.customerSentStartAt}`);
       }
     });
     
     const deduplicatedInput = Array.from(inputDeduplicationMap.values());
+    if (duplicateInputIds.length > 0) {
+      console.warn(`[BookingCalendar] INPUT DEDUP: Found ${duplicateInputIds.length} duplicate booking IDs in input:`, duplicateInputIds);
+    }
     console.log(`[BookingCalendar] INPUT DEDUP: ${bookings.length} bookings → ${deduplicatedInput.length} unique bookings`);
     
     // STEP 0.5: SECOND - Deduplicate by bookingId, ALWAYS preferring the one with customerSentStartAt
@@ -466,10 +471,11 @@ export const BookingCalendar = ({
     
     const bookingsWithoutCustomerSent = deduplicatedBookings.filter(b => !b.customerSentStartAt || !b.customerSentEndAt);
     if (bookingsWithoutCustomerSent.length > 0) {
-      console.warn(`[BookingCalendar] WARNING: Found ${bookingsWithoutCustomerSent.length} bookings WITHOUT customerSentStartAt:`, bookingsWithoutCustomerSent.map(b => ({ id: b.bookingId, startAt: b.startAt })));
+      console.warn(`[BookingCalendar] WARNING: Found ${bookingsWithoutCustomerSent.length} bookings WITHOUT customerSentStartAt:`, bookingsWithoutCustomerSent.map(b => ({ id: b.bookingId, startAt: b.startAt, customerSentStartAt: b.customerSentStartAt })));
     }
     
     // FILTER: Only keep bookings that have customer-sent times
+    // CRITICAL: Reject any booking that doesn't have BOTH customerSentStartAt AND customerSentEndAt
     // We will use customerSentStartAt for display, regardless of whether it matches startAt
     // The key is: if customerSentStartAt exists, use it. If not, don't show the booking.
     const validBookings = deduplicatedBookings.filter((booking) => {
@@ -636,21 +642,36 @@ export const BookingCalendar = ({
     const utcRejectedEvents: number[] = [];
     
     events.forEach((event) => {
-      if (!event || !event.bookingId) return;
+      if (!event || !event.bookingId) {
+        console.warn(`[BookingCalendar] Skipping event without bookingId:`, event);
+        return;
+      }
       
       const booking = event.resource as Booking;
       
-      // CRITICAL: Reject any event that is positioned at UTC time (startAt/endAt)
-      // This ensures we only show customer's mentioned time, not UTC time
-      if (booking.startAt && booking.endAt) {
+      // CRITICAL: Only reject events that were created from startAt/endAt (UTC), not from customerSentStartAt
+      // If the event has customerSentStartAt, it's valid even if it happens to match UTC time
+      // We only reject if the event was created from UTC time (startAt) without customerSentStartAt
+      if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
+        // This event was created from UTC time (startAt/endAt) - REJECT it
+        utcRejectedEvents.push(event.bookingId);
+        console.error(`[BookingCalendar] REJECTING event for booking ${event.bookingId} - missing customerSentStartAt, was created from UTC time (startAt). event.start=${event.start.toISOString()}, startAt=${booking.startAt}`);
+        return;
+      }
+      
+      // Additional check: If event start time matches UTC startAt exactly AND customerSentStartAt is different,
+      // this might be a UTC-based event that slipped through - but only reject if customerSentStartAt is clearly different
+      if (booking.startAt && booking.customerSentStartAt) {
         const utcStart = new Date(String(booking.startAt).trim()).getTime();
         const eventStart = event.start.getTime();
+        const customerStart = new Date(String(booking.customerSentStartAt).trim()).getTime();
         const timeDiff = Math.abs(eventStart - utcStart);
+        const customerDiff = Math.abs(eventStart - customerStart);
         
-        // If event is positioned at UTC time (within 1 second), REJECT it
-        if (timeDiff < 1000) {
+        // If event matches UTC time exactly but NOT customer time, it's a UTC event - REJECT
+        if (timeDiff < 1000 && customerDiff > 60000) { // 1 second for UTC match, 1 minute difference from customer time
           utcRejectedEvents.push(event.bookingId);
-          console.error(`[BookingCalendar] REJECTING event for booking ${event.bookingId} - positioned at UTC time (startAt) instead of customer time. event.start=${event.start.toISOString()}, startAt=${booking.startAt}`);
+          console.error(`[BookingCalendar] REJECTING event for booking ${event.bookingId} - positioned at UTC time (startAt) but not at customer time. event.start=${event.start.toISOString()}, startAt=${booking.startAt}, customerSentStartAt=${booking.customerSentStartAt}`);
           return;
         }
       }
@@ -660,7 +681,8 @@ export const BookingCalendar = ({
         finalEventsMap.set(event.bookingId, event);
       } else {
         duplicateEvents.push(event.bookingId);
-        console.warn(`[BookingCalendar] Duplicate event detected for booking ${event.bookingId}, keeping first occurrence`);
+        const existing = finalEventsMap.get(event.bookingId);
+        console.warn(`[BookingCalendar] Duplicate event detected for booking ${event.bookingId}, keeping first occurrence. Existing event.start=${existing?.start.toISOString()}, new event.start=${event.start.toISOString()}`);
       }
     });
 

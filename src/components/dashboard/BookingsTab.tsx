@@ -87,8 +87,6 @@ export const BookingsTab = ({
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  const [startDateFilter, setStartDateFilter] = useState<string>("");
-  const [endDateFilter, setEndDateFilter] = useState<string>("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -96,13 +94,16 @@ export const BookingsTab = ({
   const [pendingCount, setPendingCount] = useState(0);
   const [showManualBookingModal, setShowManualBookingModal] = useState(false);
   // Local copy to allow optimistic updates without mutating props
-  const [bookingsState, setBookingsState] = useState<Booking[]>(bookings || []);
+  // Sort by bookingId in descending order (newest/highest ID first)
+  const [bookingsState, setBookingsState] = useState<Booking[]>(
+    (bookings || []).slice().sort((a, b) => b.bookingId - a.bookingId)
+  );
 
   // Keep local state in sync when parent provides fresh bookings, but don't overwrite optimistic non-pending changes with stale pending data
   useEffect(() => {
     setBookingsState((prev) => {
       const prevMap = new Map(prev.map((b) => [b.bookingId, b]));
-      return (bookings || []).map((incoming) => {
+      const merged = (bookings || []).map((incoming) => {
         const existing = prevMap.get(incoming.bookingId);
         if (!existing) return incoming;
         // If we previously moved it out of pending and incoming is still pending, keep our optimistic/non-pending state
@@ -111,6 +112,8 @@ export const BookingsTab = ({
         }
         return incoming;
       });
+      // Sort by bookingId in descending order (newest/highest ID first)
+      return merged.sort((a, b) => b.bookingId - a.bookingId);
     });
   }, [bookings]);
 
@@ -161,11 +164,28 @@ export const BookingsTab = ({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Filter bookings based on status, search, and date range (use debounced query)
+  // Filter bookings based on status, search, and upcoming 2 days (use debounced query)
   const filteredBookings = useMemo(() => {
-    let filtered = bookingsState;
+    let filtered = [...bookingsState]; // Create a copy to avoid mutating the original
 
-    if (statusFilter !== "all") {
+    // Handle status filter and upcoming 2 days filter
+    if (statusFilter === "upcoming-2-days") {
+      // Filter for bookings in the next 2 days (today, tomorrow, and day after tomorrow)
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const twoDaysLater = new Date(todayStart);
+      twoDaysLater.setDate(todayStart.getDate() + 2);
+      twoDaysLater.setHours(23, 59, 59, 999); // End of the day (2 days from today)
+      
+      filtered = filtered.filter((b) => {
+        if (!b.startAt) return false;
+        const bookingDate = new Date(b.startAt);
+        if (isNaN(bookingDate.getTime())) return false;
+        
+        // Check if booking start date is between today (inclusive) and 2 days from today (inclusive)
+        return bookingDate >= todayStart && bookingDate <= twoDaysLater;
+      });
+    } else if (statusFilter !== "all") {
       filtered = filtered.filter((b) => b.status === statusFilter);
     }
 
@@ -181,37 +201,9 @@ export const BookingsTab = ({
       );
     }
 
-    // Date range filtering - filter by booking start date
-    if (startDateFilter || endDateFilter) {
-      filtered = filtered.filter((b) => {
-        if (!b.startAt) return false;
-        
-        const bookingDate = new Date(b.startAt);
-        if (isNaN(bookingDate.getTime())) return false;
-        
-        // Normalize to start of day for comparison (ignore time)
-        const bookingDateOnly = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate());
-        
-        if (startDateFilter) {
-          const startDate = new Date(startDateFilter);
-          if (isNaN(startDate.getTime())) return true; // Invalid start date, skip this filter
-          const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-          if (bookingDateOnly < startDateOnly) return false;
-        }
-        
-        if (endDateFilter) {
-          const endDate = new Date(endDateFilter);
-          if (isNaN(endDate.getTime())) return true; // Invalid end date, skip this filter
-          const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-          if (bookingDateOnly > endDateOnly) return false;
-        }
-        
-        return true;
-      });
-    }
-
-    return filtered;
-  }, [bookingsState, statusFilter, debouncedSearchQuery, startDateFilter, endDateFilter]);
+    // Sort by bookingId in descending order (newest/highest ID first)
+    return filtered.sort((a, b) => b.bookingId - a.bookingId);
+  }, [bookingsState, statusFilter, debouncedSearchQuery]);
 
   // Separate pending bookings
   const pendingBookings = useMemo(
@@ -555,6 +547,7 @@ export const BookingsTab = ({
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-amber-200 shadow-xl">
                   <SelectItem value="all" className="rounded-lg">All Statuses</SelectItem>
+                  <SelectItem value="upcoming-2-days" className="rounded-lg">Upcoming 2 Days</SelectItem>
                   <SelectItem value="pending" className="rounded-lg">Pending</SelectItem>
                   <SelectItem value="approved" className="rounded-lg">Approved</SelectItem>
                   <SelectItem value="denied" className="rounded-lg">Denied</SelectItem>
@@ -562,83 +555,6 @@ export const BookingsTab = ({
                   <SelectItem value="rescheduled" className="rounded-lg">Rescheduled</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            
-            {/* Second Row: Date Range Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 items-end">
-              <div className="flex-1 sm:flex-initial sm:w-auto">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <Calendar className="h-4 w-4 inline mr-1 text-amber-600" />
-                  Start Date
-                </label>
-                <div className="relative">
-                  <Input
-                    type="date"
-                    value={startDateFilter}
-                    onChange={(e) => {
-                      const newStartDate = e.target.value;
-                      setStartDateFilter(newStartDate);
-                      // If end date is before new start date, clear it
-                      if (endDateFilter && newStartDate && new Date(endDateFilter) < new Date(newStartDate)) {
-                        setEndDateFilter("");
-                      }
-                    }}
-                    max={endDateFilter || undefined}
-                    className="h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all"
-                  />
-                  {startDateFilter && (
-                    <button
-                      onClick={() => setStartDateFilter("")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="flex-1 sm:flex-initial sm:w-auto">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <Calendar className="h-4 w-4 inline mr-1 text-amber-600" />
-                  End Date
-                </label>
-                <div className="relative">
-                  <Input
-                    type="date"
-                    value={endDateFilter}
-                    onChange={(e) => {
-                      const newEndDate = e.target.value;
-                      setEndDateFilter(newEndDate);
-                      // If start date is after new end date, clear it
-                      if (startDateFilter && newEndDate && new Date(startDateFilter) > new Date(newEndDate)) {
-                        setStartDateFilter("");
-                      }
-                    }}
-                    min={startDateFilter || undefined}
-                    className="h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all"
-                  />
-                  {endDateFilter && (
-                    <button
-                      onClick={() => setEndDateFilter("")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              {(startDateFilter || endDateFilter) && (
-                <Button
-                  onClick={() => {
-                    setStartDateFilter("");
-                    setEndDateFilter("");
-                  }}
-                  variant="outline"
-                  className="h-12 px-4 bg-white/90 backdrop-blur-sm border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-50 rounded-xl shadow-md hover:shadow-lg transition-all"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Clear Dates
-                </Button>
-              )}
             </div>
           </div>
         </CardHeader>
@@ -695,8 +611,6 @@ export const BookingsTab = ({
                   filters={{ 
                     status: statusFilter, 
                     search: searchQuery,
-                    startDate: startDateFilter,
-                    endDate: endDateFilter,
                   }} 
                 />
               </div>

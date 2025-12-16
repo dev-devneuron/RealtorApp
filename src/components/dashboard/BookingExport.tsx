@@ -15,8 +15,6 @@ interface BookingExportProps {
   filters?: {
     status?: string;
     search?: string;
-    startDate?: string;
-    endDate?: string;
   };
 }
 
@@ -85,7 +83,7 @@ export const exportToCSV = (bookings: Booking[], filename: string = "bookings") 
 export const exportToPDF = async (
   bookings: Booking[], 
   filename: string = "bookings",
-  filters?: { status?: string; search?: string; startDate?: string; endDate?: string }
+  filters?: { status?: string; search?: string }
 ) => {
   if (bookings.length === 0) {
     toast.error("No bookings to export");
@@ -282,10 +280,8 @@ export const exportToPDF = async (
           <div class="meta-info">
             <strong>Generated:</strong> ${new Date().toLocaleString()}<br>
             <strong>Total Bookings:</strong> ${bookings.length}${filters ? `<br><strong>Filters Applied:</strong> ${[
-              filters.status && filters.status !== "all" ? `Status: ${filters.status}` : null,
+              filters.status && filters.status !== "all" ? `Status: ${filters.status === "upcoming-2-days" ? "Upcoming 2 Days" : filters.status}` : null,
               filters.search ? `Search: "${filters.search}"` : null,
-              filters.startDate ? `From: ${new Date(filters.startDate).toLocaleDateString()}` : null,
-              filters.endDate ? `To: ${new Date(filters.endDate).toLocaleDateString()}` : null,
             ].filter(Boolean).join(", ") || "None"}` : ""}
           </div>
         </div>

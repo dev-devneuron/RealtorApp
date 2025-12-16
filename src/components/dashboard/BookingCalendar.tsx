@@ -405,55 +405,78 @@ export const BookingCalendar = ({
   // Do NOT show bookings that only have UTC times (startAt/endAt) - only show customer-sent times
   // Also deduplicate by bookingId to avoid showing duplicates
   const bookingEvents = useMemo(() => {
-    // Deduplicate bookings by bookingId, preferring entries that have customer-sent times
+    // Helper function to check if a booking has valid customer-sent times
+    const hasValidCustomerTimes = (booking: Booking): boolean => {
+      if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
+        return false;
+      }
+      // Check they're not empty strings
+      if (booking.customerSentStartAt.trim() === "" || booking.customerSentEndAt.trim() === "") {
+        return false;
+      }
+      // Validate they can be parsed as dates
+      const startDate = new Date(booking.customerSentStartAt);
+      const endDate = new Date(booking.customerSentEndAt);
+      return !isNaN(startDate.getTime()) && !isNaN(endDate.getTime());
+    };
+
+    // Step 1: Deduplicate bookings by bookingId, ALWAYS preferring entries that have customer-sent times
     const byId = new Map<number, Booking>();
 
     bookings.forEach((booking) => {
       const existing = byId.get(booking.bookingId);
-      const hasCustomerTimes = !!(booking.customerSentStartAt && booking.customerSentEndAt);
-      const existingHasCustomerTimes = !!(
-        existing && existing.customerSentStartAt && existing.customerSentEndAt
-      );
+      const hasCustomerTimes = hasValidCustomerTimes(booking);
+      const existingHasCustomerTimes = existing ? hasValidCustomerTimes(existing) : false;
 
-      // If we don't have this booking yet, or the new one has customer times and the existing one doesn't,
-      // replace the existing entry.
-      if (!existing || (hasCustomerTimes && !existingHasCustomerTimes)) {
+      // Priority: Always prefer bookings with customer-sent times
+      // If existing has customer times, keep it unless new one also has customer times (then replace to get latest)
+      // If existing doesn't have customer times but new one does, replace
+      // If neither has customer times, keep existing (first one seen)
+      if (!existing) {
+        byId.set(booking.bookingId, booking);
+      } else if (hasCustomerTimes && !existingHasCustomerTimes) {
+        // New one has customer times, existing doesn't - replace
+        byId.set(booking.bookingId, booking);
+      } else if (hasCustomerTimes && existingHasCustomerTimes) {
+        // Both have customer times - replace to ensure we have the latest version
         byId.set(booking.bookingId, booking);
       }
+      // If existing has customer times and new one doesn't, keep existing (do nothing)
     });
 
-    return Array.from(byId.values())
-      .filter((booking) => {
-        // CRITICAL: Only show bookings that have customer-sent times
-        // Do NOT show bookings that only have UTC times (startAt/endAt)
-        // This ensures we only display bookings at the time the customer mentioned, not UTC times
-        return !!(booking.customerSentStartAt && booking.customerSentEndAt);
-      })
-      .map((booking) => {
-        // Use ONLY customer-sent times for calendar positioning (what customer mentioned)
-        // Do NOT fall back to regular times - if there's no customer-sent time, the booking was filtered out above
-        const startTimeString = booking.customerSentStartAt!;
-        const endTimeString = booking.customerSentEndAt!;
+    // Step 2: Filter to ONLY bookings with valid customer-sent times
+    // CRITICAL: Do NOT show bookings that only have UTC times (startAt/endAt)
+    // This ensures we only display bookings at the time the customer mentioned, not UTC times
+    const bookingsWithCustomerTimes = Array.from(byId.values()).filter(hasValidCustomerTimes);
 
-        const startDate = new Date(startTimeString);
-        const endDate = new Date(endTimeString);
+    // Step 3: Convert to calendar events using ONLY customer-sent times
+    return bookingsWithCustomerTimes.map((booking) => {
+      // Use ONLY customer-sent times for calendar positioning (what customer mentioned)
+      // We've already validated these exist and are valid above
+      const startTimeString = booking.customerSentStartAt!.trim();
+      const endTimeString = booking.customerSentEndAt!.trim();
 
-        // Validate dates
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          // Invalid booking date - skipping
-          return null;
-        }
+      const startDate = new Date(startTimeString);
+      const endDate = new Date(endTimeString);
 
-        return {
-          ...booking,
-          title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
-          start: startDate,
-          end: endDate,
-          resource: booking, // Store full booking object in resource
-          bookingId: booking.bookingId, // Also store bookingId directly for easier access
-        };
-      })
-      .filter((event) => event !== null); // Remove null entries
+      // Double-check validation (should never fail due to filter above, but defensive)
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.warn(`Invalid customer-sent dates for booking ${booking.bookingId}:`, {
+          start: startTimeString,
+          end: endTimeString,
+        });
+        return null;
+      }
+
+      return {
+        ...booking,
+        title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
+        start: startDate,
+        end: endDate,
+        resource: booking, // Store full booking object in resource
+        bookingId: booking.bookingId, // Also store bookingId directly for easier access
+      };
+    }).filter((event) => event !== null); // Remove null entries
   }, [bookings]);
 
   // Convert availability slots to calendar events

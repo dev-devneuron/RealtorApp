@@ -412,7 +412,9 @@ export const BookingCalendar = ({
       }
     });
     
-    // AGGRESSIVE FILTER: Only keep bookings that have valid, non-UTC customer-sent times
+    // FILTER: Only keep bookings that have customer-sent times
+    // We will use customerSentStartAt for display, regardless of whether it matches startAt
+    // The key is: if customerSentStartAt exists, use it. If not, don't show the booking.
     const validBookings = bookings.filter((booking) => {
       // STEP 1: Must have both customer-sent times - if not, REJECT IMMEDIATELY
       if (!booking.customerSentStartAt || !booking.customerSentEndAt) {
@@ -437,53 +439,11 @@ export const BookingCalendar = ({
         return false;
       }
       
-      // STEP 4: CRITICAL - Must be DIFFERENT from UTC times
-      // If customerSentStartAt equals startAt (ignoring timezone), it's a UTC time - REJECT
-      if (booking.startAt && booking.endAt) {
-        const utcStart = String(booking.startAt).trim();
-        const utcEnd = String(booking.endAt).trim();
-        
-        // Normalize UTC times by removing ALL timezone indicators
-        const normalizeTime = (timeStr: string) => {
-          return timeStr
-            .replace(/[+-]\d{2}:\d{2}$/, '')  // Remove +00:00 or -05:00
-            .replace(/Z$/, '')                 // Remove trailing Z
-            .replace(/\.\d{3}Z?$/, '')         // Remove .000 or .000Z
-            .replace(/\.\d+Z?$/, '')           // Remove any decimal seconds
-            .trim();
-        };
-        
-        const utcStartNoTz = normalizeTime(utcStart);
-        const utcEndNoTz = normalizeTime(utcEnd);
-        
-        // CRITICAL CHECK: If customer times match normalized UTC times, REJECT
-        if (customerStart === utcStartNoTz && customerEnd === utcEndNoTz) {
-          console.log(`[BookingCalendar] REJECTING booking ${booking.bookingId}: customerSentStartAt="${customerStart}" === startAt="${utcStartNoTz}" (UTC time)`);
-          return false;
-        }
-        
-        // Also check if they represent the same UTC moment
-        const utcStartDate = new Date(utcStart);
-        const utcEndDate = new Date(utcEnd);
-        if (!isNaN(utcStartDate.getTime()) && !isNaN(utcEndDate.getTime())) {
-          // Parse customer time as UTC to compare (add Z if no timezone)
-          const customerStartAsUtc = new Date(customerStart.includes('Z') || customerStart.includes('+') || customerStart.includes('-') ? customerStart : customerStart + 'Z');
-          const customerEndAsUtc = new Date(customerEnd.includes('Z') || customerEnd.includes('+') || customerEnd.includes('-') ? customerEnd : customerEnd + 'Z');
-          
-          // If they represent the same UTC moment (within 1 second), it's a UTC time - REJECT
-          if (!isNaN(customerStartAsUtc.getTime()) && !isNaN(customerEndAsUtc.getTime())) {
-            const timeDiffStart = Math.abs(customerStartAsUtc.getTime() - utcStartDate.getTime());
-            const timeDiffEnd = Math.abs(customerEndAsUtc.getTime() - utcEndDate.getTime());
-            if (timeDiffStart < 1000 && timeDiffEnd < 1000) {
-              console.log(`[BookingCalendar] REJECTING booking ${booking.bookingId}: customer times represent same UTC moment (diff: ${timeDiffStart}ms, ${timeDiffEnd}ms)`);
-              return false;
-            }
-          }
-        }
-      }
+      // STEP 4: REJECT bookings that ONLY have UTC times (no customer-sent times)
+      // But if customerSentStartAt exists and is valid, we KEEP it and use it for display
+      // We don't care if it matches startAt - we just use customerSentStartAt for the calendar position
       
-      // All checks passed - this booking has valid customer-sent times
-      console.log(`[BookingCalendar] ACCEPTING booking ${booking.bookingId}: customerSentStartAt="${customerStart}" is different from startAt`);
+      console.log(`[BookingCalendar] ACCEPTING booking ${booking.bookingId}: has valid customerSentStartAt="${customerStart}" - will use for calendar display`);
       return true;
     });
     

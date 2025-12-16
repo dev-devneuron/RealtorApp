@@ -113,7 +113,7 @@ const EventComponent = memo(({ event }: { event: Booking }) => {
               {event.callRecord && (event.callRecord.callRecordingUrl || event.callRecord.callTranscript) && (
                 <span className="text-xs opacity-90" title="Has call recording/transcript">📞</span>
               )}
-            </div>
+      </div>
             <div className="text-[10px] sm:text-xs opacity-95 truncate font-semibold mb-1.5 flex items-center gap-1.5 pl-1">
               <span className="opacity-90 text-xs filter drop-shadow-sm">📍</span>
               <span className="truncate drop-shadow-sm">{event.propertyAddress || `Property #${event.propertyId}`}</span>
@@ -192,17 +192,17 @@ export const BookingCalendar = ({
       
       // Save to localStorage for caching (but API is source of truth)
       localStorage.setItem(`calendar_preferences_${userId}`, JSON.stringify(prefs));
-    } catch (error) {
-      console.error("Error fetching calendar preferences:", error);
+        } catch (error) {
+          console.error("Error fetching calendar preferences:", error);
       // Only use defaults if fetch completely fails
-      const defaults = {
-        start_time: "09:00",
-        end_time: "17:00",
-        timezone: "America/New_York",
-        slot_length: 30,
-        working_days: [1, 2, 3, 4, 5],
-      };
-      setCalendarPreferences(defaults);
+          const defaults = {
+            start_time: "09:00",
+            end_time: "17:00",
+            timezone: "America/New_York",
+            slot_length: 30,
+            working_days: [1, 2, 3, 4, 5],
+          };
+          setCalendarPreferences(defaults);
     }
   };
 
@@ -243,7 +243,7 @@ export const BookingCalendar = ({
         } catch (error) {
           // Fallback to event data if API fails
           if (e.detail?.preferences) {
-            setCalendarPreferences(e.detail.preferences);
+        setCalendarPreferences(e.detail.preferences);
           }
         }
       }
@@ -272,15 +272,15 @@ export const BookingCalendar = ({
           setAvailabilitySlots([]);
         } catch (error) {
           // Fallback to localStorage if API fails
-          try {
-            const prefs = JSON.parse(e.newValue);
-            setCalendarPreferences({
-              start_time: prefs.start_time || "09:00",
-              end_time: prefs.end_time || "17:00",
-              timezone: prefs.timezone || "America/New_York",
-              slot_length: prefs.slot_length || 30,
-              working_days: prefs.working_days || [1, 2, 3, 4, 5],
-            });
+        try {
+          const prefs = JSON.parse(e.newValue);
+          setCalendarPreferences({
+            start_time: prefs.start_time || "09:00",
+            end_time: prefs.end_time || "17:00",
+            timezone: prefs.timezone || "America/New_York",
+            slot_length: prefs.slot_length || 30,
+            working_days: prefs.working_days || [1, 2, 3, 4, 5],
+          });
           } catch (parseError) {
             console.error("Error parsing preferences:", parseError);
           }
@@ -409,10 +409,30 @@ export const BookingCalendar = ({
     // DEBUG: Log what we're receiving
     console.log(`[BookingCalendar] INPUT: Received ${bookings.length} bookings`);
     
-    // STEP 0: FIRST - Deduplicate by bookingId, ALWAYS preferring the one with customerSentStartAt
+    // STEP 0: FIRST - Deduplicate by bookingId at the INPUT level
+    // This prevents duplicate bookings from entering the processing pipeline
+    const inputDeduplicationMap = new Map<number, Booking>();
+    bookings.forEach((booking) => {
+      if (!booking.bookingId) {
+        console.warn(`[BookingCalendar] Skipping booking without bookingId:`, booking);
+        return;
+      }
+      
+      // If we already have this bookingId, skip it (keep first occurrence)
+      if (!inputDeduplicationMap.has(booking.bookingId)) {
+        inputDeduplicationMap.set(booking.bookingId, booking);
+      } else {
+        console.warn(`[BookingCalendar] INPUT DEDUP: Duplicate booking ID ${booking.bookingId} in input array, keeping first occurrence`);
+      }
+    });
+    
+    const deduplicatedInput = Array.from(inputDeduplicationMap.values());
+    console.log(`[BookingCalendar] INPUT DEDUP: ${bookings.length} bookings → ${deduplicatedInput.length} unique bookings`);
+    
+    // STEP 0.5: SECOND - Deduplicate by bookingId, ALWAYS preferring the one with customerSentStartAt
     // This prevents showing the same booking twice (once with customerSentStartAt, once without)
     const deduplicatedBookingsMap = new Map<number, Booking>();
-    bookings.forEach((booking) => {
+    deduplicatedInput.forEach((booking) => {
       if (!booking.bookingId) {
         console.warn(`[BookingCalendar] Skipping booking without bookingId:`, booking);
         return;
@@ -442,7 +462,7 @@ export const BookingCalendar = ({
     });
     
     const deduplicatedBookings = Array.from(deduplicatedBookingsMap.values());
-    console.log(`[BookingCalendar] After initial deduplication: ${bookings.length} → ${deduplicatedBookings.length} unique bookings`);
+    console.log(`[BookingCalendar] After initial deduplication: ${deduplicatedInput.length} → ${deduplicatedBookings.length} unique bookings`);
     
     const bookingsWithoutCustomerSent = deduplicatedBookings.filter(b => !b.customerSentStartAt || !b.customerSentEndAt);
     if (bookingsWithoutCustomerSent.length > 0) {
@@ -526,26 +546,34 @@ export const BookingCalendar = ({
       
       const startTimeString = String(booking.customerSentStartAt).trim();
       const endTimeString = String(booking.customerSentEndAt).trim();
+      const bookingTimezone = booking.timezone || "UTC";
       
-      // Parse customer's mentioned time as local time (no UTC conversion)
-      // If it has timezone info, parse it. Otherwise, parse as local time.
-      // The calendar will display it at this time in the user's local timezone
+      // CRITICAL: Parse customer's mentioned time in THEIR timezone, not browser's local timezone
+      // If customer said "12:00 PM" in EST, we want to show it at 12:00 PM EST, not 12:00 PM in browser's timezone
+      // We need to convert customer's time to UTC for the calendar library, but preserve the customer's timezone context
       let startDate: Date;
       let endDate: Date;
       
       if (hasTimezoneInfo(startTimeString)) {
-        // Has timezone info - parse directly
+        // Has timezone info - parse directly (will be in UTC after parsing)
         startDate = new Date(startTimeString);
+      } else if (bookingTimezone && bookingTimezone !== "UTC") {
+        // No timezone info - interpret as being in the customer's timezone
+        // Convert to UTC for calendar library, but calendar will display it correctly
+        const startTimeData = formatCustomerTime(startTimeString, bookingTimezone);
+        startDate = startTimeData.utcDate;
       } else {
-        // No timezone info - parse as local time (this is what the customer mentioned)
-        // The calendar will display it at this time
-        startDate = new Date(startTimeString);
+        // No timezone info and no booking timezone - treat as UTC
+        startDate = new Date(startTimeString + "Z");
       }
       
       if (hasTimezoneInfo(endTimeString)) {
         endDate = new Date(endTimeString);
+      } else if (bookingTimezone && bookingTimezone !== "UTC") {
+        const endTimeData = formatCustomerTime(endTimeString, bookingTimezone);
+        endDate = endTimeData.utcDate;
       } else {
-        endDate = new Date(endTimeString);
+        endDate = new Date(endTimeString + "Z");
       }
 
       // Final validation - if this fails, something is very wrong
@@ -560,13 +588,27 @@ export const BookingCalendar = ({
         return null;
       }
       
+      // CRITICAL: Ensure we're NOT using startAt/endAt (UTC) - only customerSentStartAt
+      // If the parsed date matches startAt (UTC), something is wrong
+      if (booking.startAt) {
+        const utcStart = new Date(String(booking.startAt).trim());
+        if (!isNaN(utcStart.getTime())) {
+          const timeDiff = Math.abs(startDate.getTime() - utcStart.getTime());
+          // If they're the same (within 1 second), we're accidentally using UTC - REJECT
+          if (timeDiff < 1000) {
+            console.error(`[BookingCalendar] CRITICAL: Booking ${booking.bookingId} - event date matches UTC startAt! Rejecting. customerSentStartAt="${startTimeString}" -> ${startDate.toISOString()}, startAt="${booking.startAt}" -> ${utcStart.toISOString()}`);
+            return null;
+          }
+        }
+      }
+      
       // Log the dates being used for calendar positioning
-      console.log(`[BookingCalendar] Creating event for booking ${booking.bookingId}: using customerSentStartAt="${startTimeString}" -> startDate=${startDate.toISOString()} (customer's mentioned time, no UTC conversion)`);
+      console.log(`[BookingCalendar] Creating event for booking ${booking.bookingId}: using customerSentStartAt="${startTimeString}" (timezone: ${bookingTimezone}) -> startDate=${startDate.toISOString()} (converted to UTC for calendar, will display at customer's mentioned time)`);
 
       return {
         id: `booking-${booking.bookingId}`, // CRITICAL: Unique ID for react-big-calendar
-        ...booking,
-        title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
+      ...booking,
+      title: `${booking.visitor.name} - ${booking.propertyAddress || `Property #${booking.propertyId}`}`,
         start: startDate,
         end: endDate,
         resource: booking, // Store full booking object in resource
@@ -582,29 +624,50 @@ export const BookingCalendar = ({
     }>;
 
     // Step 4: Final deduplication pass - ensure no duplicate events by bookingId
-    // This is a safety net to catch any edge cases
+    // CRITICAL: Also check that events are NOT positioned at UTC times (startAt/endAt)
     const finalEventsMap = new Map<number, typeof events[0]>();
     const duplicateEvents: number[] = [];
+    const utcRejectedEvents: number[] = [];
     
     events.forEach((event) => {
-      if (event && event.bookingId) {
-        // If we already have an event for this bookingId, keep the first one
-        // (they should be identical at this point, but this ensures no duplicates)
-        if (!finalEventsMap.has(event.bookingId)) {
-          finalEventsMap.set(event.bookingId, event);
-        } else {
-          duplicateEvents.push(event.bookingId);
-          console.warn(`[BookingCalendar] Duplicate event detected for booking ${event.bookingId}, keeping first occurrence`);
+      if (!event || !event.bookingId) return;
+      
+      const booking = event.resource as Booking;
+      
+      // CRITICAL: Reject any event that is positioned at UTC time (startAt/endAt)
+      // This ensures we only show customer's mentioned time, not UTC time
+      if (booking.startAt && booking.endAt) {
+        const utcStart = new Date(String(booking.startAt).trim()).getTime();
+        const eventStart = event.start.getTime();
+        const timeDiff = Math.abs(eventStart - utcStart);
+        
+        // If event is positioned at UTC time (within 1 second), REJECT it
+        if (timeDiff < 1000) {
+          utcRejectedEvents.push(event.bookingId);
+          console.error(`[BookingCalendar] REJECTING event for booking ${event.bookingId} - positioned at UTC time (startAt) instead of customer time. event.start=${event.start.toISOString()}, startAt=${booking.startAt}`);
+          return;
         }
+      }
+      
+      // If we already have an event for this bookingId, keep the first one
+      if (!finalEventsMap.has(event.bookingId)) {
+        finalEventsMap.set(event.bookingId, event);
+      } else {
+        duplicateEvents.push(event.bookingId);
+        console.warn(`[BookingCalendar] Duplicate event detected for booking ${event.bookingId}, keeping first occurrence`);
       }
     });
 
     if (duplicateEvents.length > 0) {
       console.warn(`[BookingCalendar] Removed ${duplicateEvents.length} duplicate events:`, duplicateEvents);
     }
+    
+    if (utcRejectedEvents.length > 0) {
+      console.warn(`[BookingCalendar] Rejected ${utcRejectedEvents.length} events positioned at UTC time:`, utcRejectedEvents);
+    }
 
     const finalEvents = Array.from(finalEventsMap.values());
-    console.log(`[BookingCalendar] FINAL SUMMARY: ${bookings.length} total bookings → ${validBookings.length} passed filter → ${uniqueBookings.length} after dedup → ${events.length} events created → ${finalEvents.length} final events displayed`);
+    console.log(`[BookingCalendar] FINAL SUMMARY: ${bookings.length} total bookings → ${validBookings.length} passed filter → ${uniqueBookings.length} after dedup → ${events.length} events created → ${finalEvents.length} final events displayed (${utcRejectedEvents.length} UTC events rejected)`);
     
     // CRITICAL FINAL CHECK: Log any events that might be using UTC times
     finalEvents.forEach((event) => {
@@ -669,14 +732,19 @@ export const BookingCalendar = ({
       }
       
       const customerStartTimeString = String(booking.customerSentStartAt).trim();
+      const bookingTimezone = booking.timezone || "UTC";
       
-      // Parse customer time as local time (same as event creation, no UTC conversion)
+      // Parse customer time in their timezone (same as event creation)
       let customerStartTime: number;
       if (hasTimezoneInfo(customerStartTimeString)) {
         customerStartTime = new Date(customerStartTimeString).getTime();
+      } else if (bookingTimezone && bookingTimezone !== "UTC") {
+        // No timezone info - interpret as being in the customer's timezone
+        const customerTimeData = formatCustomerTime(customerStartTimeString, bookingTimezone);
+        customerStartTime = customerTimeData.utcDate.getTime();
       } else {
-        // No timezone info - parse as local time
-        customerStartTime = new Date(customerStartTimeString).getTime();
+        // No timezone info and no booking timezone - treat as UTC
+        customerStartTime = new Date(customerStartTimeString + "Z").getTime();
       }
       
       const eventStartTime = event.start.getTime();
@@ -698,11 +766,31 @@ export const BookingCalendar = ({
     const combined = [...filteredBookingEvents, ...workingHoursEvents, ...availabilityEvents];
     
     // Step 3: Final deduplication by unique ID and bookingId
+    // CRITICAL: Also reject any booking events that are positioned at UTC times
     const seenIds = new Set<string>();
     const seenBookingIds = new Set<number>();
     const deduplicated: typeof combined = [];
+    const utcRejectedInFinal: number[] = [];
     
     combined.forEach((event) => {
+      // CRITICAL: For booking events, check if they're positioned at UTC time (startAt/endAt)
+      // If so, reject them - we only want customer's mentioned time
+      if (event.bookingId && event.resource) {
+        const booking = event.resource as Booking;
+        if (booking.startAt && booking.customerSentStartAt) {
+          const utcStart = new Date(String(booking.startAt).trim()).getTime();
+          const eventStart = event.start.getTime();
+          const timeDiff = Math.abs(eventStart - utcStart);
+          
+          // If event is positioned at UTC time (within 1 second), REJECT it
+          if (timeDiff < 1000) {
+            utcRejectedInFinal.push(event.bookingId);
+            console.error(`[BookingCalendar] FINAL: Rejecting booking ${event.bookingId} - positioned at UTC time. event.start=${event.start.toISOString()}, startAt=${booking.startAt}`);
+            return;
+          }
+        }
+      }
+      
       // Use event.id if available, otherwise create one
       const eventId = event.id || (event.bookingId ? `booking-${event.bookingId}` : `event-${Math.random()}`);
       
@@ -725,7 +813,11 @@ export const BookingCalendar = ({
       deduplicated.push(event);
     });
     
-    console.log(`[BookingCalendar] FINAL: ${combined.length} combined events → ${deduplicated.length} after deduplication`);
+    if (utcRejectedInFinal.length > 0) {
+      console.warn(`[BookingCalendar] FINAL: Rejected ${utcRejectedInFinal.length} UTC-based events:`, utcRejectedInFinal);
+    }
+    
+    console.log(`[BookingCalendar] FINAL: ${combined.length} combined events → ${deduplicated.length} after deduplication (${utcRejectedInFinal.length} UTC events rejected)`);
     
     return deduplicated;
   }, [bookingEvents, workingHoursEvents, availabilityEvents]);
@@ -1041,8 +1133,8 @@ export const BookingCalendar = ({
                         .sort((a, b) => a - b) // Sort days to ensure consistent order
                         .map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
                         .join(", ")}
-                    </span>
-                  )}
+                </span>
+              )}
                 </div>
               </div>
             </div>
@@ -1135,7 +1227,7 @@ export const BookingCalendar = ({
           dayPropGetter={(date) => {
             // Style off days (Saturday, Sunday, and non-working days) differently
             if (!calendarPreferences) {
-              // Make whole day clickable in month view
+            // Make whole day clickable in month view
               if (view === "month") {
                 return {
                   className: "rbc-day-bg cursor-pointer hover:bg-amber-50/50 transition-colors",

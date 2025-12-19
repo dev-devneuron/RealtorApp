@@ -189,13 +189,53 @@ const generateMockCustomers = (): OldCustomer[] => {
         },
         {
           sender: "user",
+          message: "That actually sounds a lot better! But I'm still comparing a couple other places. What makes this one stand out?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 25 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Great question! Here's what makes this unit special:\n\n• Location: You're walking distance to BART, great restaurants, and parks\n• Building: 24/7 doorman, package room, and secure entry\n• The renovation: Brand new appliances, updated fixtures - it's move-in ready\n• The deal: With the special, you're getting a $3,200 unit for effectively $2,733/month\n• Flexibility: We can work with your move-in timeline\n\nPlus, the neighborhood is really safe and has a great community feel. Have you looked at other places in this area?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 28 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "I've seen a couple in the Mission, but they're either too expensive or not as nice. This one does sound good though.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 35 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "I totally get that - the Mission can be hit or miss. The Barr Gardens area is actually a sweet spot - you get the convenience of being close to everything, but it's quieter and more residential.\n\nWould it help to see it in person? Sometimes seeing the actual space and the neighborhood makes the decision easier. I can schedule a tour for you this week!",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 38 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Yeah, that would be helpful. When could I see it?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 42 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "I can schedule a tour for you this week! We have availability:\n\n• Tomorrow (Wednesday) - 2 PM, 4 PM, or 6 PM\n• Thursday - Anytime between 10 AM - 7 PM\n• Friday - Morning slots available\n• Weekend - Saturday and Sunday both work\n\nWhat day and time works best for you?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 45 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
           message: "Thursday afternoon would work. Maybe 3 PM?",
-          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 30 * 60 * 1000).toISOString()
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 50 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
           message: "Perfect! Thursday at 3 PM it is. I'll send you the exact address and my contact info. The building has a doorman, so just let them know you're there for a tour with LEASAP.\n\nAlso, since you mentioned you're relocating, I can help connect you with local moving companies if you need recommendations. Just let me know!",
-          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 32 * 60 * 1000).toISOString()
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 52 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "That would be great! Thanks so much for all your help.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 55 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Of course! Happy to help. I'll send you everything via email today, and I'll see you Thursday at 3 PM. Looking forward to showing you the place! 🏠",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 57 * 60 * 1000).toISOString()
         }
       ]
     },
@@ -246,13 +286,43 @@ const generateMockCustomers = (): OldCustomer[] => {
         },
         {
           sender: "user",
-          message: "A live walkthrough would be great! Thursday at 7 works for me.",
+          message: "A live walkthrough would be great! But I'm worried about the commute. How's the public transit from Pacific Heights?",
           timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 12 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "Perfect! I'll send you the Zoom link tomorrow morning. The tour usually takes about 20-30 minutes, and you can ask questions as we go. I'll also show you the building amenities, parking situation, and the neighborhood.\n\nLooking forward to showing you the place! 🏠",
-          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 15 * 60 * 1000).toISOString()
+          message: "Great question! Pacific Heights is actually really well-connected. You're close to several bus lines (the 1, 2, 3, and 24 all run nearby), and it's about a 10-minute walk to the California Street cable car. Plus, if you work downtown, it's a pretty quick commute.\n\nWhere do you work? I can give you more specific transit info.",
+          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 18 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "I work in SOMA, near the Caltrain station.",
+          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 22 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Perfect! From Pacific Heights, you can take the 1 California bus straight to SOMA - it's about a 20-25 minute ride. Or you can walk to the cable car and transfer. The commute is actually pretty smooth from here.\n\nWould Thursday evening at 7 PM work for the virtual tour? I can show you the exact transit routes and the neighborhood during the walkthrough.",
+          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 25 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "That sounds perfect! Thursday at 7 works for me.",
+          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 28 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Awesome! I'll send you the Zoom link tomorrow morning. The tour usually takes about 20-30 minutes, and you can ask questions as we go. I'll also show you the building amenities, parking situation, and walk you through the neighborhood so you can see the transit options.\n\nLooking forward to showing you the place! 🏠",
+          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Perfect! I'll be there. Thanks for being so flexible with the scheduling!",
+          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 32 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Of course! I know how busy work can get. That's exactly why we offer these flexible options. See you Thursday! 👋",
+          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 35 * 60 * 1000).toISOString()
         }
       ]
     },
@@ -330,6 +400,26 @@ const generateMockCustomers = (): OldCustomer[] => {
           sender: "ai",
           message: "That makes sense. Here's the thing - with the move-in special and utilities included, you'd be at about $2,635/month for the first year. That's only $135 more than your target, but you'd be getting:\n\n• A newly renovated loft in Castro (which is hard to find)\n• All utilities included\n• Rent control protection\n• A 6-month lease option if you want flexibility\n\nPlus, if you sign by Friday, you get that first month at 50% off. Would it help to see the place? Sometimes seeing it in person helps put the value in perspective.",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 17 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "I'm still not sure. $135 a month adds up over a year, you know?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 9 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "I completely understand - every dollar counts! But think about it this way: that $135/month is about $4.50 per day. For that, you're getting:\n\n• A safe, walkable neighborhood (Castro is one of the safest in SF)\n• All utilities included (no surprise bills)\n• Rent control (no increases for at least a year)\n• A newly renovated space (no maintenance headaches)\n• Great transit access (saves on car/uber costs)\n\nPlus, with the 6-month lease, you're not locked in long-term. If it doesn't work out, you can move. But I think once you see it, you'll love it!",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 9 * 35 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "When you put it that way, it does sound more reasonable. I guess I'm just nervous about committing.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 9 * 45 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "That's totally normal! Moving is a big decision. That's exactly why we offer the 6-month lease - it gives you flexibility without the risk of a long commitment.\n\nWould it help to see the place first? Sometimes seeing it in person makes all the difference. You can get a feel for the space, the neighborhood, and see if it's really worth that extra $135/month.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 9 * 50 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
@@ -546,7 +636,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 28 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Inquired about parking but never responded",
-      status: "pending_outreach",
       engagementScore: 32,
       priority: "low",
       pastCallSummary: "Customer asked about the SOMA loft and specifically inquired about parking availability. Was told about the parking situation (limited street parking, garage available for $200/month). Customer said they would 'think about it' but never responded to follow-up questions.",
@@ -567,7 +656,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Discussed lease terms but wanted to think it over",
-      status: "customer_responded",
       engagementScore: 94,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
@@ -590,18 +678,28 @@ const generateMockCustomers = (): OldCustomer[] => {
         },
         {
           sender: "user",
-          message: "That's actually much better! I was worried about committing to a full year. The 6-month option sounds perfect.",
+          message: "That's actually much better! But $5,400 is still a lot more than the $5,200. Is there any way to keep it closer to the original price?",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "I'm so glad that works for you! The 6-month lease is perfect for people who want flexibility but still want the security of a lease.\n\nWould you like to move forward? I can send over the lease agreement for you to review, or if you want to see the place one more time, we can schedule another tour.",
-          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 5 * 60 * 1000).toISOString()
+          message: "I totally understand! Here's the thing - the $200/month difference is because shorter leases have a bit more risk for us. But I can work with you on this.\n\nIf you're willing to pay the first and last month's rent upfront, I can keep it at $5,200/month even for the 6-month lease. That way you get the flexibility you want without the extra cost. Does that work?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 8 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Yes, I'd like to see it one more time. This weekend would work best.",
+          message: "Hmm, that's still a big upfront cost. Let me think about it.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 12 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Of course, take your time! I know it's a big decision. Just so you know, the penthouse is really special - those views, the private balcony, the location... it's hard to find something like this in Russian Hill.\n\nWould it help to see it one more time? Sometimes a second viewing helps you really visualize living there and makes the decision easier.",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 15 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "You know what, yes. I'd like to see it again. This weekend would work best.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 20 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
@@ -694,6 +792,73 @@ const generateMockCustomers = (): OldCustomer[] => {
           sender: "ai",
           message: "Perfect! Friday at 6:30 PM it is. You'll get to see those sunset views! 🌅\n\nI'll send you the exact address and building access info tomorrow. The building has a doorman, so just let them know you're there for a tour with LEASAP.\n\nLooking forward to showing you the place!",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 20 * 60 * 1000).toISOString()
+        }
+      ]
+    },
+    {
+      id: "13",
+      name: "Daniel Kim",
+      email: "daniel.kim@gmail.com",
+      phone: "+1 (415) 456-7890",
+      property: "3245 Union Street Apt. 8D, San Francisco, CA",
+      propertyDetails: {
+        address: "3245 Union Street Apt. 8D, San Francisco, CA 94123",
+        rent: 2950,
+        bedrooms: 1,
+        bathrooms: 1,
+        sqft: 780
+      },
+      lastInteractionDate: new Date(baseDate.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      dropOffReason: "Inquired about pet policy but never followed up",
+      engagementScore: 45,
+      priority: "medium",
+      pastCallSummary: "Customer called asking about the Union Street apartment. Showed interest in the location and asked about pet policy (has a small dog). Was informed about pet deposit ($500) and weight restrictions. Customer said they would discuss with their partner and get back, but no follow-up was received.",
+      aiConversation: [
+        {
+          sender: "ai",
+          message: "Hi Daniel! 👋\n\nI wanted to follow up about the apartment on Union Street. I know you were interested and asked about the pet policy for your dog. I wanted to let you know we have some good news - we've updated our pet policy to be more flexible!",
+          timestamp: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "The pet deposit is now $400 (down from $500), and we're waiving the monthly pet fee for the first 6 months. Plus, we have a small dog park just a block away that's perfect for daily walks.\n\nAre you still looking? I'd love to help you find the right place!",
+          timestamp: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000 + 11 * 5 * 60 * 1000).toISOString()
+        }
+      ]
+    },
+    {
+      id: "14",
+      name: "Rachel Patel",
+      email: "rachel.patel@outlook.com",
+      phone: "+1 (415) 567-8901",
+      property: "1892 Dolores Street Unit 5A, San Francisco, CA",
+      propertyDetails: {
+        address: "1892 Dolores Street Unit 5A, San Francisco, CA 94110",
+        rent: 3600,
+        bedrooms: 2,
+        bathrooms: 1,
+        sqft: 1100
+      },
+      lastInteractionDate: new Date(baseDate.getTime() - 19 * 24 * 60 * 60 * 1000).toISOString(),
+      dropOffReason: "Requested more information but never scheduled viewing",
+      engagementScore: 38,
+      priority: "medium",
+      pastCallSummary: "Customer inquired about the Dolores Street unit. Asked detailed questions about square footage, natural light, and storage space. Requested additional photos and floor plan. Photos and floor plan were sent via email, but customer never responded or scheduled a viewing.",
+      aiConversation: [
+        {
+          sender: "ai",
+          message: "Hi Rachel! 👋\n\nI sent you the photos and floor plan for the Dolores Street unit last week. I wanted to check in and see if you had a chance to review them?",
+          timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 10 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "I also wanted to mention that we just had a similar unit become available on the same floor with even better natural light - it has floor-to-ceiling windows facing south. The rent is the same, and it has all the storage space you were asking about.\n\nWould you like to see it? I can schedule a tour for you this week!",
+          timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 10 * 35 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Also, since you mentioned you work from home, the natural light in this unit would be perfect for that. Plus, Dolores Park is just a few blocks away - great for lunch breaks!",
+          timestamp: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000).toISOString()
         }
       ]
     }

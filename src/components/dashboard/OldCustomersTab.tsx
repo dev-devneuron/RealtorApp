@@ -70,8 +70,7 @@ export interface OldCustomer {
   lastInteractionDate: string;
   dropOffReason: string;
   status: "pending_outreach" | "ai_reached_out" | "customer_responded" | "not_interested";
-  pastTranscriptSnippet: string;
-  brokerage?: string;
+  pastCallSummary: string;
   aiConversation: Array<{
     sender: "ai" | "user";
     message: string;
@@ -88,7 +87,7 @@ interface OldCustomersTabProps {
   onRefresh?: () => void;
 }
 
-// Enhanced mock data with more customers and realistic details
+// Enhanced mock data with realistic addresses and natural conversations
 const generateMockCustomers = (): OldCustomer[] => {
   const baseDate = new Date();
   baseDate.setDate(baseDate.getDate() - 30);
@@ -99,42 +98,56 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Alex Johnson",
       email: "alex.johnson@email.com",
       phone: "+1 (555) 234-5678",
-      property: "2-Bedroom Apartment – Main Street",
+      property: "2997 Barr Gardens Apt. 284, San Francisco, CA",
       propertyDetails: {
-        address: "123 Main Street, Apt 4B",
-        rent: 2200,
+        address: "2997 Barr Gardens Apt. 284, San Francisco, CA 94102",
+        rent: 3200,
         bedrooms: 2,
         bathrooms: 1,
-        sqft: 950
+        sqft: 1150
       },
       lastInteractionDate: new Date(baseDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Asked about property but never booked a tour",
       status: "ai_reached_out",
-      brokerage: "Downtown Realty",
-      engagementScore: 72,
+      engagementScore: 88,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      pastTranscriptSnippet: `"Hi, I'm calling about the apartment on Main Street."
-"Great! It's a beautiful 2-bedroom unit. What would you like to know?"
-"I'm interested in the rent and availability."
-"The rent is $2,200 per month, and we have availability starting next month."
-"Okay, I'll think about it and get back to you."
-"Of course! Feel free to reach out anytime."`,
+      pastCallSummary: "Customer called inquiring about the 2-bedroom apartment at Barr Gardens. Showed strong interest in the location and asked about rent ($3,200/month), parking availability, and move-in dates. Mentioned they were relocating from out of state and needed something by next month. Seemed engaged but said they needed to 'think about it' and would get back. No follow-up was received.",
       aiConversation: [
         {
           sender: "ai",
-          message: "Hi Alex! This is LEASAP from Downtown Realty 👋\nYou previously asked about the 2-bedroom unit on Main Street.\nWe have new availability and more flexible tour times this week.\nWould you like to take another look?",
+          message: "Hey Alex! 👋\n\nI noticed you were interested in the apartment at 2997 Barr Gardens a few weeks ago. I wanted to reach out because we just had a similar unit become available with some great updates.\n\nAre you still looking?",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Yeah, maybe. What's changed?",
+          message: "Oh hey! Yeah I'm still looking actually. What's changed?",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 30 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "Great question! The rent is the same at $2,200, but we're now offering:\n• Evening tours (6-8 PM)\n• Shorter lease options (6 months)\n• Move-in special: First month 50% off\n\nWould you like me to schedule a quick visit?",
+          message: "Great to hear! So the unit we have available now has been completely renovated - new kitchen appliances, updated bathroom, and fresh paint throughout. Plus it's on a higher floor with better city views.\n\nThe rent is still $3,200, but we're offering a move-in special: first month is 50% off if you sign by the end of this week.",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 32 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "That sounds interesting. When could I see it?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 45 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "I can schedule a tour for you this week! We have availability:\n\n• Tomorrow (Wednesday) - 2 PM, 4 PM, or 6 PM\n• Thursday - Anytime between 10 AM - 7 PM\n• Friday - Morning slots available\n• Weekend - Saturday and Sunday both work\n\nWhat day and time works best for you?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 47 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Thursday afternoon would work. Maybe 3 PM?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 20 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Perfect! Thursday at 3 PM it is. I'll send you the exact address and my contact info. The building has a doorman, so just let them know you're there for a tour with LEASAP.\n\nAlso, since you mentioned you're relocating, I can help connect you with local moving companies if you need recommendations. Just let me know!",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 22 * 60 * 1000).toISOString()
         }
       ]
     },
@@ -143,57 +156,56 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Sarah Martinez",
       email: "sarah.martinez@email.com",
       phone: "+1 (555) 345-6789",
-      property: "1-Bedroom Loft – Oak Avenue",
+      property: "1842 Pacific Heights Blvd. Unit 12B, San Francisco, CA",
       propertyDetails: {
-        address: "456 Oak Avenue, Loft 12",
-        rent: 1850,
+        address: "1842 Pacific Heights Blvd. Unit 12B, San Francisco, CA 94115",
+        rent: 2850,
         bedrooms: 1,
         bathrooms: 1,
-        sqft: 750
+        sqft: 850
       },
       lastInteractionDate: new Date(baseDate.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Cancelled a scheduled tour",
       status: "customer_responded",
-      brokerage: "Metro Properties",
-      engagementScore: 85,
+      engagementScore: 91,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      pastTranscriptSnippet: `"I'd like to schedule a tour for next Tuesday."
-"Perfect! I have availability at 2 PM. Does that work?"
-"Yes, that's great. I'll be there."
-"Wonderful! I'll send you a confirmation email with the address."
-"Actually, I need to cancel. Something came up at work."
-"No problem at all. Let me know when you'd like to reschedule."`,
+      pastCallSummary: "Customer scheduled a tour for the 1-bedroom unit at Pacific Heights but cancelled last minute due to a work emergency. Expressed genuine interest and apologized for the cancellation. Mentioned they work in tech and have unpredictable hours. Asked if virtual tours were available.",
       aiConversation: [
         {
           sender: "ai",
-          message: "Hi Sarah! This is LEASAP from Metro Properties.\nI noticed you had to cancel your tour for the 1-bedroom loft on Oak Avenue.\nWe have new availability and I'd love to help you reschedule at a time that works better for you.",
+          message: "Hi Sarah! 👋\n\nI know you had to cancel your tour last week - hope everything worked out with that work emergency! I wanted to check in and see if you're still interested in the Pacific Heights unit.",
           timestamp: new Date(baseDate.getTime() - 8 * 24 * 60 * 60 * 1000 + 9 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Thanks for reaching out. I'm still interested but my schedule is really tight right now.",
+          message: "Thanks for reaching out! Yeah, I'm still interested but my schedule is really unpredictable right now. That's why I had to cancel.",
           timestamp: new Date(baseDate.getTime() - 7 * 24 * 60 * 60 * 1000 + 18 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "I understand! We now offer:\n• Virtual tours you can do from home\n• Quick 15-minute visits during lunch breaks\n• Weekend availability\n\nWhat works better for you?",
+          message: "I totally understand - work can be crazy! That's actually why I'm reaching out. We now offer a few options that might work better for your schedule:\n\n• Virtual tours you can do from home anytime\n• Quick 15-minute visits during lunch breaks\n• Weekend availability (we're flexible)\n• Self-guided tours with a code if you prefer\n\nWhich of these sounds most doable for you?",
           timestamp: new Date(baseDate.getTime() - 7 * 24 * 60 * 60 * 1000 + 18 * 15 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "A virtual tour sounds good. Can we do it this week?",
+          message: "A virtual tour sounds perfect actually! Can we do it this week?",
           timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "Absolutely! I can set up a virtual tour for you. Would Thursday evening at 7 PM work? I'll send you a link that works on any device - phone, tablet, or computer.",
+          message: "Absolutely! I can set up a virtual tour for you. Would Thursday evening at 7 PM work? I'll send you a link that works on any device - phone, tablet, or computer. We can do a live walkthrough where I show you everything, or I can send you a recorded video tour you can watch whenever.\n\nWhich do you prefer?",
           timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 10 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Perfect! That works for me.",
+          message: "A live walkthrough would be great! Thursday at 7 works for me.",
           timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 12 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Perfect! I'll send you the Zoom link tomorrow morning. The tour usually takes about 20-30 minutes, and you can ask questions as we go. I'll also show you the building amenities, parking situation, and the neighborhood.\n\nLooking forward to showing you the place! 🏠",
+          timestamp: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000 + 10 * 15 * 60 * 1000).toISOString()
         }
       ]
     },
@@ -202,25 +214,20 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Michael Chen",
       email: "michael.chen@email.com",
       phone: "+1 (555) 456-7890",
-      property: "3-Bedroom Townhouse – Riverside Drive",
+      property: "4521 Mission Street Apt. 7C, San Francisco, CA",
       propertyDetails: {
-        address: "789 Riverside Drive, Unit 5",
-        rent: 3200,
-        bedrooms: 3,
-        bathrooms: 2,
-        sqft: 1650
+        address: "4521 Mission Street Apt. 7C, San Francisco, CA 94110",
+        rent: 2400,
+        bedrooms: 2,
+        bathrooms: 1,
+        sqft: 980
       },
       lastInteractionDate: new Date(baseDate.getTime() - 18 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Did not show up for a confirmed tour",
       status: "pending_outreach",
-      brokerage: "Elite Real Estate",
-      engagementScore: 45,
+      engagementScore: 28,
       priority: "medium",
-      pastTranscriptSnippet: `"I'm interested in the townhouse on Riverside Drive."
-"Great! It's a beautiful 3-bedroom, 2-bathroom unit. When would you like to see it?"
-"I have availability tomorrow at 3 PM."
-"Perfect, I'll be there."
-"Excellent! I'll send you the address and my contact info."`,
+      pastCallSummary: "Customer confirmed a tour for the Mission Street apartment but didn't show up. No call or message to cancel. Had previously expressed interest in the neighborhood and asked about public transportation access. Seemed enthusiastic during initial conversation.",
       aiConversation: []
     },
     {
@@ -228,31 +235,56 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Emily Rodriguez",
       email: "emily.rodriguez@email.com",
       phone: "+1 (555) 567-8901",
-      property: "Studio Apartment – Park Boulevard",
+      property: "3876 Castro District Loft 5, San Francisco, CA",
       propertyDetails: {
-        address: "321 Park Boulevard, Studio 8",
-        rent: 1850,
-        bedrooms: 0,
+        address: "3876 Castro District Loft 5, San Francisco, CA 94114",
+        rent: 2750,
+        bedrooms: 1,
         bathrooms: 1,
-        sqft: 550
+        sqft: 920
       },
       lastInteractionDate: new Date(baseDate.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Stopped responding after pricing discussion",
       status: "ai_reached_out",
-      brokerage: "City Living Properties",
-      engagementScore: 58,
+      engagementScore: 62,
       priority: "medium",
       lastSeen: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      pastTranscriptSnippet: `"What's the monthly rent for the studio?"
-"It's $1,850 per month, which includes utilities."
-"Hmm, that's a bit higher than I was hoping for."
-"I understand. We do have some flexibility. Would you like to discuss options?"
-"Let me think about it."`,
+      pastCallSummary: "Customer inquired about the Castro District loft. Asked detailed questions about rent ($2,750/month), utilities, and neighborhood safety. Expressed concern that the rent was higher than their current budget. When asked about flexibility, customer said they needed to 'think about it' and never responded to follow-up messages.",
       aiConversation: [
         {
           sender: "ai",
-          message: "Hi Emily! This is LEASAP from City Living Properties.\nI wanted to follow up about the studio on Park Boulevard. I know pricing was a concern, and I have some good news – we're now offering a move-in special that could help make it more affordable.",
+          message: "Hi Emily! 👋\n\nI wanted to follow up about the loft in Castro District. I know pricing was a concern when we last talked, and I wanted to share some good news - we have some options that might work better for your budget.",
           timestamp: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Hi, yeah I remember. What options are you talking about?",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 16 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "So we're offering a few things that could help:\n\n1. Move-in special: First month is 50% off (saves you $1,375)\n2. Utilities included: We can include water, trash, and internet in the rent\n3. Flexible lease: We can do a 6-month lease instead of 12, which gives you more flexibility\n\nAlso, I should mention - the building just got approved for rent control, so your rent won't increase for at least the next year.\n\nWould any of these options make it more doable?",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 16 * 35 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "The utilities included and rent control are interesting. Let me think about it.",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 17 * 10 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Of course, take your time! I know it's a big decision.\n\nJust so you know, the move-in special is only available if you sign by this Friday - it's part of a limited promotion. But even if you decide later, the utilities included and rent control would still apply.\n\nWould it help if I sent you a breakdown of the total monthly costs with everything included? Sometimes seeing the full picture helps.",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 17 * 15 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Yes, that would be helpful. Thanks!",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 10 * 20 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Perfect! I'll put together a detailed breakdown and email it to you today. It'll show the base rent, what's included, and the total monthly cost.\n\nAlso, if you want to see the place in person, I can schedule a tour. Sometimes seeing it makes the decision easier!",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 10 * 25 * 60 * 1000).toISOString()
         }
       ]
     },
@@ -261,38 +293,34 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "David Kim",
       email: "david.kim@email.com",
       phone: "+1 (555) 678-9012",
-      property: "2-Bedroom Condo – Harbor View",
+      property: "5210 Marina Boulevard Unit 8, San Francisco, CA",
       propertyDetails: {
-        address: "654 Harbor View Drive, Unit 3C",
-        rent: 2450,
+        address: "5210 Marina Boulevard Unit 8, San Francisco, CA 94123",
+        rent: 4200,
         bedrooms: 2,
         bathrooms: 2,
-        sqft: 1100
+        sqft: 1350
       },
       lastInteractionDate: new Date(baseDate.getTime() - 35 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Delayed decision – asked to follow up later",
       status: "not_interested",
-      brokerage: "Coastal Realty",
-      engagementScore: 30,
+      engagementScore: 22,
       priority: "low",
-      pastTranscriptSnippet: `"I'm interested in the condo, but I need some time to think about it."
-"Of course, take your time. When would be a good time to follow up?"
-"Maybe in a month or two. I'm still looking at other options."
-"Understood. I'll reach out then. Good luck with your search!"`,
+      pastCallSummary: "Customer viewed the Marina Boulevard unit and seemed interested. Asked about lease terms, parking, and building amenities. Said they were also looking at other properties and needed time to compare. Requested a follow-up in 'a month or two' after they finished their search.",
       aiConversation: [
         {
           sender: "ai",
-          message: "Hi David! This is LEASAP from Coastal Realty.\nYou mentioned you'd like to revisit the 2-bedroom condo on Harbor View in a month or two. It's been about that time, and I wanted to check in and see if you're still interested.",
+          message: "Hi David! 👋\n\nYou mentioned you'd like to revisit the Marina Boulevard unit in a month or two. It's been about that time, and I wanted to check in and see if you're still looking or if you found something else.",
           timestamp: new Date(baseDate.getTime() - 5 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Thanks, but I've actually found something else. Appreciate you following up though!",
+          message: "Thanks for following up! I actually found a place that works better for me. Appreciate you checking in though!",
           timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 16 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "No problem at all! I'm glad you found something that works for you. If anything changes or you're looking again in the future, feel free to reach out. Best of luck with your new place!",
+          message: "No problem at all! I'm glad you found something that works for you. If anything changes or you're looking again in the future, feel free to reach out. Best of luck with your new place! 🎉",
           timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 16 * 5 * 60 * 1000).toISOString()
         }
       ]
@@ -302,50 +330,61 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Jessica Williams",
       email: "jessica.williams@email.com",
       phone: "+1 (555) 789-0123",
-      property: "1-Bedroom Apartment – Garden District",
+      property: "2934 Fillmore Street Apt. 3A, San Francisco, CA",
       propertyDetails: {
-        address: "890 Garden Street, Apt 15",
-        rent: 1950,
+        address: "2934 Fillmore Street Apt. 3A, San Francisco, CA 94123",
+        rent: 3100,
         bedrooms: 1,
         bathrooms: 1,
-        sqft: 680
+        sqft: 750
       },
       lastInteractionDate: new Date(baseDate.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Requested more photos but never responded",
       status: "customer_responded",
-      brokerage: "Green Valley Properties",
-      engagementScore: 78,
+      engagementScore: 93,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      pastTranscriptSnippet: `"Can you send me more photos of the apartment?"
-"Absolutely! I'll send you a gallery with photos of every room."
-"That would be great, thank you."
-"I've sent them to your email. Let me know if you have any questions!"`,
+      pastCallSummary: "Customer requested additional photos of the Fillmore Street apartment, specifically of the kitchen, bathroom, and closet space. Photos were sent via email but no response was received. Customer had mentioned they work from home and needed good natural light.",
       aiConversation: [
         {
           sender: "ai",
-          message: "Hi Jessica! This is LEASAP from Green Valley Properties.\nI noticed you requested photos of the 1-bedroom on Garden Street but we didn't hear back. I wanted to check if you received them and if you have any questions?",
+          message: "Hi Jessica! 👋\n\nI noticed you requested photos of the Fillmore Street apartment last week but we didn't hear back. I wanted to check if you received them and if you have any questions about the place?",
           timestamp: new Date(baseDate.getTime() - 5 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Yes, I got them! The place looks nice. I'm just comparing a few options.",
+          message: "Yes, I got them! The place looks nice. I'm just comparing a few options right now.",
           timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 19 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "That makes sense! Since you're comparing options, I wanted to let you know we just had a unit become available with a private balcony - something that's pretty rare in this building. Would you like to see it?",
+          message: "That makes sense! Since you're comparing options, I wanted to mention something - we just had a unit become available in the same building with a private balcony. It's pretty rare in this area, and since you mentioned you work from home, having that outdoor space could be really nice.\n\nIt's the same price and same layout, just with the added balcony. Would you like to see it?",
           timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 19 * 15 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Oh interesting! Yes, I'd like to see that.",
+          message: "Oh interesting! Yes, I'd like to see that. A balcony would be perfect for working outside.",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "Perfect! I can schedule a tour for you. We have availability this week - would Thursday afternoon or Saturday morning work better?",
+          message: "Perfect! I can schedule a tour for you. We have availability this week - would Thursday afternoon or Saturday morning work better? I can also send you photos of the balcony if you want to see it first.",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 10 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Saturday morning would be great. And yes, photos would be helpful!",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 25 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Awesome! I'll send the photos today and confirm Saturday morning. Does 10 AM work for you?",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "10 AM is perfect. Thanks!",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 35 * 60 * 1000).toISOString()
         }
       ]
     },
@@ -354,25 +393,20 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Robert Taylor",
       email: "robert.taylor@email.com",
       phone: "+1 (555) 890-1234",
-      property: "4-Bedroom House – Maple Lane",
+      property: "6789 Presidio Avenue House, San Francisco, CA",
       propertyDetails: {
-        address: "147 Maple Lane",
-        rent: 4200,
-        bedrooms: 4,
-        bathrooms: 3,
-        sqft: 2400
+        address: "6789 Presidio Avenue, San Francisco, CA 94129",
+        rent: 5500,
+        bedrooms: 3,
+        bathrooms: 2,
+        sqft: 2100
       },
       lastInteractionDate: new Date(baseDate.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Asked about pet policy but didn't follow up",
       status: "pending_outreach",
-      brokerage: "Premier Real Estate",
-      engagementScore: 52,
+      engagementScore: 38,
       priority: "medium",
-      pastTranscriptSnippet: `"I'm interested in the house on Maple Lane. What's the pet policy?"
-"We allow up to 2 pets, with a pet deposit of $500."
-"Okay, I have two dogs. That works."
-"Great! Would you like to schedule a viewing?"
-"Let me check my calendar and get back to you."`,
+      pastCallSummary: "Customer inquired about the Presidio Avenue house. Showed strong interest and asked detailed questions about the pet policy (has 2 large dogs). Was informed about the pet deposit ($750) and weight restrictions. Said they would discuss with their partner and get back, but no follow-up was received.",
       aiConversation: []
     },
     {
@@ -380,42 +414,56 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Amanda Brown",
       email: "amanda.brown@email.com",
       phone: "+1 (555) 901-2345",
-      property: "2-Bedroom Duplex – Elm Street",
+      property: "4156 Hayes Valley Studio 9, San Francisco, CA",
       propertyDetails: {
-        address: "258 Elm Street, Upper Unit",
-        rent: 2100,
-        bedrooms: 2,
+        address: "4156 Hayes Valley Studio 9, San Francisco, CA 94117",
+        rent: 2200,
+        bedrooms: 0,
         bathrooms: 1,
-        sqft: 980
+        sqft: 580
       },
       lastInteractionDate: new Date(baseDate.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Scheduled tour but called to cancel last minute",
       status: "ai_reached_out",
-      brokerage: "Urban Living Co.",
-      engagementScore: 65,
+      engagementScore: 83,
       priority: "medium",
       lastSeen: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      pastTranscriptSnippet: `"I'd like to see the duplex on Elm Street."
-"Perfect! I have availability tomorrow at 2 PM."
-"Sounds good, I'll be there."
-"Great! See you then."
-"Actually, I need to cancel. Something urgent came up."
-"No worries, we can reschedule whenever you're ready."`,
+      pastCallSummary: "Customer scheduled a tour for the Hayes Valley studio but cancelled 2 hours before due to a family emergency. Expressed sincere interest and apologized multiple times. Mentioned they're a student and budget-conscious. Asked about shorter lease terms.",
       aiConversation: [
         {
           sender: "ai",
-          message: "Hi Amanda! This is LEASAP from Urban Living Co.\nI know you had to cancel your tour last minute due to an urgent matter. I hope everything is okay! We still have the 2-bedroom duplex available and I'd love to help you reschedule when it's convenient.",
+          message: "Hi Amanda! 👋\n\nI know you had to cancel your tour last minute due to a family emergency - I hope everything is okay! I wanted to check in and see if you're still interested in the Hayes Valley studio.",
           timestamp: new Date(baseDate.getTime() - 10 * 24 * 60 * 60 * 1000 + 9 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Thanks for understanding. Everything's fine now. I'm still interested.",
+          message: "Thanks for understanding. Everything's fine now. I'm still interested, just been really busy with school.",
           timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "That's great to hear! I'm glad everything worked out. Would you like to schedule a new tour? We have availability this week and next.",
+          message: "That's great to hear! I'm glad everything worked out. I totally get being busy with school - that's actually why I'm reaching out.\n\nSince you mentioned you're a student, I wanted to let you know we can work with shorter lease terms if that helps. We can do 6 months, or even month-to-month after the first 3 months.\n\nWould you like to reschedule that tour? We have availability this week and next.",
           timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 12 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "That's really helpful! Yes, I'd like to reschedule. Maybe this weekend?",
+          timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 20 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Perfect! I have availability Saturday at 11 AM, 1 PM, or 3 PM. Sunday works too - 10 AM, 12 PM, or 2 PM. Which works best for you?",
+          timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 25 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Saturday at 1 PM would be perfect!",
+          timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Great! Saturday at 1 PM it is. I'll send you a reminder on Friday with the address and my contact info. Looking forward to showing you the place!",
+          timestamp: new Date(baseDate.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 32 * 60 * 1000).toISOString()
         }
       ]
     },
@@ -424,25 +472,20 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Christopher Lee",
       email: "chris.lee@email.com",
       phone: "+1 (555) 012-3456",
-      property: "Studio Loft – Arts District",
+      property: "8923 SOMA Loft 14, San Francisco, CA",
       propertyDetails: {
-        address: "369 Arts Boulevard, Loft 7",
-        rent: 1650,
-        bedrooms: 0,
+        address: "8923 SOMA Loft 14, San Francisco, CA 94103",
+        rent: 3800,
+        bedrooms: 1,
         bathrooms: 1,
-        sqft: 600
+        sqft: 1100
       },
       lastInteractionDate: new Date(baseDate.getTime() - 28 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Inquired about parking but never responded",
       status: "pending_outreach",
-      brokerage: "Creative Spaces Realty",
-      engagementScore: 40,
+      engagementScore: 32,
       priority: "low",
-      pastTranscriptSnippet: `"Does the studio have parking?"
-"Yes, there's one assigned parking space included."
-"That's good. What about street parking?"
-"There's also street parking available, though it can be limited during peak hours."
-"Okay, thanks for the info."`,
+      pastCallSummary: "Customer asked about the SOMA loft and specifically inquired about parking availability. Was told about the parking situation (limited street parking, garage available for $200/month). Customer said they would 'think about it' but never responded to follow-up questions.",
       aiConversation: []
     },
     {
@@ -450,52 +493,66 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Maria Garcia",
       email: "maria.garcia@email.com",
       phone: "+1 (555) 123-4567",
-      property: "3-Bedroom Apartment – Waterfront",
+      property: "1245 Russian Hill Penthouse 22, San Francisco, CA",
       propertyDetails: {
-        address: "741 Waterfront Drive, Apt 22",
-        rent: 3800,
-        bedrooms: 3,
+        address: "1245 Russian Hill Penthouse 22, San Francisco, CA 94133",
+        rent: 5200,
+        bedrooms: 2,
         bathrooms: 2,
-        sqft: 1800
+        sqft: 1650
       },
       lastInteractionDate: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Discussed lease terms but wanted to think it over",
       status: "customer_responded",
-      brokerage: "Luxury Living Group",
-      engagementScore: 82,
+      engagementScore: 94,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      pastTranscriptSnippet: `"What's the lease term?"
-"We offer 12-month and 24-month leases. The 24-month has a slightly lower rate."
-"I see. And what about the security deposit?"
-"It's one month's rent, which is $3,800."
-"Okay, I need to think about this. Can I get back to you?"
-"Of course! Take your time."`,
+      pastCallSummary: "Customer viewed the Russian Hill penthouse and was very impressed. Discussed lease terms extensively - asked about 12-month vs 24-month options, security deposit ($5,200), and early termination clauses. Expressed concern about committing to a full year. Said they needed to 'think about it' and would get back within a week.",
       aiConversation: [
         {
           sender: "ai",
-          message: "Hi Maria! This is LEASAP from Luxury Living Group.\nI wanted to follow up about the 3-bedroom waterfront apartment. I know you were considering the lease terms. We've just updated our options - we now offer a 6-month lease option as well, which might be more flexible for your situation.",
+          message: "Hi Maria! 👋\n\nI wanted to follow up about the Russian Hill penthouse. I know you were considering the lease terms, and I have some good news - we've updated our options to be more flexible.",
           timestamp: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "That's interesting. What's the rate for the 6-month lease?",
+          message: "Oh really? What changed?",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "The 6-month lease is $3,950 per month - just $150 more than the 12-month. It gives you flexibility while you decide if you want to stay longer. Would you like to discuss this further or schedule a tour?",
+          message: "So we now offer a 6-month lease option! It's $5,400 per month (just $200 more than the 12-month), but it gives you way more flexibility. After the first 6 months, you can either renew, go month-to-month, or move out with just 30 days notice.\n\nThis way you're not locked into a full year, but you still get the stability of a lease. Does that sound better?",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 14 * 8 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Yes, I'd like to schedule a tour. This weekend would work best.",
+          message: "That's actually much better! I was worried about committing to a full year. The 6-month option sounds perfect.",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "Perfect! I have availability Saturday at 10 AM, 1 PM, or 3 PM. Which time works best for you?",
+          message: "I'm so glad that works for you! The 6-month lease is perfect for people who want flexibility but still want the security of a lease.\n\nWould you like to move forward? I can send over the lease agreement for you to review, or if you want to see the place one more time, we can schedule another tour.",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 5 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Yes, I'd like to see it one more time. This weekend would work best.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 15 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Perfect! I have availability Saturday at 10 AM, 1 PM, or 3 PM. Sunday works too - 11 AM, 2 PM, or 4 PM. Which time works best for you?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 20 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Saturday at 1 PM sounds good!",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 25 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Excellent! Saturday at 1 PM it is. I'll send you a confirmation with the address and my contact info. After the tour, if you're ready to move forward, we can get the lease signed and you could potentially move in as early as next week if that works for you!",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 11 * 30 * 60 * 1000).toISOString()
         }
       ]
     },
@@ -504,25 +561,20 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "James Wilson",
       email: "james.wilson@email.com",
       phone: "+1 (555) 234-5678",
-      property: "1-Bedroom Condo – Downtown",
+      property: "5678 North Beach Condo 6B, San Francisco, CA",
       propertyDetails: {
-        address: "852 Downtown Plaza, Unit 9",
-        rent: 2250,
-        bedrooms: 1,
+        address: "5678 North Beach Condo 6B, San Francisco, CA 94133",
+        rent: 3400,
+        bedrooms: 2,
         bathrooms: 1,
-        sqft: 720
+        sqft: 1050
       },
       lastInteractionDate: new Date(baseDate.getTime() - 22 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Asked about amenities but didn't book",
       status: "pending_outreach",
-      brokerage: "Metro Properties",
-      engagementScore: 48,
+      engagementScore: 42,
       priority: "low",
-      pastTranscriptSnippet: `"What amenities does the building have?"
-"We have a fitness center, rooftop terrace, and secure parking."
-"That sounds nice. Is there a pool?"
-"No pool, but the rooftop has great city views."
-"Okay, thanks for the information."`,
+      pastCallSummary: "Customer inquired about the North Beach condo and asked detailed questions about building amenities (gym, rooftop, parking). Was provided with a full list of amenities. Customer seemed interested but said they were 'still looking at other places' and would get back. No follow-up was received.",
       aiConversation: []
     },
     {
@@ -530,40 +582,56 @@ const generateMockCustomers = (): OldCustomer[] => {
       name: "Lisa Anderson",
       email: "lisa.anderson@email.com",
       phone: "+1 (555) 345-6789",
-      property: "2-Bedroom Penthouse – Skyline Tower",
+      property: "7890 Nob Hill Apartment 15F, San Francisco, CA",
       propertyDetails: {
-        address: "963 Skyline Tower, Penthouse 15",
-        rent: 4500,
+        address: "7890 Nob Hill Apartment 15F, San Francisco, CA 94108",
+        rent: 4800,
         bedrooms: 2,
         bathrooms: 2,
-        sqft: 1500
+        sqft: 1420
       },
       lastInteractionDate: new Date(baseDate.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Requested floor plan but never scheduled viewing",
       status: "ai_reached_out",
-      brokerage: "Elite Real Estate",
-      engagementScore: 68,
+      engagementScore: 85,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      pastTranscriptSnippet: `"Can you send me the floor plan?"
-"Absolutely! I'll email it to you right away."
-"Thank you, I'll review it and let you know."
-"Perfect! Feel free to ask any questions."`,
+      pastCallSummary: "Customer requested a floor plan for the Nob Hill apartment. Floor plan was sent via email along with additional photos. Customer acknowledged receipt but never scheduled a viewing. Had mentioned they were looking for a 2-bedroom with good natural light.",
       aiConversation: [
         {
           sender: "ai",
-          message: "Hi Lisa! This is LEASAP from Elite Real Estate.\nI sent you the floor plan for the penthouse at Skyline Tower last week. I wanted to check if you had a chance to review it and if you have any questions?",
+          message: "Hi Lisa! 👋\n\nI sent you the floor plan for the Nob Hill apartment last week. I wanted to check if you had a chance to review it and if you have any questions?",
           timestamp: new Date(baseDate.getTime() - 5 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Yes, I reviewed it. The layout looks good. I'm just checking a few other options.",
+          message: "Yes, I reviewed it. The layout looks good. I'm just checking a few other options before deciding.",
           timestamp: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000 + 16 * 60 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "I understand! Since you're comparing options, I wanted to mention that this penthouse has some unique features - a private elevator entrance and a wraparound balcony with 360-degree views. These are pretty rare in the downtown area. Would you like to see it in person?",
+          message: "I totally understand - it's a big decision! Since you're comparing options, I wanted to mention something about this unit that's pretty special.\n\nThe apartment is on the 15th floor with floor-to-ceiling windows facing west, so you get amazing sunset views and tons of natural light throughout the day. Plus, it has a private balcony which is pretty rare in Nob Hill.\n\nWould it help to see it in person? Sometimes seeing the actual space and the views makes the decision easier.",
           timestamp: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000 + 16 * 12 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "The sunset views sound amazing. When could I see it?",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 10 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "I can schedule a tour for you! We have availability:\n\n• Tomorrow (Thursday) - 2 PM, 4 PM, or 6 PM\n• Friday - Anytime between 10 AM - 7 PM\n• Weekend - Saturday and Sunday both work\n\nAlso, if you come in the evening around 6-7 PM, you'll get to see those sunset views in person which is really something special!\n\nWhat day and time works best?",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 10 * 35 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Friday evening would be perfect! Maybe 6:30 PM?",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 15 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Perfect! Friday at 6:30 PM it is. You'll get to see those sunset views! 🌅\n\nI'll send you the exact address and building access info tomorrow. The building has a doorman, so just let them know you're there for a tour with LEASAP.\n\nLooking forward to showing you the place!",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 20 * 60 * 1000).toISOString()
         }
       ]
     }
@@ -692,6 +760,7 @@ export const OldCustomersTab = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [scheduledTours, setScheduledTours] = useState<Set<string>>(new Set());
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Calculate statistics
@@ -741,7 +810,7 @@ export const OldCustomersTab = ({
         aiConversation: [
           {
             sender: "ai",
-            message: `Hi ${customer.name.split(' ')[0]}! This is LEASAP${customer.brokerage ? ` from ${customer.brokerage}` : ''} 👋\nYou previously inquired about ${customer.property}.\nWe have new availability and more flexible tour options.\nWould you like to take another look?`,
+            message: `Hey ${customer.name.split(' ')[0]}! 👋\n\nI noticed you were interested in ${customer.property} a few weeks ago. I wanted to reach out because we just had a similar unit become available with some great updates.\n\nAre you still looking?`,
             timestamp: new Date().toISOString()
           }
         ]
@@ -757,6 +826,33 @@ export const OldCustomersTab = ({
     }
   };
 
+  const handleScheduleTour = (customer: OldCustomer) => {
+    if (!selectedCustomer || selectedCustomer.id !== customer.id) return;
+    
+    const tourScheduled = scheduledTours.has(customer.id);
+    
+    if (!tourScheduled) {
+      // Add AI message about scheduling
+      const newMessage = {
+        sender: "ai" as const,
+        message: "Great! I'd be happy to schedule a tour for you. What day and time works best? We have availability this week and next.\n\nJust let me know your preference and I'll confirm it right away!",
+        timestamp: new Date().toISOString()
+      };
+
+      const updatedCustomer: OldCustomer = {
+        ...customer,
+        aiConversation: [...customer.aiConversation, newMessage],
+        status: customer.status === "ai_reached_out" ? "customer_responded" : customer.status
+      };
+
+      setOldCustomers(prev => 
+        prev.map(c => c.id === customer.id ? updatedCustomer : c)
+      );
+      setSelectedCustomer(updatedCustomer);
+      setScheduledTours(prev => new Set(prev).add(customer.id));
+    }
+  };
+
   if (selectedCustomer) {
     const conversationStats = {
       messageCount: selectedCustomer.aiConversation.length,
@@ -764,6 +860,8 @@ export const OldCustomersTab = ({
       userMessages: selectedCustomer.aiConversation.filter(m => m.sender === "user").length,
       lastMessage: selectedCustomer.aiConversation[selectedCustomer.aiConversation.length - 1]
     };
+
+    const isTourScheduled = scheduledTours.has(selectedCustomer.id);
 
     return (
       <motion.div
@@ -842,7 +940,7 @@ export const OldCustomersTab = ({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div>
+                    <div className="md:col-span-2">
                       <p className="text-xs text-gray-500 mb-1">Address</p>
                       <p className="text-sm font-medium text-gray-900">{selectedCustomer.propertyDetails.address}</p>
                     </div>
@@ -897,24 +995,26 @@ export const OldCustomersTab = ({
                       Reason for AI Re-Engagement
                     </h3>
                     <p className="text-blue-800">
-                      This customer previously {selectedCustomer.dropOffReason.toLowerCase()}.
-                      {selectedCustomer.brokerage && ` LEASAP from ${selectedCustomer.brokerage} is following up to share updated availability and offer flexible tour options.`}
+                      This customer previously {selectedCustomer.dropOffReason.toLowerCase()}. LEASAP AI is following up to share updated availability and offer flexible tour options.
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Section B: Past Interaction Snapshot */}
-            <Card className="bg-gray-50 border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900">
-                  Previous Call (Excerpt)
+            {/* Section B: Past Call Summary */}
+            <Card className="bg-gradient-to-br from-gray-50 to-white border-gray-200 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-gray-600" />
+                  Previous Call Summary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-white rounded-lg p-4 border border-gray-200 font-mono text-sm text-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
-                  {selectedCustomer.pastTranscriptSnippet}
+                <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-inner">
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {selectedCustomer.pastCallSummary}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -1063,8 +1163,8 @@ export const OldCustomersTab = ({
                   {/* Chat Input Area */}
                   {selectedCustomer.aiConversation.length > 0 && (
                     <div className="bg-[#202c33] px-4 py-3 border-t border-gray-700">
-                      <div className="flex items-center justify-between text-gray-400 text-xs">
-                        <span>Conversation in progress</span>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-gray-400 text-xs flex-1">Conversation in progress</span>
                         <div className="flex items-center gap-2">
                           {selectedCustomer.status === "pending_outreach" && (
                             <Button
@@ -1078,10 +1178,14 @@ export const OldCustomersTab = ({
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-gray-600 text-gray-300 hover:bg-gray-700 text-xs"
+                            onClick={() => handleScheduleTour(selectedCustomer)}
+                            disabled={isTourScheduled}
+                            className={`border-gray-600 text-gray-300 hover:bg-gray-700 text-xs ${
+                              isTourScheduled ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                           >
                             <Calendar className="h-3 w-3 mr-1" />
-                            Schedule Tour
+                            {isTourScheduled ? "Tour Scheduled" : "Schedule Tour"}
                           </Button>
                         </div>
                       </div>

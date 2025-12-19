@@ -87,17 +87,46 @@ interface OldCustomersTabProps {
   onRefresh?: () => void;
 }
 
+// Helper function to calculate status based on conversation
+const calculateStatus = (customer: OldCustomer): OldCustomer["status"] => {
+  const hasUserMessages = customer.aiConversation.some(msg => msg.sender === "user");
+  const hasAIMessages = customer.aiConversation.some(msg => msg.sender === "ai");
+  const lastMessage = customer.aiConversation[customer.aiConversation.length - 1];
+  
+  // Check if customer explicitly said not interested
+  const notInterestedKeywords = ["not interested", "found something", "not looking", "no longer"];
+  const lastUserMessage = customer.aiConversation.filter(m => m.sender === "user").pop();
+  if (lastUserMessage && notInterestedKeywords.some(keyword => 
+    lastUserMessage.message.toLowerCase().includes(keyword)
+  )) {
+    return "not_interested";
+  }
+  
+  // If customer responded (has user messages), they responded
+  if (hasUserMessages) {
+    return "customer_responded";
+  }
+  
+  // If AI reached out but no response yet
+  if (hasAIMessages && !hasUserMessages) {
+    return "ai_reached_out";
+  }
+  
+  // Default to pending
+  return "pending_outreach";
+};
+
 // Enhanced mock data with realistic addresses and natural conversations
 const generateMockCustomers = (): OldCustomer[] => {
   const baseDate = new Date();
   baseDate.setDate(baseDate.getDate() - 30);
 
-  return [
+  const customers: Omit<OldCustomer, "status">[] = [
     {
       id: "1",
-      name: "Alex Johnson",
-      email: "alex.johnson@email.com",
-      phone: "+1 (555) 234-5678",
+      name: "Alexandra Chen",
+      email: "alexandra.chen@gmail.com",
+      phone: "+1 (415) 234-5678",
       property: "2997 Barr Gardens Apt. 284, San Francisco, CA",
       propertyDetails: {
         address: "2997 Barr Gardens Apt. 284, San Francisco, CA 94102",
@@ -108,7 +137,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Asked about property but never booked a tour",
-      status: "ai_reached_out",
       engagementScore: 88,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
@@ -116,7 +144,7 @@ const generateMockCustomers = (): OldCustomer[] => {
       aiConversation: [
         {
           sender: "ai",
-          message: "Hey Alex! 👋\n\nI noticed you were interested in the apartment at 2997 Barr Gardens a few weeks ago. I wanted to reach out because we just had a similar unit become available with some great updates.\n\nAre you still looking?",
+          message: "Hey Alexandra! 👋\n\nI noticed you were interested in the apartment at 2997 Barr Gardens a few weeks ago. I wanted to reach out because we just had a similar unit become available with some great updates.\n\nAre you still looking?",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000).toISOString()
         },
         {
@@ -131,31 +159,51 @@ const generateMockCustomers = (): OldCustomer[] => {
         },
         {
           sender: "user",
-          message: "That sounds interesting. When could I see it?",
+          message: "Hmm, that's still a bit higher than I was hoping for. I'm looking at a few other places too.",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 45 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
+          message: "I totally understand - it's a big decision! What's your budget range if you don't mind me asking? Sometimes we can work with different lease terms or include utilities to make it more affordable.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 50 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "I was hoping to stay around $2,800. But I really liked the location.",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 10 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "I hear you - the location is really great! Here's what I can do:\n\n• With the move-in special (50% off first month), that's effectively $2,933/month for the first year\n• We can include water, trash, and internet in the rent (saves you about $150/month)\n• If you sign a 12-month lease, I can knock another $50/month off\n\nThat would bring your effective monthly cost down to around $2,733. Plus you'd be in a newly renovated unit in a prime location. Does that sound more doable?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 15 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "That actually sounds a lot better! When could I see it?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 25 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
           message: "I can schedule a tour for you this week! We have availability:\n\n• Tomorrow (Wednesday) - 2 PM, 4 PM, or 6 PM\n• Thursday - Anytime between 10 AM - 7 PM\n• Friday - Morning slots available\n• Weekend - Saturday and Sunday both work\n\nWhat day and time works best for you?",
-          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 47 * 60 * 1000).toISOString()
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 27 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
           message: "Thursday afternoon would work. Maybe 3 PM?",
-          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 20 * 60 * 1000).toISOString()
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 30 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
           message: "Perfect! Thursday at 3 PM it is. I'll send you the exact address and my contact info. The building has a doorman, so just let them know you're there for a tour with LEASAP.\n\nAlso, since you mentioned you're relocating, I can help connect you with local moving companies if you need recommendations. Just let me know!",
-          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 22 * 60 * 1000).toISOString()
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 15 * 32 * 60 * 1000).toISOString()
         }
       ]
     },
     {
       id: "2",
-      name: "Sarah Martinez",
-      email: "sarah.martinez@email.com",
-      phone: "+1 (555) 345-6789",
+      name: "Sarah Mitchell",
+      email: "sarah.mitchell@outlook.com",
+      phone: "+1 (415) 345-6789",
       property: "1842 Pacific Heights Blvd. Unit 12B, San Francisco, CA",
       propertyDetails: {
         address: "1842 Pacific Heights Blvd. Unit 12B, San Francisco, CA 94115",
@@ -166,7 +214,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Cancelled a scheduled tour",
-      status: "customer_responded",
       engagementScore: 91,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
@@ -211,9 +258,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "3",
-      name: "Michael Chen",
-      email: "michael.chen@email.com",
-      phone: "+1 (555) 456-7890",
+      name: "Michael Rodriguez",
+      email: "mrodriguez92@gmail.com",
+      phone: "+1 (415) 456-7890",
       property: "4521 Mission Street Apt. 7C, San Francisco, CA",
       propertyDetails: {
         address: "4521 Mission Street Apt. 7C, San Francisco, CA 94110",
@@ -224,7 +271,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 18 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Did not show up for a confirmed tour",
-      status: "pending_outreach",
       engagementScore: 28,
       priority: "medium",
       pastCallSummary: "Customer confirmed a tour for the Mission Street apartment but didn't show up. No call or message to cancel. Had previously expressed interest in the neighborhood and asked about public transportation access. Seemed enthusiastic during initial conversation.",
@@ -232,9 +278,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "4",
-      name: "Emily Rodriguez",
-      email: "emily.rodriguez@email.com",
-      phone: "+1 (555) 567-8901",
+      name: "Emily Thompson",
+      email: "emily.thompson@yahoo.com",
+      phone: "+1 (415) 567-8901",
       property: "3876 Castro District Loft 5, San Francisco, CA",
       propertyDetails: {
         address: "3876 Castro District Loft 5, San Francisco, CA 94114",
@@ -245,7 +291,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Stopped responding after pricing discussion",
-      status: "ai_reached_out",
       engagementScore: 62,
       priority: "medium",
       lastSeen: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -268,31 +313,51 @@ const generateMockCustomers = (): OldCustomer[] => {
         },
         {
           sender: "user",
-          message: "The utilities included and rent control are interesting. Let me think about it.",
+          message: "The utilities included and rent control are interesting. But $2,750 is still pretty high for me.",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 17 * 10 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "Of course, take your time! I know it's a big decision.\n\nJust so you know, the move-in special is only available if you sign by this Friday - it's part of a limited promotion. But even if you decide later, the utilities included and rent control would still apply.\n\nWould it help if I sent you a breakdown of the total monthly costs with everything included? Sometimes seeing the full picture helps.",
+          message: "I totally get that. What's your target budget if you don't mind me asking? With the utilities included, you're actually saving about $150/month compared to places where you pay separately. Plus with the move-in special, your effective first-year cost would be around $2,635/month.\n\nAlso, the Castro District location is really walkable - you'd save on transportation costs too. Have you looked at other places in the area?",
           timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 17 * 15 * 60 * 1000).toISOString()
         },
         {
           sender: "user",
-          message: "Yes, that would be helpful. Thanks!",
+          message: "I was hoping to stay around $2,500. I've seen a few places but nothing in Castro that's that low.",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 17 * 25 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "That makes sense. Here's the thing - with the move-in special and utilities included, you'd be at about $2,635/month for the first year. That's only $135 more than your target, but you'd be getting:\n\n• A newly renovated loft in Castro (which is hard to find)\n• All utilities included\n• Rent control protection\n• A 6-month lease option if you want flexibility\n\nPlus, if you sign by Friday, you get that first month at 50% off. Would it help to see the place? Sometimes seeing it in person helps put the value in perspective.",
+          timestamp: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000 + 17 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Yeah, that might help. When could I see it?",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 10 * 20 * 60 * 1000).toISOString()
         },
         {
           sender: "ai",
-          message: "Perfect! I'll put together a detailed breakdown and email it to you today. It'll show the base rent, what's included, and the total monthly cost.\n\nAlso, if you want to see the place in person, I can schedule a tour. Sometimes seeing it makes the decision easier!",
+          message: "Perfect! I can schedule a tour for you. We have availability this week - would Thursday afternoon or Saturday morning work better? I can also send you a detailed cost breakdown before the tour so you have all the numbers.",
           timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 10 * 25 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "user",
+          message: "Saturday morning would be good. And yes, please send the breakdown!",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 10 * 30 * 60 * 1000).toISOString()
+        },
+        {
+          sender: "ai",
+          message: "Great! I'll send the breakdown today and confirm Saturday morning. Does 10 AM work for you?",
+          timestamp: new Date(baseDate.getTime() - 1 * 24 * 60 * 60 * 1000 + 10 * 35 * 60 * 1000).toISOString()
         }
       ]
     },
     {
       id: "5",
-      name: "David Kim",
-      email: "david.kim@email.com",
-      phone: "+1 (555) 678-9012",
+      name: "David Park",
+      email: "david.park@gmail.com",
+      phone: "+1 (415) 678-9012",
       property: "5210 Marina Boulevard Unit 8, San Francisco, CA",
       propertyDetails: {
         address: "5210 Marina Boulevard Unit 8, San Francisco, CA 94123",
@@ -303,7 +368,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 35 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Delayed decision – asked to follow up later",
-      status: "not_interested",
       engagementScore: 22,
       priority: "low",
       pastCallSummary: "Customer viewed the Marina Boulevard unit and seemed interested. Asked about lease terms, parking, and building amenities. Said they were also looking at other properties and needed time to compare. Requested a follow-up in 'a month or two' after they finished their search.",
@@ -327,9 +391,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "6",
-      name: "Jessica Williams",
-      email: "jessica.williams@email.com",
-      phone: "+1 (555) 789-0123",
+      name: "Jessica Anderson",
+      email: "jessica.anderson@gmail.com",
+      phone: "+1 (415) 789-0123",
       property: "2934 Fillmore Street Apt. 3A, San Francisco, CA",
       propertyDetails: {
         address: "2934 Fillmore Street Apt. 3A, San Francisco, CA 94123",
@@ -390,9 +454,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "7",
-      name: "Robert Taylor",
-      email: "robert.taylor@email.com",
-      phone: "+1 (555) 890-1234",
+      name: "Robert Martinez",
+      email: "robert.martinez@outlook.com",
+      phone: "+1 (415) 890-1234",
       property: "6789 Presidio Avenue House, San Francisco, CA",
       propertyDetails: {
         address: "6789 Presidio Avenue, San Francisco, CA 94129",
@@ -411,9 +475,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "8",
-      name: "Amanda Brown",
-      email: "amanda.brown@email.com",
-      phone: "+1 (555) 901-2345",
+      name: "Amanda Foster",
+      email: "amanda.foster@yahoo.com",
+      phone: "+1 (415) 901-2345",
       property: "4156 Hayes Valley Studio 9, San Francisco, CA",
       propertyDetails: {
         address: "4156 Hayes Valley Studio 9, San Francisco, CA 94117",
@@ -469,9 +533,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "9",
-      name: "Christopher Lee",
-      email: "chris.lee@email.com",
-      phone: "+1 (555) 012-3456",
+      name: "Christopher Wong",
+      email: "chris.wong@gmail.com",
+      phone: "+1 (415) 012-3456",
       property: "8923 SOMA Loft 14, San Francisco, CA",
       propertyDetails: {
         address: "8923 SOMA Loft 14, San Francisco, CA 94103",
@@ -490,9 +554,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "10",
-      name: "Maria Garcia",
-      email: "maria.garcia@email.com",
-      phone: "+1 (555) 123-4567",
+      name: "Maria Santos",
+      email: "maria.santos@gmail.com",
+      phone: "+1 (415) 123-4567",
       property: "1245 Russian Hill Penthouse 22, San Francisco, CA",
       propertyDetails: {
         address: "1245 Russian Hill Penthouse 22, San Francisco, CA 94133",
@@ -558,9 +622,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "11",
-      name: "James Wilson",
-      email: "james.wilson@email.com",
-      phone: "+1 (555) 234-5678",
+      name: "James Cooper",
+      email: "james.cooper@outlook.com",
+      phone: "+1 (415) 234-5678",
       property: "5678 North Beach Condo 6B, San Francisco, CA",
       propertyDetails: {
         address: "5678 North Beach Condo 6B, San Francisco, CA 94133",
@@ -571,7 +635,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 22 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Asked about amenities but didn't book",
-      status: "pending_outreach",
       engagementScore: 42,
       priority: "low",
       pastCallSummary: "Customer inquired about the North Beach condo and asked detailed questions about building amenities (gym, rooftop, parking). Was provided with a full list of amenities. Customer seemed interested but said they were 'still looking at other places' and would get back. No follow-up was received.",
@@ -579,9 +642,9 @@ const generateMockCustomers = (): OldCustomer[] => {
     },
     {
       id: "12",
-      name: "Lisa Anderson",
-      email: "lisa.anderson@email.com",
-      phone: "+1 (555) 345-6789",
+      name: "Lisa Chang",
+      email: "lisa.chang@yahoo.com",
+      phone: "+1 (415) 345-6789",
       property: "7890 Nob Hill Apartment 15F, San Francisco, CA",
       propertyDetails: {
         address: "7890 Nob Hill Apartment 15F, San Francisco, CA 94108",
@@ -592,7 +655,6 @@ const generateMockCustomers = (): OldCustomer[] => {
       },
       lastInteractionDate: new Date(baseDate.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString(),
       dropOffReason: "Requested floor plan but never scheduled viewing",
-      status: "ai_reached_out",
       engagementScore: 85,
       priority: "high",
       lastSeen: new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -636,6 +698,12 @@ const generateMockCustomers = (): OldCustomer[] => {
       ]
     }
   ];
+  
+  // Calculate status for each customer based on conversation
+  return customers.map(customer => ({
+    ...customer,
+    status: calculateStatus(customer as OldCustomer)
+  })) as OldCustomer[];
 };
 
 const getStatusBadge = (status: OldCustomer["status"]) => {
@@ -806,7 +874,6 @@ export const OldCustomersTab = ({
     if (customer.aiConversation.length === 0) {
       const updatedCustomer: OldCustomer = {
         ...customer,
-        status: "ai_reached_out",
         aiConversation: [
           {
             sender: "ai",
@@ -815,6 +882,9 @@ export const OldCustomersTab = ({
           }
         ]
       };
+      
+      // Calculate status based on conversation
+      updatedCustomer.status = calculateStatus(updatedCustomer);
       
       // Update in the list
       setOldCustomers(prev => 
@@ -841,9 +911,11 @@ export const OldCustomersTab = ({
 
       const updatedCustomer: OldCustomer = {
         ...customer,
-        aiConversation: [...customer.aiConversation, newMessage],
-        status: customer.status === "ai_reached_out" ? "customer_responded" : customer.status
+        aiConversation: [...customer.aiConversation, newMessage]
       };
+      
+      // Calculate status based on conversation
+      updatedCustomer.status = calculateStatus(updatedCustomer);
 
       setOldCustomers(prev => 
         prev.map(c => c.id === customer.id ? updatedCustomer : c)
@@ -1162,30 +1234,39 @@ export const OldCustomersTab = ({
 
                   {/* Chat Input Area */}
                   {selectedCustomer.aiConversation.length > 0 && (
-                    <div className="bg-[#202c33] px-4 py-3 border-t border-gray-700">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-gray-400 text-xs flex-1">Conversation in progress</span>
-                        <div className="flex items-center gap-2">
+                    <div className="bg-[#202c33] px-4 py-4 border-t border-gray-700">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <span className="text-gray-400 text-xs">Conversation in progress</span>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
                           {selectedCustomer.status === "pending_outreach" && (
                             <Button
                               size="sm"
                               onClick={() => handleReEngage(selectedCustomer)}
-                              className="bg-amber-500 hover:bg-amber-600 text-white text-xs"
+                              className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-4 py-2 rounded-lg flex-1 sm:flex-initial"
                             >
+                              <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                               Re-Engage with AI
                             </Button>
                           )}
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => handleScheduleTour(selectedCustomer)}
                             disabled={isTourScheduled}
-                            className={`border-gray-600 text-gray-300 hover:bg-gray-700 text-xs ${
-                              isTourScheduled ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
+                            className={`${
+                              isTourScheduled 
+                                ? "bg-green-600 hover:bg-green-700 text-white cursor-default" 
+                                : "bg-amber-500 hover:bg-amber-600 text-white"
+                            } text-xs px-4 py-2 rounded-lg flex-1 sm:flex-initial transition-all duration-200 shadow-md hover:shadow-lg`}
                           >
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {isTourScheduled ? "Tour Scheduled" : "Schedule Tour"}
+                            <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                            {isTourScheduled ? (
+                              <>
+                                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                                Tour Scheduled
+                              </>
+                            ) : (
+                              "Schedule Tour"
+                            )}
                           </Button>
                         </div>
                       </div>

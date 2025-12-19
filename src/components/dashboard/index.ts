@@ -9,6 +9,7 @@ export { CallForwardingTab } from "./CallForwardingTab";
 export { RealtorsTab } from "./RealtorsTab";
 export { MaintenanceRequestsTab } from "./MaintenanceRequestsTab";
 export { TenantsTab } from "./TenantsTab";
+export { OldCustomersTab } from "./OldCustomersTab";
 
 // Export modal components
 export { MaintenanceRequestDetailModal } from "./MaintenanceRequestDetailModal";

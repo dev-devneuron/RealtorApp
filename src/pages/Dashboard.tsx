@@ -35,7 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { PropertiesTab, BookingsTab, ChatsTab, AssignPropertiesTab, ViewAssignmentsTab, PhoneNumbersTab, CallForwardingTab, RealtorsTab, MaintenanceRequestsTab, TenantsTab, MaintenanceRequestDetailModal, MaintenanceRequestUpdateModal, PropertyDetailModal, PropertyUpdateModal, CallRecordDetailModal, TenantAddModal, TenantEditModal, PhoneNumberRequestDialog, getPropertyMetadata, formatPhoneNumber, formatCallDuration } from "@/components/dashboard";
+import { PropertiesTab, BookingsTab, ChatsTab, AssignPropertiesTab, ViewAssignmentsTab, PhoneNumbersTab, CallForwardingTab, RealtorsTab, MaintenanceRequestsTab, TenantsTab, OldCustomersTab, MaintenanceRequestDetailModal, MaintenanceRequestUpdateModal, PropertyDetailModal, PropertyUpdateModal, CallRecordDetailModal, TenantAddModal, TenantEditModal, PhoneNumberRequestDialog, getPropertyMetadata, formatPhoneNumber, formatCallDuration } from "@/components/dashboard";
 import { API_BASE } from "@/components/dashboard/constants";
 
 /**
@@ -3670,6 +3670,16 @@ const Dashboard = () => {
                   <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                   <span>Bookings</span>
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="old-customers" 
+                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                >
+                  <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
+                  <span className="hidden xl:inline">Old Customers</span>
+                  <span className="xl:hidden hidden lg:inline">Old Customers</span>
+                  <span className="lg:hidden hidden md:inline">Old</span>
+                  <span className="md:hidden">Old</span>
+                </TabsTrigger>
                   </div>
                 </div>
               </TabsList>
@@ -4024,6 +4034,17 @@ const Dashboard = () => {
                 />
               </TabsContent>
             )}
+
+            {/* Old Customers Tab */}
+            <TabsContent value="old-customers">
+              <OldCustomersTab
+                loading={false}
+                onRefresh={() => {
+                  // In production, this would refresh from API
+                  console.log("Refreshing old customers...");
+                }}
+              />
+            </TabsContent>
           </Tabs>
         </motion.div>
       </section>

@@ -1107,59 +1107,59 @@ export const OldCustomersTab = ({
         transition={{ duration: 0.6 }}
       >
         <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
+          <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedCustomer(null)}
-                  className="rounded-lg"
+                  className="rounded-lg w-full sm:w-auto"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to List
                 </Button>
-                <div>
-                  <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-2">
+                <div className="flex-1 sm:flex-initial">
+                  <CardTitle className="text-gray-900 text-xl sm:text-2xl font-bold flex flex-col sm:flex-row items-start sm:items-center gap-2">
                     {selectedCustomer.name}
                     {selectedCustomer.engagementScore && (
-                      <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+                      <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs sm:text-sm">
                         <Sparkles className="h-3 w-3 mr-1" />
                         {selectedCustomer.engagementScore}% Engaged
                       </Badge>
                     )}
                   </CardTitle>
-                  <p className="text-gray-600 mt-1">{selectedCustomer.property}</p>
+                  <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">{selectedCustomer.property}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
                 {getStatusBadge(selectedCustomer.status)}
                 {getPriorityBadge(selectedCustomer.priority)}
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="p-6 space-y-6">
+          <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Contact Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {selectedCustomer.email && (
                 <Card className="bg-gray-50 border-gray-200">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-gray-600" />
-                    <div>
+                  <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+                    <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs text-gray-500">Email</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedCustomer.email}</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{selectedCustomer.email}</p>
                     </div>
                   </CardContent>
                 </Card>
               )}
               {selectedCustomer.phone && (
                 <Card className="bg-gray-50 border-gray-200">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-gray-600" />
-                    <div>
+                  <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+                    <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs text-gray-500">Phone</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedCustomer.phone}</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">{selectedCustomer.phone}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -1169,17 +1169,17 @@ export const OldCustomersTab = ({
             {/* Property Details */}
             {selectedCustomer.propertyDetails && (
               <Card className="bg-gradient-to-br from-amber-50 to-white border-amber-200">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-amber-600" />
+                <CardHeader className="p-3 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
                     Property Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="md:col-span-2">
+                <CardContent className="p-3 sm:p-6 pt-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+                    <div className="col-span-2 sm:col-span-3 md:col-span-2">
                       <p className="text-xs text-gray-500 mb-1">Address</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedCustomer.propertyDetails.address}</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-900 break-words">{selectedCustomer.propertyDetails.address}</p>
                     </div>
                     {selectedCustomer.propertyDetails.rent && (
                       <div>
@@ -1187,7 +1187,7 @@ export const OldCustomersTab = ({
                           <DollarSign className="h-3 w-3" />
                           Rent
                         </p>
-                        <p className="text-sm font-medium text-gray-900">${selectedCustomer.propertyDetails.rent.toLocaleString()}/mo</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">${selectedCustomer.propertyDetails.rent.toLocaleString()}/mo</p>
                       </div>
                     )}
                     {selectedCustomer.propertyDetails.bedrooms !== undefined && (
@@ -1196,7 +1196,7 @@ export const OldCustomersTab = ({
                           <Bed className="h-3 w-3" />
                           Bedrooms
                         </p>
-                        <p className="text-sm font-medium text-gray-900">{selectedCustomer.propertyDetails.bedrooms}</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">{selectedCustomer.propertyDetails.bedrooms}</p>
                       </div>
                     )}
                     {selectedCustomer.propertyDetails.bathrooms !== undefined && (
@@ -1205,7 +1205,7 @@ export const OldCustomersTab = ({
                           <Bath className="h-3 w-3" />
                           Bathrooms
                         </p>
-                        <p className="text-sm font-medium text-gray-900">{selectedCustomer.propertyDetails.bathrooms}</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">{selectedCustomer.propertyDetails.bathrooms}</p>
                       </div>
                     )}
                     {selectedCustomer.propertyDetails.sqft && (
@@ -1214,7 +1214,7 @@ export const OldCustomersTab = ({
                           <Ruler className="h-3 w-3" />
                           Square Feet
                         </p>
-                        <p className="text-sm font-medium text-gray-900">{selectedCustomer.propertyDetails.sqft.toLocaleString()}</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">{selectedCustomer.propertyDetails.sqft.toLocaleString()}</p>
                       </div>
                     )}
                   </div>
@@ -1303,7 +1303,7 @@ export const OldCustomersTab = ({
                   {/* Chat Messages */}
                   <div
                     ref={chatContainerRef}
-                    className="h-96 bg-[#0b141a] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
+                    className="h-64 sm:h-80 md:h-96 bg-[#0b141a] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-y-auto p-3 sm:p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%231a1a1a' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")`
                     }}
@@ -1356,7 +1356,7 @@ export const OldCustomersTab = ({
                                   className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
                                 >
                                   <div
-                                    className={`max-w-[75%] rounded-2xl px-4 py-2 shadow-lg ${
+                                    className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 py-2 sm:px-4 sm:py-2 shadow-lg ${
                                       msg.sender === "user"
                                         ? "bg-[#005c4b] text-white rounded-br-md"
                                         : "bg-[#202c33] text-white rounded-bl-md border border-gray-600/30"
@@ -1372,7 +1372,7 @@ export const OldCustomersTab = ({
                                         {selectedCustomer.name}
                                       </div>
                                     )}
-                                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                                    <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words">
                                       {msg.message}
                                     </div>
                                     <div
@@ -1453,16 +1453,16 @@ export const OldCustomersTab = ({
       transition={{ duration: 0.6 }}
     >
       <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                  <Users className="h-6 w-6 text-white" />
+        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-4 sm:p-6 lg:p-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6">
+            <div className="flex-1 w-full lg:w-auto">
+              <CardTitle className="text-gray-900 text-xl sm:text-2xl font-bold flex items-center gap-2 sm:gap-4 mb-2 sm:mb-3">
+                <div className="p-2 sm:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                  <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
                 Old Customers
               </CardTitle>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
                 Re-engage previously interested customers with AI-powered outreach.
               </p>
             </div>
@@ -1470,7 +1470,7 @@ export const OldCustomersTab = ({
               <Button
                 onClick={onRefresh}
                 variant="outline"
-                className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
+                className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl w-full sm:w-auto"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
@@ -1478,72 +1478,72 @@ export const OldCustomersTab = ({
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-6 sm:p-8">
+        <CardContent className="p-4 sm:p-6 lg:p-8">
           {/* Statistics Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-blue-600 font-medium mb-1">Total</p>
-                    <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-blue-900">{stats.total}</p>
                   </div>
-                  <Users className="h-8 w-8 text-blue-400 opacity-50" />
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 opacity-50 flex-shrink-0 ml-2" />
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-yellow-600 font-medium mb-1">Pending</p>
-                    <p className="text-2xl font-bold text-yellow-900">{stats.pending}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-yellow-900">{stats.pending}</p>
                   </div>
-                  <Clock className="h-8 w-8 text-yellow-400 opacity-50" />
+                  <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-400 opacity-50 flex-shrink-0 ml-2" />
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-blue-600 font-medium mb-1">Reached Out</p>
-                    <p className="text-2xl font-bold text-blue-900">{stats.reachedOut}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-blue-900">{stats.reachedOut}</p>
                   </div>
-                  <MessageCircle className="h-8 w-8 text-blue-400 opacity-50" />
+                  <MessageCircle className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 opacity-50 flex-shrink-0 ml-2" />
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-green-600 font-medium mb-1">Responded</p>
-                    <p className="text-2xl font-bold text-green-900">{stats.responded}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-green-900">{stats.responded}</p>
                   </div>
-                  <CheckCircle2 className="h-8 w-8 text-green-400 opacity-50" />
+                  <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-400 opacity-50 flex-shrink-0 ml-2" />
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-amber-600 font-medium mb-1">Avg Engagement</p>
-                    <p className="text-2xl font-bold text-amber-900">{Math.round(stats.avgEngagement)}%</p>
+                    <p className="text-xl sm:text-2xl font-bold text-amber-900">{Math.round(stats.avgEngagement)}%</p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-amber-400 opacity-50" />
+                  <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-amber-400 opacity-50 flex-shrink-0 ml-2" />
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-red-600 font-medium mb-1">High Priority</p>
-                    <p className="text-2xl font-bold text-red-900">{stats.highPriority}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-red-900">{stats.highPriority}</p>
                   </div>
-                  <Zap className="h-8 w-8 text-red-400 opacity-50" />
+                  <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-red-400 opacity-50 flex-shrink-0 ml-2" />
                 </div>
               </CardContent>
             </Card>
@@ -1604,17 +1604,17 @@ export const OldCustomersTab = ({
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
               <Table>
                 <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
                   <TableRow className="border-b border-amber-200">
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Customer</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Property</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Last Interaction</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Reason</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Status</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Engagement</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Action</TableHead>
+                    <TableHead className="font-bold text-gray-900 py-6 px-3 sm:px-6 text-sm sm:text-lg text-center">Customer</TableHead>
+                    <TableHead className="font-bold text-gray-900 py-6 px-3 sm:px-6 text-sm sm:text-lg text-center">Property</TableHead>
+                    <TableHead className="font-bold text-gray-900 py-6 px-3 sm:px-6 text-sm sm:text-lg text-center">Last Interaction</TableHead>
+                    <TableHead className="font-bold text-gray-900 py-6 px-3 sm:px-6 text-sm sm:text-lg text-center hidden md:table-cell">Reason</TableHead>
+                    <TableHead className="font-bold text-gray-900 py-6 px-3 sm:px-6 text-sm sm:text-lg text-center">Status</TableHead>
+                    <TableHead className="font-bold text-gray-900 py-6 px-3 sm:px-6 text-sm sm:text-lg text-center hidden lg:table-cell">Engagement</TableHead>
+                    <TableHead className="font-bold text-gray-900 py-6 px-3 sm:px-6 text-sm sm:text-lg text-center">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1627,78 +1627,91 @@ export const OldCustomersTab = ({
                       className="border-b border-gray-100 hover:bg-amber-50/50 transition-colors cursor-pointer"
                       onClick={() => setSelectedCustomer(customer)}
                     >
-                      <TableCell className="py-4 px-6">
-                        <div>
-                          <p className="font-semibold text-gray-900">{customer.name}</p>
+                      <TableCell className="py-4 px-3 sm:px-6">
+                        <div className="text-center sm:text-left">
+                          <p className="font-semibold text-gray-900 text-sm sm:text-base">{customer.name}</p>
                           {customer.email && (
-                            <p className="text-xs text-gray-500 mt-1">{customer.email}</p>
+                            <p className="text-xs text-gray-500 mt-1 hidden sm:block">{customer.email}</p>
                           )}
-                          {getPriorityBadge(customer.priority)}
+                          <div className="flex justify-center sm:justify-start mt-1">
+                            {getPriorityBadge(customer.priority)}
+                          </div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-4 px-6">
-                        <p className="text-gray-900 font-medium">{customer.property}</p>
-                        {customer.propertyDetails?.rent && (
-                          <p className="text-xs text-gray-500 mt-1">${customer.propertyDetails.rent.toLocaleString()}/mo</p>
-                        )}
+                      <TableCell className="py-4 px-3 sm:px-6">
+                        <div className="text-center sm:text-left">
+                          <p className="text-gray-900 font-medium text-xs sm:text-sm">{customer.property}</p>
+                          {customer.propertyDetails?.rent && (
+                            <p className="text-xs text-gray-500 mt-1">${customer.propertyDetails.rent.toLocaleString()}/mo</p>
+                          )}
+                        </div>
                       </TableCell>
-                      <TableCell className="py-4 px-6">
-                        <p className="text-sm text-gray-700">
-                          {formatDate(customer.lastInteractionDate)}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatRelativeTime(customer.lastInteractionDate)}
-                        </p>
+                      <TableCell className="py-4 px-3 sm:px-6">
+                        <div className="text-center sm:text-left">
+                          <p className="text-sm text-gray-700">
+                            {formatDate(customer.lastInteractionDate)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formatRelativeTime(customer.lastInteractionDate)}
+                          </p>
+                        </div>
                       </TableCell>
-                      <TableCell className="py-4 px-6">
-                        <p className="text-sm text-gray-700 max-w-md">
+                      <TableCell className="py-4 px-3 sm:px-6 hidden md:table-cell">
+                        <p className="text-sm text-gray-700 max-w-md text-center sm:text-left">
                           {customer.dropOffReason}
                         </p>
                       </TableCell>
-                      <TableCell className="py-4 px-6">
-                        {getStatusBadge(customer.status)}
+                      <TableCell className="py-4 px-3 sm:px-6">
+                        <div className="flex justify-center">
+                          {getStatusBadge(customer.status)}
+                        </div>
                       </TableCell>
-                      <TableCell className="py-4 px-6">
-                        {customer.engagementScore !== undefined ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full ${
-                                  customer.engagementScore >= 70 ? "bg-green-500" :
-                                  customer.engagementScore >= 50 ? "bg-amber-500" :
-                                  "bg-red-500"
-                                }`}
-                                style={{ width: `${customer.engagementScore}%` }}
-                              />
+                      <TableCell className="py-4 px-3 sm:px-6 hidden lg:table-cell">
+                        <div className="flex justify-center">
+                          {customer.engagementScore !== undefined ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full ${
+                                    customer.engagementScore >= 70 ? "bg-green-500" :
+                                    customer.engagementScore >= 50 ? "bg-amber-500" :
+                                    "bg-red-500"
+                                  }`}
+                                  style={{ width: `${customer.engagementScore}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">{customer.engagementScore}%</span>
                             </div>
-                            <span className="text-sm font-medium text-gray-700">{customer.engagementScore}%</span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-gray-400">N/A</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="py-4 px-6">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReEngage(customer);
-                          }}
-                          className="rounded-lg"
-                        >
-                          {customer.status === "pending_outreach" ? (
-                            <>
-                              <MessageCircle className="h-4 w-4 mr-2" />
-                              Re-Engage
-                            </>
                           ) : (
-                            <>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View
-                            </>
+                            <span className="text-sm text-gray-400">N/A</span>
                           )}
-                        </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4 px-3 sm:px-6">
+                        <div className="flex justify-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReEngage(customer);
+                            }}
+                            className="rounded-lg text-xs sm:text-sm"
+                          >
+                            {customer.status === "pending_outreach" ? (
+                              <>
+                                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                <span className="hidden sm:inline">Re-Engage</span>
+                                <span className="sm:hidden">Engage</span>
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                View
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                     </motion.tr>
                   ))}

@@ -21,6 +21,12 @@ const CallBotSection = () => {
 
   const demos = [
     {
+      title: "Quick Leasing Call: Availability & Tour Scheduling",
+      duration: "0:40",
+      description: "AI efficiently checks property availability, answers questions, and schedules a tour in a quick conversation.",
+      videoFile: "/demo-videos/quick-leasing-call.mp4"
+    },
+    {
       title: "Book a visit",
       duration: "2:34",
       description: "AI handles a customer asking about property details and scheduling a viewing.",

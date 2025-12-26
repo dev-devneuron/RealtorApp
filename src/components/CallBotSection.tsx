@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -18,13 +18,14 @@ import {
 const CallBotSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentDemo, setCurrentDemo] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const demos = [
     {
       title: "Quick Leasing Call: Availability & Tour Scheduling",
       duration: "0:40",
       description: "AI efficiently checks property availability, answers questions, and schedules a tour in a quick conversation.",
-      videoFile: "/demo-videos/quick-leasing-call.mp4"
+      videoFile: "/demo-videos/Quick Leasing Call Availability & Tour Scheduling.mp4"
     },
     {
       title: "Book a visit",
@@ -69,6 +70,63 @@ const CallBotSection = () => {
     }
   ];
 
+  // Handle demo change - reset audio
+  useEffect(() => {
+    setIsPlaying(false);
+    // Use setTimeout to ensure the audio element is ready after key change
+    const timer = setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.load();
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [currentDemo]);
+
+  // Handle play/pause state
+  useEffect(() => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      // Check if audio is ready to play
+      if (audioRef.current.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Error playing audio:", error);
+            console.error("Audio source:", audioRef.current?.src);
+            console.error("Ready state:", audioRef.current?.readyState);
+            setIsPlaying(false);
+          });
+        }
+      } else {
+        // Wait for audio to be ready
+        const handleCanPlay = () => {
+          if (audioRef.current && isPlaying) {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                console.error("Error playing audio after load:", error);
+                setIsPlaying(false);
+              });
+            }
+          }
+        };
+        audioRef.current.addEventListener('canplay', handleCanPlay);
+        audioRef.current.load(); // Force reload if needed
+        
+        return () => {
+          if (audioRef.current) {
+            audioRef.current.removeEventListener('canplay', handleCanPlay);
+          }
+        };
+      }
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying]);
+
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
   };
@@ -109,22 +167,41 @@ const CallBotSection = () => {
                     
                     {/* Audio Player (hidden) */}
                     <audio
+                      ref={audioRef}
                       key={demos[currentDemo].videoFile}
-                      ref={(audio) => {
-                        if (audio) {
-                          if (isPlaying) {
-                            audio.play();
-                          } else {
-                            audio.pause();
-                          }
-                        }
+                      onPlay={() => {
+                        console.log("Audio playing:", demos[currentDemo].videoFile);
+                        setIsPlaying(true);
                       }}
-                      onPlay={() => setIsPlaying(true)}
                       onPause={() => setIsPlaying(false)}
                       onEnded={() => setIsPlaying(false)}
+                      onError={(e) => {
+                        const audio = e.currentTarget;
+                        console.error("Audio error:", {
+                          error: audio.error,
+                          code: audio.error?.code,
+                          message: audio.error?.message,
+                          src: audio.src,
+                          networkState: audio.networkState,
+                          readyState: audio.readyState
+                        });
+                        setIsPlaying(false);
+                      }}
+                      onLoadedData={() => {
+                        console.log("Audio loaded successfully:", demos[currentDemo].videoFile);
+                      }}
+                      onLoadStart={() => {
+                        console.log("Audio loading started:", demos[currentDemo].videoFile);
+                      }}
+                      onCanPlay={() => {
+                        console.log("Audio can play:", demos[currentDemo].videoFile);
+                      }}
+                      preload="auto"
                       className="hidden"
                     >
                       <source src={demos[currentDemo].videoFile} type="audio/mp4" />
+                      <source src={demos[currentDemo].videoFile} type="audio/mpeg" />
+                      Your browser does not support the audio element.
                     </audio>
 
                     {/* Audio Visualizer */}

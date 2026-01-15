@@ -179,7 +179,7 @@ export const CandidatesTab = () => {
 
   // Helper to check if candidate can be called (eligible OR bypassed for testing)
   const canCall = (candidate: Candidate) => {
-    return candidate.eligible || candidate.eligibility_checks?.bypassed_for_testing === true;
+    return candidate.eligible || candidate.bypassed_for_testing === true;
   };
 
   const eligibleCount = filteredCandidates.filter((c) => canCall(c)).length;
@@ -192,7 +192,7 @@ export const CandidatesTab = () => {
           <h3 className="text-lg font-bold text-gray-900">Follow-up Candidates</h3>
           <p className="text-sm text-gray-600">
             {eligibleCount} callable out of {filteredCandidates.length} candidates
-            {filteredCandidates.some(c => c.eligibility_checks?.bypassed_for_testing) && (
+            {filteredCandidates.some(c => c.bypassed_for_testing) && (
               <span className="ml-2 text-yellow-600">
                 (Testing mode active)
               </span>
@@ -358,7 +358,7 @@ export const CandidatesTab = () => {
                                   Not Eligible
                                 </Badge>
                               )}
-                              {candidate.eligibility_checks?.bypassed_for_testing && (
+                              {candidate.bypassed_for_testing && (
                                 <Badge className="bg-yellow-500 text-white text-xs">
                                   <AlertTriangle className="h-3 w-3 mr-1" />
                                   Testing Mode
@@ -382,7 +382,7 @@ export const CandidatesTab = () => {
                           <TableRow>
                             <TableCell colSpan={9} className="bg-gray-50 p-4">
                               <div className="space-y-4">
-                                {candidate.eligibility_checks?.bypassed_for_testing && (
+                                {candidate.bypassed_for_testing && (
                                   <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">
                                     <div className="flex items-center gap-2 mb-2">
                                       <AlertTriangle className="h-4 w-4 text-yellow-600" />
@@ -405,9 +405,7 @@ export const CandidatesTab = () => {
                                   <h4 className="font-semibold text-sm mb-2">Eligibility Details</h4>
                                   <p className="text-sm text-gray-600 mb-3">{candidate.eligibility_reason}</p>
                                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                    {Object.entries(candidate.eligibility_checks)
-                                      .filter(([key]) => key !== 'bypassed_for_testing')
-                                      .map(([key, value]) => (
+                                    {Object.entries(candidate.eligibility_checks).map(([key, value]) => (
                                       <div
                                         key={key}
                                         className={`flex items-center gap-2 p-2 rounded ${
@@ -472,7 +470,7 @@ export const CandidatesTab = () => {
           </DialogHeader>
           {selectedCandidate && (
             <div className="space-y-3 py-4">
-              {selectedCandidate.eligibility_checks?.bypassed_for_testing && (
+              {selectedCandidate.bypassed_for_testing && (
                 <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
@@ -585,7 +583,7 @@ export const CandidatesTab = () => {
               />
               <p className="text-xs text-gray-500 mt-1">
                 {eligibleCount} callable candidates available
-                {filteredCandidates.some(c => c.eligibility_checks?.bypassed_for_testing) && (
+                {filteredCandidates.some(c => c.bypassed_for_testing) && (
                   <span className="ml-1 text-yellow-600">(includes testing mode bypasses)</span>
                 )}
               </p>

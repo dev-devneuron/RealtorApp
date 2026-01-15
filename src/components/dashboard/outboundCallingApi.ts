@@ -30,6 +30,7 @@ export interface Candidate {
     cooldown_passed?: boolean;
     under_attempt_limit?: boolean;
     retry_allowed?: boolean;
+    bypassed_for_testing?: boolean; // Testing mode flag
   };
 }
 

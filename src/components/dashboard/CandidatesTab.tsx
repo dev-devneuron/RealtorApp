@@ -177,7 +177,12 @@ export const CandidatesTab = () => {
     );
   });
 
-  const eligibleCount = filteredCandidates.filter((c) => c.eligible).length;
+  // Helper to check if candidate can be called (eligible OR bypassed for testing)
+  const canCall = (candidate: Candidate) => {
+    return candidate.eligible || candidate.eligibility_checks?.bypassed_for_testing === true;
+  };
+
+  const eligibleCount = filteredCandidates.filter((c) => canCall(c)).length;
 
   return (
     <div className="p-6 space-y-6">
@@ -186,7 +191,12 @@ export const CandidatesTab = () => {
         <div>
           <h3 className="text-lg font-bold text-gray-900">Follow-up Candidates</h3>
           <p className="text-sm text-gray-600">
-            {eligibleCount} eligible out of {filteredCandidates.length} candidates
+            {eligibleCount} callable out of {filteredCandidates.length} candidates
+            {filteredCandidates.some(c => c.eligibility_checks?.bypassed_for_testing) && (
+              <span className="ml-2 text-yellow-600">
+                (Testing mode active)
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -263,7 +273,7 @@ export const CandidatesTab = () => {
                       <>
                         <TableRow
                           key={candidate.contact_id}
-                          className={candidate.eligible ? "bg-green-50/50" : "bg-red-50/30"}
+                          className={canCall(candidate) ? "bg-green-50/50" : "bg-red-50/30"}
                         >
                           <TableCell>
                             <Button
@@ -336,23 +346,31 @@ export const CandidatesTab = () => {
                             {getOutcomeBadge(candidate.last_call_outcome)}
                           </TableCell>
                           <TableCell>
-                            {candidate.eligible ? (
-                              <Badge className="bg-green-500">
-                                <CheckCircle2 className="h-3 w-3 mr-1" />
-                                Eligible
-                              </Badge>
-                            ) : (
-                              <Badge variant="destructive">
-                                <XCircle className="h-3 w-3 mr-1" />
-                                Not Eligible
-                              </Badge>
-                            )}
+                            <div className="flex flex-col gap-1">
+                              {candidate.eligible ? (
+                                <Badge className="bg-green-500">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Eligible
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive">
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Not Eligible
+                                </Badge>
+                              )}
+                              {candidate.eligibility_checks?.bypassed_for_testing && (
+                                <Badge className="bg-yellow-500 text-white text-xs">
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  Testing Mode
+                                </Badge>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             <Button
                               size="sm"
                               onClick={() => handleTriggerCall(candidate)}
-                              disabled={!candidate.eligible || calling}
+                              disabled={!canCall(candidate) || calling}
                               className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
                             >
                               <Phone className="h-4 w-4 mr-1" />
@@ -364,11 +382,32 @@ export const CandidatesTab = () => {
                           <TableRow>
                             <TableCell colSpan={9} className="bg-gray-50 p-4">
                               <div className="space-y-4">
+                                {candidate.eligibility_checks?.bypassed_for_testing && (
+                                  <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                      <h4 className="font-semibold text-sm text-yellow-900">
+                                        ⚠️ Testing Mode: Eligibility checks bypassed
+                                      </h4>
+                                    </div>
+                                    <p className="text-xs text-yellow-800 mb-2">
+                                      The backend has bypassed eligibility checks for testing purposes.
+                                    </p>
+                                    {candidate.eligibility_reason && (
+                                      <div className="mt-2 pt-2 border-t border-yellow-300">
+                                        <p className="text-xs font-medium text-yellow-900 mb-1">Original Eligibility Reason:</p>
+                                        <p className="text-xs text-yellow-800">{candidate.eligibility_reason}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                                 <div>
                                   <h4 className="font-semibold text-sm mb-2">Eligibility Details</h4>
                                   <p className="text-sm text-gray-600 mb-3">{candidate.eligibility_reason}</p>
                                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                    {Object.entries(candidate.eligibility_checks).map(([key, value]) => (
+                                    {Object.entries(candidate.eligibility_checks)
+                                      .filter(([key]) => key !== 'bypassed_for_testing')
+                                      .map(([key, value]) => (
                                       <div
                                         key={key}
                                         className={`flex items-center gap-2 p-2 rounded ${
@@ -433,6 +472,25 @@ export const CandidatesTab = () => {
           </DialogHeader>
           {selectedCandidate && (
             <div className="space-y-3 py-4">
+              {selectedCandidate.eligibility_checks?.bypassed_for_testing && (
+                <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <h4 className="font-semibold text-sm text-yellow-900">
+                      ⚠️ Testing Mode: Eligibility checks bypassed
+                    </h4>
+                  </div>
+                  <p className="text-xs text-yellow-800 mb-2">
+                    The backend has bypassed eligibility checks for testing purposes. This call will proceed even though eligibility checks failed.
+                  </p>
+                  {selectedCandidate.eligibility_reason && (
+                    <div className="mt-2 pt-2 border-t border-yellow-300">
+                      <p className="text-xs font-medium text-yellow-900 mb-1">Original Eligibility Reason:</p>
+                      <p className="text-xs text-yellow-800">{selectedCandidate.eligibility_reason}</p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <h4 className="font-semibold text-sm mb-2">Eligibility Checks:</h4>
                 <div className="space-y-1 text-xs">
@@ -526,7 +584,10 @@ export const CandidatesTab = () => {
                 className="mt-1"
               />
               <p className="text-xs text-gray-500 mt-1">
-                {eligibleCount} eligible candidates available
+                {eligibleCount} callable candidates available
+                {filteredCandidates.some(c => c.eligibility_checks?.bypassed_for_testing) && (
+                  <span className="ml-1 text-yellow-600">(includes testing mode bypasses)</span>
+                )}
               </p>
             </div>
             {batchResults && (

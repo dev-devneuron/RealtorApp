@@ -278,6 +278,44 @@ export const CandidatesTab = () => {
     };
   };
 
+  // Helper function to get candidate name with fallback
+  const getCandidateName = (candidate: Candidate): string => {
+    return candidate.name || candidate.extracted_name || "Unknown";
+  };
+
+  // Helper function to get candidate email with fallback
+  const getCandidateEmail = (candidate: Candidate): string => {
+    return candidate.email || "No email";
+  };
+
+  // Helper function to format last called time with timezone conversion
+  const formatLastCalledTime = (candidate: Candidate): string => {
+    // Use last_called_at (preferred) or fallback to last_call_at
+    const timeString = candidate.last_called_at || candidate.last_call_at;
+    
+    if (!timeString) {
+      return "Never called";
+    }
+    
+    try {
+      // Parse ISO 8601 UTC string
+      const date = new Date(timeString);
+      
+      // Format for display (automatically converts to user's timezone)
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return "Invalid date";
+    }
+  };
+
   const filteredCandidates = candidates.filter((c) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -469,18 +507,14 @@ export const CandidatesTab = () => {
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
-                              {candidate.name && (
-                                <div className="flex items-center gap-1 text-sm font-medium">
-                                  <User className="h-3 w-3" />
-                                  {candidate.name}
-                                </div>
-                              )}
-                              {candidate.email && (
-                                <div className="flex items-center gap-1 text-xs text-gray-500">
-                                  <Mail className="h-3 w-3" />
-                                  {candidate.email}
-                                </div>
-                              )}
+                              <div className="flex items-center gap-1 text-sm font-medium">
+                                <User className="h-3 w-3" />
+                                {getCandidateName(candidate)}
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <Mail className="h-3 w-3" />
+                                {getCandidateEmail(candidate)}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -497,14 +531,10 @@ export const CandidatesTab = () => {
                             <Badge variant="outline">{candidate.call_attempt_count}</Badge>
                           </TableCell>
                           <TableCell>
-                            {candidate.last_called_at ? (
-                              <div className="flex items-center gap-1 text-xs text-gray-600">
-                                <Clock className="h-3 w-3" />
-                                {new Date(candidate.last_called_at).toLocaleDateString()}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">Never</span>
-                            )}
+                            <div className="flex items-center gap-1 text-xs text-gray-600">
+                              <Clock className="h-3 w-3" />
+                              {formatLastCalledTime(candidate)}
+                            </div>
                           </TableCell>
                           <TableCell>
                             {getOutcomeBadge(candidate.last_call_outcome)}

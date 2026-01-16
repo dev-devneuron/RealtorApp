@@ -21,6 +21,8 @@ export interface Candidate {
   last_booking_at?: string;
   last_call_id?: string;
   last_call_at?: string;
+  extracted_name?: string; // AI-extracted name from transcript
+  extracted_region?: string; // AI-extracted region from transcript
   eligible: boolean;
   eligibility_reason: string;
   eligibility_checks: {

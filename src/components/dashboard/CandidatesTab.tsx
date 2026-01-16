@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
@@ -62,10 +63,12 @@ export const CandidatesTab = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [selectedCandidates, setSelectedCandidates] = useState<Set<number>>(new Set());
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [showCallDialog, setShowCallDialog] = useState(false);
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [calling, setCalling] = useState(false);
+  const [callingSelected, setCallingSelected] = useState(false);
   const [batchSize, setBatchSize] = useState(10);
   const [processingBatch, setProcessingBatch] = useState(false);
   const [batchResults, setBatchResults] = useState<ProcessQueueResponse | null>(null);
@@ -127,14 +130,122 @@ export const CandidatesTab = () => {
   const handleProcessBatch = async () => {
     setProcessingBatch(true);
     try {
-      const results = await processQueue(batchSize);
-      setBatchResults(results);
-      toast.success(`Processed batch: ${results.called} called, ${results.skipped} skipped`);
-      await loadCandidates();
+      // If candidates are selected, call them instead of using processQueue
+      if (selectedCandidates.size > 0) {
+        const selected = filteredCandidates.filter(c => 
+          selectedCandidates.has(c.contact_id) && canCall(c)
+        );
+        
+        if (selected.length === 0) {
+          toast.error("No callable candidates selected");
+          setProcessingBatch(false);
+          return;
+        }
+
+        let called = 0;
+        let skipped = 0;
+        let errors = 0;
+
+        for (const candidate of selected) {
+          try {
+            await triggerCall(candidate.phone_number);
+            called++;
+            // Small delay between calls to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (error: any) {
+            errors++;
+            console.error(`Failed to call ${candidate.phone_number}:`, error);
+          }
+        }
+
+        toast.success(`Processed selected: ${called} called, ${skipped} skipped, ${errors} errors`);
+        setSelectedCandidates(new Set());
+        await loadCandidates();
+      } else {
+        // Use existing batch queue processing
+        const results = await processQueue(batchSize);
+        setBatchResults(results);
+        toast.success(`Processed batch: ${results.called} called, ${results.skipped} skipped`);
+        await loadCandidates();
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to process batch");
     } finally {
       setProcessingBatch(false);
+    }
+  };
+
+  const handleCallSelected = async () => {
+    const selected = filteredCandidates.filter(c => 
+      selectedCandidates.has(c.contact_id) && canCall(c)
+    );
+
+    if (selected.length === 0) {
+      toast.error("No callable candidates selected");
+      return;
+    }
+
+    setCallingSelected(true);
+    let called = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    try {
+      for (const candidate of selected) {
+        try {
+          await triggerCall(candidate.phone_number);
+          called++;
+          // Small delay between calls to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error: any) {
+          errors++;
+          console.error(`Failed to call ${candidate.phone_number}:`, error);
+        }
+      }
+
+      if (called > 0 && errors === 0) {
+        toast.success(`Successfully initiated ${called} call(s)`);
+      } else if (called > 0 && errors > 0) {
+        toast.warning(`Initiated ${called} call(s), ${errors} failed`);
+      } else if (errors > 0) {
+        toast.error(`Failed to initiate ${errors} call(s)`);
+      }
+
+      setSelectedCandidates(new Set());
+      await loadCandidates();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to call selected candidates");
+    } finally {
+      setCallingSelected(false);
+    }
+  };
+
+  const toggleCandidateSelection = (contactId: number) => {
+    const newSelected = new Set(selectedCandidates);
+    if (newSelected.has(contactId)) {
+      newSelected.delete(contactId);
+    } else {
+      newSelected.add(contactId);
+    }
+    setSelectedCandidates(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    const callableCandidates = filteredCandidates.filter(c => canCall(c));
+    if (callableCandidates.length === 0) return;
+
+    const allSelected = callableCandidates.every(c => selectedCandidates.has(c.contact_id));
+    
+    if (allSelected) {
+      // Deselect all
+      const newSelected = new Set(selectedCandidates);
+      callableCandidates.forEach(c => newSelected.delete(c.contact_id));
+      setSelectedCandidates(newSelected);
+    } else {
+      // Select all callable
+      const newSelected = new Set(selectedCandidates);
+      callableCandidates.forEach(c => newSelected.add(c.contact_id));
+      setSelectedCandidates(newSelected);
     }
   };
 
@@ -197,9 +308,14 @@ export const CandidatesTab = () => {
                 (Testing mode active)
               </span>
             )}
+            {selectedCandidates.size > 0 && (
+              <span className="ml-2 text-amber-600 font-medium">
+                • {selectedCandidates.size} selected
+              </span>
+            )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -209,11 +325,42 @@ export const CandidatesTab = () => {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+          {selectedCandidates.size > 0 && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCandidates(new Set())}
+                disabled={callingSelected || processingBatch}
+              >
+                Clear Selection
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleCallSelected}
+                disabled={callingSelected || processingBatch}
+                className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+              >
+                {callingSelected ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Calling...
+                  </>
+                ) : (
+                  <>
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call Selected ({selectedCandidates.size})
+                  </>
+                )}
+              </Button>
+            </>
+          )}
           <Button
             variant="default"
             size="sm"
             onClick={() => setShowBatchDialog(true)}
-            disabled={processingBatch || eligibleCount === 0}
+            disabled={processingBatch || callingSelected || eligibleCount === 0}
             className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
           >
             <Play className="h-4 w-4 mr-2" />
@@ -240,6 +387,16 @@ export const CandidatesTab = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={
+                        filteredCandidates.filter(c => canCall(c)).length > 0 &&
+                        filteredCandidates.filter(c => canCall(c)).every(c => selectedCandidates.has(c.contact_id))
+                      }
+                      onCheckedChange={toggleSelectAll}
+                      disabled={filteredCandidates.filter(c => canCall(c)).length === 0}
+                    />
+                  </TableHead>
                   <TableHead className="w-12"></TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Name / Email</TableHead>
@@ -254,13 +411,13 @@ export const CandidatesTab = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
+                    <TableCell colSpan={10} className="text-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-amber-600" />
                     </TableCell>
                   </TableRow>
                 ) : filteredCandidates.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                       No candidates found
                     </TableCell>
                   </TableRow>
@@ -275,6 +432,13 @@ export const CandidatesTab = () => {
                           key={candidate.contact_id}
                           className={canCall(candidate) ? "bg-green-50/50" : "bg-red-50/30"}
                         >
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedCandidates.has(candidate.contact_id)}
+                              onCheckedChange={() => toggleCandidateSelection(candidate.contact_id)}
+                              disabled={!canCall(candidate)}
+                            />
+                          </TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"
@@ -380,7 +544,7 @@ export const CandidatesTab = () => {
                         </TableRow>
                         {isExpanded && (
                           <TableRow>
-                            <TableCell colSpan={9} className="bg-gray-50 p-4">
+                            <TableCell colSpan={10} className="bg-gray-50 p-4">
                               <div className="space-y-4">
                                 {candidate.bypassed_for_testing && (
                                   <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">
@@ -567,27 +731,55 @@ export const CandidatesTab = () => {
           <DialogHeader>
             <DialogTitle>Process Batch</DialogTitle>
             <DialogDescription>
-              Process a batch of eligible candidates automatically.
+              {selectedCandidates.size > 0
+                ? `Call ${selectedCandidates.size} selected candidate(s)`
+                : "Process a batch of eligible candidates automatically."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div>
-              <label className="text-sm font-medium">Batch Size</label>
-              <Input
-                type="number"
-                min="1"
-                max="50"
-                value={batchSize}
-                onChange={(e) => setBatchSize(parseInt(e.target.value) || 10)}
-                className="mt-1"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {eligibleCount} callable candidates available
-                {filteredCandidates.some(c => c.bypassed_for_testing) && (
-                  <span className="ml-1 text-yellow-600">(includes testing mode bypasses)</span>
-                )}
-              </p>
-            </div>
+            {selectedCandidates.size > 0 ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Phone className="h-4 w-4 text-amber-600" />
+                  <h4 className="font-semibold text-sm">Selected Candidates</h4>
+                </div>
+                <p className="text-xs text-gray-700">
+                  {selectedCandidates.size} candidate(s) selected. They will be called in sequence.
+                </p>
+                <div className="mt-2 pt-2 border-t border-amber-300">
+                  <p className="text-xs text-gray-600">
+                    Selected: {filteredCandidates.filter(c => selectedCandidates.has(c.contact_id) && canCall(c)).length} callable
+                    {filteredCandidates.filter(c => selectedCandidates.has(c.contact_id) && !canCall(c)).length > 0 && (
+                      <span className="text-red-600">
+                        {" "}
+                        ({filteredCandidates.filter(c => selectedCandidates.has(c.contact_id) && !canCall(c)).length} not callable will be skipped)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="text-sm font-medium">Batch Size</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(parseInt(e.target.value) || 10)}
+                  className="mt-1"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {eligibleCount} callable candidates available
+                  {filteredCandidates.some(c => c.bypassed_for_testing) && (
+                    <span className="ml-1 text-yellow-600">(includes testing mode bypasses)</span>
+                  )}
+                </p>
+                <p className="text-xs text-amber-600 mt-2">
+                  💡 Tip: Select specific candidates using checkboxes to call only those.
+                </p>
+              </div>
+            )}
             {batchResults && (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                 <h4 className="font-semibold text-sm mb-2">Last Batch Results:</h4>
@@ -605,7 +797,7 @@ export const CandidatesTab = () => {
             </Button>
             <Button
               onClick={handleProcessBatch}
-              disabled={processingBatch || eligibleCount === 0}
+              disabled={processingBatch || (selectedCandidates.size === 0 && eligibleCount === 0)}
               className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
             >
               {processingBatch ? (
@@ -616,7 +808,7 @@ export const CandidatesTab = () => {
               ) : (
                 <>
                   <Play className="h-4 w-4 mr-2" />
-                  Run Batch
+                  {selectedCandidates.size > 0 ? `Call Selected (${selectedCandidates.size})` : "Run Batch"}
                 </>
               )}
             </Button>

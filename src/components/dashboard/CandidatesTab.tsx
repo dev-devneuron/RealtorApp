@@ -63,11 +63,11 @@ export const CandidatesTab = () => {
 
   // Helper Functions
   const getDisplayName = (candidate: Candidate): string => {
-    return candidate.name || candidate.inferred_name || candidate.stored_name || "Unknown";
+    return candidate.name || candidate.inferred_name || candidate.stored_name || "N/A";
   };
 
   const getDisplayEmail = (candidate: Candidate): string => {
-    return candidate.email || candidate.extracted_email || candidate.stored_email || "No email";
+    return candidate.email || candidate.extracted_email || candidate.stored_email || "N/A";
   };
 
   const isNameInferred = (candidate: Candidate): boolean => {
@@ -289,7 +289,7 @@ export const CandidatesTab = () => {
           }`}
           onClick={() => handleViewDetails(candidate)}
         >
-          <CardContent className="p-0 flex flex-col h-full min-h-[280px]">
+          <CardContent className="p-0 flex flex-col h-full" style={{ minHeight: '280px' }}>
             {/* Header */}
             <div className="p-4 border-b bg-white/50">
               <div className="flex items-start justify-between gap-3">
@@ -350,8 +350,16 @@ export const CandidatesTab = () => {
                 )}
               </div>
 
+              {/* Property - Show on Card */}
+              <div className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+                <div className="flex-1 text-sm text-gray-700 truncate" title={candidate.inquiry_property || undefined}>
+                  {candidate.inquiry_property || "N/A"}
+                </div>
+              </div>
+
               {/* Inquiry Purpose Badge - Quick View */}
-              {candidate.inquiry_purpose && (
+              {candidate.inquiry_purpose ? (
                 <div>
                   <Badge 
                     className={`${getPurposeBadgeClass(candidate.inquiry_purpose)} text-white text-xs px-2 py-1`}
@@ -359,13 +367,15 @@ export const CandidatesTab = () => {
                     {candidate.inquiry_purpose}
                   </Badge>
                 </div>
+              ) : (
+                <div className="h-5" /> // Spacer to maintain height
               )}
 
               {/* Quick Stats */}
               <div className="flex items-center gap-3 text-xs text-gray-600 pt-1">
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  <span className="truncate">{formatLastCalled(candidate).split(',')[0]}</span>
+                  <span className="truncate">{formatLastCalled(candidate).split(',')[0] || "N/A"}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Phone className="h-3 w-3" />

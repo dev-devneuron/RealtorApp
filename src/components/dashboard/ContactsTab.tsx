@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +79,8 @@ export const ContactsTab = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showOptOutDialog, setShowOptOutDialog] = useState(false);
   const [showConsentDialog, setShowConsentDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [detailContact, setDetailContact] = useState<Contact | null>(null);
   const [consentSource, setConsentSource] = useState("manual");
   const [processing, setProcessing] = useState(false);
 
@@ -204,25 +206,35 @@ export const ContactsTab = () => {
   const totalPages = Math.ceil(total / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
-  // Contact Card Component
+  const handleViewDetails = (contact: Contact, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setDetailContact(contact);
+    setShowDetailDialog(true);
+  };
+
+  // Contact Card Component - Simplified
   const ContactCard = ({ contact }: { contact: Contact }) => {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
+        className="h-full"
       >
-        <Card className={`overflow-hidden transition-all hover:shadow-lg ${
-          contact.opted_out ? "border-red-200 bg-red-50/30" : "border-gray-200"
-        }`}>
-          <CardContent className="p-0">
+        <Card 
+          className={`overflow-hidden transition-all hover:shadow-lg cursor-pointer h-full flex flex-col ${
+            contact.opted_out ? "border-red-200 bg-red-50/30" : "border-gray-200"
+          }`}
+          onClick={() => handleViewDetails(contact)}
+        >
+          <CardContent className="p-0 flex flex-col h-full" style={{ minHeight: '280px' }}>
             {/* Header */}
             <div className="p-4 border-b bg-white/50">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-gray-900 truncate">
-                      {contact.name || "Unknown"}
+                      {contact.name || "N/A"}
                     </h3>
                     {contact.opted_out && (
                       <Badge variant="destructive" className="text-xs">
@@ -234,14 +246,6 @@ export const ContactsTab = () => {
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Phone className="h-3.5 w-3.5" />
                     <span className="font-mono">{formatPhoneNumber(contact.phone_number)}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 w-5 p-0"
-                      onClick={() => handleCopy(contact.phone_number, "Phone")}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
@@ -260,163 +264,102 @@ export const ContactsTab = () => {
               </div>
             </div>
 
-            {/* Contact Info */}
-            <div className="p-4 space-y-3">
+            {/* Essential Info - Compact */}
+            <div className="p-4 space-y-2 flex-1">
               {/* Email */}
-              {contact.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                  <div 
-                    className="flex-1 text-sm text-blue-600 cursor-pointer hover:underline"
-                    onClick={() => handleCopy(contact.email!, "Email")}
-                  >
-                    {contact.email}
-                  </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+                <div 
+                  className={`flex-1 text-sm truncate ${
+                    contact.email 
+                      ? "text-blue-600 cursor-pointer hover:underline" 
+                      : "text-gray-400"
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (contact.email) handleCopy(contact.email, "Email");
+                  }}
+                >
+                  {contact.email || "N/A"}
                 </div>
-              )}
-
-              {/* Property Inquiry - NEW */}
-              {hasInquiryContext(contact) ? (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-3 space-y-2">
-                  <div className="flex items-center gap-2 pb-2 border-b border-blue-200">
-                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                    <span className="text-xs font-bold text-blue-900">Inquired Properties</span>
-                    <Badge variant="outline" className="text-xs border-blue-400 text-blue-700">
-                      AI Extracted
-                    </Badge>
-                  </div>
-                  
-                  {/* Property Address - Most Important */}
-                  {contact.inquiry_property && (
-                    <div className="bg-white rounded-lg p-2.5 border border-blue-200">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">Property</div>
-                          <div className="text-sm font-medium text-gray-900 leading-relaxed">
-                            {contact.inquiry_property}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Purpose Badge */}
-                  {contact.inquiry_purpose && (
-                    <div>
-                      <Badge 
-                        className={`${getPurposeBadgeClass(contact.inquiry_purpose)} text-white text-xs px-2 py-1`}
-                      >
-                        {contact.inquiry_purpose}
-                      </Badge>
-                    </div>
-                  )}
-                  
-                  {/* Region */}
-                  {contact.extracted_region && (
-                    <div className="flex items-center gap-2 text-xs text-gray-700">
-                      <Globe className="h-3.5 w-3.5 text-blue-600" />
-                      <span>{contact.extracted_region}</span>
-                    </div>
-                  )}
-                  
-                  {/* Summary - Expandable */}
-                  {contact.inquiry_summary && (
-                    <details className="text-xs">
-                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        <span>View inquiry summary</span>
-                      </summary>
-                      <div className="mt-2 p-2 bg-white rounded text-gray-700 whitespace-pre-wrap text-xs">
-                        {contact.inquiry_summary}
-                      </div>
-                    </details>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-center">
-                  <span className="text-xs text-gray-500">No property inquiries</span>
-                </div>
-              )}
-
-              {/* Consent Info */}
-              <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                {contact.consent_status && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">Consent Source:</span>
-                    <span className="font-medium">{contact.consent_source || "Unknown"}</span>
-                  </div>
-                )}
-                {contact.consent_timestamp && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">Consent Date:</span>
-                    <span className="font-medium">{formatDate(contact.consent_timestamp)}</span>
-                  </div>
-                )}
-                {contact.opt_out_timestamp && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-red-600">Opt-out Date:</span>
-                    <span className="font-medium text-red-700">{formatDate(contact.opt_out_timestamp)}</span>
-                  </div>
-                )}
-                {contact.opt_out_method && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-red-600">Opt-out Method:</span>
-                    <span className="font-medium text-red-700">{contact.opt_out_method}</span>
-                  </div>
-                )}
               </div>
 
-              {/* Call Info */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Phone className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span>{contact.call_attempt_count} {contact.call_attempt_count === 1 ? 'attempt' : 'attempts'}</span>
+              {/* Property - Show on Card */}
+              <div className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+                <div className="flex-1 text-sm text-gray-700 truncate" title={contact.inquiry_property || undefined}>
+                  {contact.inquiry_property || "N/A"}
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span className="truncate">{formatDate(contact.last_called_at)}</span>
+              </div>
+
+              {/* Purpose Badge - Quick View */}
+              {contact.inquiry_purpose && (
+                <div>
+                  <Badge 
+                    className={`${getPurposeBadgeClass(contact.inquiry_purpose)} text-white text-xs px-2 py-1`}
+                  >
+                    {contact.inquiry_purpose}
+                  </Badge>
                 </div>
-                {contact.last_call_outcome && (
-                  <div className="col-span-2">
-                    <Badge variant="outline" className="text-xs">
-                      Last: {contact.last_call_outcome}
-                    </Badge>
-                  </div>
-                )}
+              )}
+
+              {/* Quick Stats */}
+              <div className="flex items-center gap-3 text-xs text-gray-600 pt-1">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  <span className="truncate">{formatDate(contact.last_called_at).split(',')[0] || "N/A"}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Phone className="h-3 w-3" />
+                  <span>{contact.call_attempt_count}</span>
+                </div>
               </div>
             </div>
 
             {/* Actions */}
             <div className="p-4 border-t bg-gray-50/50">
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewDetails(contact);
+                  }}
+                  className="flex-1"
+                >
+                  <User className="h-3.5 w-3.5 mr-1.5" />
+                  Details
+                </Button>
                 {!contact.opted_out && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedContact(contact);
                       setShowConsentDialog(true);
                     }}
                     disabled={processing}
                     className="flex-1"
                   >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Record Consent
+                    <Shield className="h-3.5 w-3.5 mr-1.5" />
+                    Consent
                   </Button>
                 )}
                 <Button
                   size="sm"
                   variant={contact.opted_out ? "outline" : "destructive"}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedContact(contact);
                     setShowOptOutDialog(true);
                   }}
                   disabled={processing || contact.opted_out}
-                  className={contact.opted_out ? "flex-1" : "flex-1"}
+                  className="flex-1"
                 >
-                  <Ban className="h-4 w-4 mr-2" />
-                  {contact.opted_out ? "Already Opted Out" : "Opt Out"}
+                  <Ban className="h-3.5 w-3.5 mr-1.5" />
+                  {contact.opted_out ? "Opted Out" : "Opt Out"}
                 </Button>
               </div>
             </div>
@@ -507,7 +450,7 @@ export const ContactsTab = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
           <AnimatePresence>
             {filteredContacts.map((contact) => (
               <ContactCard key={contact.contact_id} contact={contact} />
@@ -647,6 +590,298 @@ export const ContactsTab = () => {
                 </>
               )}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contact Detail Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-amber-600" />
+              Contact Details
+            </DialogTitle>
+            <DialogDescription>
+              Complete information for {detailContact && formatPhoneNumber(detailContact.phone_number)}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {detailContact && (
+            <div className="space-y-6 py-4">
+              {/* Contact Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Contact Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <User className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Name</div>
+                        <div className="font-semibold text-gray-900">
+                          {detailContact.name || "N/A"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Phone</div>
+                        <div className="font-mono font-semibold text-gray-900 flex items-center gap-2">
+                          {formatPhoneNumber(detailContact.phone_number)}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => handleCopy(detailContact.phone_number, "Phone")}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Email</div>
+                        <div 
+                          className={`font-semibold flex items-center gap-2 ${
+                            detailContact.email 
+                              ? "text-blue-600 cursor-pointer hover:underline" 
+                              : "text-gray-400"
+                          }`}
+                          onClick={() => {
+                            if (detailContact.email) handleCopy(detailContact.email, "Email");
+                          }}
+                        >
+                          {detailContact.email || "N/A"}
+                        </div>
+                      </div>
+                    </div>
+                    {detailContact.timezone && (
+                      <div className="flex items-center gap-3">
+                        <Globe className="h-5 w-5 text-gray-500" />
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Timezone</div>
+                          <div className="font-semibold text-gray-900">{detailContact.timezone}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Property Inquiry Context - Full Details */}
+              {hasInquiryContext(detailContact) ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-blue-600" />
+                      Property Inquiry Context
+                      <Badge variant="outline" className="text-xs border-blue-400 text-blue-700">
+                        AI Extracted
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Inquiry Summary - MOST IMPORTANT */}
+                    {detailContact.inquiry_summary && (
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <MessageSquare className="h-5 w-5 text-blue-600" />
+                          <span className="text-sm font-bold text-blue-900 uppercase tracking-wide">Complete Summary</span>
+                        </div>
+                        <div className="text-base text-gray-900 leading-relaxed whitespace-pre-wrap font-medium mb-2">
+                          {detailContact.inquiry_summary}
+                        </div>
+                        <div className="pt-2 border-t border-blue-200">
+                          <span className="text-xs text-blue-600 italic">Combined: Purpose | Property | Email</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Property Address */}
+                    {detailContact.inquiry_property && (
+                      <div className="bg-white rounded-lg p-4 border-2 border-blue-200 shadow-sm">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                            <MapPin className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">Property Address</div>
+                            <div className="text-base font-semibold text-gray-900 leading-relaxed">
+                              {detailContact.inquiry_property}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Purpose */}
+                    {detailContact.inquiry_purpose && (
+                      <div>
+                        <div className="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">Purpose</div>
+                        <Badge 
+                          className={`${getPurposeBadgeClass(detailContact.inquiry_purpose)} text-white text-base px-4 py-2 font-semibold`}
+                        >
+                          {detailContact.inquiry_purpose}
+                        </Badge>
+                      </div>
+                    )}
+                    
+                    {/* Region */}
+                    {detailContact.extracted_region && (
+                      <div className="bg-white rounded-lg p-3 border border-blue-200">
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-5 w-5 text-blue-600" />
+                          <span className="text-sm font-semibold text-blue-700 uppercase tracking-wide mr-2">Region:</span>
+                          <span className="text-base font-semibold text-gray-900">{detailContact.extracted_region}</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Full Call Summary */}
+                    {detailContact.call_summary && detailContact.call_summary !== detailContact.inquiry_summary && (
+                      <div className="bg-white rounded-lg p-4 border border-blue-200">
+                        <details className="group">
+                          <summary className="cursor-pointer text-sm font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-2 list-none mb-3">
+                            <MessageSquare className="h-5 w-5" />
+                            <span>View Full Call Summary</span>
+                            <span className="ml-auto text-xs text-blue-600 group-open:hidden">▼</span>
+                            <span className="ml-auto text-xs text-blue-600 hidden group-open:inline">▲</span>
+                          </summary>
+                          <div className="pt-3 border-t border-blue-200">
+                            <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                              {detailContact.call_summary}
+                            </div>
+                          </div>
+                        </details>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Property Inquiry Context</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8 text-gray-500">
+                      No property inquiries available
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Call History */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Call History</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Last Called</div>
+                      <div className="font-semibold text-gray-900">{formatDate(detailContact.last_called_at) || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Call Attempts</div>
+                      <div className="font-semibold text-gray-900">{detailContact.call_attempt_count}</div>
+                    </div>
+                    {detailContact.last_call_outcome && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Last Outcome</div>
+                        <Badge variant="outline">
+                          {detailContact.last_call_outcome}
+                        </Badge>
+                      </div>
+                    )}
+                    {detailContact.last_booking_at && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Last Booking</div>
+                        <div className="font-semibold text-gray-900">{formatDate(detailContact.last_booking_at)}</div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Consent & Compliance */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Consent & Compliance</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      {detailContact.consent_status ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-600" />
+                      )}
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Consent Status</div>
+                        <div className="font-semibold text-gray-900">
+                          {detailContact.consent_status ? "Has Consent" : "No Consent"}
+                        </div>
+                        {detailContact.consent_source && (
+                          <div className="text-xs text-gray-500 mt-1">Source: {detailContact.consent_source}</div>
+                        )}
+                        {detailContact.consent_timestamp && (
+                          <div className="text-xs text-gray-500 mt-1">Date: {formatDate(detailContact.consent_timestamp)}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {detailContact.opted_out ? (
+                        <XCircle className="h-5 w-5 text-red-600" />
+                      ) : (
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      )}
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Opt-out Status</div>
+                        <div className="font-semibold text-gray-900">
+                          {detailContact.opted_out ? "Opted Out" : "Active"}
+                        </div>
+                        {detailContact.opt_out_method && (
+                          <div className="text-xs text-gray-500 mt-1">Method: {detailContact.opt_out_method}</div>
+                        )}
+                        {detailContact.opt_out_timestamp && (
+                          <div className="text-xs text-gray-500 mt-1">Date: {formatDate(detailContact.opt_out_timestamp)}</div>
+                        )}
+                      </div>
+                    </div>
+                    {detailContact.dnc_flag && (
+                      <div className="md:col-span-2">
+                        <div className="text-xs text-gray-500 mb-1">DNC Flag</div>
+                        <Badge variant="destructive">Do Not Call</Badge>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+              Close
+            </Button>
+            {detailContact && !detailContact.opted_out && (
+              <Button
+                onClick={() => {
+                  setShowDetailDialog(false);
+                  setSelectedContact(detailContact);
+                  setShowConsentDialog(true);
+                }}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Record Consent
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

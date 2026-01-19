@@ -77,6 +77,12 @@ export interface Contact {
   last_called_at?: string;
   last_call_outcome?: string;
   last_booking_at?: string;
+  // Inquiry context fields (from latest call)
+  inquiry_property?: string | null;
+  inquiry_purpose?: string | null;
+  inquiry_summary?: string | null;
+  extracted_region?: string | null;
+  call_summary?: string | null;
 }
 
 export interface Analytics {

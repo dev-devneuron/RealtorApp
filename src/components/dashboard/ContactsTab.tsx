@@ -53,6 +53,10 @@ import {
   Phone,
   Filter,
   AlertTriangle,
+  MapPin,
+  Globe,
+  Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -148,6 +152,33 @@ export const ContactsTab = () => {
     }
   };
 
+  // Helper functions for inquiry context
+  const hasInquiryContext = (contact: Contact): boolean => {
+    return !!(
+      contact.inquiry_property || 
+      contact.inquiry_purpose || 
+      contact.inquiry_summary ||
+      contact.extracted_region
+    );
+  };
+
+  const getPurposeBadgeClass = (purpose?: string | null): string => {
+    if (!purpose) return "bg-gray-500";
+    
+    const purposeKey = purpose.toLowerCase().replace(/\s+/g, '-');
+    const colorMap: Record<string, string> = {
+      'booking-a-tour': 'bg-green-500',
+      'pricing-inquiry': 'bg-blue-500',
+      'availability-inquiry': 'bg-yellow-500',
+      'maintenance-request': 'bg-orange-500',
+      'general-information': 'bg-gray-500',
+      'viewing-request': 'bg-purple-500',
+      'application-inquiry': 'bg-pink-500',
+    };
+    
+    return colorMap[purposeKey] || 'bg-gray-500';
+  };
+
   const filteredContacts = useMemo(() => {
     let filtered = contacts;
 
@@ -156,7 +187,8 @@ export const ContactsTab = () => {
       filtered = filtered.filter(c =>
         c.phone_number.toLowerCase().includes(query) ||
         c.name?.toLowerCase().includes(query) ||
-        c.email?.toLowerCase().includes(query)
+        c.email?.toLowerCase().includes(query) ||
+        c.inquiry_property?.toLowerCase().includes(query)
       );
     }
 
@@ -240,6 +272,70 @@ export const ContactsTab = () => {
                   >
                     {contact.email}
                   </div>
+                </div>
+              )}
+
+              {/* Property Inquiry - NEW */}
+              {hasInquiryContext(contact) ? (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-2 pb-2 border-b border-blue-200">
+                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                    <span className="text-xs font-bold text-blue-900">Inquired Properties</span>
+                    <Badge variant="outline" className="text-xs border-blue-400 text-blue-700">
+                      AI Extracted
+                    </Badge>
+                  </div>
+                  
+                  {/* Property Address - Most Important */}
+                  {contact.inquiry_property && (
+                    <div className="bg-white rounded-lg p-2.5 border border-blue-200">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">Property</div>
+                          <div className="text-sm font-medium text-gray-900 leading-relaxed">
+                            {contact.inquiry_property}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Purpose Badge */}
+                  {contact.inquiry_purpose && (
+                    <div>
+                      <Badge 
+                        className={`${getPurposeBadgeClass(contact.inquiry_purpose)} text-white text-xs px-2 py-1`}
+                      >
+                        {contact.inquiry_purpose}
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  {/* Region */}
+                  {contact.extracted_region && (
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
+                      <Globe className="h-3.5 w-3.5 text-blue-600" />
+                      <span>{contact.extracted_region}</span>
+                    </div>
+                  )}
+                  
+                  {/* Summary - Expandable */}
+                  {contact.inquiry_summary && (
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        <span>View inquiry summary</span>
+                      </summary>
+                      <div className="mt-2 p-2 bg-white rounded text-gray-700 whitespace-pre-wrap text-xs">
+                        {contact.inquiry_summary}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-center">
+                  <span className="text-xs text-gray-500">No property inquiries</span>
                 </div>
               )}
 
@@ -362,7 +458,7 @@ export const ContactsTab = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search by phone, name, or email..."
+                placeholder="Search by phone, name, email, or property..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"

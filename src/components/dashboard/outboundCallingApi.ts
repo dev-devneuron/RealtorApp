@@ -8,37 +8,56 @@
 import { API_BASE } from "./constants";
 
 export interface Candidate {
+  // Basic Contact Information
   contact_id: number;
   phone_number: string;
-  name?: string;
-  email?: string;
   timezone?: string;
+  
+  // Name Fields (Smart Fallback Logic)
+  name?: string | null;              // BEST AVAILABLE: stored_name OR inferred_name
+  inferred_name?: string | null;      // Name inferred from email/extraction
+  stored_name?: string | null;        // Name stored in contact table
+  
+  // Email Fields (Smart Fallback Logic)
+  email?: string | null;              // BEST AVAILABLE: stored_email OR extracted_email
+  extracted_email?: string | null;    // Email extracted from transcript
+  stored_email?: string | null;       // Email stored in contact table
+  
+  // Extracted Intelligence (NEW - CRITICAL)
+  extracted_region?: string | null;        // Region/state: "California", "Santa Clara, California"
+  inquiry_property?: string | null;        // Property address: "188 Alexandra Road, Santa Clara, California"
+  inquiry_purpose?: string | null;         // Purpose: "booking a tour", "availability inquiry", "pricing inquiry", etc.
+  inquiry_summary?: string | null;         // Structured: "Purpose: booking a tour | Property: 188 Alexandra Road... | Email: rehan@gmail.com"
+  call_summary?: string | null;            // Full call summary from transcript
+  
+  // Call History
+  last_call_id?: string | null;
+  last_call_at?: string | null;           // ISO 8601 format
+  last_called_at?: string | null;         // ISO 8601 format
+  last_call_outcome?: string | null;       // "connected", "no_answer", "voicemail", etc.
+  call_direction?: string;                 // "inbound" or "outbound"
+  call_transcript?: string | null;         // Full transcript if available
+  call_attempt_count: number;
+  last_booking_at?: string | null;        // ISO 8601 format
+  
+  // Consent & Compliance
   consent_status: boolean;
   opted_out: boolean;
-  call_attempt_count: number;
-  last_called_at?: string;
-  last_call_outcome?: string;
-  last_booking_at?: string;
-  last_call_id?: string;
-  last_call_at?: string;
-  extracted_name?: string; // AI-extracted name from transcript (legacy)
-  extracted_region?: string; // AI-extracted region from transcript
-  inferred_name?: string; // Name inferred from email (e.g., "rehan@gmail.com" → "Rehan")
-  extracted_email?: string; // Email extracted from transcript
-  inquiry_property?: string; // Property address/name from last call
-  inquiry_purpose?: string; // Purpose of last call (e.g., "booking a tour", "pricing inquiry")
-  inquiry_summary?: string; // Combined summary: "Purpose: X | Property: Y | Email: Z"
+  
+  // Eligibility Information
   eligible: boolean;
   eligibility_reason: string;
   eligibility_checks: {
-    has_consent?: boolean;
+    consent?: boolean;
     not_opted_out?: boolean;
+    not_internal_dnc?: boolean;
+    not_national_dnc?: boolean;
     within_time_window?: boolean;
+    below_attempt_limit?: boolean;
     cooldown_passed?: boolean;
-    under_attempt_limit?: boolean;
     retry_allowed?: boolean;
   };
-  bypassed_for_testing?: boolean; // Testing mode flag - at top level
+  bypassed_for_testing?: boolean;
 }
 
 export interface Contact {

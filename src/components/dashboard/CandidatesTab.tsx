@@ -1,18 +1,17 @@
 /**
- * Candidates Tab Component
+ * Candidates Tab Component - Modern Redesign
  * 
- * Displays eligible follow-up candidates with eligibility checks,
- * allows triggering calls, and shows call history.
+ * Sleek, easy-to-use interface for managing outbound calling candidates
+ * with AI-powered intelligence extraction and inquiry context.
  */
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -21,16 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   Phone,
   RefreshCw,
@@ -41,20 +30,21 @@ import {
   User,
   Mail,
   Globe,
-  ChevronDown,
-  ChevronUp,
   Copy,
   AlertTriangle,
   Play,
   Loader2,
+  MapPin,
+  MessageSquare,
+  Filter,
+  X,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   fetchCandidates,
-  processQueue,
   triggerCall,
   type Candidate,
-  type ProcessQueueResponse,
 } from "./outboundCallingApi";
 import { formatPhoneNumber } from "./utils";
 
@@ -62,17 +52,79 @@ export const CandidatesTab = () => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [selectedCandidates, setSelectedCandidates] = useState<Set<number>>(new Set());
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [showCallDialog, setShowCallDialog] = useState(false);
-  const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [calling, setCalling] = useState(false);
-  const [callingSelected, setCallingSelected] = useState(false);
-  const [batchSize, setBatchSize] = useState(10);
-  const [processingBatch, setProcessingBatch] = useState(false);
-  const [batchResults, setBatchResults] = useState<ProcessQueueResponse | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [statusFilter, setStatusFilter] = useState<"all" | "eligible" | "ineligible">("all");
 
+  // Helper Functions
+  const getDisplayName = (candidate: Candidate): string => {
+    return candidate.name || candidate.inferred_name || candidate.stored_name || "Unknown";
+  };
+
+  const getDisplayEmail = (candidate: Candidate): string => {
+    return candidate.email || candidate.extracted_email || candidate.stored_email || "No email";
+  };
+
+  const isNameInferred = (candidate: Candidate): boolean => {
+    return !!candidate.inferred_name && !candidate.stored_name;
+  };
+
+  const isEmailExtracted = (candidate: Candidate): boolean => {
+    return !!candidate.extracted_email && !candidate.stored_email;
+  };
+
+  const hasInquiryContext = (candidate: Candidate): boolean => {
+    return !!(candidate.inquiry_property || candidate.inquiry_purpose);
+  };
+
+  const formatLastCalled = (candidate: Candidate): string => {
+    const lastCalled = candidate.last_called_at || candidate.last_call_at;
+    if (!lastCalled) return "Never called";
+    
+    try {
+      return new Date(lastCalled).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+    } catch {
+      return "Invalid date";
+    }
+  };
+
+  const getPurposeBadgeClass = (purpose?: string | null): string => {
+    if (!purpose) return "bg-gray-500";
+    
+    const purposeKey = purpose.toLowerCase().replace(/\s+/g, '-');
+    const colorMap: Record<string, string> = {
+      'booking-a-tour': 'bg-green-500',
+      'pricing-inquiry': 'bg-blue-500',
+      'availability-inquiry': 'bg-yellow-500',
+      'maintenance-request': 'bg-orange-500',
+      'general-information': 'bg-gray-500',
+      'viewing-request': 'bg-purple-500',
+      'application-inquiry': 'bg-pink-500',
+    };
+    
+    return colorMap[purposeKey] || 'bg-gray-500';
+  };
+
+  const canCall = (candidate: Candidate): boolean => {
+    return candidate.eligible || candidate.bypassed_for_testing === true;
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied`);
+  };
+
+  // Load candidates
   const loadCandidates = async () => {
     setLoading(true);
     try {
@@ -89,22 +141,62 @@ export const CandidatesTab = () => {
     loadCandidates();
   }, []);
 
-  const toggleRowExpansion = (contactId: number) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(contactId)) {
-      newExpanded.delete(contactId);
-    } else {
-      newExpanded.add(contactId);
+  // Filtered candidates
+  const filteredCandidates = useMemo(() => {
+    let filtered = candidates;
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(c => 
+        c.phone_number.toLowerCase().includes(query) ||
+        getDisplayName(c).toLowerCase().includes(query) ||
+        getDisplayEmail(c).toLowerCase().includes(query) ||
+        c.inquiry_property?.toLowerCase().includes(query)
+      );
     }
-    setExpandedRows(newExpanded);
+
+    // Status filter
+    if (statusFilter === "eligible") {
+      filtered = filtered.filter(c => canCall(c));
+    } else if (statusFilter === "ineligible") {
+      filtered = filtered.filter(c => !canCall(c));
+    }
+
+    return filtered;
+  }, [candidates, searchQuery, statusFilter]);
+
+  const eligibleCount = filteredCandidates.filter(c => canCall(c)).length;
+  const selectedCount = selectedCandidates.size;
+
+  // Toggle selection
+  const toggleSelection = (contactId: number) => {
+    const newSelected = new Set(selectedCandidates);
+    if (newSelected.has(contactId)) {
+      newSelected.delete(contactId);
+    } else {
+      newSelected.add(contactId);
+    }
+    setSelectedCandidates(newSelected);
   };
 
-  const handleCopyPhone = (phone: string) => {
-    navigator.clipboard.writeText(phone);
-    toast.success("Phone number copied");
+  const toggleSelectAll = () => {
+    const callable = filteredCandidates.filter(c => canCall(c));
+    const allSelected = callable.every(c => selectedCandidates.has(c.contact_id));
+    
+    if (allSelected) {
+      const newSelected = new Set(selectedCandidates);
+      callable.forEach(c => newSelected.delete(c.contact_id));
+      setSelectedCandidates(newSelected);
+    } else {
+      const newSelected = new Set(selectedCandidates);
+      callable.forEach(c => newSelected.add(c.contact_id));
+      setSelectedCandidates(newSelected);
+    }
   };
 
-  const handleTriggerCall = async (candidate: Candidate) => {
+  // Call functions
+  const handleTriggerCall = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
     setShowCallDialog(true);
   };
@@ -114,64 +206,15 @@ export const CandidatesTab = () => {
 
     setCalling(true);
     try {
-      const result = await triggerCall(selectedCandidate.phone_number);
+      await triggerCall(selectedCandidate.phone_number);
       toast.success(`Call initiated to ${formatPhoneNumber(selectedCandidate.phone_number)}`);
       setShowCallDialog(false);
       setSelectedCandidate(null);
-      // Refresh candidates to update attempt counts
       await loadCandidates();
     } catch (error: any) {
       toast.error(error.message || "Failed to trigger call");
     } finally {
       setCalling(false);
-    }
-  };
-
-  const handleProcessBatch = async () => {
-    setProcessingBatch(true);
-    try {
-      // If candidates are selected, call them instead of using processQueue
-      if (selectedCandidates.size > 0) {
-        const selected = filteredCandidates.filter(c => 
-          selectedCandidates.has(c.contact_id) && canCall(c)
-        );
-        
-        if (selected.length === 0) {
-          toast.error("No callable candidates selected");
-          setProcessingBatch(false);
-          return;
-        }
-
-        let called = 0;
-        let skipped = 0;
-        let errors = 0;
-
-        for (const candidate of selected) {
-          try {
-            await triggerCall(candidate.phone_number);
-            called++;
-            // Small delay between calls to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 500));
-          } catch (error: any) {
-            errors++;
-            console.error(`Failed to call ${candidate.phone_number}:`, error);
-          }
-        }
-
-        toast.success(`Processed selected: ${called} called, ${skipped} skipped, ${errors} errors`);
-        setSelectedCandidates(new Set());
-        await loadCandidates();
-      } else {
-        // Use existing batch queue processing
-        const results = await processQueue(batchSize);
-        setBatchResults(results);
-        toast.success(`Processed batch: ${results.called} called, ${results.skipped} skipped`);
-        await loadCandidates();
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to process batch");
-    } finally {
-      setProcessingBatch(false);
     }
   };
 
@@ -185,214 +228,195 @@ export const CandidatesTab = () => {
       return;
     }
 
-    setCallingSelected(true);
-    let called = 0;
-    let skipped = 0;
-    let errors = 0;
+    setCalling(true);
+    let success = 0;
+    let failed = 0;
 
-    try {
-      for (const candidate of selected) {
-        try {
-          await triggerCall(candidate.phone_number);
-          called++;
-          // Small delay between calls to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error: any) {
-          errors++;
-          console.error(`Failed to call ${candidate.phone_number}:`, error);
-        }
+    for (const candidate of selected) {
+      try {
+        await triggerCall(candidate.phone_number);
+        success++;
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error: any) {
+        failed++;
+        console.error(`Failed to call ${candidate.phone_number}:`, error);
       }
-
-      if (called > 0 && errors === 0) {
-        toast.success(`Successfully initiated ${called} call(s)`);
-      } else if (called > 0 && errors > 0) {
-        toast.warning(`Initiated ${called} call(s), ${errors} failed`);
-      } else if (errors > 0) {
-        toast.error(`Failed to initiate ${errors} call(s)`);
-      }
-
-      setSelectedCandidates(new Set());
-      await loadCandidates();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to call selected candidates");
-    } finally {
-      setCallingSelected(false);
     }
+
+    if (success > 0) {
+      toast.success(`Successfully initiated ${success} call(s)`);
+    }
+    if (failed > 0) {
+      toast.warning(`${failed} call(s) failed`);
+    }
+
+    setSelectedCandidates(new Set());
+    await loadCandidates();
+    setCalling(false);
   };
 
-  const toggleCandidateSelection = (contactId: number) => {
-    const newSelected = new Set(selectedCandidates);
-    if (newSelected.has(contactId)) {
-      newSelected.delete(contactId);
-    } else {
-      newSelected.add(contactId);
-    }
-    setSelectedCandidates(newSelected);
-  };
+  // Candidate Card Component
+  const CandidateCard = ({ candidate }: { candidate: Candidate }) => {
+    const displayName = getDisplayName(candidate);
+    const displayEmail = getDisplayEmail(candidate);
+    const hasInquiry = hasInquiryContext(candidate);
+    const callable = canCall(candidate);
 
-  const toggleSelectAll = () => {
-    const callableCandidates = filteredCandidates.filter(c => canCall(c));
-    if (callableCandidates.length === 0) return;
-
-    const allSelected = callableCandidates.every(c => selectedCandidates.has(c.contact_id));
-    
-    if (allSelected) {
-      // Deselect all
-      const newSelected = new Set(selectedCandidates);
-      callableCandidates.forEach(c => newSelected.delete(c.contact_id));
-      setSelectedCandidates(newSelected);
-    } else {
-      // Select all callable
-      const newSelected = new Set(selectedCandidates);
-      callableCandidates.forEach(c => newSelected.add(c.contact_id));
-      setSelectedCandidates(newSelected);
-    }
-  };
-
-  const getOutcomeBadge = (outcome?: string) => {
-    if (!outcome) return null;
-
-    const badges: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-      no_answer: { label: "No Answer", variant: "secondary" },
-      voicemail: { label: "Voicemail", variant: "secondary" },
-      hangup: { label: "Hangup", variant: "destructive" },
-      opt_out: { label: "Opted Out", variant: "destructive" },
-      connected: { label: "Connected", variant: "default" },
-      connected_and_declined: { label: "Declined", variant: "outline" },
-    };
-
-    const badge = badges[outcome] || { label: outcome, variant: "outline" };
     return (
-      <Badge variant={badge.variant} className="text-xs">
-        {badge.label}
-      </Badge>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className={`overflow-hidden transition-all hover:shadow-lg ${
+          callable ? "border-green-200 bg-green-50/30" : "border-red-200 bg-red-50/20"
+        }`}>
+          <CardContent className="p-0">
+            {/* Header */}
+            <div className="p-4 border-b bg-white/50">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <Checkbox
+                    checked={selectedCandidates.has(candidate.contact_id)}
+                    onCheckedChange={() => toggleSelection(candidate.contact_id)}
+                    disabled={!callable}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-gray-900 truncate">{displayName}</h3>
+                      {isNameInferred(candidate) && (
+                        <Badge variant="secondary" className="text-xs">Inferred</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Phone className="h-3.5 w-3.5" />
+                      <span className="font-mono">{formatPhoneNumber(candidate.phone_number)}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0"
+                        onClick={() => handleCopy(candidate.phone_number, "Phone")}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <Badge className={callable ? "bg-green-500" : "bg-red-500"}>
+                  {callable ? "Eligible" : "Not Eligible"}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Contact Info */}
+            <div className="p-4 space-y-3">
+              {/* Email */}
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                <div 
+                  className={`flex-1 text-sm ${
+                    displayEmail !== "No email" 
+                      ? "text-blue-600 cursor-pointer hover:underline" 
+                      : "text-gray-400"
+                  }`}
+                  onClick={() => displayEmail !== "No email" && handleCopy(displayEmail, "Email")}
+                >
+                  {displayEmail}
+                </div>
+                {isEmailExtracted(candidate) && (
+                  <Badge variant="outline" className="text-xs">Extracted</Badge>
+                )}
+              </div>
+
+              {/* Inquiry Context */}
+              {hasInquiry && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                  {candidate.inquiry_purpose && (
+                    <Badge 
+                      className={`${getPurposeBadgeClass(candidate.inquiry_purpose)} text-white text-xs`}
+                    >
+                      {candidate.inquiry_purpose}
+                    </Badge>
+                  )}
+                  {candidate.inquiry_property && (
+                    <div className="flex items-start gap-2 text-xs text-gray-700">
+                      <MapPin className="h-3.5 w-3.5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <span className="line-clamp-2">{candidate.inquiry_property}</span>
+                    </div>
+                  )}
+                  {candidate.inquiry_summary && (
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
+                        View summary
+                      </summary>
+                      <div className="mt-2 p-2 bg-white rounded text-gray-700 whitespace-pre-wrap">
+                        {candidate.inquiry_summary}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )}
+
+              {/* Call Info */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span className="truncate">{formatLastCalled(candidate)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Phone className="h-3.5 w-3.5" />
+                  <span>{candidate.call_attempt_count} attempts</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-4 border-t bg-gray-50/50">
+              <Button
+                onClick={() => handleTriggerCall(candidate)}
+                disabled={!callable || calling}
+                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+                size="sm"
+              >
+                {calling ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Calling...
+                  </>
+                ) : (
+                  <>
+                    <Phone className="h-4 w-4 mr-2" />
+                    {hasInquiry ? "Re-engage" : "Call Now"}
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   };
-
-  const getRetryStatus = (outcome?: string) => {
-    if (!outcome) return { allowed: false, reason: "No previous call" };
-    const retryable = ["no_answer", "voicemail"];
-    return {
-      allowed: retryable.includes(outcome),
-      reason: retryable.includes(outcome) ? "Retry allowed" : "Retry blocked",
-    };
-  };
-
-  // Helper function to get candidate name with fallback
-  // Priority: name → inferred_name → extracted_name → "Unknown"
-  const getCandidateName = (candidate: Candidate): string => {
-    return candidate.name || candidate.inferred_name || candidate.extracted_name || "Unknown";
-  };
-
-  // Helper function to check if name is inferred (not stored)
-  const isNameInferred = (candidate: Candidate): boolean => {
-    return !candidate.name && !!candidate.inferred_name;
-  };
-
-  // Helper function to get candidate email with fallback
-  // Priority: email → extracted_email → "No email"
-  const getCandidateEmail = (candidate: Candidate): string => {
-    return candidate.email || candidate.extracted_email || "No email";
-  };
-
-  // Helper function to check if email is extracted (not stored)
-  const isEmailExtracted = (candidate: Candidate): boolean => {
-    return !candidate.email && !!candidate.extracted_email;
-  };
-
-  // Helper function to format last called time with timezone conversion
-  const formatLastCalledTime = (candidate: Candidate): string => {
-    // Use last_called_at (preferred) or fallback to last_call_at
-    const timeString = candidate.last_called_at || candidate.last_call_at;
-    
-    if (!timeString) {
-      return "Never called";
-    }
-    
-    try {
-      // Parse ISO 8601 UTC string
-      const date = new Date(timeString);
-      
-      // Format for display (automatically converts to user's timezone)
-      return date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short'
-      });
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return "Invalid date";
-    }
-  };
-
-  // Helper function to check if candidate has inquiry context
-  const hasInquiryContext = (candidate: Candidate): boolean => {
-    return !!(candidate.inquiry_property || candidate.inquiry_purpose);
-  };
-
-  // Helper function to get purpose badge variant/color
-  const getPurposeBadgeClass = (purpose?: string): string => {
-    if (!purpose) return "bg-gray-500";
-    
-    const purposeKey = purpose.toLowerCase().replace(/\s+/g, '-');
-    const colorMap: Record<string, string> = {
-      'booking-a-tour': 'bg-green-500',
-      'pricing-inquiry': 'bg-blue-500',
-      'availability-inquiry': 'bg-yellow-500',
-      'maintenance-request': 'bg-orange-500',
-      'general-information': 'bg-gray-500',
-    };
-    
-    return colorMap[purposeKey] || 'bg-gray-500';
-  };
-
-  // Helper function to copy text to clipboard
-  const handleCopyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
-  };
-
-  const filteredCandidates = candidates.filter((c) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      c.phone_number.toLowerCase().includes(query) ||
-      c.name?.toLowerCase().includes(query) ||
-      c.email?.toLowerCase().includes(query)
-    );
-  });
-
-  // Helper to check if candidate can be called (eligible OR bypassed for testing)
-  const canCall = (candidate: Candidate) => {
-    return candidate.eligible || candidate.bypassed_for_testing === true;
-  };
-
-  const eligibleCount = filteredCandidates.filter((c) => canCall(c)).length;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header Actions */}
+    <div className="space-y-6 p-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">Follow-up Candidates</h3>
-          <p className="text-sm text-gray-600">
-            {eligibleCount} callable out of {filteredCandidates.length} candidates
-            {filteredCandidates.some(c => c.bypassed_for_testing) && (
-              <span className="ml-2 text-yellow-600">
-                (Testing mode active)
-              </span>
-            )}
-            {selectedCandidates.size > 0 && (
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-amber-500" />
+            Follow-up Candidates
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {eligibleCount} eligible • {filteredCandidates.length} total
+            {selectedCount > 0 && (
               <span className="ml-2 text-amber-600 font-medium">
-                • {selectedCandidates.size} selected
+                • {selectedCount} selected
               </span>
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -402,24 +426,24 @@ export const CandidatesTab = () => {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          {selectedCandidates.size > 0 && (
+          {selectedCount > 0 && (
             <>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedCandidates(new Set())}
-                disabled={callingSelected || processingBatch}
+                disabled={calling}
               >
-                Clear Selection
+                <X className="h-4 w-4 mr-2" />
+                Clear
               </Button>
               <Button
-                variant="default"
                 size="sm"
                 onClick={handleCallSelected}
-                disabled={callingSelected || processingBatch}
-                className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                disabled={calling}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
               >
-                {callingSelected ? (
+                {calling ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Calling...
@@ -427,462 +451,176 @@ export const CandidatesTab = () => {
                 ) : (
                   <>
                     <Phone className="h-4 w-4 mr-2" />
-                    Call Selected ({selectedCandidates.size})
+                    Call Selected ({selectedCount})
                   </>
                 )}
               </Button>
             </>
           )}
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setShowBatchDialog(true)}
-            disabled={processingBatch || callingSelected || eligibleCount === 0}
-            className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
-          >
-            <Play className="h-4 w-4 mr-2" />
-            Run Batch
-          </Button>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search by phone, name, or email..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
-      {/* Candidates Table */}
+      {/* Filters */}
       <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={
-                        filteredCandidates.filter(c => canCall(c)).length > 0 &&
-                        filteredCandidates.filter(c => canCall(c)).every(c => selectedCandidates.has(c.contact_id))
-                      }
-                      onCheckedChange={toggleSelectAll}
-                      disabled={filteredCandidates.filter(c => canCall(c)).length === 0}
-                    />
-                  </TableHead>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Name / Email</TableHead>
-                  <TableHead>Timezone</TableHead>
-                  <TableHead>Attempts</TableHead>
-                  <TableHead>Last Called</TableHead>
-                  <TableHead>Last Inquiry</TableHead>
-                  <TableHead>Outcome</TableHead>
-                  <TableHead>Eligible</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={11} className="text-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-amber-600" />
-                    </TableCell>
-                  </TableRow>
-                ) : filteredCandidates.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={11} className="text-center py-8 text-gray-500">
-                      No candidates found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCandidates.map((candidate) => {
-                    const isExpanded = expandedRows.has(candidate.contact_id);
-                    const retryStatus = getRetryStatus(candidate.last_call_outcome);
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by name, phone, email, or property..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
 
-                    return (
-                      <>
-                        <TableRow
-                          key={candidate.contact_id}
-                          className={canCall(candidate) ? "bg-green-50/50" : "bg-red-50/30"}
-                        >
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedCandidates.has(candidate.contact_id)}
-                              onCheckedChange={() => toggleCandidateSelection(candidate.contact_id)}
-                              disabled={!canCall(candidate)}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleRowExpansion(candidate.contact_id)}
-                            >
-                              {isExpanded ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-sm">
-                                {formatPhoneNumber(candidate.phone_number)}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => handleCopyPhone(candidate.phone_number)}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1.5 text-sm font-medium">
-                                <User className="h-3 w-3 flex-shrink-0" />
-                                <span>{getCandidateName(candidate)}</span>
-                                {isNameInferred(candidate) && (
-                                  <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4">
-                                    Inferred
-                                  </Badge>
-                                )}
-                              </div>
-                              <div 
-                                className={`flex items-center gap-1 text-xs ${
-                                  getCandidateEmail(candidate) !== "No email" 
-                                    ? "text-blue-600 cursor-pointer hover:underline" 
-                                    : "text-gray-500"
-                                }`}
-                                onClick={() => {
-                                  if (getCandidateEmail(candidate) !== "No email") {
-                                    handleCopyToClipboard(getCandidateEmail(candidate), "Email");
-                                  }
-                                }}
-                                title={getCandidateEmail(candidate) !== "No email" ? "Click to copy email" : ""}
-                              >
-                                <Mail className="h-3 w-3 flex-shrink-0" />
-                                <span>{getCandidateEmail(candidate)}</span>
-                                {isEmailExtracted(candidate) && (
-                                  <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 ml-1">
-                                    Extracted
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {candidate.timezone ? (
-                              <div className="flex items-center gap-1 text-xs">
-                                <Globe className="h-3 w-3" />
-                                {candidate.timezone}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{candidate.call_attempt_count}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1 text-xs text-gray-600">
-                              <Clock className="h-3 w-3" />
-                              {formatLastCalledTime(candidate)}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {hasInquiryContext(candidate) ? (
-                              <div className="space-y-1.5 max-w-[200px]">
-                                {candidate.inquiry_purpose && (
-                                  <Badge 
-                                    className={`${getPurposeBadgeClass(candidate.inquiry_purpose)} text-white text-xs px-2 py-0.5`}
-                                  >
-                                    {candidate.inquiry_purpose}
-                                  </Badge>
-                                )}
-                                {candidate.inquiry_property && (
-                                  <div className="text-xs text-gray-600 truncate" title={candidate.inquiry_property}>
-                                    📍 {candidate.inquiry_property}
-                                  </div>
-                                )}
-                                {candidate.inquiry_summary && (
-                                  <details className="text-xs">
-                                    <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
-                                      View summary
-                                    </summary>
-                                    <div className="mt-1 p-2 bg-gray-50 rounded text-xs text-gray-700 whitespace-pre-wrap">
-                                      {candidate.inquiry_summary}
-                                    </div>
-                                  </details>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">No inquiry context</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {getOutcomeBadge(candidate.last_call_outcome)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col gap-1">
-                              {candidate.eligible ? (
-                                <Badge className="bg-green-500">
-                                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                                  Eligible
-                                </Badge>
-                              ) : (
-                                <Badge variant="destructive">
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                  Not Eligible
-                                </Badge>
-                              )}
-                              {candidate.bypassed_for_testing && (
-                                <Badge className="bg-yellow-500 text-white text-xs">
-                                  <AlertTriangle className="h-3 w-3 mr-1" />
-                                  Testing Mode
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              onClick={() => handleTriggerCall(candidate)}
-                              disabled={!canCall(candidate) || calling}
-                              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
-                            >
-                              <Phone className="h-4 w-4 mr-1" />
-                              Call
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                        {isExpanded && (
-                          <TableRow>
-                            <TableCell colSpan={11} className="bg-gray-50 p-4">
-                              <div className="space-y-4">
-                                {candidate.bypassed_for_testing && (
-                                  <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                                      <h4 className="font-semibold text-sm text-yellow-900">
-                                        ⚠️ Testing Mode: Eligibility checks bypassed
-                                      </h4>
-                                    </div>
-                                    <p className="text-xs text-yellow-800 mb-2">
-                                      The backend has bypassed eligibility checks for testing purposes.
-                                    </p>
-                                    {candidate.eligibility_reason && (
-                                      <div className="mt-2 pt-2 border-t border-yellow-300">
-                                        <p className="text-xs font-medium text-yellow-900 mb-1">Original Eligibility Reason:</p>
-                                        <p className="text-xs text-yellow-800">{candidate.eligibility_reason}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                <div>
-                                  <h4 className="font-semibold text-sm mb-2">Eligibility Details</h4>
-                                  <p className="text-sm text-gray-600 mb-3">{candidate.eligibility_reason}</p>
-                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                    {Object.entries(candidate.eligibility_checks).map(([key, value]) => (
-                                      <div
-                                        key={key}
-                                        className={`flex items-center gap-2 p-2 rounded ${
-                                          value ? "bg-green-100" : "bg-red-100"
-                                        }`}
-                                      >
-                                        {value ? (
-                                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                        ) : (
-                                          <XCircle className="h-4 w-4 text-red-600" />
-                                        )}
-                                        <span className="text-xs capitalize">
-                                          {key.replace(/_/g, " ")}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                                {hasInquiryContext(candidate) && (
-                                  <div>
-                                    <h4 className="font-semibold text-sm mb-2">Last Inquiry Context</h4>
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                      {candidate.inquiry_purpose && (
-                                        <div className="mb-2">
-                                          <span className="text-xs font-medium text-blue-900">Purpose: </span>
-                                          <Badge 
-                                            className={`${getPurposeBadgeClass(candidate.inquiry_purpose)} text-white text-xs px-2 py-0.5`}
-                                          >
-                                            {candidate.inquiry_purpose}
-                                          </Badge>
-                                        </div>
-                                      )}
-                                      {candidate.inquiry_property && (
-                                        <div className="mb-2">
-                                          <span className="text-xs font-medium text-blue-900">Property: </span>
-                                          <span className="text-xs text-blue-800">{candidate.inquiry_property}</span>
-                                        </div>
-                                      )}
-                                      {candidate.inquiry_summary && (
-                                        <div className="mt-2 pt-2 border-t border-blue-300">
-                                          <p className="text-xs font-medium text-blue-900 mb-1">Full Summary:</p>
-                                          <p className="text-xs text-blue-800 whitespace-pre-wrap">{candidate.inquiry_summary}</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                                {candidate.last_call_id && (
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-sm text-gray-600">Last Call ID:</span>
-                                    <code className="text-xs bg-gray-200 px-2 py-1 rounded font-mono">
-                                      {candidate.last_call_id}
-                                    </code>
-                                    <span className="text-xs text-gray-500">
-                                      (View in Call Records tab)
-                                    </span>
-                                  </div>
-                                )}
-                                {retryStatus && (
-                                  <div className="flex items-center gap-2">
-                                    <AlertTriangle
-                                      className={`h-4 w-4 ${
-                                        retryStatus.allowed ? "text-green-600" : "text-red-600"
-                                      }`}
-                                    />
-                                    <span className="text-sm">{retryStatus.reason}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="all">All Candidates</option>
+                <option value="eligible">Eligible Only</option>
+                <option value="ineligible">Not Eligible</option>
+              </select>
+            </div>
+
+            {/* Select All */}
+            {filteredCandidates.filter(c => canCall(c)).length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSelectAll}
+                className="whitespace-nowrap"
+              >
+                <Checkbox
+                  checked={
+                    filteredCandidates.filter(c => canCall(c)).length > 0 &&
+                    filteredCandidates.filter(c => canCall(c)).every(c => selectedCandidates.has(c.contact_id))
+                  }
+                  className="mr-2"
+                />
+                Select All
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
 
+      {/* Candidates Grid */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+        </div>
+      ) : filteredCandidates.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <p className="text-gray-500">No candidates found</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatePresence>
+            {filteredCandidates.map((candidate) => (
+              <CandidateCard key={candidate.contact_id} candidate={candidate} />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+
       {/* Call Confirmation Dialog */}
       <Dialog open={showCallDialog} onOpenChange={setShowCallDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Confirm Outbound Call</DialogTitle>
             <DialogDescription>
-              This will place an outbound call to {selectedCandidate && formatPhoneNumber(selectedCandidate.phone_number)} now.
+              Ready to call {selectedCandidate && formatPhoneNumber(selectedCandidate.phone_number)}?
             </DialogDescription>
           </DialogHeader>
+          
           {selectedCandidate && (
-            <div className="space-y-3 py-4">
+            <div className="space-y-4 py-4">
+              {/* Contact Info */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span className="font-medium">{getDisplayName(selectedCandidate)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-500" />
+                  <span>{getDisplayEmail(selectedCandidate)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-500" />
+                  <span className="font-mono">{formatPhoneNumber(selectedCandidate.phone_number)}</span>
+                </div>
+              </div>
+
+              {/* Testing Mode Warning */}
               {selectedCandidate.bypassed_for_testing && (
                 <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
                     <h4 className="font-semibold text-sm text-yellow-900">
-                      ⚠️ Testing Mode: Eligibility checks bypassed
+                      Testing Mode Active
                     </h4>
                   </div>
-                  <p className="text-xs text-yellow-800 mb-2">
-                    The backend has bypassed eligibility checks for testing purposes. This call will proceed even though eligibility checks failed.
+                  <p className="text-xs text-yellow-800">
+                    Eligibility checks are bypassed for testing purposes.
                   </p>
-                  {selectedCandidate.eligibility_reason && (
-                    <div className="mt-2 pt-2 border-t border-yellow-300">
-                      <p className="text-xs font-medium text-yellow-900 mb-1">Original Eligibility Reason:</p>
-                      <p className="text-xs text-yellow-800">{selectedCandidate.eligibility_reason}</p>
-                    </div>
-                  )}
                 </div>
               )}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <h4 className="font-semibold text-sm mb-2">Eligibility Checks:</h4>
-                <div className="space-y-1 text-xs">
+
+              {/* Re-engagement Context */}
+              {hasInquiryContext(selectedCandidate) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    {selectedCandidate.eligibility_checks.has_consent ? (
-                      <CheckCircle2 className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <XCircle className="h-3 w-3 text-red-600" />
-                    )}
-                    <span>Has consent</span>
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-semibold text-sm text-blue-900">
+                      Re-engagement Context
+                    </h4>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {selectedCandidate.eligibility_checks.not_opted_out ? (
-                      <CheckCircle2 className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <XCircle className="h-3 w-3 text-red-600" />
-                    )}
-                    <span>Not opted out</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedCandidate.eligibility_checks.within_time_window ? (
-                      <CheckCircle2 className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <XCircle className="h-3 w-3 text-red-600" />
-                    )}
-                    <span>Within time window</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedCandidate.eligibility_checks.cooldown_passed ? (
-                      <CheckCircle2 className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <XCircle className="h-3 w-3 text-red-600" />
-                    )}
-                    <span>Cooldown passed</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedCandidate.eligibility_checks.under_attempt_limit ? (
-                      <CheckCircle2 className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <XCircle className="h-3 w-3 text-red-600" />
-                    )}
-                    <span>Under attempt limit</span>
-                  </div>
-                </div>
-              </div>
-              {selectedCandidate && hasInquiryContext(selectedCandidate) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h4 className="font-semibold text-sm mb-2 text-blue-900">
-                    Re-engagement Context
-                  </h4>
-                  <p className="text-xs text-blue-800 mb-3">
-                    This context will be sent to the AI assistant to help personalize the call.
+                  <p className="text-xs text-blue-800">
+                    This context will be sent to the AI assistant to personalize the conversation.
                   </p>
+                  
                   {selectedCandidate.inquiry_purpose && (
-                    <div className="mb-2">
+                    <div>
                       <span className="text-xs font-medium text-blue-900">Purpose: </span>
                       <Badge 
-                        className={`${getPurposeBadgeClass(selectedCandidate.inquiry_purpose)} text-white text-xs px-2 py-0.5`}
+                        className={`${getPurposeBadgeClass(selectedCandidate.inquiry_purpose)} text-white text-xs ml-2`}
                       >
                         {selectedCandidate.inquiry_purpose}
                       </Badge>
                     </div>
                   )}
+                  
                   {selectedCandidate.inquiry_property && (
-                    <div className="mb-2">
+                    <div>
                       <span className="text-xs font-medium text-blue-900">Property: </span>
                       <span className="text-xs text-blue-800">{selectedCandidate.inquiry_property}</span>
                     </div>
                   )}
+                  
                   {selectedCandidate.inquiry_summary && (
-                    <div className="mt-2 pt-2 border-t border-blue-300">
-                      <p className="text-xs font-medium text-blue-900 mb-1">Full Summary:</p>
-                      <p className="text-xs text-blue-800 whitespace-pre-wrap">{selectedCandidate.inquiry_summary}</p>
-                    </div>
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs font-medium text-blue-900 hover:text-blue-800">
+                        View full summary
+                      </summary>
+                      <div className="mt-2 p-3 bg-white rounded text-xs text-gray-700 whitespace-pre-wrap">
+                        {selectedCandidate.inquiry_summary}
+                      </div>
+                    </details>
                   )}
                 </div>
               )}
             </div>
           )}
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCallDialog(false)} disabled={calling}>
               Cancel
@@ -890,7 +628,7 @@ export const CandidatesTab = () => {
             <Button
               onClick={confirmCall}
               disabled={calling}
-              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
             >
               {calling ? (
                 <>
@@ -907,98 +645,6 @@ export const CandidatesTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Batch Process Dialog */}
-      <Dialog open={showBatchDialog} onOpenChange={setShowBatchDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Process Batch</DialogTitle>
-            <DialogDescription>
-              {selectedCandidates.size > 0
-                ? `Call ${selectedCandidates.size} selected candidate(s)`
-                : "Process a batch of eligible candidates automatically."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {selectedCandidates.size > 0 ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Phone className="h-4 w-4 text-amber-600" />
-                  <h4 className="font-semibold text-sm">Selected Candidates</h4>
-                </div>
-                <p className="text-xs text-gray-700">
-                  {selectedCandidates.size} candidate(s) selected. They will be called in sequence.
-                </p>
-                <div className="mt-2 pt-2 border-t border-amber-300">
-                  <p className="text-xs text-gray-600">
-                    Selected: {filteredCandidates.filter(c => selectedCandidates.has(c.contact_id) && canCall(c)).length} callable
-                    {filteredCandidates.filter(c => selectedCandidates.has(c.contact_id) && !canCall(c)).length > 0 && (
-                      <span className="text-red-600">
-                        {" "}
-                        ({filteredCandidates.filter(c => selectedCandidates.has(c.contact_id) && !canCall(c)).length} not callable will be skipped)
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <label className="text-sm font-medium">Batch Size</label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="50"
-                  value={batchSize}
-                  onChange={(e) => setBatchSize(parseInt(e.target.value) || 10)}
-                  className="mt-1"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {eligibleCount} callable candidates available
-                  {filteredCandidates.some(c => c.bypassed_for_testing) && (
-                    <span className="ml-1 text-yellow-600">(includes testing mode bypasses)</span>
-                  )}
-                </p>
-                <p className="text-xs text-amber-600 mt-2">
-                  💡 Tip: Select specific candidates using checkboxes to call only those.
-                </p>
-              </div>
-            )}
-            {batchResults && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                <h4 className="font-semibold text-sm mb-2">Last Batch Results:</h4>
-                <div className="space-y-1 text-xs">
-                  <div>Called: {batchResults.called}</div>
-                  <div>Skipped: {batchResults.skipped}</div>
-                  <div>Errors: {batchResults.errors}</div>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBatchDialog(false)} disabled={processingBatch}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleProcessBatch}
-              disabled={processingBatch || (selectedCandidates.size === 0 && eligibleCount === 0)}
-              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
-            >
-              {processingBatch ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  {selectedCandidates.size > 0 ? `Call Selected (${selectedCandidates.size})` : "Run Batch"}
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
-

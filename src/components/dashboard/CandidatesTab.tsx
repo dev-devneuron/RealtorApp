@@ -279,13 +279,25 @@ export const CandidatesTab = () => {
   };
 
   // Helper function to get candidate name with fallback
+  // Priority: name → inferred_name → extracted_name → "Unknown"
   const getCandidateName = (candidate: Candidate): string => {
-    return candidate.name || candidate.extracted_name || "Unknown";
+    return candidate.name || candidate.inferred_name || candidate.extracted_name || "Unknown";
+  };
+
+  // Helper function to check if name is inferred (not stored)
+  const isNameInferred = (candidate: Candidate): boolean => {
+    return !candidate.name && !!candidate.inferred_name;
   };
 
   // Helper function to get candidate email with fallback
+  // Priority: email → extracted_email → "No email"
   const getCandidateEmail = (candidate: Candidate): string => {
-    return candidate.email || "No email";
+    return candidate.email || candidate.extracted_email || "No email";
+  };
+
+  // Helper function to check if email is extracted (not stored)
+  const isEmailExtracted = (candidate: Candidate): boolean => {
+    return !candidate.email && !!candidate.extracted_email;
   };
 
   // Helper function to format last called time with timezone conversion
@@ -314,6 +326,33 @@ export const CandidatesTab = () => {
       console.error('Error formatting date:', error);
       return "Invalid date";
     }
+  };
+
+  // Helper function to check if candidate has inquiry context
+  const hasInquiryContext = (candidate: Candidate): boolean => {
+    return !!(candidate.inquiry_property || candidate.inquiry_purpose);
+  };
+
+  // Helper function to get purpose badge variant/color
+  const getPurposeBadgeClass = (purpose?: string): string => {
+    if (!purpose) return "bg-gray-500";
+    
+    const purposeKey = purpose.toLowerCase().replace(/\s+/g, '-');
+    const colorMap: Record<string, string> = {
+      'booking-a-tour': 'bg-green-500',
+      'pricing-inquiry': 'bg-blue-500',
+      'availability-inquiry': 'bg-yellow-500',
+      'maintenance-request': 'bg-orange-500',
+      'general-information': 'bg-gray-500',
+    };
+    
+    return colorMap[purposeKey] || 'bg-gray-500';
+  };
+
+  // Helper function to copy text to clipboard
+  const handleCopyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
   };
 
   const filteredCandidates = candidates.filter((c) => {
@@ -441,6 +480,7 @@ export const CandidatesTab = () => {
                   <TableHead>Timezone</TableHead>
                   <TableHead>Attempts</TableHead>
                   <TableHead>Last Called</TableHead>
+                  <TableHead>Last Inquiry</TableHead>
                   <TableHead>Outcome</TableHead>
                   <TableHead>Eligible</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -449,13 +489,13 @@ export const CandidatesTab = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
+                    <TableCell colSpan={11} className="text-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-amber-600" />
                     </TableCell>
                   </TableRow>
                 ) : filteredCandidates.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={11} className="text-center py-8 text-gray-500">
                       No candidates found
                     </TableCell>
                   </TableRow>
@@ -507,13 +547,35 @@ export const CandidatesTab = () => {
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
-                              <div className="flex items-center gap-1 text-sm font-medium">
-                                <User className="h-3 w-3" />
-                                {getCandidateName(candidate)}
+                              <div className="flex items-center gap-1.5 text-sm font-medium">
+                                <User className="h-3 w-3 flex-shrink-0" />
+                                <span>{getCandidateName(candidate)}</span>
+                                {isNameInferred(candidate) && (
+                                  <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4">
+                                    Inferred
+                                  </Badge>
+                                )}
                               </div>
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
-                                <Mail className="h-3 w-3" />
-                                {getCandidateEmail(candidate)}
+                              <div 
+                                className={`flex items-center gap-1 text-xs ${
+                                  getCandidateEmail(candidate) !== "No email" 
+                                    ? "text-blue-600 cursor-pointer hover:underline" 
+                                    : "text-gray-500"
+                                }`}
+                                onClick={() => {
+                                  if (getCandidateEmail(candidate) !== "No email") {
+                                    handleCopyToClipboard(getCandidateEmail(candidate), "Email");
+                                  }
+                                }}
+                                title={getCandidateEmail(candidate) !== "No email" ? "Click to copy email" : ""}
+                              >
+                                <Mail className="h-3 w-3 flex-shrink-0" />
+                                <span>{getCandidateEmail(candidate)}</span>
+                                {isEmailExtracted(candidate) && (
+                                  <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 ml-1">
+                                    Extracted
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           </TableCell>
@@ -535,6 +597,36 @@ export const CandidatesTab = () => {
                               <Clock className="h-3 w-3" />
                               {formatLastCalledTime(candidate)}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            {hasInquiryContext(candidate) ? (
+                              <div className="space-y-1.5 max-w-[200px]">
+                                {candidate.inquiry_purpose && (
+                                  <Badge 
+                                    className={`${getPurposeBadgeClass(candidate.inquiry_purpose)} text-white text-xs px-2 py-0.5`}
+                                  >
+                                    {candidate.inquiry_purpose}
+                                  </Badge>
+                                )}
+                                {candidate.inquiry_property && (
+                                  <div className="text-xs text-gray-600 truncate" title={candidate.inquiry_property}>
+                                    📍 {candidate.inquiry_property}
+                                  </div>
+                                )}
+                                {candidate.inquiry_summary && (
+                                  <details className="text-xs">
+                                    <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                                      View summary
+                                    </summary>
+                                    <div className="mt-1 p-2 bg-gray-50 rounded text-xs text-gray-700 whitespace-pre-wrap">
+                                      {candidate.inquiry_summary}
+                                    </div>
+                                  </details>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">No inquiry context</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             {getOutcomeBadge(candidate.last_call_outcome)}
@@ -574,7 +666,7 @@ export const CandidatesTab = () => {
                         </TableRow>
                         {isExpanded && (
                           <TableRow>
-                            <TableCell colSpan={10} className="bg-gray-50 p-4">
+                            <TableCell colSpan={11} className="bg-gray-50 p-4">
                               <div className="space-y-4">
                                 {candidate.bypassed_for_testing && (
                                   <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">
@@ -618,6 +710,35 @@ export const CandidatesTab = () => {
                                     ))}
                                   </div>
                                 </div>
+                                {hasInquiryContext(candidate) && (
+                                  <div>
+                                    <h4 className="font-semibold text-sm mb-2">Last Inquiry Context</h4>
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                      {candidate.inquiry_purpose && (
+                                        <div className="mb-2">
+                                          <span className="text-xs font-medium text-blue-900">Purpose: </span>
+                                          <Badge 
+                                            className={`${getPurposeBadgeClass(candidate.inquiry_purpose)} text-white text-xs px-2 py-0.5`}
+                                          >
+                                            {candidate.inquiry_purpose}
+                                          </Badge>
+                                        </div>
+                                      )}
+                                      {candidate.inquiry_property && (
+                                        <div className="mb-2">
+                                          <span className="text-xs font-medium text-blue-900">Property: </span>
+                                          <span className="text-xs text-blue-800">{candidate.inquiry_property}</span>
+                                        </div>
+                                      )}
+                                      {candidate.inquiry_summary && (
+                                        <div className="mt-2 pt-2 border-t border-blue-300">
+                                          <p className="text-xs font-medium text-blue-900 mb-1">Full Summary:</p>
+                                          <p className="text-xs text-blue-800 whitespace-pre-wrap">{candidate.inquiry_summary}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                                 {candidate.last_call_id && (
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <span className="text-sm text-gray-600">Last Call ID:</span>
@@ -728,6 +849,38 @@ export const CandidatesTab = () => {
                   </div>
                 </div>
               </div>
+              {selectedCandidate && hasInquiryContext(selectedCandidate) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <h4 className="font-semibold text-sm mb-2 text-blue-900">
+                    Re-engagement Context
+                  </h4>
+                  <p className="text-xs text-blue-800 mb-3">
+                    This context will be sent to the AI assistant to help personalize the call.
+                  </p>
+                  {selectedCandidate.inquiry_purpose && (
+                    <div className="mb-2">
+                      <span className="text-xs font-medium text-blue-900">Purpose: </span>
+                      <Badge 
+                        className={`${getPurposeBadgeClass(selectedCandidate.inquiry_purpose)} text-white text-xs px-2 py-0.5`}
+                      >
+                        {selectedCandidate.inquiry_purpose}
+                      </Badge>
+                    </div>
+                  )}
+                  {selectedCandidate.inquiry_property && (
+                    <div className="mb-2">
+                      <span className="text-xs font-medium text-blue-900">Property: </span>
+                      <span className="text-xs text-blue-800">{selectedCandidate.inquiry_property}</span>
+                    </div>
+                  )}
+                  {selectedCandidate.inquiry_summary && (
+                    <div className="mt-2 pt-2 border-t border-blue-300">
+                      <p className="text-xs font-medium text-blue-900 mb-1">Full Summary:</p>
+                      <p className="text-xs text-blue-800 whitespace-pre-wrap">{selectedCandidate.inquiry_summary}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>

@@ -21,8 +21,13 @@ export interface Candidate {
   last_booking_at?: string;
   last_call_id?: string;
   last_call_at?: string;
-  extracted_name?: string; // AI-extracted name from transcript
+  extracted_name?: string; // AI-extracted name from transcript (legacy)
   extracted_region?: string; // AI-extracted region from transcript
+  inferred_name?: string; // Name inferred from email (e.g., "rehan@gmail.com" → "Rehan")
+  extracted_email?: string; // Email extracted from transcript
+  inquiry_property?: string; // Property address/name from last call
+  inquiry_purpose?: string; // Purpose of last call (e.g., "booking a tour", "pricing inquiry")
+  inquiry_summary?: string; // Combined summary: "Purpose: X | Property: Y | Email: Z"
   eligible: boolean;
   eligibility_reason: string;
   eligibility_checks: {

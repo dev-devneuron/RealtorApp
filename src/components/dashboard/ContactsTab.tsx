@@ -1,17 +1,15 @@
 /**
- * Contacts Tab Component
+ * Contacts Tab Component - Modern Redesign
  * 
- * Manage consent and opt-out status for contacts.
- * Compliance-focused interface with permanent opt-out warnings.
+ * Sleek interface for managing consent and opt-out status
  */
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +50,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
+  Phone,
+  Filter,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -129,40 +130,217 @@ export const ContactsTab = () => {
     }
   };
 
-  const handleCopyPhone = (phone: string) => {
-    navigator.clipboard.writeText(phone);
-    toast.success("Phone number copied");
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied`);
   };
 
-  const filteredContacts = contacts.filter((c) => {
-    // Search filter
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Never";
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return "Invalid date";
+    }
+  };
+
+  const filteredContacts = useMemo(() => {
+    let filtered = contacts;
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const matchesSearch =
+      filtered = filtered.filter(c =>
         c.phone_number.toLowerCase().includes(query) ||
         c.name?.toLowerCase().includes(query) ||
-        c.email?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
+        c.email?.toLowerCase().includes(query)
+      );
     }
 
-    // Consent filter
-    if (consentFilter === "has_consent" && !c.consent_status) return false;
-    if (consentFilter === "no_consent" && c.consent_status) return false;
+    if (consentFilter === "has_consent" && !filtered.some(c => c.consent_status)) {
+      filtered = filtered.filter(c => c.consent_status);
+    } else if (consentFilter === "no_consent" && !filtered.some(c => !c.consent_status)) {
+      filtered = filtered.filter(c => !c.consent_status);
+    }
 
-    return true;
-  });
+    return filtered;
+  }, [contacts, searchQuery, consentFilter]);
 
   const totalPages = Math.ceil(total / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
+  // Contact Card Component
+  const ContactCard = ({ contact }: { contact: Contact }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className={`overflow-hidden transition-all hover:shadow-lg ${
+          contact.opted_out ? "border-red-200 bg-red-50/30" : "border-gray-200"
+        }`}>
+          <CardContent className="p-0">
+            {/* Header */}
+            <div className="p-4 border-b bg-white/50">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-gray-900 truncate">
+                      {contact.name || "Unknown"}
+                    </h3>
+                    {contact.opted_out && (
+                      <Badge variant="destructive" className="text-xs">
+                        <Ban className="h-3 w-3 mr-1" />
+                        Opted Out
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Phone className="h-3.5 w-3.5" />
+                    <span className="font-mono">{formatPhoneNumber(contact.phone_number)}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={() => handleCopy(contact.phone_number, "Phone")}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  {contact.consent_status ? (
+                    <Badge className="bg-green-500">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Has Consent
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      No Consent
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Info */}
+            <div className="p-4 space-y-3">
+              {/* Email */}
+              {contact.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  <div 
+                    className="flex-1 text-sm text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => handleCopy(contact.email!, "Email")}
+                  >
+                    {contact.email}
+                  </div>
+                </div>
+              )}
+
+              {/* Consent Info */}
+              <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                {contact.consent_status && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600">Consent Source:</span>
+                    <span className="font-medium">{contact.consent_source || "Unknown"}</span>
+                  </div>
+                )}
+                {contact.consent_timestamp && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600">Consent Date:</span>
+                    <span className="font-medium">{formatDate(contact.consent_timestamp)}</span>
+                  </div>
+                )}
+                {contact.opt_out_timestamp && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-red-600">Opt-out Date:</span>
+                    <span className="font-medium text-red-700">{formatDate(contact.opt_out_timestamp)}</span>
+                  </div>
+                )}
+                {contact.opt_out_method && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-red-600">Opt-out Method:</span>
+                    <span className="font-medium text-red-700">{contact.opt_out_method}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Call Info */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>{contact.call_attempt_count} {contact.call_attempt_count === 1 ? 'attempt' : 'attempts'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="truncate">{formatDate(contact.last_called_at)}</span>
+                </div>
+                {contact.last_call_outcome && (
+                  <div className="col-span-2">
+                    <Badge variant="outline" className="text-xs">
+                      Last: {contact.last_call_outcome}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-4 border-t bg-gray-50/50">
+              <div className="flex gap-2">
+                {!contact.opted_out && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedContact(contact);
+                      setShowConsentDialog(true);
+                    }}
+                    disabled={processing}
+                    className="flex-1"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Record Consent
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant={contact.opted_out ? "outline" : "destructive"}
+                  onClick={() => {
+                    setSelectedContact(contact);
+                    setShowOptOutDialog(true);
+                  }}
+                  disabled={processing || contact.opted_out}
+                  className={contact.opted_out ? "flex-1" : "flex-1"}
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  {contact.opted_out ? "Already Opted Out" : "Opt Out"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">Contact Management</h3>
-          <p className="text-sm text-gray-600">
-            Manage consent and opt-out status for {total} contacts
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Users className="h-6 w-6 text-amber-500" />
+            Contact Management
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {total} total contacts • {filteredContacts.length} shown
           </p>
         </div>
         <Button
@@ -177,252 +355,123 @@ export const ContactsTab = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search by phone, name, or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={optedOutFilter} onValueChange={setOptedOutFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Opt-out Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Opt-out Status</SelectItem>
-            <SelectItem value="opted_out">Opted Out</SelectItem>
-            <SelectItem value="not_opted_out">Not Opted Out</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={consentFilter} onValueChange={setConsentFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Consent Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Consent</SelectItem>
-            <SelectItem value="has_consent">Has Consent</SelectItem>
-            <SelectItem value="no_consent">No Consent</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Contacts Table */}
       <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Name / Email</TableHead>
-                  <TableHead>Consent</TableHead>
-                  <TableHead>Opt-out</TableHead>
-                  <TableHead>Attempts</TableHead>
-                  <TableHead>Last Called</TableHead>
-                  <TableHead>Last Outcome</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-amber-600" />
-                    </TableCell>
-                  </TableRow>
-                ) : filteredContacts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                      No contacts found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredContacts.map((contact) => (
-                    <TableRow
-                      key={contact.contact_id}
-                      className={contact.opted_out ? "bg-red-50/30" : ""}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm">
-                            {formatPhoneNumber(contact.phone_number)}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => handleCopyPhone(contact.phone_number)}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {contact.name && (
-                            <div className="flex items-center gap-1 text-sm font-medium">
-                              <User className="h-3 w-3" />
-                              {contact.name}
-                            </div>
-                          )}
-                          {contact.email && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Mail className="h-3 w-3" />
-                              {contact.email}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {contact.consent_status ? (
-                          <Badge className="bg-green-500">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Yes
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            No
-                          </Badge>
-                        )}
-                        {contact.consent_source && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {contact.consent_source}
-                          </div>
-                        )}
-                        {contact.consent_timestamp && (
-                          <div className="text-xs text-gray-400 mt-1">
-                            {new Date(contact.consent_timestamp).toLocaleDateString()}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {contact.opted_out ? (
-                          <div>
-                            <Badge variant="destructive">
-                              <Ban className="h-3 w-3 mr-1" />
-                              Opted Out
-                            </Badge>
-                            {contact.opt_out_method && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                {contact.opt_out_method}
-                              </div>
-                            )}
-                            {contact.opt_out_timestamp && (
-                              <div className="text-xs text-gray-400 mt-1">
-                                {new Date(contact.opt_out_timestamp).toLocaleDateString()}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <Badge variant="outline">Active</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{contact.call_attempt_count}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {contact.last_called_at ? (
-                          <div className="flex items-center gap-1 text-xs text-gray-600">
-                            <Clock className="h-3 w-3" />
-                            {new Date(contact.last_called_at).toLocaleDateString()}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400">Never</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {contact.last_call_outcome ? (
-                          <Badge variant="outline" className="text-xs">
-                            {contact.last_call_outcome}
-                          </Badge>
-                        ) : (
-                          <span className="text-xs text-gray-400">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {!contact.opted_out && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedContact(contact);
-                                setShowConsentDialog(true);
-                              }}
-                              disabled={processing}
-                            >
-                              <Shield className="h-3 w-3 mr-1" />
-                              Consent
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant={contact.opted_out ? "outline" : "destructive"}
-                            onClick={() => {
-                              setSelectedContact(contact);
-                              setShowOptOutDialog(true);
-                            }}
-                            disabled={processing || contact.opted_out}
-                          >
-                            <Ban className="h-3 w-3 mr-1" />
-                            Opt Out
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by phone, name, or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Opt-out Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <Select value={optedOutFilter} onValueChange={setOptedOutFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Opt-out Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="opted_out">Opted Out</SelectItem>
+                  <SelectItem value="not_opted_out">Active</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Consent Filter */}
+            <Select value={consentFilter} onValueChange={setConsentFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Consent Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Consent</SelectItem>
+                <SelectItem value="has_consent">Has Consent</SelectItem>
+                <SelectItem value="no_consent">No Consent</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
+      {/* Contacts Grid */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+        </div>
+      ) : filteredContacts.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <p className="text-gray-500">No contacts found</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatePresence>
+            {filteredContacts.map((contact) => (
+              <ContactCard key={contact.contact_id} contact={contact} />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setOffset(Math.max(0, offset - limit))}
-              disabled={offset === 0 || loading}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setOffset(offset + limit)}
-              disabled={offset + limit >= total || loading}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages} • {total} total contacts
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(Math.max(0, offset - limit))}
+                  disabled={offset === 0 || loading}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(offset + limit)}
+                  disabled={offset + limit >= total || loading}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Opt-out Confirmation Dialog */}
       <AlertDialog open={showOptOutDialog} onOpenChange={setShowOptOutDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Permanent Opt-Out</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p className="font-semibold text-red-600">
-                ⚠️ This action is PERMANENT and cannot be undone.
-              </p>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              Permanent Opt-Out
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="font-semibold text-red-700 text-sm">
+                  ⚠️ This action is PERMANENT and cannot be undone.
+                </p>
+              </div>
               <p>
                 Are you sure you want to opt out{" "}
-                {selectedContact && formatPhoneNumber(selectedContact.phone_number)}?
+                <span className="font-mono font-semibold">
+                  {selectedContact && formatPhoneNumber(selectedContact.phone_number)}
+                </span>?
               </p>
               <p className="text-sm text-gray-600">
                 This contact will no longer receive outbound calls from your system.
@@ -453,16 +502,22 @@ export const ContactsTab = () => {
       <Dialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Record Consent</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-green-600" />
+              Record Consent
+            </DialogTitle>
             <DialogDescription>
-              Record consent for {selectedContact && formatPhoneNumber(selectedContact.phone_number)}
+              Record consent for{" "}
+              <span className="font-mono font-semibold">
+                {selectedContact && formatPhoneNumber(selectedContact.phone_number)}
+              </span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium">Consent Source</label>
+              <label className="text-sm font-medium mb-2 block">Consent Source</label>
               <Select value={consentSource} onValueChange={setConsentSource}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -482,7 +537,7 @@ export const ContactsTab = () => {
             <Button
               onClick={handleRecordConsent}
               disabled={processing}
-              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
             >
               {processing ? (
                 <>
@@ -502,4 +557,3 @@ export const ContactsTab = () => {
     </div>
   );
 };
-

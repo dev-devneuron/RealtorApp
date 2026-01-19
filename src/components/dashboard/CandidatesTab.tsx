@@ -77,7 +77,13 @@ export const CandidatesTab = () => {
   };
 
   const hasInquiryContext = (candidate: Candidate): boolean => {
-    return !!(candidate.inquiry_property || candidate.inquiry_purpose);
+    // Check ALL inquiry fields - inquiry_summary is the most important!
+    return !!(
+      candidate.inquiry_property || 
+      candidate.inquiry_purpose || 
+      candidate.inquiry_summary ||  // CRITICAL: Most important field!
+      candidate.extracted_region
+    );
   };
 
   const formatLastCalled = (candidate: Candidate): string => {
@@ -303,9 +309,30 @@ export const CandidatesTab = () => {
                     </div>
                   </div>
                 </div>
-                <Badge className={callable ? "bg-green-500" : "bg-red-500"}>
-                  {callable ? "Eligible" : "Not Eligible"}
-                </Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge className={callable ? "bg-green-500" : "bg-red-500"}>
+                    {callable ? "Eligible" : "Not Eligible"}
+                  </Badge>
+                  {candidate.bypassed_for_testing && (
+                    <Badge variant="outline" className="text-xs border-yellow-400 text-yellow-700">
+                      Testing Mode
+                    </Badge>
+                  )}
+                  {candidate.last_call_outcome && (
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${
+                        candidate.last_call_outcome === "connected" 
+                          ? "border-green-400 text-green-700"
+                          : candidate.last_call_outcome === "no_answer" || candidate.last_call_outcome === "voicemail"
+                          ? "border-yellow-400 text-yellow-700"
+                          : "border-gray-400 text-gray-700"
+                      }`}
+                    >
+                      {candidate.last_call_outcome}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -330,44 +357,136 @@ export const CandidatesTab = () => {
               </div>
 
               {/* Inquiry Context */}
-              {hasInquiry && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-                  {candidate.inquiry_purpose && (
-                    <Badge 
-                      className={`${getPurposeBadgeClass(candidate.inquiry_purpose)} text-white text-xs`}
-                    >
-                      {candidate.inquiry_purpose}
+              {hasInquiry ? (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-blue-200">
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-bold text-blue-900">Last Inquiry Context</span>
+                    <Badge variant="outline" className="text-xs border-blue-400 text-blue-700">
+                      AI Extracted
                     </Badge>
-                  )}
-                  {candidate.inquiry_property && (
-                    <div className="flex items-start gap-2 text-xs text-gray-700">
-                      <MapPin className="h-3.5 w-3.5 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <span className="line-clamp-2">{candidate.inquiry_property}</span>
-                    </div>
-                  )}
+                  </div>
+                  
+                  {/* Inquiry Summary - MOST IMPORTANT - Show Prominently First */}
                   {candidate.inquiry_summary && (
-                    <details className="text-xs">
-                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
-                        View summary
-                      </summary>
-                      <div className="mt-2 p-2 bg-white rounded text-gray-700 whitespace-pre-wrap">
+                    <div className="bg-white rounded-lg p-3 border-2 border-blue-300 shadow-sm">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MessageSquare className="h-4 w-4 text-blue-600" />
+                        <span className="text-xs font-bold text-blue-900 uppercase tracking-wide">Complete Summary</span>
+                      </div>
+                      <div className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap font-medium">
                         {candidate.inquiry_summary}
                       </div>
-                    </details>
+                      <div className="mt-2 pt-2 border-t border-blue-200">
+                        <span className="text-xs text-blue-600 italic">Combined: Purpose | Property | Email</span>
+                      </div>
+                    </div>
                   )}
+                  
+                  {/* Property - PROMINENT */}
+                  {candidate.inquiry_property && (
+                    <div className="bg-white rounded-lg p-3 border border-blue-200 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                          <MapPin className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">Property Address</div>
+                          <div className="text-sm font-medium text-gray-900 leading-relaxed" title={candidate.inquiry_property}>
+                            {candidate.inquiry_property}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Purpose Badge */}
+                  {candidate.inquiry_purpose && (
+                    <div>
+                      <div className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">Purpose</div>
+                      <Badge 
+                        className={`${getPurposeBadgeClass(candidate.inquiry_purpose)} text-white text-sm px-3 py-1.5 font-semibold`}
+                      >
+                        {candidate.inquiry_purpose}
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  {/* Region */}
+                  {candidate.extracted_region && (
+                    <div className="bg-white rounded-lg p-2 border border-blue-200">
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Globe className="h-4 w-4 text-blue-600" />
+                        <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide mr-2">Region:</span>
+                        <span className="font-medium">{candidate.extracted_region}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Full Call Summary - Show if different from inquiry_summary */}
+                  {candidate.call_summary && candidate.call_summary !== candidate.inquiry_summary && (
+                    <div className="bg-white rounded-lg p-3 border border-blue-200">
+                      <details className="group">
+                        <summary className="cursor-pointer text-sm font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-2 list-none">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>View Full Call Summary</span>
+                          <span className="ml-auto text-xs text-blue-600 group-open:hidden">▼</span>
+                          <span className="ml-auto text-xs text-blue-600 hidden group-open:inline">▲</span>
+                        </summary>
+                        <div className="mt-3 pt-3 border-t border-blue-200">
+                          <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            {candidate.call_summary}
+                          </div>
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                  
+                  {/* Extracted Info Section */}
+                  {(candidate.extracted_email || candidate.inferred_name) && (
+                    <div className="bg-blue-100/50 rounded-lg p-3 border border-blue-200">
+                      <div className="text-xs font-semibold text-blue-900 mb-2 uppercase tracking-wide">Extracted from Call</div>
+                      <div className="space-y-1">
+                        {candidate.extracted_email && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <Mail className="h-3.5 w-3.5 text-blue-600" />
+                            <span className="font-mono">{candidate.extracted_email}</span>
+                            <Badge variant="outline" className="text-xs">Extracted</Badge>
+                          </div>
+                        )}
+                        {candidate.inferred_name && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <User className="h-3.5 w-3.5 text-blue-600" />
+                            <span>{candidate.inferred_name}</span>
+                            <Badge variant="outline" className="text-xs">Inferred</Badge>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                  <span className="text-xs text-gray-500">No inquiry context</span>
                 </div>
               )}
 
               {/* Call Info */}
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Clock className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-2 text-gray-600" title={formatLastCalled(candidate)}>
+                  <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                   <span className="truncate">{formatLastCalled(candidate)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Phone className="h-3.5 w-3.5" />
-                  <span>{candidate.call_attempt_count} attempts</span>
+                  <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>{candidate.call_attempt_count} {candidate.call_attempt_count === 1 ? 'attempt' : 'attempts'}</span>
                 </div>
+                {candidate.timezone && (
+                  <div className="flex items-center gap-2 text-gray-600 col-span-2">
+                    <Globe className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span className="truncate">{candidate.timezone}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -412,6 +531,11 @@ export const CandidatesTab = () => {
             {selectedCount > 0 && (
               <span className="ml-2 text-amber-600 font-medium">
                 • {selectedCount} selected
+              </span>
+            )}
+            {filteredCandidates.some(c => c.bypassed_for_testing) && (
+              <span className="ml-2 text-yellow-600 font-medium">
+                • Testing mode active
               </span>
             )}
           </p>
@@ -577,16 +701,35 @@ export const CandidatesTab = () => {
 
               {/* Re-engagement Context */}
               {hasInquiryContext(selectedCandidate) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-2">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-blue-200">
                     <Sparkles className="h-4 w-4 text-blue-600" />
                     <h4 className="font-semibold text-sm text-blue-900">
                       Re-engagement Context
                     </h4>
+                    <Badge variant="outline" className="text-xs border-blue-400 text-blue-700">
+                      AI Extracted
+                    </Badge>
                   </div>
-                  <p className="text-xs text-blue-800">
+                  <p className="text-xs text-blue-800 bg-white/50 rounded p-2">
                     This context will be sent to the AI assistant to personalize the conversation.
                   </p>
+                  
+                  {/* Inquiry Summary - MOST IMPORTANT - Show Prominently */}
+                  {selectedCandidate.inquiry_summary && (
+                    <div className="bg-white rounded-lg p-3 border-2 border-blue-300 shadow-sm">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MessageSquare className="h-4 w-4 text-blue-600" />
+                        <span className="text-xs font-bold text-blue-900 uppercase tracking-wide">Complete Summary</span>
+                      </div>
+                      <div className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap font-medium">
+                        {selectedCandidate.inquiry_summary}
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-blue-200">
+                        <span className="text-xs text-blue-600 italic">Combined: Purpose | Property | Email</span>
+                      </div>
+                    </div>
+                  )}
                   
                   {selectedCandidate.inquiry_purpose && (
                     <div>
@@ -600,19 +743,39 @@ export const CandidatesTab = () => {
                   )}
                   
                   {selectedCandidate.inquiry_property && (
-                    <div>
-                      <span className="text-xs font-medium text-blue-900">Property: </span>
-                      <span className="text-xs text-blue-800">{selectedCandidate.inquiry_property}</span>
+                    <div className="bg-white rounded p-2 border border-blue-200">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <span className="text-xs font-medium text-blue-900">Property: </span>
+                          <span className="text-sm text-gray-900 font-medium">{selectedCandidate.inquiry_property}</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                   
-                  {selectedCandidate.inquiry_summary && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-xs font-medium text-blue-900 hover:text-blue-800">
-                        View full summary
+                  {selectedCandidate.extracted_region && (
+                    <div className="bg-white rounded p-2 border border-blue-200">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-blue-600" />
+                        <span className="text-xs font-medium text-blue-900">Region: </span>
+                        <span className="text-sm text-gray-900 font-medium">{selectedCandidate.extracted_region}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Full Call Summary - Show if different from inquiry_summary */}
+                  {selectedCandidate.call_summary && selectedCandidate.call_summary !== selectedCandidate.inquiry_summary && (
+                    <details className="bg-white rounded-lg p-3 border border-blue-200">
+                      <summary className="cursor-pointer text-sm font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-2 list-none">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>View Full Call Summary</span>
+                        <span className="ml-auto text-xs text-blue-600">▼</span>
                       </summary>
-                      <div className="mt-2 p-3 bg-white rounded text-xs text-gray-700 whitespace-pre-wrap">
-                        {selectedCandidate.inquiry_summary}
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          {selectedCandidate.call_summary}
+                        </div>
                       </div>
                     </details>
                   )}

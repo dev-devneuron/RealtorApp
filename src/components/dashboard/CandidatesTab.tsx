@@ -629,8 +629,8 @@ export const CandidatesTab = () => {
 
       {/* Call Confirmation Dialog */}
       <Dialog open={showCallDialog} onOpenChange={setShowCallDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Confirm Outbound Call</DialogTitle>
             <DialogDescription>
               Ready to call {selectedCandidate && formatPhoneNumber(selectedCandidate.phone_number)}?
@@ -638,7 +638,7 @@ export const CandidatesTab = () => {
           </DialogHeader>
           
           {selectedCandidate && (
-            <div className="space-y-4 py-4">
+            <div className="flex-1 overflow-y-auto space-y-4 py-4 pr-1 custom-scrollbar">
               {/* Contact Info */}
               <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                 <div className="flex items-center gap-2">
@@ -750,7 +750,7 @@ export const CandidatesTab = () => {
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 border-t pt-4 mt-2">
             <Button variant="outline" onClick={() => setShowCallDialog(false)} disabled={calling}>
               Cancel
             </Button>

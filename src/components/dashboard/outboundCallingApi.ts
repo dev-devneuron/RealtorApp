@@ -65,6 +65,8 @@ export interface Candidate {
 
 export interface Contact {
   contact_id: number;
+  // Some backend responses may use `id` instead of `contact_id`
+  id?: number;
   phone_number: string;
   name?: string;
   email?: string;
@@ -254,7 +256,17 @@ export const fetchContacts = async (
     throw new Error(errorData.detail || `Failed to fetch contacts: ${response.statusText}`);
   }
 
-  return await response.json();
+  const raw = await response.json();
+  const contacts: Contact[] = (raw.contacts || []).map((c: any) => ({
+    ...c,
+    // Ensure we always have a numeric contact_id for downstream usage (e.g. consent URL)
+    contact_id: c.contact_id ?? c.id,
+  }));
+
+  return {
+    contacts,
+    total: raw.total ?? contacts.length,
+  };
 };
 
 /**

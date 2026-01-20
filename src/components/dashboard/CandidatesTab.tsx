@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import {
   fetchCandidates,
   triggerCall,
+  clearOptOut,
   type Candidate,
 } from "./outboundCallingApi";
 import { formatPhoneNumber } from "./utils";
@@ -58,10 +59,13 @@ export const CandidatesTab = () => {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [detailCandidate, setDetailCandidate] = useState<Candidate | null>(null);
   const [calling, setCalling] = useState(false);
+  const [clearingOptOut, setClearingOptOut] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [statusFilter, setStatusFilter] = useState<"all" | "eligible" | "ineligible">("all");
 
   // Helper Functions
+  // Names are sanitized server-side in `/outbound-calls/candidates`.
+  // We still apply a simple fallback order here for display.
   const getDisplayName = (candidate: Candidate): string => {
     return candidate.name || candidate.inferred_name || candidate.stored_name || "N/A";
   };
@@ -133,18 +137,20 @@ export const CandidatesTab = () => {
   };
 
   // Load candidates
-  const loadCandidates = async (silent: boolean = false) => {
+  const loadCandidates = async (silent: boolean = false): Promise<Candidate[] | undefined> => {
     if (!silent) {
       setLoading(true);
     }
     try {
       const data = await fetchCandidates(100);
       setCandidates(data);
+      return data;
     } catch (error: any) {
       // Only show error toast for non-silent refreshes
       if (!silent) {
         toast.error(error.message || "Failed to load candidates");
       }
+      return undefined;
     } finally {
       if (!silent) {
         setLoading(false);
@@ -157,9 +163,9 @@ export const CandidatesTab = () => {
     loadCandidates();
   }, []);
 
-  // Automatic polling: refresh every 7 seconds while dashboard is open
+  // Automatic polling: refresh every 35 seconds while dashboard is open
   useEffect(() => {
-    const POLL_INTERVAL = 7000; // 7 seconds
+    const POLL_INTERVAL = 35000; // 35 seconds
     
     // Only poll when the page is visible
     const handleVisibilityChange = () => {
@@ -250,6 +256,29 @@ export const CandidatesTab = () => {
     e?.stopPropagation();
     setDetailCandidate(candidate);
     setShowDetailDialog(true);
+  };
+
+  const handleClearOptOut = async (contactId: number) => {
+    setClearingOptOut(true);
+    try {
+      await clearOptOut(contactId);
+      toast.success("Opt-out status cleared successfully");
+
+      // Refresh candidates and keep detail view in sync
+      const updatedCandidates = await loadCandidates();
+      if (updatedCandidates && detailCandidate) {
+        const updated = updatedCandidates.find(
+          (c) => c.contact_id === detailCandidate.contact_id
+        );
+        if (updated) {
+          setDetailCandidate(updated);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to clear opt-out status");
+    } finally {
+      setClearingOptOut(false);
+    }
   };
 
   const confirmCall = async () => {
@@ -1070,7 +1099,7 @@ export const CandidatesTab = () => {
                 <CardHeader>
                   <CardTitle className="text-lg">Consent & Compliance</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
                       {detailCandidate.consent_status ? (
@@ -1099,6 +1128,34 @@ export const CandidatesTab = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Manual clear opt-out control */}
+                  {detailCandidate.opted_out && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-yellow-300 bg-yellow-50 px-3 py-2">
+                      <span className="text-xs text-yellow-800">
+                        This contact is currently opted out. You can clear this status if it was set incorrectly.
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleClearOptOut(detailCandidate.contact_id)}
+                        disabled={clearingOptOut}
+                        className="whitespace-nowrap border-yellow-400 text-yellow-900 hover:bg-yellow-100"
+                      >
+                        {clearingOptOut ? (
+                          <>
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                            Clearing...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="mr-2 h-3.5 w-3.5" />
+                            Clear opt-out
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

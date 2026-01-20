@@ -280,6 +280,38 @@ export const optOutContact = async (contactId: number): Promise<void> => {
 };
 
 /**
+ * Clear opt-out status for a contact
+ */
+export const clearOptOut = async (contactId: number): Promise<void> => {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    throw new Error("Authentication required");
+  }
+
+  const response = await fetch(
+    `${API_BASE}/outbound-calls/contacts/${contactId}/clear-opt-out`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (response.status === 403) {
+    throw new Error("Access denied. Property Manager role required.");
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.detail || `Failed to clear opt-out: ${response.statusText}`
+    );
+  }
+};
+
+/**
  * Manual consent
  */
 export const recordConsent = async (contactId: number, source: string = "manual"): Promise<void> => {

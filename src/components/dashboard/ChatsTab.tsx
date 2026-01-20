@@ -104,7 +104,7 @@ export const ChatsTab = ({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search by caller number or transcript..."
+                  placeholder="Search by caller number, summary, or transcript..."
                   value={callRecordSearch}
                   onChange={(e) => onSearchChange(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-400"
@@ -155,6 +155,8 @@ export const ChatsTab = ({
                       const searchLower = callRecordSearch.toLowerCase();
                       const matchesSearch =
                         formatPhoneNumber(record.caller_number).toLowerCase().includes(searchLower) ||
+                        (record.summary && record.summary.toLowerCase().includes(searchLower)) ||
+                        ((record as any).transcript_summary && (record as any).transcript_summary.toLowerCase().includes(searchLower)) ||
                         (record.transcript && record.transcript.toLowerCase().includes(searchLower));
                       if (!matchesSearch) return false;
                     }
@@ -189,17 +191,31 @@ export const ChatsTab = ({
                             </p>
                           </div>
                         </div>
-                        <Badge
-                          className={`text-xs font-semibold ${
-                            record.call_status === "ended"
-                              ? "bg-green-100 text-green-700 border-green-300"
-                              : record.call_status === "started"
-                              ? "bg-blue-100 text-blue-700 border-blue-300"
-                              : "bg-red-100 text-red-700 border-red-300"
-                          }`}
-                        >
-                          {record.call_status || "unknown"}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1">
+                          {/* Call Direction Badge */}
+                          {record.call_direction && (
+                            <Badge
+                              className={`text-xs font-semibold ${
+                                record.call_direction === "outbound"
+                                  ? "bg-blue-100 text-blue-700 border-blue-300"
+                                  : "bg-purple-100 text-purple-700 border-purple-300"
+                              }`}
+                            >
+                              {record.call_direction === "outbound" ? "📞 Outbound" : "📥 Inbound"}
+                            </Badge>
+                          )}
+                          <Badge
+                            className={`text-xs font-semibold ${
+                              record.call_status === "ended"
+                                ? "bg-green-100 text-green-700 border-green-300"
+                                : record.call_status === "started"
+                                ? "bg-blue-100 text-blue-700 border-blue-300"
+                                : "bg-red-100 text-red-700 border-red-300"
+                            }`}
+                          >
+                            {record.call_status || "unknown"}
+                          </Badge>
+                        </div>
                       </div>
 
                       <div className="space-y-3">
@@ -219,7 +235,19 @@ export const ChatsTab = ({
                           </div>
                         )}
 
-                        {((record as any).transcript_segments?.length || record.transcript) && (
+                        {/* Summary Preview - Show if available */}
+                        {(record.summary || (record as any).transcript_summary) && (
+                          <div className="mt-3 pt-3 border-t border-amber-100">
+                            <p className="text-xs font-semibold text-emerald-700 mb-1">Summary:</p>
+                            <p className="text-xs text-gray-600 line-clamp-2 whitespace-pre-line">
+                              {record.summary || (record as any).transcript_summary}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Transcript Preview - Show if no summary */}
+                        {!(record.summary || (record as any).transcript_summary) && 
+                         ((record as any).transcript_segments?.length || record.transcript) && (
                           <div className="mt-3 pt-3 border-t border-amber-100">
                             <p className="text-xs text-gray-500 line-clamp-3 whitespace-pre-line">
                               {(record as any).transcript_segments?.length

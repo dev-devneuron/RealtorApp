@@ -69,6 +69,8 @@ export interface CallRecord {
   caller_number?: string;
   recording_url?: string;
   transcript?: string;
+  summary?: string | null; // ✅ NEW - AI-generated call summary from Vapi (preferred over transcript_summary)
+  call_direction?: "inbound" | "outbound"; // ✅ NEW - Call direction
   call_status?: string;
   call_duration?: number;
   realtor_number?: string;
@@ -76,7 +78,7 @@ export interface CallRecord {
   updated_at?: string;
   live_transcript_chunks?: string[];
   transcript_segments?: any[];
-  transcript_summary?: string;
+  transcript_summary?: string; // Legacy field, use summary if available
   metadata?: any;
   [key: string]: any;
 }

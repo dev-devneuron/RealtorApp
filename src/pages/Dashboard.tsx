@@ -904,9 +904,16 @@ const Dashboard = () => {
       ...record,
       transcript: transcriptData.cleanedTranscript,
       transcript_segments: transcriptData.conversationSegments,
+      // Preserve API summary field (preferred), fallback to extracted summary from transcript
+      summary: record.summary || (transcriptData.summarySegments
+        .map((segment) => segment.content)
+        .join("\n\n") || undefined),
+      // Preserve legacy transcript_summary for backward compatibility
       transcript_summary: transcriptData.summarySegments
         .map((segment) => segment.content)
         .join("\n\n"),
+      // Ensure call_direction is preserved
+      call_direction: record.call_direction || undefined,
     };
   };
 

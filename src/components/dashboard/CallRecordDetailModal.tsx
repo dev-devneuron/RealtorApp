@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { PhoneIncoming, Clock, Calendar, User, Volume2, Download, FileText, Phone, Info, RefreshCw, Trash2, Copy, Check } from "lucide-react";
+import { PhoneIncoming, PhoneOutgoing, Clock, Calendar, User, Volume2, Download, FileText, Phone, Info, RefreshCw, Trash2, Copy, Check } from "lucide-react";
 import { formatPhoneNumber, formatCallDuration } from "./utils";
 import { CallRecord } from "./types";
 import { toast } from "sonner";
@@ -109,7 +109,11 @@ export const CallRecordDetailModal = ({
               <div className="flex-1">
                 <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3 mb-2">
                   <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
-                    <PhoneIncoming className="h-6 w-6 text-white" />
+                    {selectedCallRecord.call_direction === "outbound" ? (
+                      <PhoneOutgoing className="h-6 w-6 text-white" />
+                    ) : (
+                      <PhoneIncoming className="h-6 w-6 text-white" />
+                    )}
                   </div>
                   Call Details
                 </DialogTitle>
@@ -118,6 +122,18 @@ export const CallRecordDetailModal = ({
                 </DialogDescription>
               </div>
               <div className="flex items-center gap-2">
+                {/* Call Direction Badge */}
+                {selectedCallRecord.call_direction && (
+                  <Badge 
+                    className={`text-sm font-semibold ${
+                      selectedCallRecord.call_direction === "outbound"
+                        ? "bg-blue-100 text-blue-700 border-blue-300"
+                        : "bg-purple-100 text-purple-700 border-purple-300"
+                    }`}
+                  >
+                    {selectedCallRecord.call_direction === "outbound" ? "📞 Outbound" : "📥 Inbound"}
+                  </Badge>
+                )}
                 <Badge 
                   className={`text-sm font-semibold ${
                     selectedCallRecord.call_status === "ended"
@@ -169,6 +185,24 @@ export const CallRecordDetailModal = ({
                 </div>
               )}
             </div>
+
+            {/* Summary - Show prominently before transcript */}
+            {(selectedCallRecord.summary || (selectedCallRecord as any).transcript_summary) && (
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-300 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                    <FileText className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Call Summary</p>
+                    <p className="text-sm text-gray-500">AI-generated overview of the conversation</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                  {selectedCallRecord.summary || (selectedCallRecord as any).transcript_summary}
+                </p>
+              </div>
+            )}
 
             {/* Recording */}
             {selectedCallRecord.recording_url && (
@@ -279,22 +313,6 @@ export const CallRecordDetailModal = ({
               )}
             </div>
 
-            {(selectedCallRecord as any).transcript_summary && (
-              <div className="bg-white border border-amber-200 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
-                    <FileText className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900">Call Summary</p>
-                    <p className="text-sm text-gray-500">High-level recap for quick review</p>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-                  {(selectedCallRecord as any).transcript_summary}
-                </p>
-              </div>
-            )}
 
             {/* Live Transcript Chunks (if available) */}
             {(selectedCallRecord as any).live_transcript_chunks && 

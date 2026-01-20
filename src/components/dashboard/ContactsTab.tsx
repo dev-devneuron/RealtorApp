@@ -53,9 +53,7 @@ import {
   Phone,
   Filter,
   AlertTriangle,
-  MapPin,
   Globe,
-  Sparkles,
   MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -63,6 +61,7 @@ import {
   fetchContacts,
   optOutContact,
   recordConsent,
+  clearOptOut,
   type Contact,
 } from "./outboundCallingApi";
 import { formatPhoneNumber } from "./utils";
@@ -84,15 +83,18 @@ export const ContactsTab = () => {
   const [consentSource, setConsentSource] = useState("manual");
   const [processing, setProcessing] = useState(false);
 
-  const loadContacts = async () => {
+  const loadContacts = async (): Promise<Contact[] | undefined> => {
     setLoading(true);
     try {
       const optedOut = optedOutFilter === "opted_out" ? true : optedOutFilter === "not_opted_out" ? false : undefined;
       const data = await fetchContacts(limit, offset, optedOut);
-      setContacts(data.contacts || []);
-      setTotal(data.total || data.contacts?.length || 0);
+      const list = data.contacts || [];
+      setContacts(list);
+      setTotal(data.total || list.length || 0);
+      return list;
     } catch (error: any) {
       toast.error(error.message || "Failed to load contacts");
+      return undefined;
     } finally {
       setLoading(false);
     }
@@ -136,6 +138,25 @@ export const ContactsTab = () => {
     }
   };
 
+  const handleClearOptOut = async (contactId: number) => {
+    setProcessing(true);
+    try {
+      await clearOptOut(contactId);
+      toast.success("Opt-out status cleared successfully");
+      const updated = await loadContacts();
+      if (updated && detailContact) {
+        const match = updated.find((c) => c.contact_id === detailContact.contact_id);
+        if (match) {
+          setDetailContact(match);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to clear opt-out status");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copied`);
@@ -154,32 +175,6 @@ export const ContactsTab = () => {
     }
   };
 
-  // Helper functions for inquiry context
-  const hasInquiryContext = (contact: Contact): boolean => {
-    return !!(
-      contact.inquiry_property || 
-      contact.inquiry_purpose || 
-      contact.inquiry_summary ||
-      contact.extracted_region
-    );
-  };
-
-  const getPurposeBadgeClass = (purpose?: string | null): string => {
-    if (!purpose) return "bg-gray-500";
-    
-    const purposeKey = purpose.toLowerCase().replace(/\s+/g, '-');
-    const colorMap: Record<string, string> = {
-      'booking-a-tour': 'bg-green-500',
-      'pricing-inquiry': 'bg-blue-500',
-      'availability-inquiry': 'bg-yellow-500',
-      'maintenance-request': 'bg-orange-500',
-      'general-information': 'bg-gray-500',
-      'viewing-request': 'bg-purple-500',
-      'application-inquiry': 'bg-pink-500',
-    };
-    
-    return colorMap[purposeKey] || 'bg-gray-500';
-  };
 
   const filteredContacts = useMemo(() => {
     let filtered = contacts;
@@ -189,8 +184,7 @@ export const ContactsTab = () => {
       filtered = filtered.filter(c =>
         c.phone_number.toLowerCase().includes(query) ||
         c.name?.toLowerCase().includes(query) ||
-        c.email?.toLowerCase().includes(query) ||
-        c.inquiry_property?.toLowerCase().includes(query)
+        c.email?.toLowerCase().includes(query)
       );
     }
 
@@ -284,24 +278,6 @@ export const ContactsTab = () => {
                 </div>
               </div>
 
-              {/* Property - Show on Card */}
-              <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
-                <div className="flex-1 text-sm text-gray-700 truncate" title={contact.inquiry_property || undefined}>
-                  {contact.inquiry_property || "N/A"}
-                </div>
-              </div>
-
-              {/* Purpose Badge - Quick View */}
-              {contact.inquiry_purpose && (
-                <div>
-                  <Badge 
-                    className={`${getPurposeBadgeClass(contact.inquiry_purpose)} text-white text-xs px-2 py-1`}
-                  >
-                    {contact.inquiry_purpose}
-                  </Badge>
-                </div>
-              )}
 
               {/* Quick Stats */}
               <div className="flex items-center gap-3 text-xs text-gray-600 pt-1">
@@ -331,36 +307,51 @@ export const ContactsTab = () => {
                   <User className="h-3.5 w-3.5 mr-1.5" />
                   Details
                 </Button>
-                {!contact.opted_out && (
+                {!contact.opted_out ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedContact(contact);
+                        setShowConsentDialog(true);
+                      }}
+                      disabled={processing}
+                      className="flex-1"
+                    >
+                      <Shield className="h-3.5 w-3.5 mr-1.5" />
+                      Consent
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedContact(contact);
+                        setShowOptOutDialog(true);
+                      }}
+                      disabled={processing}
+                      className="flex-1"
+                    >
+                      <Ban className="h-3.5 w-3.5 mr-1.5" />
+                      Opt Out
+                    </Button>
+                  </>
+                ) : (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedContact(contact);
-                      setShowConsentDialog(true);
+                      handleViewDetails(contact);
                     }}
-                    disabled={processing}
                     className="flex-1"
                   >
-                    <Shield className="h-3.5 w-3.5 mr-1.5" />
-                    Consent
+                    <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                    Review opt-out
                   </Button>
                 )}
-                <Button
-                  size="sm"
-                  variant={contact.opted_out ? "outline" : "destructive"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedContact(contact);
-                    setShowOptOutDialog(true);
-                  }}
-                  disabled={processing || contact.opted_out}
-                  className="flex-1"
-                >
-                  <Ban className="h-3.5 w-3.5 mr-1.5" />
-                  {contact.opted_out ? "Opted Out" : "Opt Out"}
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -673,107 +664,6 @@ export const ContactsTab = () => {
                 </CardContent>
               </Card>
 
-              {/* Property Inquiry Context - Full Details */}
-              {hasInquiryContext(detailContact) ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-blue-600" />
-                      Property Inquiry Context
-                      <Badge variant="outline" className="text-xs border-blue-400 text-blue-700">
-                        AI Extracted
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Inquiry Summary - MOST IMPORTANT */}
-                    {detailContact.inquiry_summary && (
-                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <MessageSquare className="h-5 w-5 text-blue-600" />
-                          <span className="text-sm font-bold text-blue-900 uppercase tracking-wide">Complete Summary</span>
-                        </div>
-                        <div className="text-base text-gray-900 leading-relaxed whitespace-pre-wrap font-medium mb-2">
-                          {detailContact.inquiry_summary}
-                        </div>
-                        <div className="pt-2 border-t border-blue-200">
-                          <span className="text-xs text-blue-600 italic">Combined: Purpose | Property | Email</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Property Address */}
-                    {detailContact.inquiry_property && (
-                      <div className="bg-white rounded-lg p-4 border-2 border-blue-200 shadow-sm">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                            <MapPin className="h-6 w-6 text-blue-600" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">Property Address</div>
-                            <div className="text-base font-semibold text-gray-900 leading-relaxed">
-                              {detailContact.inquiry_property}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Purpose */}
-                    {detailContact.inquiry_purpose && (
-                      <div>
-                        <div className="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">Purpose</div>
-                        <Badge 
-                          className={`${getPurposeBadgeClass(detailContact.inquiry_purpose)} text-white text-base px-4 py-2 font-semibold`}
-                        >
-                          {detailContact.inquiry_purpose}
-                        </Badge>
-                      </div>
-                    )}
-                    
-                    {/* Region */}
-                    {detailContact.extracted_region && (
-                      <div className="bg-white rounded-lg p-3 border border-blue-200">
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-5 w-5 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-700 uppercase tracking-wide mr-2">Region:</span>
-                          <span className="text-base font-semibold text-gray-900">{detailContact.extracted_region}</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Full Call Summary */}
-                    {detailContact.call_summary && detailContact.call_summary !== detailContact.inquiry_summary && (
-                      <div className="bg-white rounded-lg p-4 border border-blue-200">
-                        <details className="group">
-                          <summary className="cursor-pointer text-sm font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-2 list-none mb-3">
-                            <MessageSquare className="h-5 w-5" />
-                            <span>View Full Call Summary</span>
-                            <span className="ml-auto text-xs text-blue-600 group-open:hidden">▼</span>
-                            <span className="ml-auto text-xs text-blue-600 hidden group-open:inline">▲</span>
-                          </summary>
-                          <div className="pt-3 border-t border-blue-200">
-                            <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                              {detailContact.call_summary}
-                            </div>
-                          </div>
-                        </details>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Property Inquiry Context</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8 text-gray-500">
-                      No property inquiries available
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Call History */}
               <Card>
@@ -860,6 +750,67 @@ export const ContactsTab = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Opt-out context from transcript (keyword + exact line) */}
+                  {detailContact.opted_out &&
+                    (detailContact.opt_out_reason ||
+                      detailContact.opt_out_transcript_line) && (
+                      <details className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs space-y-2">
+                        <summary className="flex cursor-pointer items-center gap-2 text-red-800 font-semibold list-none">
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          <span>Opt-out context</span>
+                          <span className="ml-auto text-[10px] uppercase tracking-wide text-red-600">
+                            View details
+                          </span>
+                        </summary>
+                        {detailContact.opt_out_reason && (
+                          <div className="text-red-700">
+                            <span className="font-medium">Triggered by: </span>
+                            <span className="italic">
+                              "{detailContact.opt_out_reason}"
+                            </span>
+                          </div>
+                        )}
+                        {detailContact.opt_out_transcript_line && (
+                          <div className="border-t border-red-200 pt-2 text-gray-700">
+                            <div className="mb-1 font-medium">
+                              Exact transcript line (user):
+                            </div>
+                            <div className="rounded bg-white p-2 text-[11px] italic">
+                              "{detailContact.opt_out_transcript_line}"
+                            </div>
+                          </div>
+                        )}
+                      </details>
+                    )}
+
+                  {/* Manual clear opt-out control */}
+                  {detailContact.opted_out && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-yellow-300 bg-yellow-50 px-3 py-2">
+                      <span className="text-xs text-yellow-800">
+                        This contact is currently opted out. You can clear this status if it was set incorrectly.
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleClearOptOut(detailContact.contact_id)}
+                        disabled={processing}
+                        className="whitespace-nowrap border-yellow-400 text-yellow-900 hover:bg-yellow-100"
+                      >
+                        {processing ? (
+                          <>
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                            Clearing...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="mr-2 h-3.5 w-3.5" />
+                            Clear opt-out
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

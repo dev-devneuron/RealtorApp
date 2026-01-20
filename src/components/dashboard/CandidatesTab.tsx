@@ -44,7 +44,6 @@ import { toast } from "sonner";
 import {
   fetchCandidates,
   triggerCall,
-  clearOptOut,
   type Candidate,
 } from "./outboundCallingApi";
 import { formatPhoneNumber } from "./utils";
@@ -59,19 +58,19 @@ export const CandidatesTab = () => {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [detailCandidate, setDetailCandidate] = useState<Candidate | null>(null);
   const [calling, setCalling] = useState(false);
-  const [clearingOptOut, setClearingOptOut] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [statusFilter, setStatusFilter] = useState<"all" | "eligible" | "ineligible">("all");
 
   // Helper Functions
   // Names are sanitized server-side in `/outbound-calls/candidates`.
-  // We still apply a simple fallback order here for display.
+  // Always use the main 'name' field - it's already sanitized by the backend.
   const getDisplayName = (candidate: Candidate): string => {
-    return candidate.name || candidate.inferred_name || candidate.stored_name || "N/A";
+    return candidate.name || "N/A";
   };
 
   const getDisplayEmail = (candidate: Candidate): string => {
-    return candidate.email || candidate.extracted_email || candidate.stored_email || "N/A";
+    // Use main 'email' field (already sanitized/prioritized by backend)
+    return candidate.email || "N/A";
   };
 
   const isNameInferred = (candidate: Candidate): boolean => {
@@ -256,29 +255,6 @@ export const CandidatesTab = () => {
     e?.stopPropagation();
     setDetailCandidate(candidate);
     setShowDetailDialog(true);
-  };
-
-  const handleClearOptOut = async (contactId: number) => {
-    setClearingOptOut(true);
-    try {
-      await clearOptOut(contactId);
-      toast.success("Opt-out status cleared successfully");
-
-      // Refresh candidates and keep detail view in sync
-      const updatedCandidates = await loadCandidates();
-      if (updatedCandidates && detailCandidate) {
-        const updated = updatedCandidates.find(
-          (c) => c.contact_id === detailCandidate.contact_id
-        );
-        if (updated) {
-          setDetailCandidate(updated);
-        }
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to clear opt-out status");
-    } finally {
-      setClearingOptOut(false);
-    }
   };
 
   const confirmCall = async () => {
@@ -1128,67 +1104,6 @@ export const CandidatesTab = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Opt-out context from transcript (keyword + exact line) */}
-                  {detailCandidate.opted_out &&
-                    (detailCandidate.opt_out_reason ||
-                      detailCandidate.opt_out_transcript_line) && (
-                      <details className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs space-y-2">
-                        <summary className="flex cursor-pointer items-center gap-2 text-red-800 font-semibold list-none">
-                          <MessageSquare className="h-3.5 w-3.5" />
-                          <span>Opt-out context</span>
-                          <span className="ml-auto text-[10px] uppercase tracking-wide text-red-600">
-                            View details
-                          </span>
-                        </summary>
-                        {detailCandidate.opt_out_reason && (
-                          <div className="text-red-700">
-                            <span className="font-medium">Triggered by: </span>
-                            <span className="italic">
-                              "{detailCandidate.opt_out_reason}"
-                            </span>
-                          </div>
-                        )}
-                        {detailCandidate.opt_out_transcript_line && (
-                          <div className="border-t border-red-200 pt-2 text-gray-700">
-                            <div className="mb-1 font-medium">
-                              Exact transcript line (user):
-                            </div>
-                            <div className="rounded bg-white p-2 text-[11px] italic">
-                              "{detailCandidate.opt_out_transcript_line}"
-                            </div>
-                          </div>
-                        )}
-                      </details>
-                    )}
-
-                  {/* Manual clear opt-out control */}
-                  {detailCandidate.opted_out && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-yellow-300 bg-yellow-50 px-3 py-2">
-                      <span className="text-xs text-yellow-800">
-                        This contact is currently opted out. You can clear this status if it was set incorrectly.
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleClearOptOut(detailCandidate.contact_id)}
-                        disabled={clearingOptOut}
-                        className="whitespace-nowrap border-yellow-400 text-yellow-900 hover:bg-yellow-100"
-                      >
-                        {clearingOptOut ? (
-                          <>
-                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            Clearing...
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="mr-2 h-3.5 w-3.5" />
-                            Clear opt-out
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>

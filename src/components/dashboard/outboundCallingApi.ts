@@ -75,6 +75,9 @@ export interface Contact {
   opted_out: boolean;
   opt_out_timestamp?: string;
   opt_out_method?: string;
+  // Optional opt-out context if available
+  opt_out_reason?: string | null;
+  opt_out_transcript_line?: string | null;
   dnc_flag?: boolean;
   call_attempt_count: number;
   last_called_at?: string;

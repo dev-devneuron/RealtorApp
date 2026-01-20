@@ -587,8 +587,8 @@ export const ContactsTab = () => {
 
       {/* Contact Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5 text-amber-600" />
               Contact Details
@@ -599,14 +599,16 @@ export const ContactsTab = () => {
           </DialogHeader>
           
           {detailContact && (
-            <div className="space-y-6 py-4">
-              {/* Contact Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Contact Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex-1 overflow-y-auto pr-2 space-y-4 py-4 custom-scrollbar">
+              {/* Top Row: Contact Info and Call History side by side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Contact Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-center gap-3">
                       <User className="h-5 w-5 text-gray-500" />
                       <div>
@@ -664,9 +666,8 @@ export const ContactsTab = () => {
                 </CardContent>
               </Card>
 
-
-              {/* Call History */}
-              <Card>
+                {/* Call History */}
+                <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Call History</CardTitle>
                 </CardHeader>
@@ -697,8 +698,9 @@ export const ContactsTab = () => {
                   </div>
                 </CardContent>
               </Card>
+              </div>
 
-              {/* Consent & Compliance */}
+              {/* Consent & Compliance - Full Width */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Consent & Compliance</CardTitle>
@@ -816,7 +818,7 @@ export const ContactsTab = () => {
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 border-t pt-4 mt-4">
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
               Close
             </Button>

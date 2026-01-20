@@ -43,6 +43,9 @@ export interface Candidate {
   // Consent & Compliance
   consent_status: boolean;
   opted_out: boolean;
+  // Opt-out context (if system detected an opt-out from transcript)
+  opt_out_reason?: string | null;           // Keyword/phrase that triggered opt-out
+  opt_out_transcript_line?: string | null;  // Exact user transcript line
   
   // Eligibility Information
   eligible: boolean;

@@ -1129,6 +1129,39 @@ export const CandidatesTab = () => {
                     </div>
                   </div>
 
+                  {/* Opt-out context from transcript (keyword + exact line) */}
+                  {detailCandidate.opted_out &&
+                    (detailCandidate.opt_out_reason ||
+                      detailCandidate.opt_out_transcript_line) && (
+                      <details className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs space-y-2">
+                        <summary className="flex cursor-pointer items-center gap-2 text-red-800 font-semibold list-none">
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          <span>Opt-out context</span>
+                          <span className="ml-auto text-[10px] uppercase tracking-wide text-red-600">
+                            View details
+                          </span>
+                        </summary>
+                        {detailCandidate.opt_out_reason && (
+                          <div className="text-red-700">
+                            <span className="font-medium">Triggered by: </span>
+                            <span className="italic">
+                              "{detailCandidate.opt_out_reason}"
+                            </span>
+                          </div>
+                        )}
+                        {detailCandidate.opt_out_transcript_line && (
+                          <div className="border-t border-red-200 pt-2 text-gray-700">
+                            <div className="mb-1 font-medium">
+                              Exact transcript line (user):
+                            </div>
+                            <div className="rounded bg-white p-2 text-[11px] italic">
+                              "{detailCandidate.opt_out_transcript_line}"
+                            </div>
+                          </div>
+                        )}
+                      </details>
+                    )}
+
                   {/* Manual clear opt-out control */}
                   {detailCandidate.opted_out && (
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-yellow-300 bg-yellow-50 px-3 py-2">

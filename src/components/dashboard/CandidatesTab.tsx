@@ -91,6 +91,27 @@ export const CandidatesTab = () => {
     );
   };
 
+  // Get display property - use property if available, otherwise fall back to region
+  const getDisplayProperty = (candidate: Candidate): string => {
+    return candidate.inquiry_property || candidate.extracted_region || "N/A";
+  };
+
+  // Format inquiry summary for better readability - returns JSX
+  const formatInquirySummary = (summary: string) => {
+    // Split by | and format each part on a new line with bullet points
+    const parts = summary
+      .split(/\s*\|\s*/)
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+    
+    return parts.map((part, idx) => (
+      <div key={idx} className={idx === 0 ? '' : 'mt-2'}>
+        {idx > 0 && <span className="text-blue-600 mr-2">•</span>}
+        <span className={idx === 0 ? 'font-semibold' : ''}>{part}</span>
+      </div>
+    ));
+  };
+
   const formatLastCalled = (candidate: Candidate): string => {
     const lastCalled = candidate.last_called_at || candidate.last_call_at;
     if (!lastCalled) return "Never called";
@@ -392,11 +413,11 @@ export const CandidatesTab = () => {
                 )}
               </div>
 
-              {/* Property - Show on Card */}
+              {/* Property/Region - Show on Card */}
               <div className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
-                <div className="flex-1 text-sm text-gray-700 truncate" title={candidate.inquiry_property || undefined}>
-                  {candidate.inquiry_property || "N/A"}
+                <div className="flex-1 text-sm text-gray-700 truncate" title={getDisplayProperty(candidate)}>
+                  {getDisplayProperty(candidate)}
                 </div>
               </div>
 
@@ -667,15 +688,15 @@ export const CandidatesTab = () => {
                   
                   {/* Inquiry Summary - MOST IMPORTANT - Show Prominently */}
                   {selectedCandidate.inquiry_summary && (
-                    <div className="bg-white rounded-lg p-3 border-2 border-blue-300 shadow-sm">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="bg-white rounded-lg p-4 border-2 border-blue-300 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
                         <MessageSquare className="h-4 w-4 text-blue-600" />
                         <span className="text-xs font-bold text-blue-900 uppercase tracking-wide">Complete Summary</span>
                       </div>
-                      <div className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap font-medium">
-                        {selectedCandidate.inquiry_summary}
+                      <div className="text-sm text-gray-900 leading-relaxed font-medium space-y-1">
+                        {formatInquirySummary(selectedCandidate.inquiry_summary)}
                       </div>
-                      <div className="mt-2 pt-2 border-t border-blue-200">
+                      <div className="mt-3 pt-3 border-t border-blue-200">
                         <span className="text-xs text-blue-600 italic">Combined: Purpose | Property | Email</span>
                       </div>
                     </div>
@@ -692,24 +713,19 @@ export const CandidatesTab = () => {
                     </div>
                   )}
                   
-                  {selectedCandidate.inquiry_property && (
+                  {/* Property/Region - Show property if available, otherwise region */}
+                  {getDisplayProperty(selectedCandidate) !== "N/A" && (
                     <div className="bg-white rounded p-2 border border-blue-200">
                       <div className="flex items-start gap-2">
                         <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <div>
-                          <span className="text-xs font-medium text-blue-900">Property: </span>
-                          <span className="text-sm text-gray-900 font-medium">{selectedCandidate.inquiry_property}</span>
+                          <span className="text-xs font-medium text-blue-900">
+                            {selectedCandidate.inquiry_property ? "Property: " : "Region: "}
+                          </span>
+                          <span className="text-sm text-gray-900 font-medium">
+                            {getDisplayProperty(selectedCandidate)}
+                          </span>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedCandidate.extracted_region && (
-                    <div className="bg-white rounded p-2 border border-blue-200">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-blue-600" />
-                        <span className="text-xs font-medium text-blue-900">Region: </span>
-                        <span className="text-sm text-gray-900 font-medium">{selectedCandidate.extracted_region}</span>
                       </div>
                     </div>
                   )}
@@ -872,26 +888,28 @@ export const CandidatesTab = () => {
                           <MessageSquare className="h-5 w-5 text-blue-600" />
                           <span className="text-sm font-bold text-blue-900 uppercase tracking-wide">Complete Summary</span>
                         </div>
-                        <div className="text-base text-gray-900 leading-relaxed whitespace-pre-wrap font-medium mb-2">
-                          {detailCandidate.inquiry_summary}
+                        <div className="text-base text-gray-900 leading-relaxed font-medium mb-2 space-y-1">
+                          {formatInquirySummary(detailCandidate.inquiry_summary)}
                         </div>
-                        <div className="pt-2 border-t border-blue-200">
+                        <div className="pt-3 border-t border-blue-200">
                           <span className="text-xs text-blue-600 italic">Combined: Purpose | Property | Email</span>
                         </div>
                       </div>
                     )}
                     
-                    {/* Property Address */}
-                    {detailCandidate.inquiry_property && (
+                    {/* Property/Region Address - Show property if available, otherwise region */}
+                    {getDisplayProperty(detailCandidate) !== "N/A" && (
                       <div className="bg-white rounded-lg p-4 border-2 border-blue-200 shadow-sm">
                         <div className="flex items-start gap-3">
                           <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
                             <MapPin className="h-6 w-6 text-blue-600" />
                           </div>
                           <div className="flex-1">
-                            <div className="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">Property Address</div>
+                            <div className="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">
+                              {detailCandidate.inquiry_property ? "Property Address" : "Region"}
+                            </div>
                             <div className="text-base font-semibold text-gray-900 leading-relaxed">
-                              {detailCandidate.inquiry_property}
+                              {getDisplayProperty(detailCandidate)}
                             </div>
                           </div>
                         </div>
@@ -907,17 +925,6 @@ export const CandidatesTab = () => {
                         >
                           {detailCandidate.inquiry_purpose}
                         </Badge>
-                      </div>
-                    )}
-                    
-                    {/* Region */}
-                    {detailCandidate.extracted_region && (
-                      <div className="bg-white rounded-lg p-3 border border-blue-200">
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-5 w-5 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-700 uppercase tracking-wide mr-2">Region:</span>
-                          <span className="text-base font-semibold text-gray-900">{detailCandidate.extracted_region}</span>
-                        </div>
                       </div>
                     )}
                     

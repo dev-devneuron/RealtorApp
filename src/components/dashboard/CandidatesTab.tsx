@@ -133,20 +133,57 @@ export const CandidatesTab = () => {
   };
 
   // Load candidates
-  const loadCandidates = async () => {
-    setLoading(true);
+  const loadCandidates = async (silent: boolean = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     try {
       const data = await fetchCandidates(100);
       setCandidates(data);
     } catch (error: any) {
-      toast.error(error.message || "Failed to load candidates");
+      // Only show error toast for non-silent refreshes
+      if (!silent) {
+        toast.error(error.message || "Failed to load candidates");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
+  // Initial load
   useEffect(() => {
     loadCandidates();
+  }, []);
+
+  // Automatic polling: refresh every 7 seconds while dashboard is open
+  useEffect(() => {
+    const POLL_INTERVAL = 7000; // 7 seconds
+    
+    // Only poll when the page is visible
+    const handleVisibilityChange = () => {
+      // When tab becomes visible, immediately refresh (silent)
+      if (!document.hidden) {
+        loadCandidates(true);
+      }
+    };
+
+    // Set up visibility change listener
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Set up polling interval (only when page is visible, silent refresh)
+    const pollInterval = setInterval(() => {
+      if (!document.hidden) {
+        loadCandidates(true); // Silent refresh for polling
+      }
+    }, POLL_INTERVAL);
+
+    // Cleanup
+    return () => {
+      clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Filtered candidates
@@ -452,7 +489,7 @@ export const CandidatesTab = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadCandidates}
+            onClick={() => loadCandidates()}
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />

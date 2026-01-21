@@ -3,13 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { CheckCircle, Mail, Phone, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 // Backend API base URL
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 const ContactSection = () => {
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -18,6 +23,7 @@ const ContactSection = () => {
     subject: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,6 +76,7 @@ const ContactSection = () => {
         title: "Message sent!",
         description: data.message || "Thank you for contacting us! We'll get back to you soon.",
       });
+      setShowSuccess(true);
 
       // Reset form
       setFormData({
@@ -92,17 +99,28 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact-section" className="py-20 bg-muted/20">
+    <section id="contact-section" className="py-16 sm:py-20 bg-muted/20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Contact Us</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <motion.div
+          className="text-center mb-16"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={itemVariants}
+        >
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Contact Us</h2>
+          <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Get in touch with our team for any questions or support
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          <div>
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 max-w-6xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={itemVariants}
+          >
             <h3 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Get in Touch</h3>
             <div className="space-y-4 sm:space-y-6">
               <div className="flex items-center space-x-4">
@@ -118,10 +136,16 @@ const ContactSection = () => {
                 <span>San Francisco Bay Area, CA</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <Card>
-            <CardContent className="p-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={itemVariants}
+          >
+            <Card>
+              <CardContent className="p-4 sm:p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="name" className="text-sm font-medium mb-1 block">
@@ -131,7 +155,10 @@ const ContactSection = () => {
                     id="name"
                     placeholder="Your Name"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      setShowSuccess(false);
+                    }}
                     required
                     minLength={2}
                   />
@@ -146,7 +173,10 @@ const ContactSection = () => {
                     type="email"
                     placeholder="your.email@example.com"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      setShowSuccess(false);
+                    }}
                     required
                   />
                 </div>
@@ -160,7 +190,10 @@ const ContactSection = () => {
                     type="tel"
                     placeholder="+1 (555) 123-4567"
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      setShowSuccess(false);
+                    }}
                   />
                 </div>
 
@@ -172,7 +205,10 @@ const ContactSection = () => {
                     id="subject"
                     placeholder="General Inquiry"
                     value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, subject: e.target.value });
+                      setShowSuccess(false);
+                    }}
                   />
                 </div>
 
@@ -184,7 +220,10 @@ const ContactSection = () => {
                     id="message"
                     placeholder="Your Message"
                     value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, message: e.target.value });
+                      setShowSuccess(false);
+                    }}
                     required
                     minLength={10}
                     rows={4}
@@ -206,9 +245,16 @@ const ContactSection = () => {
                     "Send Message"
                   )}
                 </Button>
+                {showSuccess && (
+                  <div className="flex items-center justify-center text-sm text-green-600">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Message sent, we will contact you soon.
+                  </div>
+                )}
               </form>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
     </section>

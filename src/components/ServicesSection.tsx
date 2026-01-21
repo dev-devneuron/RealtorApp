@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { 
   MessageCircle, 
   Phone, 
@@ -14,6 +15,19 @@ import {
 } from "lucide-react";
 
 const ServicesSection = () => {
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
   const services = [
     {
       icon: MessageCircle,
@@ -79,9 +93,15 @@ const ServicesSection = () => {
 
   return (
     <section id="services" className="py-20 bg-gray-50">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-16">
+        <motion.div
+          className="text-center mb-16"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={itemVariants}
+        >
           <h2 className="text-4xl lg:text-5xl font-bold text-navy mb-6">
             AI-Powered Real Estate Solutions
           </h2>
@@ -90,25 +110,38 @@ const ServicesSection = () => {
             Our comprehensive suite of tools helps you capture leads, engage clients, 
             and close deals more efficiently than ever before.
           </p>
-        </div>
+        </motion.div>
 
         {/* Benefits Row */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <motion.div
+          className="grid md:grid-cols-3 gap-8 mb-16"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+        >
           {benefits.map((benefit, index) => (
-            <div key={index} className="text-center">
+            <motion.div key={index} className="text-center" variants={itemVariants}>
               <div className="bg-accent-gradient w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <benefit.icon className="h-8 w-8 text-navy" />
               </div>
               <h3 className="text-xl font-bold text-navy mb-2">{benefit.title}</h3>
               <p className="text-gray-600">{benefit.description}</p>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Services Grid */}
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12 md:mb-16">
+        <motion.div
+          className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12 md:mb-16"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
           {services.map((service, index) => (
-            <Card key={index} className="group hover:shadow-luxury transition-all duration-300 hover:-translate-y-2 border-0">
+            <motion.div key={index} variants={itemVariants}>
+              <Card className="group hover:shadow-luxury transition-all duration-300 hover:-translate-y-2 border-0">
               <CardHeader>
                 <div className={`w-12 h-12 ${service.color} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <service.icon className="h-6 w-6 text-white" />
@@ -126,12 +159,19 @@ const ServicesSection = () => {
                   ))}
                 </ul>
               </CardContent>
-            </Card>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* CTA Section */}
-        <div className="text-center bg-luxury-gradient rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-white">
+        <motion.div
+          className="text-center bg-luxury-gradient rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-white"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={itemVariants}
+        >
           <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
             Ready to Transform Your Business?
           </h3>
@@ -148,7 +188,7 @@ const ServicesSection = () => {
               </Button>
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

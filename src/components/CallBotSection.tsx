@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { 
   Phone, 
   Play, 
@@ -16,9 +17,27 @@ import {
 } from "lucide-react";
 
 const CallBotSection = () => {
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentDemo, setCurrentDemo] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const [statsStarted, setStatsStarted] = useState(false);
+  const [statsValues, setStatsValues] = useState({
+    successRate: 0,
+  });
 
   const demos = [
     {
@@ -127,6 +146,44 @@ const CallBotSection = () => {
     }
   }, [isPlaying]);
 
+  useEffect(() => {
+    const element = statsRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setStatsStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!statsStarted) return;
+
+    const duration = 2200;
+    const startTime = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      setStatsValues({
+        successRate: Math.round(92 * progress),
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      }
+    };
+
+    requestAnimationFrame(tick);
+  }, [statsStarted]);
+
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
   };
@@ -137,7 +194,13 @@ const CallBotSection = () => {
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-10 md:gap-12 items-center">
           {/* Left Column - Demo */}
           <div className="space-y-8">
-            <Card className="shadow-luxury border-0">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={itemVariants}
+            >
+              <Card className="shadow-luxury border-0">
               <CardHeader className="bg-navy text-white">
                 <CardTitle className="flex items-center space-x-2">
                   <Phone className="h-6 w-6 text-gold" />
@@ -267,12 +330,18 @@ const CallBotSection = () => {
                   ))}
                 </div>
               </CardContent>
-            </Card>
+              </Card>
+            </motion.div>
           </div>
 
           {/* Right Column - Features */}
           <div className="space-y-6 sm:space-y-8 mt-8 lg:mt-0">
-            <div>
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={itemVariants}
+            >
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-navy mb-4 sm:mb-6">
                 AI Voice Assistant That
                 <span className="text-gold block">Sounds Human</span>
@@ -282,12 +351,22 @@ const CallBotSection = () => {
                 best agent. Natural conversations, smart scheduling, and lead qualification 
                 all automated for maximum efficiency.
               </p>
-            </div>
+            </motion.div>
 
             {/* Features */}
-            <div className="space-y-6">
+            <motion.div
+              className="space-y-6"
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+            >
               {features.map((feature, index) => (
-                <div key={index} className="flex items-start space-x-4">
+                <motion.div
+                  key={index}
+                  className="flex items-start space-x-4"
+                  variants={itemVariants}
+                >
                   <div className="bg-accent-gradient w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
                     <feature.icon className="h-6 w-6 text-navy" />
                   </div>
@@ -295,16 +374,25 @@ const CallBotSection = () => {
                     <h3 className="font-bold text-navy mb-2">{feature.title}</h3>
                     <p className="text-gray-600">{feature.description}</p>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
             {/* Call Stats */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card">
+            <motion.div
+              ref={statsRef}
+              className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={itemVariants}
+            >
               <h4 className="font-bold text-navy mb-3 sm:mb-4 text-center text-sm sm:text-base">CallBot Performance</h4>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gold">92%</div>
+                  <div className="text-2xl font-bold text-gold">
+                    {statsStarted ? `${statsValues.successRate}%` : "92%"}
+                  </div>
                   <div className="text-gray-600 text-sm">Call Success Rate</div>
                 </div>
                 <div className="text-center">
@@ -316,7 +404,7 @@ const CallBotSection = () => {
                   <div className="text-gray-600 text-sm">Lead Conversion</div>
                 </div> */}
               </div>
-            </div>
+            </motion.div>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/book-demo" className="flex-1">   

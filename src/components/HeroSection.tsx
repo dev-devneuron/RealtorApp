@@ -15,6 +15,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Phone, TrendingUp, Users, Award, Bot, User, MoreVertical, Search, Paperclip, Mic } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -26,6 +27,13 @@ const HeroSection = () => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const [statsStarted, setStatsStarted] = useState(false);
+  const [statValues, setStatValues] = useState({
+    availability: 0,
+    conversion: 25,
+    realtors: 0,
+  });
 
   /**
    * Predefined chat script for demonstration
@@ -89,6 +97,46 @@ const HeroSection = () => {
     }
   }, [currentMessageIndex]);
 
+  useEffect(() => {
+    const element = statsRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setStatsStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!statsStarted) return;
+
+    const duration = 2200;
+    const startTime = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      setStatValues({
+        availability: Math.round(24 * progress),
+        conversion: Math.round(25 + (30 - 25) * progress),
+        realtors: Math.round(500 * progress),
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      }
+    };
+
+    requestAnimationFrame(tick);
+  }, [statsStarted]);
+
   /**
    * Resets the chat animation
    * 
@@ -100,8 +148,13 @@ const HeroSection = () => {
     setCurrentMessageIndex(0);
   };
 
+  const heroItem = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
+
   return (
-    <section id="home" className="relative min-h-screen flex items-center overflow-hidden pt-16 bg-navy">
+    <section id="home" className="relative min-h-screen flex items-center overflow-hidden pt-20 sm:pt-16 bg-navy">
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50"
@@ -118,16 +171,22 @@ const HeroSection = () => {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 md:py-12">
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-8 items-center">
           {/* Left Column - Main Content */}
-          <div className="text-white space-y-4 md:space-y-6 animate-slide-up">
+          <motion.div
+            className="text-white space-y-4 md:space-y-6 animate-slide-up"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.4 }}
+            variants={heroItem}
+          >
             <div className="space-y-3 md:space-y-4">
-              <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border border-white/20">
+            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm font-medium border border-white/20">
                 <Award className="mr-2 h-3 w-3 sm:h-4 sm:w-4 text-gold" />
                 #1 AI-Powered Real Estate Services
               </div>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight">
                 Revolutionize Your
                 <span className="text-gold block bg-gradient-to-r from-gold to-yellow-200 bg-clip-text text-transparent">
                   Real Estate Business
@@ -135,7 +194,7 @@ const HeroSection = () => {
                 with AI
               </h1>
               
-              <p className="text-base sm:text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed">
+              <p className="text-sm sm:text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed">
                 Experience the future of real estate with our AI-powered chatbot and callbot. 
                 Capture leads 24/7, provide instant property information, and close deals faster 
                 than ever before.
@@ -147,7 +206,7 @@ const HeroSection = () => {
               <Button 
                 variant="gold" 
                 size="lg" 
-                className="text-base sm:text-lg px-4 sm:px-6 py-2.5 sm:py-3 font-semibold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
+                className="text-sm sm:text-lg px-4 sm:px-6 py-2.5 sm:py-3 font-semibold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
                 onClick={() => {
                   const element = document.getElementById('ai-tools');
                   if (element) {
@@ -161,7 +220,7 @@ const HeroSection = () => {
                 <Button 
                   variant="premium" 
                   size="lg" 
-                  className="text-base sm:text-lg px-4 sm:px-6 py-2.5 sm:py-3 font-semibold border-2 border-gold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
+                  className="text-sm sm:text-lg px-4 sm:px-6 py-2.5 sm:py-3 font-semibold border-2 border-gold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
                 >
                   Schedule Demo
                 </Button>
@@ -169,24 +228,36 @@ const HeroSection = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6">
+            <div ref={statsRef} className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6">
               <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-xl sm:text-2xl font-bold text-gold">24/7</div>
-                <div className="text-white/80 text-xs">AI Availability</div>
+                <div className="text-lg sm:text-2xl font-bold text-gold">
+                  {statsStarted ? statValues.availability : 24}/7
+                </div>
+                <div className="text-white/80 text-[11px] sm:text-xs">AI Availability</div>
               </div>
               <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-xl sm:text-2xl font-bold text-gold">25-30%</div>
-                <div className="text-white/80 text-xs">Lead Conversion</div>
+                <div className="text-lg sm:text-2xl font-bold text-gold">
+                  {statsStarted ? `25-${statValues.conversion}%` : "25-30%"}
+                </div>
+                <div className="text-white/80 text-[11px] sm:text-xs">Lead Conversion</div>
               </div>
               <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-xl sm:text-2xl font-bold text-gold">500+</div>
-                <div className="text-white/80 text-xs">Happy Realtors</div>
+                <div className="text-lg sm:text-2xl font-bold text-gold">
+                  {statsStarted ? `${statValues.realtors}+` : "500+"}
+                </div>
+                <div className="text-white/80 text-[11px] sm:text-xs">Happy Realtors</div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column - Premium WhatsApp Style Chat */}
-          <div className="relative animate-float mt-8 lg:mt-0">
+          <motion.div
+            className="relative animate-float mt-8 lg:mt-0 w-full max-w-sm sm:max-w-lg lg:max-w-none mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={heroItem}
+          >
             <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 shadow-2xl border border-white/20 relative overflow-hidden">
               {/* WhatsApp Chat Container */}
               <div className="bg-[#111b21] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-gray-600">
@@ -200,7 +271,7 @@ const HeroSection = () => {
                       <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-[#202c33]"></div>
                     </div>
                     <div>
-                      <div className="text-white font-semibold text-sm sm:text-base">Leasap Property Assistant</div>
+                      <div className="text-white font-semibold text-xs sm:text-base">Leasap Property Assistant</div>
                       <div className="text-green-400 text-xs flex items-center">
                         {/* <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div> */}
                         Online 
@@ -217,7 +288,7 @@ const HeroSection = () => {
                 {/* WhatsApp Chat Area */}
                 <div 
                   ref={chatContainerRef}
-                  className="h-64 sm:h-72 bg-[#0b141a] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-y-auto p-2 sm:p-3 space-y-2 scrollbar-thin scrollbar-thumb-[#374248] scrollbar-track-[#202c33]"
+                  className="h-52 sm:h-64 md:h-72 bg-[#0b141a] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-hidden no-scrollbar p-2 sm:p-3 space-y-2"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%231a1a1a' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")`
                   }}
@@ -252,7 +323,7 @@ const HeroSection = () => {
                             : "bg-[#202c33] text-white rounded-bl-md border border-gray-600/30"
                         }`}
                       >
-                        <div className="text-xs leading-relaxed" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
+                      <div className="text-[11px] sm:text-xs leading-relaxed" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
                           {message.text.split('\n').map((line, lineIndex) => {
                             // Handle table formatting
                             if (line.includes('|') && line.includes('Building')) {
@@ -425,7 +496,7 @@ const HeroSection = () => {
                 Experience the Results
               </Button>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 

@@ -21,6 +21,7 @@ const Header = () => {
   
   // State for scroll-based styling
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   
   // State for mobile menu visibility
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -38,6 +39,12 @@ const Header = () => {
     // Handle scroll event to update header styling
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
+      const doc = document.documentElement;
+      const body = document.body;
+      const scrollTop = window.scrollY || doc.scrollTop || body.scrollTop;
+      const scrollHeight = Math.max(doc.scrollHeight, body.scrollHeight) - window.innerHeight;
+      const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+      setScrollProgress(Math.min(100, Math.max(0, progress)));
     };
 
     // Check if user is logged in by looking for access token
@@ -49,11 +56,16 @@ const Header = () => {
     // Initial auth check
     checkAuthStatus();
     
-    // Add scroll listener
-    window.addEventListener("scroll", handleScroll);
+    // Initialize and add scroll listeners
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
     
     // Cleanup: remove scroll listener on unmount
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, []);
 
   /**
@@ -121,7 +133,7 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 relative ${
         isScrolled
           ? "bg-white/95 backdrop-blur-lg shadow-luxury"
           : "bg-gold backdrop-blur-md"
@@ -292,6 +304,12 @@ const Header = () => {
             </nav>
           </div>
         )}
+      </div>
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-white/25 pointer-events-none">
+        <div
+          className="h-full bg-gradient-to-r from-gold to-yellow-300 transition-transform duration-150"
+          style={{ transform: `scaleX(${scrollProgress / 100})`, transformOrigin: "left" }}
+        />
       </div>
     </header>
   );

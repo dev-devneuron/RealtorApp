@@ -154,7 +154,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center overflow-hidden pt-20 sm:pt-16 bg-navy">
+    <section id="home" className="relative min-h-screen flex items-center overflow-hidden pt-16 xs:pt-18 sm:pt-20 bg-navy">
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50"
@@ -164,29 +164,29 @@ const HeroSection = () => {
 
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gold/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-navy/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-white/5 rounded-full blur-2xl animate-pulse delay-500"></div>
+        <div className="absolute top-1/4 left-1/4 w-48 h-48 sm:w-64 sm:h-64 bg-gold/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/3 w-64 h-64 sm:w-96 sm:h-96 bg-navy/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 right-1/4 w-32 h-32 sm:w-48 sm:h-48 bg-white/5 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 md:py-12">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-8 items-center">
+      <div className="relative z-10 container mx-auto px-3 xs:px-4 sm:px-6 py-6 xs:py-8 md:py-12">
+        <div className="grid lg:grid-cols-2 gap-6 xs:gap-8 lg:gap-10 items-center">
           {/* Left Column - Main Content */}
           <motion.div
-            className="text-white space-y-4 md:space-y-6 animate-slide-up"
+            className="text-white space-y-3 xs:space-y-4 md:space-y-6 animate-slide-up"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.4 }}
             variants={heroItem}
           >
-            <div className="space-y-3 md:space-y-4">
-            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm font-medium border border-white/20">
-                <Award className="mr-2 h-3 w-3 sm:h-4 sm:w-4 text-gold" />
+            <div className="space-y-2 xs:space-y-3 md:space-y-4">
+            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-2.5 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 text-[10px] xs:text-[11px] sm:text-sm font-medium border border-white/20">
+                <Award className="mr-1.5 xs:mr-2 h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 text-gold" />
                 #1 AI-Powered Real Estate Services
               </div>
               
-              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight">
+              <h1 className="text-xl xs:text-2xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight">
                 Revolutionize Your
                 <span className="text-gold block bg-gradient-to-r from-gold to-yellow-200 bg-clip-text text-transparent">
                   Real Estate Business
@@ -194,7 +194,7 @@ const HeroSection = () => {
                 with AI
               </h1>
               
-              <p className="text-sm sm:text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed">
+              <p className="text-xs xs:text-sm sm:text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed">
                 Experience the future of real estate with our AI-powered chatbot and callbot. 
                 Capture leads 24/7, provide instant property information, and close deals faster 
                 than ever before.
@@ -202,11 +202,11 @@ const HeroSection = () => {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col xs:flex-row gap-2 xs:gap-3">
               <Button 
                 variant="gold" 
                 size="lg" 
-                className="text-sm sm:text-lg px-4 sm:px-6 py-2.5 sm:py-3 font-semibold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
+                className="text-xs xs:text-sm sm:text-base md:text-lg px-3 xs:px-4 sm:px-6 py-2 xs:py-2.5 sm:py-3 font-semibold hover:scale-105 transition-transform duration-200 w-full xs:w-auto"
                 onClick={() => {
                   const element = document.getElementById('ai-tools');
                   if (element) {
@@ -216,11 +216,11 @@ const HeroSection = () => {
               >
                 Experience the Results
               </Button>
-              <Link to="/book-demo" className="w-full sm:w-auto">
+              <Link to="/book-demo" className="w-full xs:w-auto">
                 <Button 
                   variant="premium" 
                   size="lg" 
-                  className="text-sm sm:text-lg px-4 sm:px-6 py-2.5 sm:py-3 font-semibold border-2 border-gold hover:scale-105 transition-transform duration-200 w-full sm:w-auto"
+                  className="text-xs xs:text-sm sm:text-base md:text-lg px-3 xs:px-4 sm:px-6 py-2 xs:py-2.5 sm:py-3 font-semibold border-2 border-gold hover:scale-105 transition-transform duration-200 w-full"
                 >
                   Schedule Demo
                 </Button>
@@ -228,82 +228,80 @@ const HeroSection = () => {
             </div>
 
             {/* Stats */}
-            <div ref={statsRef} className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6">
-              <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-lg sm:text-2xl font-bold text-gold">
+            <div ref={statsRef} className="grid grid-cols-3 gap-2 xs:gap-3 sm:gap-4 pt-3 xs:pt-4 sm:pt-6">
+              <div className="text-center p-1.5 xs:p-2 sm:p-3 bg-white/5 rounded-lg xs:rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
+                <div className="text-base xs:text-lg sm:text-2xl font-bold text-gold">
                   {statsStarted ? statValues.availability : 24}/7
                 </div>
-                <div className="text-white/80 text-[11px] sm:text-xs">AI Availability</div>
+                <div className="text-white/80 text-[9px] xs:text-[10px] sm:text-xs">AI Availability</div>
               </div>
-              <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-lg sm:text-2xl font-bold text-gold">
+              <div className="text-center p-1.5 xs:p-2 sm:p-3 bg-white/5 rounded-lg xs:rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
+                <div className="text-base xs:text-lg sm:text-2xl font-bold text-gold">
                   {statsStarted ? `25-${statValues.conversion}%` : "25-30%"}
                 </div>
-                <div className="text-white/80 text-[11px] sm:text-xs">Lead Conversion</div>
+                <div className="text-white/80 text-[9px] xs:text-[10px] sm:text-xs">Lead Conversion</div>
               </div>
-              <div className="text-center p-2 sm:p-3 bg-white/5 rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
-                <div className="text-lg sm:text-2xl font-bold text-gold">
+              <div className="text-center p-1.5 xs:p-2 sm:p-3 bg-white/5 rounded-lg xs:rounded-xl sm:rounded-2xl backdrop-blur-sm border border-white/10">
+                <div className="text-base xs:text-lg sm:text-2xl font-bold text-gold">
                   {statsStarted ? `${statValues.realtors}+` : "500+"}
                 </div>
-                <div className="text-white/80 text-[11px] sm:text-xs">Happy Realtors</div>
+                <div className="text-white/80 text-[9px] xs:text-[10px] sm:text-xs">Happy Realtors</div>
               </div>
             </div>
           </motion.div>
 
           {/* Right Column - Premium WhatsApp Style Chat */}
           <motion.div
-            className="relative animate-float mt-8 lg:mt-0 w-full max-w-sm sm:max-w-lg lg:max-w-none mx-auto"
+            className="relative animate-float mt-6 xs:mt-8 lg:mt-0 w-full max-w-sm sm:max-w-lg lg:max-w-none mx-auto"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={heroItem}
           >
-            <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 shadow-2xl border border-white/20 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-xl xs:rounded-2xl sm:rounded-3xl p-1 xs:p-1.5 sm:p-2 shadow-2xl border border-white/20 relative overflow-hidden">
               {/* WhatsApp Chat Container */}
-              <div className="bg-[#111b21] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-gray-600">
+              <div className="bg-[#111b21] rounded-lg xs:rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-gray-600">
                 {/* WhatsApp Header */}
-                <div className="bg-[#202c33] px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between border-b border-gray-700">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="bg-[#202c33] px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 sm:py-3 flex items-center justify-between border-b border-gray-700">
+                  <div className="flex items-center space-x-1.5 xs:space-x-2 sm:space-x-3">
                     <div className="relative">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                        <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-[#111b21]" />
+                      <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                        <Bot className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-[#111b21]" />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-[#202c33]"></div>
+                      <div className="absolute -bottom-0.5 -right-0.5 xs:-bottom-1 xs:-right-1 w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-[#202c33]"></div>
                     </div>
-                    <div>
-                      <div className="text-white font-semibold text-xs sm:text-base">Leasap Property Assistant</div>
-                      <div className="text-green-400 text-xs flex items-center">
-                        {/* <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div> */}
+                    <div className="min-w-0">
+                      <div className="text-white font-semibold text-[10px] xs:text-xs sm:text-base truncate">Leasap Property Assistant</div>
+                      <div className="text-green-400 text-[9px] xs:text-[10px] sm:text-xs flex items-center">
                         Online 
-                        {/* • Typing... */}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300 hover:text-white cursor-pointer transition-colors" />
-                    <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300 hover:text-white cursor-pointer transition-colors" />
+                  <div className="flex items-center space-x-1.5 xs:space-x-2 sm:space-x-3 flex-shrink-0">
+                    <Search className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 text-gray-300 hover:text-white cursor-pointer transition-colors" />
+                    <MoreVertical className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 text-gray-300 hover:text-white cursor-pointer transition-colors" />
                   </div>
                 </div>
 
                 {/* WhatsApp Chat Area */}
                 <div 
                   ref={chatContainerRef}
-                  className="h-52 sm:h-64 md:h-72 bg-[#0b141a] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-hidden no-scrollbar p-2 sm:p-3 space-y-2"
+                  className="h-48 xs:h-52 sm:h-64 md:h-72 bg-[#0b141a] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-y-auto overflow-x-hidden no-scrollbar p-1.5 xs:p-2 sm:p-3 space-y-1.5 xs:space-y-2"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%231a1a1a' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")`
                   }}
                 >
                   {/* Welcome Message */}
-                  <div className="flex justify-center mb-3">
-                    <div className="bg-[#182229] rounded-lg px-3 py-1 shadow-sm">
-                      <span className="text-gray-300 text-xs">Today at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <div className="flex justify-center mb-2 xs:mb-3">
+                    <div className="bg-[#182229] rounded-md xs:rounded-lg px-2 xs:px-3 py-0.5 xs:py-1 shadow-sm">
+                      <span className="text-gray-300 text-[9px] xs:text-[10px] sm:text-xs">Today at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </div>
 
                   {/* System Welcome */}
-                  <div className="flex justify-center mb-4">
-                    <div className="bg-gradient-to-r from-[#182229] to-[#202c33] rounded-xl px-4 py-3 max-w-sm border border-gold/30 shadow-lg">
-                      <p className="text-gray-300 text-sm text-center leading-relaxed">
+                  <div className="flex justify-center mb-3 xs:mb-4">
+                    <div className="bg-gradient-to-r from-[#182229] to-[#202c33] rounded-lg xs:rounded-xl px-2.5 xs:px-4 py-2 xs:py-3 max-w-[85%] xs:max-w-sm border border-gold/30 shadow-lg">
+                      <p className="text-gray-300 text-[10px] xs:text-xs sm:text-sm text-center leading-relaxed">
                         <span className="text-gold font-semibold">🤖 LEASAP AI Assistant</span><br/>
                         <span className="text-gold">Connected & Ready to Help!</span>
                       </p>
@@ -317,13 +315,13 @@ const HeroSection = () => {
                       className={`flex ${message.isUser ? "justify-end" : "justify-start"} animate-fade-in`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-lg ${
+                        className={`max-w-[85%] xs:max-w-[80%] rounded-xl xs:rounded-2xl px-2 xs:px-3 py-1.5 xs:py-2 shadow-lg ${
                           message.isUser
                             ? "bg-[#005c4b] text-white rounded-br-md"
                             : "bg-[#202c33] text-white rounded-bl-md border border-gray-600/30"
                         }`}
                       >
-                      <div className="text-[11px] sm:text-xs leading-relaxed" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
+                      <div className="text-[9px] xs:text-[10px] sm:text-xs leading-relaxed" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
                           {message.text.split('\n').map((line, lineIndex) => {
                             // Handle table formatting
                             if (line.includes('|') && line.includes('Building')) {
@@ -399,7 +397,7 @@ const HeroSection = () => {
                             );
                           })}
                         </div>
-                        <div className={`text-xs mt-2 text-right ${
+                        <div className={`text-[9px] xs:text-[10px] sm:text-xs mt-1 xs:mt-2 text-right ${
                           message.isUser ? "text-[#99b8b1]" : "text-gray-400"
                         }`}>
                           {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -412,14 +410,14 @@ const HeroSection = () => {
                   {/* Typing Indicator */}
                   {currentMessageIndex < chatScript.length && (
                     <div className="flex justify-start animate-fade-in">
-                      <div className="bg-[#202c33] rounded-2xl rounded-bl-md px-3 py-2 border border-gray-600/30">
-                        <div className="flex space-x-2 items-center">
-                          <div className="flex space-x-1">
-                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      <div className="bg-[#202c33] rounded-xl xs:rounded-2xl rounded-bl-md px-2 xs:px-3 py-1.5 xs:py-2 border border-gray-600/30">
+                        <div className="flex space-x-1.5 xs:space-x-2 items-center">
+                          <div className="flex space-x-0.5 xs:space-x-1">
+                            <div className="w-1 h-1 xs:w-1.5 xs:h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-1 h-1 xs:w-1.5 xs:h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-1 h-1 xs:w-1.5 xs:h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                           </div>
-                          <span className="text-gray-400 text-xs ml-1">AI is typing...</span>
+                          <span className="text-gray-400 text-[9px] xs:text-[10px] sm:text-xs ml-0.5 xs:ml-1">AI is typing...</span>
                         </div>
                       </div>
                     </div>
@@ -429,54 +427,54 @@ const HeroSection = () => {
                 </div>
 
                 {/* WhatsApp Input Area */}
-                <div className="bg-[#202c33] px-3 py-2 flex items-center space-x-2 border-t border-gray-700">
-                  <div className="flex space-x-1">
-                    <div className="w-8 h-8 rounded-full bg-[#2a3942] flex items-center justify-center hover:bg-[#374248] transition-colors cursor-pointer">
-                      <Paperclip className="h-4 w-4 text-gray-300" />
+                <div className="bg-[#202c33] px-2 xs:px-3 py-1.5 xs:py-2 flex items-center space-x-1 xs:space-x-2 border-t border-gray-700">
+                  <div className="hidden xs:flex space-x-1">
+                    <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full bg-[#2a3942] flex items-center justify-center hover:bg-[#374248] transition-colors cursor-pointer">
+                      <Paperclip className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 text-gray-300" />
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-[#2a3942] flex items-center justify-center hover:bg-[#374248] transition-colors cursor-pointer">
-                      <Mic className="h-4 w-4 text-gray-300" />
+                    <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full bg-[#2a3942] flex items-center justify-center hover:bg-[#374248] transition-colors cursor-pointer">
+                      <Mic className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 text-gray-300" />
                     </div>
                   </div>
-                  <div className="flex-1 bg-[#2a3942] rounded-3xl px-3 py-1 border border-transparent hover:border-gray-600 transition-colors">
-                    <p className="text-gray-400 text-xs">Message</p>
+                  <div className="flex-1 bg-[#2a3942] rounded-2xl xs:rounded-3xl px-2 xs:px-3 py-1 border border-transparent hover:border-gray-600 transition-colors">
+                    <p className="text-gray-400 text-[9px] xs:text-[10px] sm:text-xs">Message</p>
                   </div>
-                  <div className="flex space-x-1">
+                  <div className="flex items-center space-x-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={resetChat}
-                      className="text-gray-400 hover:text-gold text-xs bg-[#2a3942] hover:bg-[#374248] px-2 rounded-lg"
+                      className="text-gray-400 hover:text-gold text-[9px] xs:text-[10px] sm:text-xs bg-[#2a3942] hover:bg-[#374248] px-1.5 xs:px-2 py-1 rounded-lg h-6 xs:h-7 sm:h-8"
                     >
                       Restart
                     </Button>
-                    <div className="w-10 h-10 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center hover:from-yellow-400 hover:to-gold transition-all cursor-pointer shadow-lg hover:scale-105">
-                      <MessageCircle className="h-4 w-4 text-[#111b21]" />
+                    <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center hover:from-yellow-400 hover:to-gold transition-all cursor-pointer shadow-lg hover:scale-105 flex-shrink-0">
+                      <MessageCircle className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4 text-[#111b21]" />
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Enhanced Call Demo */}
-              <div className="mt-2 sm:mt-3 bg-gradient-to-r from-[#005c4b] to-[#202c33] rounded-lg sm:rounded-xl p-2 sm:p-3 border border-gold/40 shadow-lg">
-                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                  <div className="flex items-center space-x-1.5 sm:space-x-2">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                      <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-[#111b21]" />
+              <div className="mt-1.5 xs:mt-2 sm:mt-3 bg-gradient-to-r from-[#005c4b] to-[#202c33] rounded-md xs:rounded-lg sm:rounded-xl p-1.5 xs:p-2 sm:p-3 border border-gold/40 shadow-lg">
+                <div className="flex items-center justify-between mb-1 xs:mb-1.5 sm:mb-2">
+                  <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                      <Phone className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4 text-[#111b21]" />
                     </div>
-                    <div>
-                      <span className="text-white font-semibold text-xs sm:text-sm">AI Voice Assistant</span>
-                      <div className="text-green-300 text-xs">Live call simulation</div>
+                    <div className="min-w-0">
+                      <span className="text-white font-semibold text-[10px] xs:text-xs sm:text-sm block truncate">AI Voice Assistant</span>
+                      <div className="text-green-300 text-[9px] xs:text-[10px] sm:text-xs">Live call simulation</div>
                     </div>
                   </div>
-                  <div className="flex space-x-0.5 sm:space-x-1">
-                    <div className="w-1 h-2 sm:w-1.5 sm:h-3 bg-gold rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-1 h-2.5 sm:w-1.5 sm:h-4 bg-gold rounded-full animate-pulse" style={{ animationDelay: '100ms' }}></div>
-                    <div className="w-1 h-1.5 sm:w-1.5 sm:h-2 bg-gold rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
-                    <div className="w-1 h-2 sm:w-1.5 sm:h-3.5 bg-gold rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+                  <div className="flex space-x-0.5 xs:space-x-1 flex-shrink-0">
+                    <div className="w-0.5 h-1.5 xs:w-1 xs:h-2 sm:w-1.5 sm:h-3 bg-gold rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-0.5 h-2 xs:w-1 xs:h-2.5 sm:w-1.5 sm:h-4 bg-gold rounded-full animate-pulse" style={{ animationDelay: '100ms' }}></div>
+                    <div className="w-0.5 h-1 xs:w-1 xs:h-1.5 sm:w-1.5 sm:h-2 bg-gold rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
+                    <div className="w-0.5 h-1.5 xs:w-1 xs:h-2 sm:w-1.5 sm:h-3.5 bg-gold rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
                   </div>
                 </div>
-                <p className="text-white/90 text-xs bg-black/20 rounded-lg p-1.5 sm:p-2 border border-gold/20">
+                <p className="text-white/90 text-[9px] xs:text-[10px] sm:text-xs bg-black/20 rounded-md xs:rounded-lg p-1 xs:p-1.5 sm:p-2 border border-gold/20 leading-relaxed">
                   "Hello! I can help you schedule viewings, answer property questions, 
                   and connect you with the right agent in real-time."
                 </p>
@@ -484,7 +482,7 @@ const HeroSection = () => {
 
               {/* Enhanced Action Button */}
               <Button 
-                className="w-full mt-2 sm:mt-3 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-gold text-[#111b21] font-bold py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-105 shadow-xl border-2 border-gold/50 text-xs sm:text-sm"
+                className="w-full mt-1.5 xs:mt-2 sm:mt-3 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-gold text-[#111b21] font-bold py-1.5 xs:py-2 sm:py-3 rounded-md xs:rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-105 shadow-xl border-2 border-gold/50 text-[10px] xs:text-xs sm:text-sm"
                 onClick={() => {
                   const element = document.getElementById('ai-tools');
                   if (element) {
@@ -492,7 +490,7 @@ const HeroSection = () => {
                   }
                 }}
               >
-                <TrendingUp className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <TrendingUp className="mr-1.5 xs:mr-2 h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4" />
                 Experience the Results
               </Button>
             </div>
@@ -501,9 +499,9 @@ const HeroSection = () => {
       </div>
 
       {/* Floating Elements */}
-      <div className="absolute top-24 right-8 w-16 h-16 bg-gold/20 rounded-full animate-float delay-1000 backdrop-blur-sm"></div>
-      <div className="absolute bottom-32 left-8 w-12 h-12 bg-white/10 rounded-full animate-float delay-2000 backdrop-blur-sm"></div>
-      <div className="absolute top-36 left-16 w-10 h-10 bg-gold/30 rounded-full animate-float delay-1500 backdrop-blur-sm"></div>
+      <div className="hidden sm:block absolute top-24 right-8 w-12 h-12 sm:w-16 sm:h-16 bg-gold/20 rounded-full animate-float delay-1000 backdrop-blur-sm"></div>
+      <div className="hidden sm:block absolute bottom-32 left-8 w-8 h-8 sm:w-12 sm:h-12 bg-white/10 rounded-full animate-float delay-2000 backdrop-blur-sm"></div>
+      <div className="hidden sm:block absolute top-36 left-16 w-8 h-8 sm:w-10 sm:h-10 bg-gold/30 rounded-full animate-float delay-1500 backdrop-blur-sm"></div>
       
     </section>
   );

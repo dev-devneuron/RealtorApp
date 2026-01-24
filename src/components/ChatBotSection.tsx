@@ -402,20 +402,21 @@ const ChatBotSection = () => {
                         className={`flex ${message.isUser ? "justify-end" : "justify-start"} animate-fade-in`}
                       >
                         <div
-                          className={`max-w-[85%] sm:max-w-[80%] rounded-xl sm:rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-lg ${
+                          className={`max-w-[85%] sm:max-w-[80%] rounded-xl sm:rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-lg break-words ${
                             message.isUser
                               ? "bg-[#005c4b] text-white rounded-br-md"
                               : "bg-[#202c33] text-white rounded-bl-md border border-gray-600/30"
                           }`}
+                          style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                         >
-                          <div className="text-[10px] xs:text-xs leading-relaxed" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
+                          <div className="text-[10px] xs:text-xs leading-relaxed break-words" style={{ overflowWrap: 'anywhere', wordWrap: 'break-word', wordBreak: 'break-word', hyphens: 'auto' }}>
                             {message.text.split('\n').map((line, lineIndex) => (
-                              <div key={lineIndex} className={lineIndex > 0 ? "mt-1" : ""}>
+                              <div key={lineIndex} className={`${lineIndex > 0 ? "mt-1" : ""} break-words`}>
                                 {line.split(' ').map((word, wordIndex) => {
                                   // Highlight emojis and special characters
                                   if (word.match(/[🔧📋⚡👨‍🔧📅✅⏳📝📱📧🏠🐕🏢🔒🛡️📊🌙🚨💰📋]/)) {
                                     return (
-                                      <span key={wordIndex} className="text-gold mr-1">
+                                      <span key={wordIndex} className="text-gold mr-1 inline-block">
                                         {word}
                                       </span>
                                     );
@@ -423,12 +424,12 @@ const ChatBotSection = () => {
                                   // Highlight prices
                                   if (word.match(/\$\d+/)) {
                                     return (
-                                      <span key={wordIndex} className="text-green-400 font-semibold mr-1">
+                                      <span key={wordIndex} className="text-green-400 font-semibold mr-1 inline-block">
                                         {word}
                                       </span>
                                     );
                                   }
-                                  return <span key={wordIndex} className="mr-1">{word}</span>;
+                                  return <span key={wordIndex} className="mr-1 inline-block">{word}</span>;
                                 })}
                               </div>
                             ))}

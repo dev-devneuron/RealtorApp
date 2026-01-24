@@ -173,68 +173,48 @@ const Footer = () => {
     >
       {/* Newsletter Section */}
       <div className="border-b border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 py-12">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            {/* <div>
-              <h3 className="text-2xl font-bold mb-2">Stay Updated with AI Real Estate Trends</h3>
-              <p className="text-white/80">
-                Get weekly insights, tips, and updates about AI in real estate delivered to your inbox.
-              </p>
-            </div> */}
-            {/* <div className="flex space-x-4">
-              <Input 
-                placeholder="Enter your email address" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/60"
-              />
-              <Button 
-                variant="gold" 
-                onClick={handleSubscribe}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Subscribing..." : "Subscribe"}
-              </Button>
-            </div> */}
+        <div className="container mx-auto px-3 xs:px-4 sm:px-6 py-8 xs:py-10 sm:py-12">
+          <div className="grid lg:grid-cols-2 gap-6 xs:gap-8 items-center">
+            {/* Newsletter content commented out */}
           </div>
         </div>
       </div>
 
       {/* Main Footer Content */}
-      <div className="container mx-auto px-4 sm:px-6 py-16">
-        <div className="grid lg:grid-cols-5 gap-8">
+      <div className="container mx-auto px-3 xs:px-4 sm:px-6 py-10 xs:py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 xs:gap-8">
           {/* Company Info */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="sm:col-span-2 lg:col-span-2 space-y-4 xs:space-y-6">
             <div className="flex items-center">
               <img 
                 src="/images/photos/leasap logo.jpg" 
                 alt="Leasap Logo" 
-                className="h-14 sm:h-16 md:h-20 w-auto object-contain"
+                className="h-12 xs:h-14 sm:h-16 md:h-20 w-auto object-contain"
               />
             </div>
             
-            <p className="text-white/80 max-w-md">
+            <p className="text-white/80 max-w-md text-sm xs:text-base">
               Revolutionizing real estate with AI-powered chatbots and callbots. 
               Help realtors capture more leads, engage customers 24/7, and close deals faster.
             </p>
 
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-gold" />
-                <a href="mailto:ttahir@leasap.com" className="text-white/80 hover:text-gold transition-colors">ttahir@leasap.com</a>
+            <div className="space-y-2.5 xs:space-y-3">
+              <div className="flex items-center space-x-2.5 xs:space-x-3">
+                <Mail className="h-4 w-4 xs:h-5 xs:w-5 text-gold flex-shrink-0" />
+                <a href="mailto:ttahir@leasap.com" className="text-white/80 hover:text-gold transition-colors text-sm xs:text-base break-all">ttahir@leasap.com</a>
               </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-gold" />
-                <a href="tel:+15419126397" className="text-white/80 hover:text-gold transition-colors">+1 (541) 912-6397</a>
+              <div className="flex items-center space-x-2.5 xs:space-x-3">
+                <Phone className="h-4 w-4 xs:h-5 xs:w-5 text-gold flex-shrink-0" />
+                <a href="tel:+15419126397" className="text-white/80 hover:text-gold transition-colors text-sm xs:text-base">+1 (541) 912-6397</a>
               </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-5 w-5 text-gold" />
-                <span className="text-white/80">San Francisco Bay Area, CA</span>
+              <div className="flex items-center space-x-2.5 xs:space-x-3">
+                <MapPin className="h-4 w-4 xs:h-5 xs:w-5 text-gold flex-shrink-0" />
+                <span className="text-white/80 text-sm xs:text-base">San Francisco Bay Area, CA</span>
               </div>
             </div>
 
             {/* Social Links */}
-            <div className="flex space-x-4">
+            <div className="flex space-x-3 xs:space-x-4">
               {socialLinks.map((social, index) => (
                 <a
                   key={index}
@@ -242,7 +222,7 @@ const Footer = () => {
                   className="bg-white/10 hover:bg-gold/20 p-2 rounded-lg transition-colors"
                   aria-label={social.name}
                 >
-                  <social.icon className="h-5 w-5" />
+                  <social.icon className="h-4 w-4 xs:h-5 xs:w-5" />
                 </a>
               ))}
             </div>
@@ -250,21 +230,21 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-bold text-lg mb-6">Quick Links</h4>
-            <ul className="space-y-3">
+            <h4 className="font-bold text-base xs:text-lg mb-4 xs:mb-6">Quick Links</h4>
+            <ul className="space-y-2 xs:space-y-3">
               {quickLinks.map((link, index) => (
                 <li key={index}>
                   {link.isRoute ? (
                     <Link 
                       to={link.href} 
-                      className="text-white/80 hover:text-gold transition-colors"
+                      className="text-white/80 hover:text-gold transition-colors text-sm xs:text-base"
                     >
                       {link.name}
                     </Link>
                   ) : (
                     <a 
                       href={link.href} 
-                      className="text-white/80 hover:text-gold transition-colors"
+                      className="text-white/80 hover:text-gold transition-colors text-sm xs:text-base"
                       onClick={(e) => handleAnchorClick(e, link.href)}
                     >
                       {link.name}
@@ -277,13 +257,13 @@ const Footer = () => {
 
           {/* Services */}
           <div>
-            <h4 className="font-bold text-lg mb-6">AI Services</h4>
-            <ul className="space-y-3">
+            <h4 className="font-bold text-base xs:text-lg mb-4 xs:mb-6">AI Services</h4>
+            <ul className="space-y-2 xs:space-y-3">
               {services.map((service, index) => (
                 <li key={index}>
                   <a 
                     href={service.href} 
-                    className="text-white/80 hover:text-gold transition-colors"
+                    className="text-white/80 hover:text-gold transition-colors text-sm xs:text-base"
                   >
                     {service.name}
                   </a>
@@ -313,13 +293,13 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-white/60 text-sm">
+        <div className="container mx-auto px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-3 xs:space-y-4 md:space-y-0">
+            <p className="text-white/60 text-xs xs:text-sm">
               © 2025 Leasap. All rights reserved.
             </p>
             
-            <div className="flex items-center space-x-6 text-sm text-white/60">
+            <div className="flex items-center space-x-4 xs:space-x-6 text-xs xs:text-sm text-white/60">
               <span>Powered by Advanced AI Technology</span>
             </div>
           </div>

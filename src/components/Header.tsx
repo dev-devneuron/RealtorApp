@@ -139,7 +139,7 @@ const Header = () => {
           : "bg-gold backdrop-blur-md"
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 py-1.5 sm:py-2">
+      <div className="container mx-auto px-3 xs:px-4 sm:px-6 py-1.5 sm:py-2">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link 
@@ -150,7 +150,7 @@ const Header = () => {
             <img 
               src="/images/photos/leasap logo.jpg" 
               alt="Leasap Logo" 
-              className="h-14 sm:h-16 md:h-20 w-auto object-contain"
+              className="h-12 xs:h-14 sm:h-16 md:h-20 w-auto object-contain"
             />
           </Link>
 

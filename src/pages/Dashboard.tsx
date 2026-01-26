@@ -17,7 +17,7 @@
  * @module pages/Dashboard
  */
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef, useLayoutEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +53,10 @@ const Dashboard = () => {
   const [animateCards, setAnimateCards] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("properties");
+  const tabsScrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [forceTabArrows, setForceTabArrows] = useState(false);
   
   // ============================================================================
   // User Information State
@@ -3119,6 +3123,49 @@ const Dashboard = () => {
     });
   };
 
+  const updateTabScrollState = useCallback(() => {
+    const container = tabsScrollRef.current;
+    if (!container) return;
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    const overflow = scrollWidth - clientWidth;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(
+      (overflow > 8 && scrollLeft + clientWidth < scrollWidth - 1) || forceTabArrows
+    );
+  }, [forceTabArrows]);
+
+  const scrollTabs = (direction: "left" | "right") => {
+    const container = tabsScrollRef.current;
+    if (!container) return;
+    const scrollAmount = Math.max(160, Math.floor(container.clientWidth * 0.6));
+    container.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+    window.setTimeout(updateTabScrollState, 200);
+  };
+
+  useLayoutEffect(() => {
+    updateTabScrollState();
+  }, [updateTabScrollState, userType, activeTab]);
+
+  useEffect(() => {
+    const shouldForce = () => userType === "realtor" || window.innerWidth < 1024;
+    const handleResize = () => {
+      setForceTabArrows(shouldForce());
+      updateTabScrollState();
+    };
+    setForceTabArrows(shouldForce());
+    window.addEventListener("resize", handleResize);
+    const raf = window.requestAnimationFrame(updateTabScrollState);
+    const timeout = window.setTimeout(updateTabScrollState, 250);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.cancelAnimationFrame(raf);
+      window.clearTimeout(timeout);
+    };
+  }, [updateTabScrollState, userType, activeTab]);
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50/30 relative overflow-x-hidden">
       {/* Elegant Header */}
@@ -3556,7 +3603,10 @@ const Dashboard = () => {
             >
               <TabsList className="bg-gradient-to-br from-amber-50/90 via-white to-amber-50/70 border-2 border-amber-200/90 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden relative z-50">
                 {/* Scrollable tabs container with responsive scrollbar */}
-                <div className="relative w-full overflow-x-auto overflow-y-hidden scroll-smooth
+                <div
+                  ref={tabsScrollRef}
+                  onScroll={updateTabScrollState}
+                  className="relative w-full overflow-x-auto overflow-y-hidden scroll-smooth
                   [scrollbar-width:thin]
                   [scrollbar-color:rgb(251_191_36_/_0.7)_transparent]
                   [&::-webkit-scrollbar]:h-[6px]
@@ -3570,10 +3620,12 @@ const Dashboard = () => {
                   md:[&::-webkit-scrollbar]:h-[5px]
                   md:[&::-webkit-scrollbar]:w-[5px]
                   sm:[&::-webkit-scrollbar]:h-[4px]
-                  sm:[&::-webkit-scrollbar]:w-[4px]">
+                  sm:[&::-webkit-scrollbar]:w-[4px]"
+                >
                   <div className="flex gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 xl:gap-2.5 items-center 
+                    snap-x snap-mandatory [&>*]:snap-start
                     min-h-[60px] sm:min-h-[64px] md:min-h-[68px] lg:min-h-[68px] xl:min-h-[68px] 
-                    px-2 sm:px-3 md:px-4 lg:px-6 xl:px-6 2xl:px-8 
+                    px-2 sm:px-3 md:px-4 lg:px-6 xl:px-6 2xl:px-8 pr-14 sm:pr-16
                     pt-3 pb-3 sm:pt-3.5 sm:pb-3.5 md:pt-4 md:pb-4 lg:pt-4 lg:pb-4 xl:pt-5 xl:pb-4">
                 {userType === "property_manager" && (
                   <>
@@ -3692,13 +3744,29 @@ const Dashboard = () => {
                     className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
                 >
                   <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
-                  <span className="hidden xl:inline">Old Customers</span>
-                  <span className="xl:hidden hidden lg:inline">Old Customers</span>
-                  <span className="lg:hidden hidden md:inline">Old</span>
-                  <span className="md:hidden">Old</span>
+                  <span>Old Customers</span>
                 </TabsTrigger>
-                  </div>
+                <div className="flex-shrink-0 w-6 sm:w-10" />
                 </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Scroll tabs left"
+                  onClick={() => scrollTabs("left")}
+                  disabled={!canScrollLeft}
+                  className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-amber-50/90 via-amber-50/60 to-transparent flex items-center justify-start pl-1 text-amber-500 hover:text-amber-700 transition-colors opacity-100 disabled:opacity-40"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Scroll tabs right"
+                  onClick={() => scrollTabs("right")}
+                  disabled={!canScrollRight && !forceTabArrows}
+                  className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-amber-50/90 via-amber-50/60 to-transparent flex items-center justify-end pr-1 text-amber-500 hover:text-amber-700 transition-colors opacity-100 disabled:opacity-40"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </TabsList>
             </motion.div>
 

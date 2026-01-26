@@ -64,6 +64,7 @@ import {
   type Vendor,
 } from "./vendorApi";
 import { formatPhoneNumber } from "./utils";
+import { PropertyManagerVendorSettings } from "./PropertyManagerVendorSettings";
 
 interface VendorManagementTabProps {
   userType: string | null;
@@ -269,7 +270,11 @@ export const VendorManagementTab = ({ userType }: VendorManagementTabProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
+      className="space-y-6"
     >
+      {/* Vendor Calling Assistant Settings */}
+      <PropertyManagerVendorSettings userType={userType} />
+
       <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">

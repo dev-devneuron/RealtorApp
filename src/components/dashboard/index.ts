@@ -14,6 +14,7 @@ export { VendorManagementTab } from "./VendorManagementTab";
 export { PropertyVendorConfiguration } from "./PropertyVendorConfiguration";
 export { VendorCallingSection } from "./VendorCallingSection";
 export { VendorCallAttemptsTimeline } from "./VendorCallAttemptsTimeline";
+export { PropertyManagerVendorSettings } from "./PropertyManagerVendorSettings";
 
 // Export modal components
 export { MaintenanceRequestDetailModal } from "./MaintenanceRequestDetailModal";

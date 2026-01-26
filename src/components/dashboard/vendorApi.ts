@@ -94,6 +94,19 @@ export interface VendorCallAttempt {
   initiated_at: string;
   answered_at?: string;
   completed_at?: string;
+  call_metadata?: {
+    retry_scheduled?: boolean;
+    retry_delay_minutes?: number;
+    retry_scheduled_at?: string;
+    notification_sent?: boolean;
+    notification_method?: 'sms' | 'email';
+    notification_sent_at?: string;
+    callback_scheduled?: boolean;
+    callback_id?: number;
+    callback_date?: string;
+    callback_time?: string;
+    callback_reason?: string;
+  };
 }
 
 export interface VendorCallStatus {
@@ -535,6 +548,65 @@ export const fetchPropertyVendorSettings = async (
     headers: {
       'Authorization': `Bearer ${token}`,
     },
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+};
+
+// ============================================================================
+// Property Manager Settings Endpoints
+// ============================================================================
+
+/**
+ * Get current property manager profile
+ */
+export const fetchPropertyManagerProfile = async (): Promise<{
+  property_manager_id: number;
+  vapi_vendor_calling_assistant_id?: string | null;
+  vapi_outbound_assistant_id?: string | null;
+  [key: string]: any;
+}> => {
+  const token = getAuthToken();
+  const response = await fetch(`${API_BASE}/property-managers/me`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+};
+
+/**
+ * Update property manager vendor calling assistant ID
+ */
+export const updatePropertyManagerVendorAssistant = async (
+  pmId: number,
+  vapiVendorCallingAssistantId: string
+): Promise<{
+  property_manager_id: number;
+  vapi_vendor_calling_assistant_id: string;
+  [key: string]: any;
+}> => {
+  const token = getAuthToken();
+  const response = await fetch(`${API_BASE}/property-managers/${pmId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      vapi_vendor_calling_assistant_id: vapiVendorCallingAssistantId,
+    }),
   });
 
   if (!response.ok) {

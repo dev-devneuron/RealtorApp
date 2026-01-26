@@ -35,7 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { PropertiesTab, BookingsTab, ChatsTab, AssignPropertiesTab, ViewAssignmentsTab, PhoneNumbersTab, CallForwardingTab, RealtorsTab, MaintenanceRequestsTab, TenantsTab, OutboundCallingTab, VendorManagementTab, MaintenanceRequestDetailModal, MaintenanceRequestUpdateModal, PropertyDetailModal, PropertyUpdateModal, CallRecordDetailModal, TenantAddModal, TenantEditModal, PhoneNumberRequestDialog, getPropertyMetadata, formatPhoneNumber, formatCallDuration } from "@/components/dashboard";
+import { PropertiesTab, BookingsTab, ChatsTab, AssignPropertiesTab, ViewAssignmentsTab, PhoneNumbersTab, CallForwardingTab, RealtorsTab, MaintenanceRequestsTab, TenantsTab, OutboundCallingTab, VendorManagementTab, PropertyManagerVendorSettings, MaintenanceRequestDetailModal, MaintenanceRequestUpdateModal, PropertyDetailModal, PropertyUpdateModal, CallRecordDetailModal, TenantAddModal, TenantEditModal, PhoneNumberRequestDialog, getPropertyMetadata, formatPhoneNumber, formatCallDuration } from "@/components/dashboard";
 import { API_BASE } from "@/components/dashboard/constants";
 
 /**

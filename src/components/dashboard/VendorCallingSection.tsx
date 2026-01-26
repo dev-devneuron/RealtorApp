@@ -37,6 +37,7 @@ import { VendorCallAttemptsTimeline } from "./VendorCallAttemptsTimeline";
 interface VendorCallingSectionProps {
   maintenanceRequestId: number;
   propertyId: number;
+  propertyAddress?: string;
   userType: string | null;
 }
 
@@ -63,6 +64,7 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
 export const VendorCallingSection = ({
   maintenanceRequestId,
   propertyId,
+  propertyAddress,
   userType,
 }: VendorCallingSectionProps) => {
   const [callStatus, setCallStatus] = useState<VendorCallStatus | null>(null);
@@ -198,6 +200,11 @@ export const VendorCallingSection = ({
                 <p className="text-sm text-gray-600 mt-1">
                   Automated vendor outreach for this maintenance request
                 </p>
+                {propertyAddress && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Property: {propertyAddress} • Vendors will be called from vendors assigned to this property
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">

@@ -408,6 +408,7 @@ export const MaintenanceRequestDetailModal = ({
                 <VendorCallingSection
                   maintenanceRequestId={selectedMaintenanceRequest.maintenance_request_id}
                   propertyId={selectedMaintenanceRequest.property_id}
+                  propertyAddress={selectedMaintenanceRequest.property_address}
                   userType={userType}
                 />
               </div>

@@ -25,6 +25,7 @@ const Index = () => {
     }
   }, [location.hash]);
 
+
   return (
     <div className="min-h-screen">
       <Header />

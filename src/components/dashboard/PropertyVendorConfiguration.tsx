@@ -357,14 +357,20 @@ export const PropertyVendorConfiguration = ({
       {/* Vendor Configuration by Service Type */}
       <Card className="border border-gray-200">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-gray-600" />
-              Configured Vendors
-            </CardTitle>
-            {propertyAddress && (
-              <p className="text-sm text-gray-600">{propertyAddress}</p>
-            )}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-gray-600" />
+                Configured Vendors
+              </CardTitle>
+              {propertyAddress && (
+                <p className="text-sm text-gray-600">{propertyAddress}</p>
+              )}
+            </div>
+            <p className="text-sm text-gray-600">
+              Assign vendors from your vendor pool to this property. Configure priority and service types per property. 
+              The same vendor can be assigned multiple times with different service types.
+            </p>
           </div>
         </CardHeader>
         <CardContent>

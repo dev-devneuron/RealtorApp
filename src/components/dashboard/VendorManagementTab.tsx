@@ -281,8 +281,14 @@ export const VendorManagementTab = ({ userType }: VendorManagementTabProps) => {
                 Vendor Management
               </CardTitle>
               <p className="text-gray-600 text-lg">
-                Manage repair vendors for maintenance requests
+                Manage your vendor pool. Vendors can be assigned to multiple properties.
               </p>
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> Vendors are created at the Property Manager level and can be reused across multiple properties. 
+                  Assign vendors to specific properties in the property detail page.
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-sm font-semibold px-4 py-2">

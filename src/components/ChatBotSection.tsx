@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   MessageCircle,
   Bot,
@@ -20,6 +21,25 @@ import {
 } from "lucide-react";
 
 const ChatBotSection = () => {
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const [statsStarted, setStatsStarted] = useState(false);
+  const [statsValues, setStatsValues] = useState({
+    satisfaction: 0,
+    availability: 0,
+  });
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
   const [activeFeature, setActiveFeature] = useState('apartment');
   const [messages, setMessages] = useState([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
@@ -173,6 +193,45 @@ const ChatBotSection = () => {
     }
   }, [currentMessageIndex, activeFeature, chatPaused]);
 
+  useEffect(() => {
+    const element = statsRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setStatsStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!statsStarted) return;
+
+    const duration = 2000;
+    const startTime = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      setStatsValues({
+        satisfaction: Math.round(95 * progress),
+        availability: Math.round(24 * progress),
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      }
+    };
+
+    requestAnimationFrame(tick);
+  }, [statsStarted]);
+
   // Auto-restart chat after completion
   useEffect(() => {
     if (currentMessageIndex >= chatScripts[activeFeature].length && !chatPaused) {
@@ -195,7 +254,13 @@ const ChatBotSection = () => {
     <section id="ai-tools" className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-50 to-white">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-8 sm:mb-12 md:mb-16">
+        <motion.div
+          className="text-center mb-8 sm:mb-12 md:mb-16"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={itemVariants}
+        >
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-navy mb-4 sm:mb-6">
                 AI ChatBot That
                 <span className="text-gold block">Never Sleeps</span>
@@ -203,85 +268,117 @@ const ChatBotSection = () => {
           <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
             Experience our AI-powered chatbot in action. Click on any feature below to see how it handles different scenarios 24/7.
               </p>
-            </div>
+            </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-8 sm:gap-10 md:gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 md:gap-10 lg:gap-12 items-start">
           {/* Left Column - Feature Tabs */}
-          <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-navy mb-6">Try Our AI Features</h3>
+          <div className="space-y-4 sm:space-y-6">
+            <h3 className="text-xl sm:text-2xl font-bold text-navy mb-4 sm:mb-6">Try Our AI Features</h3>
             
             {/* Feature Tabs */}
-            <div className="grid grid-cols-1 gap-4">
-              {features.map((feature) => (
-                <button
+            <motion.div
+              className="grid grid-cols-1 gap-3 sm:gap-4"
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+            >
+              {features.map((feature, index) => (
+                <motion.button
                   key={feature.id}
                   onClick={() => setActiveFeature(feature.id)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
+                  className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-300 text-left ${
                     activeFeature === feature.id
                       ? 'border-gold bg-gold/10 shadow-lg'
                       : 'border-gray-200 bg-white hover:border-gold/50 hover:shadow-md'
                   }`}
+                  variants={itemVariants}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${feature.color} ${
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${feature.color} ${
                       activeFeature === feature.id ? 'scale-110' : ''
                     } transition-transform duration-300`}>
-                      <feature.icon className="h-6 w-6 text-white" />
+                      <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
-                    <div>
-                      <h4 className="font-bold text-navy text-lg">{feature.title}</h4>
-                      <p className="text-gray-600 text-sm">{feature.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-navy text-base sm:text-lg">{feature.title}</h4>
+                      <p className="text-gray-600 text-xs sm:text-sm">{feature.description}</p>
                     </div>
                     {activeFeature === feature.id && (
-                      <div className="ml-auto">
-                        <div className="w-3 h-3 bg-gold rounded-full animate-pulse"></div>
+                      <div className="ml-auto flex-shrink-0">
+                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gold rounded-full animate-pulse"></div>
                       </div>
                     )}
                   </div>
-                </button>
+                </motion.button>
               ))}
-            </div>
+            </motion.div>
 
             {/* Stats */}
-            <div className="bg-gradient-to-r from-navy to-navy/90 rounded-2xl p-6 text-white mb-8">
-              <h4 className="font-bold mb-4 text-center text-lg">
+            <motion.div
+              ref={statsRef}
+              className="bg-gradient-to-r from-navy to-navy/90 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={itemVariants}
+            >
+              <h4 className="font-bold mb-3 sm:mb-4 text-center text-base sm:text-lg">
                 ChatBot Performance
               </h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-gold">95%</div>
-                  <div className="text-white/80 text-sm">
+                  <div className="text-2xl sm:text-3xl font-bold text-gold">
+                    {statsStarted ? `${statsValues.satisfaction}%` : "95%"}
+                  </div>
+                  <div className="text-white/80 text-xs sm:text-sm mt-1">
                     Customer Satisfaction
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-gold">24/7</div>
-                  <div className="text-white/80 text-sm">Availability</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-gold">
+                    {statsStarted ? `${statsValues.availability}/7` : "24/7"}
+                  </div>
+                  <div className="text-white/80 text-xs sm:text-sm mt-1">Availability</div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* CTA Button */}
-            <Link to="/book-demo">
-              <Button variant="luxury" size="lg" className="w-full text-lg py-4">
-                <MessageCircle className="mr-2 h-5 w-5" />
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={itemVariants}
+              className="mt-4 sm:mt-0"
+            >
+              <Link to="/book-demo" className="inline-block w-full">
+              <Button variant="luxury" size="lg" className="w-full text-base sm:text-lg py-3 sm:py-4">
+                <MessageCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Get Your ChatBot Today
               </Button>
-            </Link>
+              </Link>
+            </motion.div>
           </div>
 
           {/* Right Column - Interactive Chat Demo */}
-          <div className="lg:sticky lg:top-8">
-            <Card className="shadow-2xl border-0 overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-navy to-navy/90 text-white">
-                <CardTitle className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gold rounded-full flex items-center justify-center">
-                    <Bot className="h-5 w-5 text-navy" />
+          <div className="lg:sticky lg:top-8 w-full">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={itemVariants}
+            >
+              <Card className="shadow-xl sm:shadow-2xl border-0 overflow-hidden w-full">
+              <CardHeader className="bg-gradient-to-r from-navy to-navy/90 text-white p-3 sm:p-6">
+                <CardTitle className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gold rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-navy" />
                   </div>
-                  <div>
-                    <span className="text-lg font-bold">LEASAP AI Assistant</span>
-                    <div className="text-green-300 text-sm flex items-center">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                  <div className="min-w-0">
+                    <span className="text-base sm:text-lg font-bold block truncate">LEASAP AI Assistant</span>
+                    <div className="text-green-300 text-xs sm:text-sm flex items-center">
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-1.5 sm:mr-2 animate-pulse"></div>
                       Online
                     </div>
                   </div>
@@ -293,7 +390,7 @@ const ChatBotSection = () => {
                   {/* Chat Area */}
                   <div 
                     ref={chatContainerRef}
-                    className="h-[24rem] sm:h-[28rem] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 scrollbar-thin scrollbar-thumb-[#374248] scrollbar-track-[#202c33]"
+                    className="h-[20rem] xs:h-[24rem] sm:h-[28rem] md:h-[32rem] bg-gradient-to-br from-[#0b141a] to-[#111b21] overflow-y-auto overflow-x-hidden no-scrollbar p-2 xs:p-3 sm:p-4 space-y-2 sm:space-y-3"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%231a1a1a' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")`
                     }}
@@ -305,20 +402,21 @@ const ChatBotSection = () => {
                         className={`flex ${message.isUser ? "justify-end" : "justify-start"} animate-fade-in`}
                       >
                         <div
-                          className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-lg ${
+                          className={`max-w-[85%] sm:max-w-[80%] rounded-xl sm:rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-lg break-words ${
                             message.isUser
                               ? "bg-[#005c4b] text-white rounded-br-md"
                               : "bg-[#202c33] text-white rounded-bl-md border border-gray-600/30"
                           }`}
+                          style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                         >
-                          <div className="text-xs leading-relaxed" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
+                          <div className="text-[10px] xs:text-xs leading-relaxed break-words" style={{ overflowWrap: 'anywhere', wordWrap: 'break-word', wordBreak: 'break-word', hyphens: 'auto' }}>
                             {message.text.split('\n').map((line, lineIndex) => (
-                              <div key={lineIndex} className={lineIndex > 0 ? "mt-1" : ""}>
+                              <div key={lineIndex} className={`${lineIndex > 0 ? "mt-1" : ""} break-words`}>
                                 {line.split(' ').map((word, wordIndex) => {
                                   // Highlight emojis and special characters
                                   if (word.match(/[🔧📋⚡👨‍🔧📅✅⏳📝📱📧🏠🐕🏢🔒🛡️📊🌙🚨💰📋]/)) {
                                     return (
-                                      <span key={wordIndex} className="text-gold mr-1">
+                                      <span key={wordIndex} className="text-gold mr-1 inline-block">
                                         {word}
                                       </span>
                                     );
@@ -326,17 +424,17 @@ const ChatBotSection = () => {
                                   // Highlight prices
                                   if (word.match(/\$\d+/)) {
                                     return (
-                                      <span key={wordIndex} className="text-green-400 font-semibold mr-1">
+                                      <span key={wordIndex} className="text-green-400 font-semibold mr-1 inline-block">
                                         {word}
                                       </span>
                                     );
                                   }
-                                  return <span key={wordIndex} className="mr-1">{word}</span>;
+                                  return <span key={wordIndex} className="mr-1 inline-block">{word}</span>;
                                 })}
                               </div>
                             ))}
                           </div>
-                          <div className={`text-xs mt-1 text-right ${
+                          <div className={`text-[9px] xs:text-[10px] mt-0.5 sm:mt-1 text-right ${
                             message.isUser ? "text-[#99b8b1]" : "text-gray-400"
                           }`}>
                             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -349,14 +447,14 @@ const ChatBotSection = () => {
                     {/* Typing Indicator */}
                     {isTyping && (
                       <div className="flex justify-start animate-fade-in">
-                        <div className="bg-[#202c33] rounded-2xl rounded-bl-md px-3 py-2 border border-gray-600/30">
-                          <div className="flex space-x-2 items-center">
-                            <div className="flex space-x-1">
-                              <div className="w-1.5 h-1.5 bg-gold rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="w-1.5 h-1.5 bg-gold rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="w-1.5 h-1.5 bg-gold rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        <div className="bg-[#202c33] rounded-xl sm:rounded-2xl rounded-bl-md px-2.5 py-1.5 sm:px-3 sm:py-2 border border-gray-600/30">
+                          <div className="flex space-x-1.5 sm:space-x-2 items-center">
+                            <div className="flex space-x-0.5 sm:space-x-1">
+                              <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-gold rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-gold rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-gold rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                             </div>
-                            <span className="text-gold text-xs ml-1 font-medium">AI is typing...</span>
+                            <span className="text-gold text-[10px] xs:text-xs ml-0.5 sm:ml-1 font-medium">AI is typing...</span>
                           </div>
                         </div>
                       </div>
@@ -366,35 +464,36 @@ const ChatBotSection = () => {
                   </div>
 
                   {/* Input Area */}
-                  <div className="bg-[#202c33] px-3 py-2 flex items-center space-x-2 border-t border-gray-700">
-                    <div className="flex space-x-1">
-                      <div className="w-8 h-8 rounded-full bg-[#2a3942] flex items-center justify-center hover:bg-[#374248] transition-colors cursor-pointer">
-                        <Paperclip className="h-4 w-4 text-gray-300" />
+                  <div className="bg-[#202c33] px-2 sm:px-3 py-1.5 sm:py-2 flex items-center space-x-1.5 sm:space-x-2 border-t border-gray-700">
+                    <div className="hidden xs:flex space-x-1">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#2a3942] flex items-center justify-center hover:bg-[#374248] transition-colors cursor-pointer">
+                        <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300" />
                       </div>
-                      <div className="w-8 h-8 rounded-full bg-[#2a3942] flex items-center justify-center hover:bg-[#374248] transition-colors cursor-pointer">
-                        <Mic className="h-4 w-4 text-gray-300" />
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#2a3942] flex items-center justify-center hover:bg-[#374248] transition-colors cursor-pointer">
+                        <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-300" />
                       </div>
                     </div>
-                    <div className="flex-1 bg-[#2a3942] rounded-3xl px-3 py-1 border border-transparent hover:border-gray-600 transition-colors">
-                      <p className="text-gray-400 text-xs">Message</p>
+                    <div className="flex-1 bg-[#2a3942] rounded-2xl sm:rounded-3xl px-2.5 sm:px-3 py-1.5 sm:py-2 border border-transparent hover:border-gray-600 transition-colors">
+                      <p className="text-gray-400 text-[10px] xs:text-xs">Message</p>
                     </div>
-                    <div className="flex space-x-1">
+                    <div className="flex items-center space-x-1 sm:space-x-1.5">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={resetChat}
-                        className="text-gray-400 hover:text-gold text-xs bg-[#2a3942] hover:bg-[#374248] px-2 rounded-lg"
+                        className="text-gray-400 hover:text-gold text-[10px] xs:text-xs bg-[#2a3942] hover:bg-[#374248] px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg h-7 sm:h-8"
                       >
                         Restart
                       </Button>
-                      <div className="w-10 h-10 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center hover:from-yellow-400 hover:to-gold transition-all cursor-pointer shadow-lg hover:scale-105">
-                        <MessageCircle className="h-4 w-4 text-navy" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-gold to-yellow-400 rounded-full flex items-center justify-center hover:from-yellow-400 hover:to-gold transition-all cursor-pointer shadow-lg hover:scale-105 flex-shrink-0">
+                        <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-navy" />
                       </div>
                     </div>
                   </div>
                 </div>
               </CardContent>
-            </Card>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </div>

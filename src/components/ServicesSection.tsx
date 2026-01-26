@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { 
   MessageCircle, 
   Phone, 
@@ -14,6 +15,19 @@ import {
 } from "lucide-react";
 
 const ServicesSection = () => {
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
   const services = [
     {
       icon: MessageCircle,
@@ -78,77 +92,103 @@ const ServicesSection = () => {
   ];
 
   return (
-    <section id="services" className="py-20 bg-gray-50">
-      <div className="container mx-auto px-6">
+    <section id="services" className="py-12 xs:py-16 sm:py-20 bg-gray-50">
+      <div className="container mx-auto px-3 xs:px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-navy mb-6">
+        <motion.div
+          className="text-center mb-8 xs:mb-12 sm:mb-16"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={itemVariants}
+        >
+          <h2 className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-bold text-navy mb-3 xs:mb-4 sm:mb-6">
             AI-Powered Real Estate Solutions
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
             Transform your real estate business with cutting-edge AI technology. 
             Our comprehensive suite of tools helps you capture leads, engage clients, 
             and close deals more efficiently than ever before.
           </p>
-        </div>
+        </motion.div>
 
         {/* Benefits Row */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <motion.div
+          className="grid grid-cols-1 xs:grid-cols-3 gap-4 xs:gap-6 sm:gap-8 mb-8 xs:mb-12 sm:mb-16"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+        >
           {benefits.map((benefit, index) => (
-            <div key={index} className="text-center">
-              <div className="bg-accent-gradient w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <benefit.icon className="h-8 w-8 text-navy" />
+            <motion.div key={index} className="text-center" variants={itemVariants}>
+              <div className="bg-accent-gradient w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-2 xs:mb-3 sm:mb-4">
+                <benefit.icon className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 text-navy" />
               </div>
-              <h3 className="text-xl font-bold text-navy mb-2">{benefit.title}</h3>
-              <p className="text-gray-600">{benefit.description}</p>
-            </div>
+              <h3 className="text-base xs:text-lg sm:text-xl font-bold text-navy mb-1 xs:mb-2">{benefit.title}</h3>
+              <p className="text-xs xs:text-sm sm:text-base text-gray-600">{benefit.description}</p>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Services Grid */}
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12 md:mb-16">
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-6 sm:gap-8 mb-8 xs:mb-10 sm:mb-12 md:mb-16"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
           {services.map((service, index) => (
-            <Card key={index} className="group hover:shadow-luxury transition-all duration-300 hover:-translate-y-2 border-0">
-              <CardHeader>
-                <div className={`w-12 h-12 ${service.color} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                  <service.icon className="h-6 w-6 text-white" />
+            <motion.div key={index} variants={itemVariants}>
+              <Card className="group hover:shadow-luxury transition-all duration-300 hover:-translate-y-2 border-0 h-full">
+              <CardHeader className="p-4 xs:p-5 sm:p-6">
+                <div className={`w-10 h-10 xs:w-12 xs:h-12 ${service.color} rounded-lg flex items-center justify-center mb-3 xs:mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  <service.icon className="h-5 w-5 xs:h-6 xs:w-6 text-white" />
                 </div>
-                <CardTitle className="text-xl text-navy">{service.title}</CardTitle>
+                <CardTitle className="text-lg xs:text-xl text-navy">{service.title}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-6">{service.description}</p>
-                <ul className="space-y-2">
+              <CardContent className="p-4 xs:p-5 sm:p-6 pt-0">
+                <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-4 xs:mb-6">{service.description}</p>
+                <ul className="space-y-1.5 xs:space-y-2">
                   {service.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-sm text-gray-600">
-                      <div className="w-2 h-2 bg-gold rounded-full mr-3"></div>
+                    <li key={idx} className="flex items-center text-xs xs:text-sm text-gray-600">
+                      <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-gold rounded-full mr-2 xs:mr-3 flex-shrink-0"></div>
                       {feature}
                     </li>
                   ))}
                 </ul>
               </CardContent>
-            </Card>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* CTA Section */}
-        <div className="text-center bg-luxury-gradient rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-white">
-          <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
+        <motion.div
+          className="text-center bg-luxury-gradient rounded-xl xs:rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-8 md:p-12 text-white"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={itemVariants}
+        >
+          <h3 className="text-xl xs:text-2xl sm:text-3xl font-bold mb-2 xs:mb-3 sm:mb-4">
             Ready to Transform Your Business?
           </h3>
-          <p className="text-lg sm:text-xl mb-6 sm:mb-8 text-white/90">
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl mb-4 xs:mb-6 sm:mb-8 text-white/90">
             Join 500+ realtors already using our AI solutions to grow their business
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col xs:flex-row gap-3 xs:gap-4 justify-center">
             {/* <Button variant="gold" size="lg">
               Start Free Trial
             </Button> */}
-            <Link to="/book-demo">
-              <Button variant="premium" size="lg">
+            <Link to="/book-demo" className="w-full xs:w-auto">
+              <Button variant="premium" size="lg" className="w-full xs:w-auto text-sm xs:text-base">
                 Schedule Demo
               </Button>
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

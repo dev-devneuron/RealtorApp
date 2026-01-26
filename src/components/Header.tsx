@@ -21,6 +21,7 @@ const Header = () => {
   
   // State for scroll-based styling
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   
   // State for mobile menu visibility
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -38,6 +39,12 @@ const Header = () => {
     // Handle scroll event to update header styling
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
+      const doc = document.documentElement;
+      const body = document.body;
+      const scrollTop = window.scrollY || doc.scrollTop || body.scrollTop;
+      const scrollHeight = Math.max(doc.scrollHeight, body.scrollHeight) - window.innerHeight;
+      const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+      setScrollProgress(Math.min(100, Math.max(0, progress)));
     };
 
     // Check if user is logged in by looking for access token
@@ -49,11 +56,16 @@ const Header = () => {
     // Initial auth check
     checkAuthStatus();
     
-    // Add scroll listener
-    window.addEventListener("scroll", handleScroll);
+    // Initialize and add scroll listeners
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
     
     // Cleanup: remove scroll listener on unmount
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, []);
 
   /**
@@ -127,7 +139,7 @@ const Header = () => {
           : "bg-gold backdrop-blur-md"
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 py-1.5 sm:py-2">
+      <div className="container mx-auto px-3 xs:px-4 sm:px-6 py-1.5 sm:py-2">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link 
@@ -138,7 +150,7 @@ const Header = () => {
             <img 
               src="/images/photos/leasap logo.jpg" 
               alt="Leasap Logo" 
-              className="h-14 sm:h-16 md:h-20 w-auto object-contain"
+              className="h-12 xs:h-14 sm:h-16 md:h-20 w-auto object-contain"
             />
           </Link>
 
@@ -292,6 +304,12 @@ const Header = () => {
             </nav>
           </div>
         )}
+      </div>
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-white/25 pointer-events-none">
+        <div
+          className="h-full bg-gradient-to-r from-gold to-yellow-300 transition-transform duration-150"
+          style={{ transform: `scaleX(${scrollProgress / 100})`, transformOrigin: "left" }}
+        />
       </div>
     </header>
   );

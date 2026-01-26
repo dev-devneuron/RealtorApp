@@ -7,10 +7,12 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Bed, Bath, Square, Ruler, CalendarIcon, TrendingUp, User, Users, Edit2, Trash2, RefreshCw, UserPlus } from "lucide-react";
+import { Bed, Bath, Square, Ruler, CalendarIcon, TrendingUp, User, Users, Edit2, Trash2, RefreshCw, UserPlus, Wrench } from "lucide-react";
 import { getPropertyMetadata } from "./utils";
 import { Property } from "./types";
+import { PropertyVendorConfiguration } from "./PropertyVendorConfiguration";
 
 interface PropertyDetailModalProps {
   open: boolean;
@@ -136,20 +138,30 @@ export const PropertyDetailModal = ({
               )}
             </div>
 
-            {/* Price */}
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-4 sm:p-6 border border-amber-200">
-              <p className="text-3xl sm:text-4xl font-bold text-amber-600 mb-2">
-                ${meta.price ? meta.price.toLocaleString() : 'N/A'}
-              </p>
-              {meta.property_type && (
-                <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-white text-amber-700 mt-2">
-                  {meta.property_type}
-                </Badge>
-              )}
-            </div>
+            {/* Tabbed Interface for PM, regular view for others */}
+            {userType === "property_manager" ? (
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="details">Property Details</TabsTrigger>
+                  <TabsTrigger value="vendors" className="flex items-center gap-2">
+                    <Wrench className="h-4 w-4" />
+                    Vendors
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="details" className="mt-0 space-y-4 sm:space-y-6">
+                      <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-4 sm:p-6 border border-amber-200">
+                  <p className="text-3xl sm:text-4xl font-bold text-amber-600 mb-2">
+                    ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                  </p>
+                  {meta.property_type && (
+                    <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-white text-amber-700 mt-2">
+                      {meta.property_type}
+                    </Badge>
+                  )}
+                </div>
 
-            {/* Basic Info Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                {/* Basic Info Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
                 <div className="flex items-center gap-2 mb-1">
                   <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
@@ -202,8 +214,8 @@ export const PropertyDetailModal = ({
               )}
             </div>
 
-            {/* Additional Details */}
-            <div className="space-y-4">
+                {/* Additional Details */}
+                <div className="space-y-4">
               {meta.listing_date && (
                 <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
                   <span className="text-sm sm:text-base text-gray-600 font-medium">Listing Date:</span>
@@ -233,48 +245,60 @@ export const PropertyDetailModal = ({
                 </div>
               )}
 
-              {/* Assignment Status (for PM) */}
-              {userType === "property_manager" && (
-                <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Assignment Status</h3>
-                  {meta.is_assigned && meta.assigned_to_realtor_name ? (
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-amber-600" />
-                      <div>
-                        <p className="text-sm text-gray-600 font-medium">Assigned to:</p>
-                        <p className="text-base sm:text-lg font-bold text-amber-700">{meta.assigned_to_realtor_name}</p>
+                {/* Assignment Status (for PM) */}
+                {userType === "property_manager" && (
+                  <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Assignment Status</h3>
+                    {meta.is_assigned && meta.assigned_to_realtor_name ? (
+                      <div className="flex items-center gap-3">
+                        <User className="h-5 w-5 text-amber-600" />
+                        <div>
+                          <p className="text-sm text-gray-600 font-medium">Assigned to:</p>
+                          <p className="text-base sm:text-lg font-bold text-amber-700">{meta.assigned_to_realtor_name}</p>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <Badge variant="outline" className="bg-white text-amber-700 border-amber-300 text-sm font-medium px-4 py-2">
-                      Unassigned
-                    </Badge>
-                  )}
-                </div>
-              )}
-
-              {/* Tenant Assignment Section (for PM) */}
-              {userType === "property_manager" && (
-                <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <Users className="h-5 w-5 text-green-600" />
-                      Tenant Management
-                    </h3>
+                    ) : (
+                      <Badge variant="outline" className="bg-white text-amber-700 border-amber-300 text-sm font-medium px-4 py-2">
+                        Unassigned
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Assign a tenant to this property. The property will be marked as "Rented" automatically.
-                  </p>
-                  <Button
-                    onClick={onAssignTenant}
-                    className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl w-full sm:w-auto"
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Assign Tenant to This Property
-                  </Button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+              </>
+            )}
+
+                  {/* Tenant Assignment Section (for PM) */}
+                  <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <Users className="h-5 w-5 text-green-600" />
+                        Tenant Management
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Assign a tenant to this property. The property will be marked as "Rented" automatically.
+                    </p>
+                    <Button
+                      onClick={onAssignTenant}
+                      className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl w-full sm:w-auto"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Assign Tenant to This Property
+                    </Button>
+                  </div>
+                </TabsContent>
+                <TabsContent value="vendors" className="mt-0">
+                  <PropertyVendorConfiguration
+                    propertyId={selectedProperty.id}
+                    propertyAddress={meta.address || `Property #${selectedProperty.id}`}
+                    userType={userType}
+                  />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <>
+                {/* Price */}
           </div>
         </div>
       </DialogContent>

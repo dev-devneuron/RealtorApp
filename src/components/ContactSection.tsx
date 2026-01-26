@@ -3,13 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { CheckCircle, Mail, Phone, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 // Backend API base URL
 const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 const ContactSection = () => {
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -18,6 +23,7 @@ const ContactSection = () => {
     subject: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,6 +76,7 @@ const ContactSection = () => {
         title: "Message sent!",
         description: data.message || "Thank you for contacting us! We'll get back to you soon.",
       });
+      setShowSuccess(true);
 
       // Reset form
       setFormData({
@@ -92,53 +99,74 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact-section" className="py-20 bg-muted/20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Contact Us</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+    <section id="contact-section" className="py-12 xs:py-16 sm:py-20 bg-muted/20">
+      <div className="container mx-auto px-3 xs:px-4">
+        <motion.div
+          className="text-center mb-8 xs:mb-12 sm:mb-16"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={itemVariants}
+        >
+          <h2 className="text-2xl xs:text-3xl sm:text-4xl font-bold mb-3 xs:mb-4">Contact Us</h2>
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
             Get in touch with our team for any questions or support
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          <div>
-            <h3 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Get in Touch</h3>
-            <div className="space-y-4 sm:space-y-6">
-              <div className="flex items-center space-x-4">
-                <Mail className="h-6 w-6 text-primary" />
-                <a href="mailto:ttahir@leasap.com" className="hover:text-primary transition-colors">ttahir@leasap.com</a>
+        <div className="grid lg:grid-cols-2 gap-6 xs:gap-8 sm:gap-12 max-w-6xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={itemVariants}
+          >
+            <h3 className="text-lg xs:text-xl sm:text-2xl font-semibold mb-3 xs:mb-4 sm:mb-6">Get in Touch</h3>
+            <div className="space-y-3 xs:space-y-4 sm:space-y-6">
+              <div className="flex items-center space-x-2.5 xs:space-x-3 sm:space-x-4">
+                <Mail className="h-5 w-5 xs:h-6 xs:w-6 text-primary flex-shrink-0" />
+                <a href="mailto:ttahir@leasap.com" className="hover:text-primary transition-colors text-sm xs:text-base break-all">ttahir@leasap.com</a>
               </div>
-              <div className="flex items-center space-x-4">
-                <Phone className="h-6 w-6 text-primary" />
-                <a href="tel:+15419126397" className="hover:text-primary transition-colors">+1 (541) 912-6397</a>
+              <div className="flex items-center space-x-2.5 xs:space-x-3 sm:space-x-4">
+                <Phone className="h-5 w-5 xs:h-6 xs:w-6 text-primary flex-shrink-0" />
+                <a href="tel:+15419126397" className="hover:text-primary transition-colors text-sm xs:text-base">+1 (541) 912-6397</a>
               </div>
-              <div className="flex items-center space-x-4">
-                <MapPin className="h-6 w-6 text-primary" />
-                <span>San Francisco Bay Area, CA</span>
+              <div className="flex items-center space-x-2.5 xs:space-x-3 sm:space-x-4">
+                <MapPin className="h-5 w-5 xs:h-6 xs:w-6 text-primary flex-shrink-0" />
+                <span className="text-sm xs:text-base">San Francisco Bay Area, CA</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <Card>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={itemVariants}
+          >
+            <Card>
+              <CardContent className="p-3 xs:p-4 sm:p-6">
+              <form onSubmit={handleSubmit} className="space-y-3 xs:space-y-4">
                 <div>
-                  <label htmlFor="name" className="text-sm font-medium mb-1 block">
+                  <label htmlFor="name" className="text-xs xs:text-sm font-medium mb-1 block">
                     Name <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="name"
                     placeholder="Your Name"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      setShowSuccess(false);
+                    }}
                     required
                     minLength={2}
+                    className="text-sm xs:text-base"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="text-sm font-medium mb-1 block">
+                  <label htmlFor="email" className="text-xs xs:text-sm font-medium mb-1 block">
                     Email <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -146,56 +174,71 @@ const ContactSection = () => {
                     type="email"
                     placeholder="your.email@example.com"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      setShowSuccess(false);
+                    }}
                     required
+                    className="text-sm xs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="text-sm font-medium mb-1 block">
-                    Phone <span className="text-gray-500 text-xs">(Optional)</span>
+                  <label htmlFor="phone" className="text-xs xs:text-sm font-medium mb-1 block">
+                    Phone <span className="text-gray-500 text-[10px] xs:text-xs">(Optional)</span>
                   </label>
                   <Input
                     id="phone"
                     type="tel"
                     placeholder="+1 (555) 123-4567"
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      setShowSuccess(false);
+                    }}
+                    className="text-sm xs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="text-sm font-medium mb-1 block">
-                    Subject <span className="text-gray-500 text-xs">(Optional)</span>
+                  <label htmlFor="subject" className="text-xs xs:text-sm font-medium mb-1 block">
+                    Subject <span className="text-gray-500 text-[10px] xs:text-xs">(Optional)</span>
                   </label>
                   <Input
                     id="subject"
                     placeholder="General Inquiry"
                     value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, subject: e.target.value });
+                      setShowSuccess(false);
+                    }}
+                    className="text-sm xs:text-base"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="text-sm font-medium mb-1 block">
+                  <label htmlFor="message" className="text-xs xs:text-sm font-medium mb-1 block">
                     Message <span className="text-red-500">*</span>
                   </label>
                   <Textarea
                     id="message"
                     placeholder="Your Message"
                     value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({ ...formData, message: e.target.value });
+                      setShowSuccess(false);
+                    }}
                     required
                     minLength={10}
                     rows={4}
-                    className="resize-none"
+                    className="resize-none text-sm xs:text-base"
                   />
                 </div>
 
                 <Button 
                   type="submit" 
                   disabled={isSubmitting || !formData.name.trim() || !formData.email.trim() || !formData.message.trim()} 
-                  className="w-full"
+                  className="w-full text-sm xs:text-base"
                 >
                   {isSubmitting ? (
                     <>
@@ -206,9 +249,16 @@ const ContactSection = () => {
                     "Send Message"
                   )}
                 </Button>
+                {showSuccess && (
+                  <div className="flex items-center justify-center text-xs xs:text-sm text-green-600">
+                    <CheckCircle className="h-3.5 w-3.5 xs:h-4 xs:w-4 mr-2" />
+                    Message sent, we will contact you soon.
+                  </div>
+                )}
               </form>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
     </section>

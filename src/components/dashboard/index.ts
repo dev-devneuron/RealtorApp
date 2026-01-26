@@ -9,8 +9,11 @@ export { CallForwardingTab } from "./CallForwardingTab";
 export { RealtorsTab } from "./RealtorsTab";
 export { MaintenanceRequestsTab } from "./MaintenanceRequestsTab";
 export { TenantsTab } from "./TenantsTab";
-export { OldCustomersTab } from "./OldCustomersTab";
 export { OutboundCallingTab } from "./OutboundCallingTab";
+export { VendorManagementTab } from "./VendorManagementTab";
+export { PropertyVendorConfiguration } from "./PropertyVendorConfiguration";
+export { VendorCallingSection } from "./VendorCallingSection";
+export { VendorCallAttemptsTimeline } from "./VendorCallAttemptsTimeline";
 
 // Export modal components
 export { MaintenanceRequestDetailModal } from "./MaintenanceRequestDetailModal";

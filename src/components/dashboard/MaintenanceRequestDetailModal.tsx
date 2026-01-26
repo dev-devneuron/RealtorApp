@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Edit2, Trash2, Volume2, Download, FileText, ChevronDown, ChevronUp, RefreshCw, Copy, Check } from "lucide-react";
 import { formatPhoneNumber } from "./utils";
 import { toast } from "sonner";
+import { VendorCallingSection } from "./VendorCallingSection";
 
 interface MaintenanceRequestDetailModalProps {
   open: boolean;
@@ -398,6 +399,17 @@ export const MaintenanceRequestDetailModal = ({
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                 <p className="text-sm font-semibold text-gray-600 mb-2">Resolution Notes</p>
                 <p className="text-gray-900 whitespace-pre-wrap">{selectedMaintenanceRequest.resolution_notes}</p>
+              </div>
+            )}
+
+            {/* Vendor Calling Section - Property Manager Only */}
+            {userType === "property_manager" && selectedMaintenanceRequest.property_id && (
+              <div className="mt-6">
+                <VendorCallingSection
+                  maintenanceRequestId={selectedMaintenanceRequest.maintenance_request_id}
+                  propertyId={selectedMaintenanceRequest.property_id}
+                  userType={userType}
+                />
               </div>
             )}
           </div>

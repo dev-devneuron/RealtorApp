@@ -4,7 +4,7 @@
  * Allows PMs to link vendors to properties, set priorities, and configure settings
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -92,44 +92,25 @@ export const PropertyVendorConfiguration = ({
     return null;
   }
 
-  useEffect(() => {
-    loadData();
-  }, [propertyId]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadPropertyVendors(),
-        loadAllVendors(),
-        loadSettings(),
-      ]);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadPropertyVendors = async () => {
+  const loadPropertyVendors = useCallback(async () => {
     try {
       const response = await fetchPropertyVendors(propertyId);
       setPropertyVendors(response.property_vendors);
     } catch (error: any) {
       toast.error(error.message || "Failed to load property vendors");
     }
-  };
+  }, [propertyId]);
 
-  const loadAllVendors = async () => {
+  const loadAllVendors = useCallback(async () => {
     try {
       const response = await fetchVendors({ is_active: true });
       setAllVendors(response.vendors);
     } catch (error: any) {
       toast.error(error.message || "Failed to load vendors");
     }
-  };
+  }, []);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const settingsData = await fetchPropertyVendorSettings(propertyId);
       setSettings(settingsData);
@@ -142,7 +123,26 @@ export const PropertyVendorConfiguration = ({
         emergency_only: false,
       });
     }
-  };
+  }, [propertyId]);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadPropertyVendors(),
+        loadAllVendors(),
+        loadSettings(),
+      ]);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  }, [loadPropertyVendors, loadAllVendors, loadSettings]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleLinkVendor = async () => {
     if (!selectedVendorId) {

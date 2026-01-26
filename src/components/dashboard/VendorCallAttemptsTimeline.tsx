@@ -24,7 +24,6 @@ import {
   Calendar,
   AlertCircle,
 } from "lucide-react";
-import { formatPhoneNumber } from "./utils";
 import { type VendorCallAttempt } from "./vendorApi";
 import {
   Dialog,

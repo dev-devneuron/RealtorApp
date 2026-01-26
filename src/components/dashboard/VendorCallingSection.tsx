@@ -4,7 +4,7 @@
  * Displays vendor call status, queue, and allows PM to start/pause/cancel calls
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,10 +77,28 @@ export const VendorCallingSection = ({
     return null;
   }
 
+  const loadCallStatus = useCallback(async (silent = false) => {
+    try {
+      if (!silent) {
+        setLoading(true);
+      }
+      const status = await fetchVendorCallStatus(maintenanceRequestId);
+      setCallStatus(status);
+    } catch (error: any) {
+      if (!silent) {
+        toast.error(error.message || "Failed to load vendor call status");
+      }
+    } finally {
+      if (!silent) {
+        setLoading(false);
+      }
+    }
+  }, [maintenanceRequestId]);
+
   // Load initial status
   useEffect(() => {
     loadCallStatus();
-  }, [maintenanceRequestId]);
+  }, [loadCallStatus]);
 
   // Poll for updates when calling is active
   useEffect(() => {
@@ -98,25 +116,7 @@ export const VendorCallingSection = ({
       clearInterval(interval);
       setPolling(false);
     };
-  }, [callStatus?.vendor_call_status, maintenanceRequestId]);
-
-  const loadCallStatus = async (silent = false) => {
-    try {
-      if (!silent) {
-        setLoading(true);
-      }
-      const status = await fetchVendorCallStatus(maintenanceRequestId);
-      setCallStatus(status);
-    } catch (error: any) {
-      if (!silent) {
-        toast.error(error.message || "Failed to load vendor call status");
-      }
-    } finally {
-      if (!silent) {
-        setLoading(false);
-      }
-    }
-  };
+  }, [callStatus?.vendor_call_status, loadCallStatus]);
 
   const handleStartCalls = async () => {
     try {

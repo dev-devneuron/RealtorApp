@@ -86,15 +86,11 @@ export const VendorCallAttemptsTimeline = ({
           <div className="space-y-4">
             {sortedAttempts.map((attempt, index) => {
               const isExpanded = expandedAttempt === attempt.attempt_id;
-              const metadata = attempt.call_metadata;
               const hasDetails =
                 attempt.is_available !== null ||
                 attempt.earliest_available_time ||
                 attempt.estimated_cost_range ||
-                attempt.vendor_notes ||
-                metadata?.retry_scheduled ||
-                metadata?.callback_scheduled ||
-                metadata?.notification_sent;
+                attempt.vendor_notes;
 
               return (
                 <motion.div
@@ -246,75 +242,6 @@ export const VendorCallAttemptsTimeline = ({
                             <p className="text-sm text-amber-800 whitespace-pre-wrap">
                               {attempt.vendor_notes}
                             </p>
-                          </div>
-                        )}
-
-                        {/* Retry Status Indicator */}
-                        {metadata?.retry_scheduled && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Clock className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm font-medium text-blue-900">
-                                Retry Scheduled
-                              </span>
-                            </div>
-                            <p className="text-sm text-blue-800">
-                              {metadata.retry_delay_minutes ? (
-                                <>Retry scheduled in approximately {metadata.retry_delay_minutes} minutes</>
-                              ) : metadata.retry_scheduled_at ? (
-                                <>Retry scheduled for {new Date(metadata.retry_scheduled_at).toLocaleString()}</>
-                              ) : (
-                                <>Retry has been scheduled</>
-                              )}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Notification Status */}
-                        {metadata?.notification_sent && (
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                <span className="text-sm font-medium text-green-900">
-                                  Notification Sent
-                                </span>
-                              </div>
-                              {metadata.notification_method && (
-                                <Badge variant="outline" className="border-green-300 text-green-700 text-xs">
-                                  {metadata.notification_method.toUpperCase()}
-                                </Badge>
-                              )}
-                            </div>
-                            {metadata.notification_sent_at && (
-                              <p className="text-xs text-green-700 mt-1">
-                                Sent at {new Date(metadata.notification_sent_at).toLocaleString()}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Callback Scheduled Indicator */}
-                        {metadata?.callback_scheduled && (
-                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Calendar className="h-4 w-4 text-purple-600" />
-                              <span className="text-sm font-medium text-purple-900">
-                                Callback Scheduled
-                              </span>
-                            </div>
-                            <div className="space-y-1 text-sm text-purple-800">
-                              {metadata.callback_date && metadata.callback_time && (
-                                <p>
-                                  <span className="font-medium">Date:</span> {metadata.callback_date} at {metadata.callback_time}
-                                </p>
-                              )}
-                              {metadata.callback_reason && (
-                                <p>
-                                  <span className="font-medium">Reason:</span> {metadata.callback_reason}
-                                </p>
-                              )}
-                            </div>
                           </div>
                         )}
 

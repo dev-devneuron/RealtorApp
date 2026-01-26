@@ -29,7 +29,6 @@ import {
   fetchVendorCallStatus,
   pauseVendorCalls,
   cancelVendorCalls,
-  fetchPropertyManagerProfile,
   type VendorCallStatus,
   type VendorCallQueue,
 } from "./vendorApi";
@@ -72,7 +71,6 @@ export const VendorCallingSection = ({
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [polling, setPolling] = useState(false);
-  const [assistantIdConfigured, setAssistantIdConfigured] = useState<boolean | null>(null);
 
   // Only show for Property Managers
   if (userType !== "property_manager") {
@@ -96,20 +94,6 @@ export const VendorCallingSection = ({
       }
     }
   }, [maintenanceRequestId]);
-
-  // Check if assistant ID is configured
-  useEffect(() => {
-    const checkAssistantId = async () => {
-      try {
-        const profile = await fetchPropertyManagerProfile();
-        setAssistantIdConfigured(!!profile.vapi_vendor_calling_assistant_id);
-      } catch (error) {
-        // If we can't check, assume not configured to be safe
-        setAssistantIdConfigured(false);
-      }
-    };
-    checkAssistantId();
-  }, []);
 
   // Load initial status
   useEffect(() => {
@@ -135,34 +119,6 @@ export const VendorCallingSection = ({
   }, [callStatus?.vendor_call_status, loadCallStatus]);
 
   const handleStartCalls = async () => {
-    // Check if assistant ID is configured
-    if (assistantIdConfigured === false) {
-      toast.error(
-        "Vendor calling assistant ID is not configured. Please configure it in settings before starting vendor calls.",
-        { duration: 5000 }
-      );
-      return;
-    }
-
-    // If we haven't checked yet, check now
-    if (assistantIdConfigured === null) {
-      try {
-        const profile = await fetchPropertyManagerProfile();
-        if (!profile.vapi_vendor_calling_assistant_id) {
-          toast.error(
-            "Vendor calling assistant ID is not configured. Please configure it in settings before starting vendor calls.",
-            { duration: 5000 }
-          );
-          setAssistantIdConfigured(false);
-          return;
-        }
-        setAssistantIdConfigured(true);
-      } catch (error) {
-        toast.error("Failed to verify assistant configuration");
-        return;
-      }
-    }
-
     try {
       setActionLoading(true);
       await startVendorCalls(maintenanceRequestId);
@@ -287,30 +243,13 @@ export const VendorCallingSection = ({
             </div>
           )}
 
-          {/* Warning if assistant ID not configured */}
-          {assistantIdConfigured === false && status === "not_started" && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-red-900 mb-1">
-                    Vendor Calling Assistant Not Configured
-                  </p>
-                  <p className="text-sm text-red-800 mb-2">
-                    You must configure your vendor calling assistant ID in settings before starting vendor calls.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
             {status === "not_started" && (
               <Button
                 onClick={handleStartCalls}
-                disabled={actionLoading || assistantIdConfigured === false}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={actionLoading}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
               >
                 {actionLoading ? (
                   <>

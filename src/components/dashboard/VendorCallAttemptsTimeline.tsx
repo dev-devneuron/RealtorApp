@@ -57,6 +57,122 @@ const OUTCOME_COLORS: Record<string, string> = {
   voicemail: "bg-purple-100 text-purple-700 border-purple-300",
 };
 
+// Helper to format transcripts similar to Call Records tab
+const formatCallTranscriptBubbles = (transcript: string): JSX.Element[] => {
+  if (!transcript) return [];
+
+  const lines = transcript.split("\n").filter((line) => line.trim());
+  const formatted: JSX.Element[] = [];
+  let currentSpeaker: string | null = null;
+  let currentMessage: string[] = [];
+
+  lines.forEach((line, index) => {
+    // Check if line looks like a speaker label (e.g., "Agent:", "Caller:", "User:")
+    const speakerMatch = line.match(/^([A-Za-z\s]+):\s*(.*)$/);
+
+    if (speakerMatch) {
+      // Save previous message if exists
+      if (currentSpeaker && currentMessage.length > 0) {
+        formatted.push(
+          <div key={`message-${index}-prev`} className="mb-4">
+            <div className="flex items-start gap-3">
+              <div
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                  currentSpeaker.toLowerCase().includes("agent") ||
+                  currentSpeaker.toLowerCase().includes("assistant")
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {currentSpeaker.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-semibold text-gray-700">
+                    {currentSpeaker}
+                  </span>
+                  <span className="text-xs text-gray-400">•</span>
+                  <span className="text-xs text-gray-400">Now</span>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
+                    {currentMessage.join(" ")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // Start new message
+      currentSpeaker = speakerMatch[1].trim();
+      currentMessage = [speakerMatch[2].trim()];
+    } else {
+      // Continuation of current message
+      if (currentSpeaker) {
+        currentMessage.push(line.trim());
+      } else {
+        // No speaker identified, treat as general text
+        if (currentMessage.length === 0) {
+          currentSpeaker = "System";
+        }
+        currentMessage.push(line.trim());
+      }
+    }
+  });
+
+  // Add last message
+  if (currentSpeaker && currentMessage.length > 0) {
+    formatted.push(
+      <div key={`message-final`} className="mb-4">
+        <div className="flex items-start gap-3">
+          <div
+            className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+              currentSpeaker.toLowerCase().includes("agent") ||
+              currentSpeaker.toLowerCase().includes("assistant")
+                ? "bg-blue-100 text-blue-700"
+                : "bg-amber-100 text-amber-700"
+            }`}
+          >
+            {currentSpeaker.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm font-semibold text-gray-700">
+                {currentSpeaker}
+              </span>
+              <span className="text-xs text-gray-400">•</span>
+              <span className="text-xs text-gray-400">Now</span>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+              <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
+                {currentMessage.join(" ")}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If no formatted messages, return original transcript
+  if (formatted.length === 0) {
+    return [
+      <div
+        key="raw-transcript"
+        className="bg-white rounded-lg p-4 border border-gray-200"
+      >
+        <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed font-mono">
+          {transcript}
+        </p>
+      </div>,
+    ];
+  }
+
+  return formatted;
+};
+
 export const VendorCallAttemptsTimeline = ({
   attempts,
 }: VendorCallAttemptsTimelineProps) => {
@@ -514,9 +630,20 @@ export const VendorCallAttemptsTimeline = ({
             </DialogHeader>
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50 rounded-lg border border-gray-200">
               <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                <pre className="text-sm text-gray-900 whitespace-pre-wrap font-mono leading-relaxed">
-                  {showTranscript.call_transcript || "No transcript available"}
-                </pre>
+                <div className="space-y-2">
+                  {showTranscript.call_transcript
+                    ? formatCallTranscriptBubbles(showTranscript.call_transcript)
+                    : [
+                        <div
+                          key="no-transcript"
+                          className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                        >
+                          <p className="text-sm text-gray-600">
+                            No transcript available for this call.
+                          </p>
+                        </div>,
+                      ]}
+                </div>
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-200">

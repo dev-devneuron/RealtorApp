@@ -23,7 +23,11 @@ import {
   DollarSign,
   Calendar,
   AlertCircle,
+  Copy,
+  Check,
+  AlertTriangle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { type VendorCallAttempt } from "./vendorApi";
 import {
   Dialog,
@@ -58,9 +62,32 @@ export const VendorCallAttemptsTimeline = ({
 }: VendorCallAttemptsTimelineProps) => {
   const [expandedAttempt, setExpandedAttempt] = useState<number | null>(null);
   const [showTranscript, setShowTranscript] = useState<VendorCallAttempt | null>(null);
+  const [expandedTranscripts, setExpandedTranscripts] = useState<Set<number>>(new Set());
+  const [copiedTranscript, setCopiedTranscript] = useState(false);
 
   // Sort attempts by attempt_number (newest first)
   const sortedAttempts = [...attempts].sort((a, b) => b.attempt_number - a.attempt_number);
+
+  const toggleTranscript = (attemptId: number) => {
+    const newExpanded = new Set(expandedTranscripts);
+    if (newExpanded.has(attemptId)) {
+      newExpanded.delete(attemptId);
+    } else {
+      newExpanded.add(attemptId);
+    }
+    setExpandedTranscripts(newExpanded);
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedTranscript(true);
+      toast.success("Transcript copied to clipboard!");
+      setTimeout(() => setCopiedTranscript(false), 2000);
+    } catch (err) {
+      toast.error("Failed to copy transcript");
+    }
+  };
 
   if (attempts.length === 0) {
     return (
@@ -86,11 +113,17 @@ export const VendorCallAttemptsTimeline = ({
           <div className="space-y-4">
             {sortedAttempts.map((attempt, index) => {
               const isExpanded = expandedAttempt === attempt.attempt_id;
+              const isTranscriptExpanded = expandedTranscripts.has(attempt.attempt_id);
               const hasDetails =
                 attempt.is_available !== null ||
                 attempt.earliest_available_time ||
                 attempt.estimated_cost_range ||
-                attempt.vendor_notes;
+                attempt.vendor_notes ||
+                attempt.initiated_at ||
+                attempt.answered_at ||
+                attempt.completed_at ||
+                attempt.call_duration_seconds;
+              const hasRecordingOrTranscript = attempt.call_recording_url || attempt.call_transcript;
 
               return (
                 <motion.div
@@ -174,6 +207,163 @@ export const VendorCallAttemptsTimeline = ({
                     </div>
                   </div>
 
+                  {/* Call Recording & Transcript - Prominent Display (Always Visible) */}
+                  {hasRecordingOrTranscript && (
+                    <div className="border-t border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+                      <div className="p-4 space-y-4">
+                        {/* ⭐ CALL RECORDING SECTION - CRITICAL FOR PM VERIFICATION */}
+                        {attempt.call_recording_url && (
+                          <div className="bg-white rounded-xl p-4 border-2 border-blue-200 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Volume2 className="h-5 w-5 text-blue-600" />
+                              <h4 className="text-sm font-bold text-gray-900">Call Recording</h4>
+                            </div>
+                            <div className="space-y-3">
+                              <audio
+                                controls
+                                className="w-full h-10 rounded-lg"
+                                src={attempt.call_recording_url}
+                              >
+                                Your browser does not support the audio element.
+                              </audio>
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  asChild
+                                  className="text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+                                >
+                                  <a
+                                    href={attempt.call_recording_url}
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Download className="h-3.5 w-3.5 mr-1.5" />
+                                    Download Recording
+                                  </a>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  asChild
+                                  className="text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+                                >
+                                  <a
+                                    href={attempt.call_recording_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    Open in New Tab
+                                  </a>
+                                </Button>
+                              </div>
+                              <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                                <p className="text-xs text-amber-800 flex items-start gap-2">
+                                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                  <span>
+                                    <strong>Important:</strong> Listen to verify vendor acceptance and job details before confirming assignment.
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ⭐ CALL TRANSCRIPT SECTION - CRITICAL FOR PM VERIFICATION */}
+                        {attempt.call_transcript && (
+                          <div className="bg-white rounded-xl p-4 border-2 border-blue-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-5 w-5 text-blue-600" />
+                                <h4 className="text-sm font-bold text-gray-900">Call Transcript</h4>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleTranscript(attempt.attempt_id)}
+                                className="text-xs h-7"
+                              >
+                                {isTranscriptExpanded ? (
+                                  <>
+                                    <ChevronUp className="h-3.5 w-3.5 mr-1" />
+                                    Collapse
+                                  </>
+                                ) : (
+                                  <>
+                                    <ChevronDown className="h-3.5 w-3.5 mr-1" />
+                                    Expand
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+
+                            {isTranscriptExpanded ? (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="space-y-3"
+                              >
+                                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 max-h-96 overflow-y-auto">
+                                  <pre className="text-xs text-gray-900 whitespace-pre-wrap font-mono leading-relaxed">
+                                    {attempt.call_transcript}
+                                  </pre>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => copyToClipboard(attempt.call_transcript!)}
+                                    className="text-xs"
+                                  >
+                                    {copiedTranscript ? (
+                                      <>
+                                        <Check className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+                                        Copied!
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy className="h-3.5 w-3.5 mr-1.5" />
+                                        Copy Transcript
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowTranscript(attempt)}
+                                    className="text-xs"
+                                  >
+                                    <FileText className="h-3.5 w-3.5 mr-1.5" />
+                                    View in Dialog
+                                  </Button>
+                                </div>
+                              </motion.div>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-3">
+                                    {attempt.call_transcript.substring(0, 200)}
+                                    {attempt.call_transcript.length > 200 && "..."}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleTranscript(attempt.attempt_id)}
+                                  className="text-xs w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  Read Full Transcript ({attempt.call_transcript.length} characters)
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Expanded Details */}
                   {isExpanded && hasDetails && (
                     <motion.div
@@ -245,49 +435,58 @@ export const VendorCallAttemptsTimeline = ({
                           </div>
                         )}
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
-                          {attempt.call_transcript && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShowTranscript(attempt)}
-                              className="text-xs"
-                            >
-                              <FileText className="h-3.5 w-3.5 mr-1.5" />
-                              View Transcript
-                            </Button>
-                          )}
-                          {attempt.call_recording_url && (
-                            <>
-                              <audio
-                                controls
-                                className="h-8 flex-1 min-w-[200px]"
-                                src={attempt.call_recording_url}
-                              >
-                                Your browser does not support the audio element.
-                              </audio>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="text-xs"
-                              >
-                                <a
-                                  href={attempt.call_recording_url}
-                                  download
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <Download className="h-3.5 w-3.5 mr-1.5" />
-                                  Download
-                                </a>
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                        {/* Call Metadata */}
+                        {(attempt.initiated_at || attempt.answered_at || attempt.completed_at || attempt.call_duration_seconds) && (
+                          <div className="pt-2 border-t border-gray-200">
+                            <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Call Metadata</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              {attempt.initiated_at && (
+                                <div>
+                                  <span className="text-gray-500">Initiated:</span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {new Date(attempt.initiated_at).toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              {attempt.answered_at && (
+                                <div>
+                                  <span className="text-gray-500">Answered:</span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {new Date(attempt.answered_at).toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              {attempt.completed_at && (
+                                <div>
+                                  <span className="text-gray-500">Completed:</span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {new Date(attempt.completed_at).toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              {attempt.call_duration_seconds && (
+                                <div>
+                                  <span className="text-gray-500">Duration:</span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {Math.floor(attempt.call_duration_seconds / 60)}m {attempt.call_duration_seconds % 60}s
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
+                  )}
+
+                  {/* Show message if no recording/transcript available but call completed */}
+                  {!hasRecordingOrTranscript && attempt.completed_at && (
+                    <div className="border-t border-gray-200 bg-yellow-50 p-3">
+                      <p className="text-xs text-yellow-800 flex items-center gap-2">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        Recording and transcript not available yet. They will appear after the call completes processing.
+                      </p>
+                    </div>
                   )}
                 </motion.div>
               );
@@ -299,21 +498,53 @@ export const VendorCallAttemptsTimeline = ({
       {/* Transcript Dialog */}
       {showTranscript && (
         <Dialog open={!!showTranscript} onOpenChange={() => setShowTranscript(null)}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+                <FileText className="h-5 w-5 text-blue-600" />
                 Call Transcript - {showTranscript.vendor_name}
               </DialogTitle>
               <DialogDescription>
                 Attempt #{showTranscript.attempt_number} •{" "}
                 {new Date(showTranscript.initiated_at).toLocaleString()}
+                {showTranscript.call_duration_seconds && (
+                  <> • Duration: {Math.floor(showTranscript.call_duration_seconds / 60)}m {showTranscript.call_duration_seconds % 60}s</>
+                )}
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 rounded-lg">
-              <pre className="text-sm text-gray-900 whitespace-pre-wrap font-sans">
-                {showTranscript.call_transcript || "No transcript available"}
-              </pre>
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <pre className="text-sm text-gray-900 whitespace-pre-wrap font-mono leading-relaxed">
+                  {showTranscript.call_transcript || "No transcript available"}
+                </pre>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-200">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copyToClipboard(showTranscript.call_transcript!)}
+                disabled={!showTranscript.call_transcript}
+              >
+                {copiedTranscript ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2 text-green-600" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Transcript
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTranscript(null)}
+              >
+                Close
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

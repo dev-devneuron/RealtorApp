@@ -187,7 +187,34 @@ export const PropertiesTab = ({
           </div>
         ) : (
           Array.isArray(apartments) &&
-          apartments.map((apt, idx) => {
+          [...apartments]
+            .sort((a, b) => {
+              const metaA = getPropertyMetadata(a);
+              const metaB = getPropertyMetadata(b);
+              const statusA = metaA.listing_status || "";
+              const statusB = metaB.listing_status || "";
+
+              // Priority order: Rented/Sold > For Rent > For Sale > Available
+              const getStatusPriority = (status: string): number => {
+                const upperStatus = status.toUpperCase();
+                if (upperStatus === "RENTED" || upperStatus === "SOLD") return 1;
+                if (upperStatus === "FOR RENT") return 2;
+                if (upperStatus === "FOR SALE") return 3;
+                if (upperStatus === "AVAILABLE") return 4;
+                return 5; // Other statuses go last
+              };
+
+              const priorityA = getStatusPriority(statusA);
+              const priorityB = getStatusPriority(statusB);
+
+              if (priorityA !== priorityB) {
+                return priorityA - priorityB;
+              }
+
+              // If same priority, maintain original order (or sort by ID)
+              return (a.id || 0) - (b.id || 0);
+            })
+            .map((apt, idx) => {
             if (!apt) return null;
             const meta = getPropertyMetadata(apt);
             return (

@@ -375,15 +375,22 @@ export const PropertyVendorConfiguration = ({
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 h-auto">
               {SERVICE_TYPES.map((type) => {
                 const count = vendorsByServiceType[type.value]?.length || 0;
                 return (
-                  <TabsTrigger key={type.value} value={type.value} className="text-xs sm:text-sm">
-                    {type.label}
+                  <TabsTrigger 
+                    key={type.value} 
+                    value={type.value} 
+                    className="text-sm sm:text-base font-medium py-3 px-4 flex flex-col items-center gap-1.5 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700"
+                  >
+                    <span className="whitespace-nowrap">{type.label}</span>
                     {count > 0 && (
-                      <Badge variant="outline" className="ml-2 text-xs">
-                        {count}
+                      <Badge 
+                        variant="outline" 
+                        className="text-xs font-semibold px-2 py-0.5 border-amber-300 text-amber-700 bg-amber-50"
+                      >
+                        {count} {count === 1 ? "vendor" : "vendors"}
                       </Badge>
                     )}
                   </TabsTrigger>
@@ -396,8 +403,8 @@ export const PropertyVendorConfiguration = ({
               const availableVendors = getAvailableVendors(type.value);
 
               return (
-                <TabsContent key={type.value} value={type.value} className="mt-4">
-                  <div className="space-y-3">
+                <TabsContent key={type.value} value={type.value} className="mt-6">
+                  <div className="space-y-4">
                     {vendors.length === 0 && availableVendors.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <Users className="h-8 w-8 mx-auto mb-2 text-gray-400" />
@@ -405,42 +412,56 @@ export const PropertyVendorConfiguration = ({
                       </div>
                     ) : (
                       <>
+                        {vendors.length > 0 && (
+                          <div className="mb-4">
+                            <p className="text-sm font-semibold text-gray-700 mb-3">
+                              {vendors.length} {vendors.length === 1 ? "Vendor" : "Vendors"} Configured (Priority Order)
+                            </p>
+                          </div>
+                        )}
                         {vendors.map((pv, index) => (
                           <motion.div
                             key={pv.property_vendor_id}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="border border-gray-200 rounded-lg p-4 bg-white"
+                            className="border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-white to-gray-50 hover:border-amber-300 hover:shadow-md transition-all"
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                                  <span className="text-sm font-semibold text-amber-700">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-start gap-4 flex-1 min-w-0">
+                                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center shadow-md">
+                                  <span className="text-base font-bold text-white">
                                     {pv.priority}
                                   </span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-gray-900 truncate">
-                                    {pv.vendor_name}
-                                  </p>
-                                  <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
-                                    <span className="flex items-center gap-1">
-                                      <Phone className="h-3.5 w-3.5" />
-                                      {formatPhoneNumber(pv.vendor_phone)}
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <p className="font-bold text-lg text-gray-900">
+                                      {pv.vendor_name}
+                                    </p>
+                                    <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-50">
+                                      Priority {pv.priority}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
+                                    <span className="flex items-center gap-1.5">
+                                      <Phone className="h-4 w-4 text-gray-500" />
+                                      <span className="font-medium">{formatPhoneNumber(pv.vendor_phone)}</span>
                                     </span>
                                     {pv.vendor_email && (
-                                      <span className="flex items-center gap-1">
-                                        <Mail className="h-3.5 w-3.5" />
-                                        {pv.vendor_email}
+                                      <span className="flex items-center gap-1.5">
+                                        <Mail className="h-4 w-4 text-gray-500" />
+                                        <span className="font-medium">{pv.vendor_email}</span>
                                       </span>
                                     )}
                                   </div>
                                   {pv.notes && (
-                                    <p className="text-xs text-gray-500 mt-1">{pv.notes}</p>
+                                    <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                                      <p className="text-xs text-amber-800 font-medium">{pv.notes}</p>
+                                    </div>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-shrink-0">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -448,7 +469,8 @@ export const PropertyVendorConfiguration = ({
                                     handleUpdatePriority(pv.property_vendor_id, pv.priority - 1)
                                   }
                                   disabled={index === 0}
-                                  className="h-8 w-8 p-0"
+                                  className="h-9 w-9 p-0 border-gray-300 hover:border-amber-400 hover:bg-amber-50"
+                                  title="Move up in priority"
                                 >
                                   <ArrowUp className="h-4 w-4" />
                                 </Button>
@@ -459,15 +481,17 @@ export const PropertyVendorConfiguration = ({
                                     handleUpdatePriority(pv.property_vendor_id, pv.priority + 1)
                                   }
                                   disabled={index === vendors.length - 1}
-                                  className="h-8 w-8 p-0"
+                                  className="h-9 w-9 p-0 border-gray-300 hover:border-amber-400 hover:bg-amber-50"
+                                  title="Move down in priority"
                                 >
                                   <ArrowDown className="h-4 w-4" />
                                 </Button>
                                 <Button
-                                  variant="destructive"
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => handleUnlinkVendor(pv.property_vendor_id)}
-                                  className="h-8 w-8 p-0"
+                                  className="h-9 w-9 p-0 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+                                  title="Remove vendor from property"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -477,14 +501,24 @@ export const PropertyVendorConfiguration = ({
                         ))}
 
                         {availableVendors.length > 0 && (
-                          <Button
-                            variant="outline"
-                            onClick={() => openLinkModal(type.value)}
-                            className="w-full border-dashed"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add {type.label} Vendor
-                          </Button>
+                          <div className="mt-6 pt-6 border-t-2 border-gray-300">
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                              <p className="text-sm font-semibold text-blue-900 mb-1">
+                                Add Vendor to {type.label}
+                              </p>
+                              <p className="text-xs text-blue-700">
+                                Select a vendor from your vendor pool to assign to this property
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              onClick={() => openLinkModal(type.value)}
+                              className="w-full border-2 border-dashed border-blue-300 hover:border-blue-400 hover:bg-blue-50 text-blue-700 font-medium py-3"
+                            >
+                              <Plus className="h-5 w-5 mr-2" />
+                              Add {type.label} Vendor
+                            </Button>
+                          </div>
                         )}
                       </>
                     )}

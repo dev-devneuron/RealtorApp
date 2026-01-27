@@ -375,23 +375,26 @@ export const PropertyVendorConfiguration = ({
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 h-auto">
+            <TabsList className="flex flex-wrap w-full gap-3 p-2 h-auto bg-gray-100/50">
               {SERVICE_TYPES.map((type) => {
                 const count = vendorsByServiceType[type.value]?.length || 0;
                 return (
                   <TabsTrigger 
                     key={type.value} 
                     value={type.value} 
-                    className="text-sm sm:text-base font-medium py-3 px-4 flex flex-col items-center gap-1.5 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700"
+                    className="flex flex-col items-center justify-center gap-2 min-w-[100px] sm:min-w-[120px] px-4 py-3 text-sm sm:text-base font-semibold rounded-lg border-2 border-transparent bg-white shadow-sm hover:border-amber-300 hover:shadow-md transition-all data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 data-[state=active]:border-amber-400 data-[state=active]:shadow-md"
                   >
-                    <span className="whitespace-nowrap">{type.label}</span>
+                    <span className="text-center leading-tight">{type.label}</span>
                     {count > 0 && (
                       <Badge 
                         variant="outline" 
-                        className="text-xs font-semibold px-2 py-0.5 border-amber-300 text-amber-700 bg-amber-50"
+                        className="text-xs font-bold px-2.5 py-1 border-amber-400 text-amber-700 bg-amber-100 whitespace-nowrap"
                       >
                         {count} {count === 1 ? "vendor" : "vendors"}
                       </Badge>
+                    )}
+                    {count === 0 && (
+                      <span className="text-xs text-gray-400 font-normal">No vendors</span>
                     )}
                   </TabsTrigger>
                 );

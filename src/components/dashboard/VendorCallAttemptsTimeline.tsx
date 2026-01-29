@@ -180,6 +180,26 @@ const formatMaybeDateTime = (iso?: string | null): string => {
   return d.toLocaleString();
 };
 
+const formatMaybeDateTimeInTimeZone = (iso?: string | null, timeZone?: string | null): string => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  if (!timeZone) return d.toLocaleString();
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      timeZone,
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(d);
+  } catch {
+    // If timezone is invalid, fall back to local formatting.
+    return d.toLocaleString();
+  }
+};
+
 const pickFirst = <T,>(...values: Array<T | null | undefined>): T | undefined => {
   for (const v of values) {
     if (v !== undefined && v !== null) return v as T;
@@ -278,6 +298,26 @@ export const VendorCallAttemptsTimeline = ({
                 toolCapture?.available_time_window
               );
 
+              // Prefer normalized ISO availability fields from call_metadata, per guide.
+              // earliest_available_time should be treated as a raw fallback string only (not parsed).
+              const availabilityTimezone = pickFirst<string>(
+                (meta as any)?.availability_timezone,
+                toolCapture?.availability_timezone
+              );
+              const availabilityStartIso = pickFirst<string>(
+                (meta as any)?.availability_start_at_local,
+                (meta as any)?.availability_start_at_utc,
+                toolCapture?.availability_start_at_local,
+                toolCapture?.availability_start_at_utc
+              );
+              const availabilityEndIso = pickFirst<string>(
+                (meta as any)?.availability_end_at_local,
+                (meta as any)?.availability_end_at_utc,
+                toolCapture?.availability_end_at_local,
+                toolCapture?.availability_end_at_utc
+              );
+              const hasNormalizedAvailability = !!availabilityStartIso || !!availabilityEndIso || !!availabilityTimezone;
+
               const declineReason = pickFirst<string>(
                 (meta as any)?.decline_reason,
                 toolEscalate?.decline_reason
@@ -332,6 +372,7 @@ export const VendorCallAttemptsTimeline = ({
                 attempt.answered_at ||
                 attempt.completed_at ||
                 attempt.call_duration_seconds ||
+                hasNormalizedAvailability ||
                 hasVendorDecisionSignals ||
                 hasCallbackRetrySignals ||
                 !!meta;
@@ -606,16 +647,37 @@ export const VendorCallAttemptsTimeline = ({
                           </div>
                         )}
 
-                        {/* Earliest Available Time */}
-                        {attempt.earliest_available_time && (
+                        {/* Availability time (prefer normalized ISO in call_metadata) */}
+                        {hasNormalizedAvailability && (
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-gray-500" />
                             <span className="text-sm text-gray-600">
-                              Earliest Available:{" "}
-                              <span className="font-medium text-gray-900">
-                                {new Date(
-                                  attempt.earliest_available_time
-                                ).toLocaleString()}
+                              Availability:
+                              <span className="ml-2 font-medium text-gray-900">
+                                {availabilityStartIso
+                                  ? formatMaybeDateTimeInTimeZone(availabilityStartIso, availabilityTimezone ?? null)
+                                  : "—"}
+                                {availabilityEndIso
+                                  ? ` → ${formatMaybeDateTimeInTimeZone(availabilityEndIso, availabilityTimezone ?? null)}`
+                                  : ""}
+                              </span>
+                              {availabilityTimezone && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  ({availabilityTimezone})
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Raw fallback string (do not parse as Date) */}
+                        {attempt.earliest_available_time && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">
+                              Earliest available (raw):
+                              <span className="ml-2 font-medium text-gray-900">
+                                {attempt.earliest_available_time}
                               </span>
                             </span>
                           </div>

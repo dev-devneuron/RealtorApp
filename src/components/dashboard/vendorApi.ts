@@ -103,7 +103,8 @@ export interface VendorCallAttempt {
 
 export interface VendorCallStatus {
   maintenance_request_id: number;
-  vendor_call_status: 'not_started' | 'calling' | 'vendor_accepted' | 'vendor_declined' | 'no_response' | 'paused' | 'cancelled';
+  // Backend may return "pending" when queue exists but is not actively calling yet.
+  vendor_call_status: 'not_started' | 'pending' | 'calling' | 'vendor_accepted' | 'vendor_declined' | 'no_response' | 'paused' | 'cancelled';
   assigned_vendor_id?: number | null;
   queue: VendorCallQueue | null;
   call_attempts: VendorCallAttempt[];

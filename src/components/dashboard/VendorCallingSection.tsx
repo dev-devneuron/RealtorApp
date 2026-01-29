@@ -205,6 +205,10 @@ export const VendorCallingSection = ({
                     Property: {propertyAddress} • Vendors will be called from vendors assigned to this property
                   </p>
                 )}
+                <p className="text-xs text-gray-500 mt-1">
+                  If Auto-Call is enabled for this property, calls auto-start about 1 minute after the tenant call completes.
+                  Vendor calling uses strict service-type matching (no fallback to unrelated vendors).
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -432,12 +436,13 @@ export const VendorCallingSection = ({
       )}
 
       {/* Empty State */}
-      {status === "not_started" && attempts.length === 0 && (
+      {status === "not_started" && attempts.length === 0 && !queue && (
         <Card className="border border-gray-200 bg-gray-50">
           <CardContent className="p-6 text-center">
             <AlertTriangle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
             <p className="text-sm text-gray-600">
-              No vendor calls have been initiated yet. Click "Start Vendor Calls" to begin.
+              No vendor calls have been initiated yet. If this request has no matching vendors for its service type,
+              the system will not call unrelated vendors. Configure vendors in the Property → Vendors tab, then start again.
             </p>
           </CardContent>
         </Card>

@@ -89,11 +89,16 @@ export interface VendorCallAttempt {
   vapi_call_id?: string;
   call_transcript?: string;
   call_recording_url?: string;
+  /**
+   * Optional tool payload snapshots + extra details from vendor calls.
+   * When present, can include: retry/callback suggestions, access instructions, emergency surcharge, etc.
+   */
+  call_metadata?: Record<string, any> | null;
   call_duration_seconds?: number;
   attempt_number: number;
-  initiated_at: string;
-  answered_at?: string;
-  completed_at?: string;
+  initiated_at?: string | null;
+  answered_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface VendorCallStatus {
@@ -113,7 +118,7 @@ export interface PropertyVendorSettings {
     start_hour: number;
     end_hour: number;
     timezone: string;
-  };
+  } | null;
 }
 
 // ============================================================================
@@ -504,7 +509,7 @@ export const updatePropertyVendorSettings = async (
       start_hour: number;
       end_hour: number;
       timezone: string;
-    };
+    } | null;
   }
 ): Promise<PropertyVendorSettings> => {
   const token = getAuthToken();

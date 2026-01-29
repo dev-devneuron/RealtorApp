@@ -86,6 +86,10 @@ export const PropertyVendorConfiguration = ({
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [updatingSettings, setUpdatingSettings] = useState(false);
+  const [callWindowStart, setCallWindowStart] = useState<number>(8);
+  const [callWindowEnd, setCallWindowEnd] = useState<number>(21);
+  const [callWindowTimezone, setCallWindowTimezone] = useState<string>("America/New_York");
+  const [priorityUpdatingId, setPriorityUpdatingId] = useState<number | null>(null);
 
   // Only show for Property Managers
   if (userType !== "property_manager") {
@@ -114,6 +118,16 @@ export const PropertyVendorConfiguration = ({
     try {
       const settingsData = await fetchPropertyVendorSettings(propertyId);
       setSettings(settingsData);
+      if (settingsData?.call_time_restrictions) {
+        setCallWindowStart(settingsData.call_time_restrictions.start_hour);
+        setCallWindowEnd(settingsData.call_time_restrictions.end_hour);
+        setCallWindowTimezone(settingsData.call_time_restrictions.timezone);
+      } else {
+        // Reset local inputs when no restrictions exist (prevents leaking previous property's values)
+        setCallWindowStart(8);
+        setCallWindowEnd(21);
+        setCallWindowTimezone("America/New_York");
+      }
     } catch (error: any) {
       // Settings might not exist yet, use defaults
       setSettings({
@@ -122,6 +136,9 @@ export const PropertyVendorConfiguration = ({
         auto_call_enabled: false,
         emergency_only: false,
       });
+      setCallWindowStart(8);
+      setCallWindowEnd(21);
+      setCallWindowTimezone("America/New_York");
     }
   }, [propertyId]);
 
@@ -183,37 +200,53 @@ export const PropertyVendorConfiguration = ({
     }
   };
 
-  const handleUpdatePriority = async (
-    propertyVendorId: number,
-    newPriority: number
-  ) => {
-    // For now, we'll need to unlink and re-link with new priority
-    // In a full implementation, you'd have an update endpoint
-    const vendor = propertyVendors.find((pv) => pv.property_vendor_id === propertyVendorId);
-    if (!vendor) return;
-
+  const handleSwapPriority = async (a: PropertyVendor, b: PropertyVendor) => {
+    // NOTE: Backend does not expose a "PATCH priority" endpoint yet.
+    // We simulate reorder by unlinking and re-linking both items with swapped priorities.
     try {
-      await unlinkVendorFromProperty(propertyId, propertyVendorId);
+      setPriorityUpdatingId(a.property_vendor_id);
+      await unlinkVendorFromProperty(propertyId, a.property_vendor_id);
+      await unlinkVendorFromProperty(propertyId, b.property_vendor_id);
+
       await linkVendorToProperty(propertyId, {
-        vendor_id: vendor.vendor_id,
-        service_type: vendor.service_type,
-        priority: newPriority,
-        notes: vendor.notes,
+        vendor_id: a.vendor_id,
+        service_type: a.service_type,
+        priority: b.priority,
+        notes: a.notes,
       });
+      await linkVendorToProperty(propertyId, {
+        vendor_id: b.vendor_id,
+        service_type: b.service_type,
+        priority: a.priority,
+        notes: b.notes,
+      });
+
       toast.success("Priority updated");
       await loadPropertyVendors();
     } catch (error: any) {
       toast.error(error.message || "Failed to update priority");
+      // Best-effort refresh in case one unlink succeeded
+      await loadPropertyVendors().catch(() => {});
+    } finally {
+      setPriorityUpdatingId(null);
     }
   };
 
   const handleUpdateSettings = async (updates: Partial<PropertyVendorSettings>) => {
     try {
       setUpdatingSettings(true);
+      const nextCallTimeRestrictions =
+        updates.call_time_restrictions === null
+          ? null
+          : updates.call_time_restrictions === undefined
+            ? settings?.call_time_restrictions
+            : updates.call_time_restrictions;
+
       const updated = await updatePropertyVendorSettings(propertyId, {
         auto_call_enabled: updates.auto_call_enabled ?? settings?.auto_call_enabled ?? false,
         emergency_only: updates.emergency_only ?? settings?.emergency_only ?? false,
-        call_time_restrictions: updates.call_time_restrictions,
+        // Preserve existing unless explicitly set; allow explicit clear via null.
+        call_time_restrictions: nextCallTimeRestrictions,
       });
       setSettings(updated);
       toast.success("Settings updated successfully");
@@ -258,7 +291,6 @@ export const PropertyVendorConfiguration = ({
       .map((pv) => pv.vendor_id);
     return allVendors.filter(
       (v) =>
-        v.service_type === serviceType &&
         !linkedVendorIds.includes(v.vendor_id) &&
         v.is_active &&
         !v.opted_out
@@ -350,6 +382,124 @@ export const PropertyVendorConfiguration = ({
                 "Disabled"
               )}
             </Button>
+          </div>
+
+          {/* Call time restrictions (optional) */}
+          <div className="pt-4 border-t border-blue-200">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <p className="font-medium text-gray-900">Call Time Window (Optional)</p>
+                <p className="text-sm text-gray-600">
+                  Limit automated vendor calls to a specific time window for this property (uses the selected timezone).
+                </p>
+              </div>
+              <Badge variant="outline" className="border-blue-300 text-blue-800 bg-white">
+                {settings?.call_time_restrictions
+                  ? "Configured"
+                  : "Not set"}
+              </Badge>
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-1">Start hour</p>
+                <Input
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={callWindowStart}
+                  onChange={(e) => setCallWindowStart(Number(e.target.value))}
+                  className="bg-white"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-1">End hour</p>
+                <Input
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={callWindowEnd}
+                  onChange={(e) => setCallWindowEnd(Number(e.target.value))}
+                  className="bg-white"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-1">Timezone</p>
+                <Select value={callWindowTimezone} onValueChange={setCallWindowTimezone}>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select timezone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="America/New_York">America/New_York</SelectItem>
+                    <SelectItem value="America/Chicago">America/Chicago</SelectItem>
+                    <SelectItem value="America/Denver">America/Denver</SelectItem>
+                    <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
+                    <SelectItem value="UTC">UTC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                disabled={updatingSettings}
+                onClick={() => {
+                  const start = Math.max(0, Math.min(23, Number(callWindowStart)));
+                  const end = Math.max(0, Math.min(23, Number(callWindowEnd)));
+                  if (Number.isNaN(start) || Number.isNaN(end)) {
+                    toast.error("Please enter valid hours (0–23).");
+                    return;
+                  }
+                  if (start === end) {
+                    toast.error("Start and end hour cannot be the same.");
+                    return;
+                  }
+                  handleUpdateSettings({
+                    call_time_restrictions: {
+                      start_hour: start,
+                      end_hour: end,
+                      timezone: callWindowTimezone,
+                    },
+                  });
+                }}
+                className="border-blue-300 text-blue-800 hover:bg-blue-50"
+              >
+                Save Call Window
+              </Button>
+              {settings?.call_time_restrictions && (
+                <Button
+                  variant="outline"
+                  disabled={updatingSettings}
+                  onClick={() => handleUpdateSettings({ call_time_restrictions: null })}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Clear
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                disabled={updatingSettings}
+                onClick={() => {
+                  const existing = settings?.call_time_restrictions;
+                  if (!existing) {
+                    toast.message("No saved call window yet.");
+                    return;
+                  }
+                  setCallWindowStart(existing.start_hour);
+                  setCallWindowEnd(existing.end_hour);
+                  setCallWindowTimezone(existing.timezone);
+                  toast.success("Loaded saved call window.");
+                }}
+                className="text-gray-600"
+              >
+                Load saved
+              </Button>
+            </div>
+
+            <p className="mt-2 text-xs text-gray-500">
+              Tip: The backend enforces the window; this UI only configures it. Manual “Start Vendor Calls” can still be used anytime.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -468,10 +618,13 @@ export const PropertyVendorConfiguration = ({
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleUpdatePriority(pv.property_vendor_id, pv.priority - 1)
-                                  }
-                                  disabled={index === 0}
+                                  onClick={() => {
+                                    if (index === 0) return;
+                                    const above = vendors[index - 1];
+                                    if (!above) return;
+                                    handleSwapPriority(pv, above);
+                                  }}
+                                  disabled={index === 0 || priorityUpdatingId === pv.property_vendor_id}
                                   className="h-9 w-9 p-0 border-gray-300 hover:border-amber-400 hover:bg-amber-50"
                                   title="Move up in priority"
                                 >
@@ -480,10 +633,13 @@ export const PropertyVendorConfiguration = ({
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleUpdatePriority(pv.property_vendor_id, pv.priority + 1)
-                                  }
-                                  disabled={index === vendors.length - 1}
+                                  onClick={() => {
+                                    if (index === vendors.length - 1) return;
+                                    const below = vendors[index + 1];
+                                    if (!below) return;
+                                    handleSwapPriority(pv, below);
+                                  }}
+                                  disabled={index === vendors.length - 1 || priorityUpdatingId === pv.property_vendor_id}
                                   className="h-9 w-9 p-0 border-gray-300 hover:border-amber-400 hover:bg-amber-50"
                                   title="Move down in priority"
                                 >
@@ -503,26 +659,27 @@ export const PropertyVendorConfiguration = ({
                           </motion.div>
                         ))}
 
-                        {availableVendors.length > 0 && (
-                          <div className="mt-6 pt-6 border-t-2 border-gray-300">
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                              <p className="text-sm font-semibold text-blue-900 mb-1">
-                                Add Vendor to {type.label}
-                              </p>
-                              <p className="text-xs text-blue-700">
-                                Select a vendor from your vendor pool to assign to this property
-                              </p>
-                            </div>
-                            <Button
-                              variant="outline"
-                              onClick={() => openLinkModal(type.value)}
-                              className="w-full border-2 border-dashed border-blue-300 hover:border-blue-400 hover:bg-blue-50 text-blue-700 font-medium py-3"
-                            >
-                              <Plus className="h-5 w-5 mr-2" />
-                              Add {type.label} Vendor
-                            </Button>
+                        <div className="mt-6 pt-6 border-t-2 border-gray-300">
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <p className="text-sm font-semibold text-blue-900 mb-1">
+                              Add Vendor to {type.label}
+                            </p>
+                            <p className="text-xs text-blue-700">
+                              Select a vendor from your vendor pool to assign to this property.
+                              {availableVendors.length === 0 &&
+                                " No available vendors in your pool (create vendors or unlink an existing one to reassign)."}
+                            </p>
                           </div>
-                        )}
+                          <Button
+                            variant="outline"
+                            onClick={() => openLinkModal(type.value)}
+                            disabled={availableVendors.length === 0}
+                            className="w-full border-2 border-dashed border-blue-300 hover:border-blue-400 hover:bg-blue-50 text-blue-700 font-medium py-3 disabled:opacity-60"
+                          >
+                            <Plus className="h-5 w-5 mr-2" />
+                            {availableVendors.length === 0 ? "No vendors available" : `Add ${type.label} Vendor`}
+                          </Button>
+                        </div>
                       </>
                     )}
                   </div>
@@ -558,7 +715,8 @@ export const PropertyVendorConfiguration = ({
                 <SelectContent>
                   {getAvailableVendors(selectedServiceType).map((vendor) => (
                     <SelectItem key={vendor.vendor_id} value={vendor.vendor_id.toString()}>
-                      {vendor.name} - {formatPhoneNumber(vendor.phone_number)}
+                      {vendor.name} • {vendor.service_type.toUpperCase()} •{" "}
+                      {formatPhoneNumber(vendor.phone_number)}
                     </SelectItem>
                   ))}
                 </SelectContent>

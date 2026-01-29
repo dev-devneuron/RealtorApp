@@ -2,7 +2,16 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -59,6 +68,41 @@ export const MaintenanceRequestsTab = ({
   onViewRequest,
   onEditRequest,
 }: MaintenanceRequestsTabProps) => {
+  const quickFilterValue =
+    maintenanceRequestFilterPriority !== "all" && maintenanceRequestFilterCategory !== "all"
+      ? "custom"
+      : maintenanceRequestFilterPriority !== "all"
+        ? `priority:${maintenanceRequestFilterPriority}`
+        : maintenanceRequestFilterCategory !== "all"
+          ? `category:${maintenanceRequestFilterCategory}`
+          : "all";
+
+  const handleQuickFilterChange = (value: string) => {
+    if (value === "all") {
+      onFilterPriorityChange("all");
+      onFilterCategoryChange("all");
+      return;
+    }
+    if (value.startsWith("priority:")) {
+      onFilterPriorityChange(value.replace("priority:", ""));
+      onFilterCategoryChange("all");
+      return;
+    }
+    if (value.startsWith("category:")) {
+      onFilterCategoryChange(value.replace("category:", ""));
+      onFilterPriorityChange("all");
+      return;
+    }
+  };
+
+  const sortValue = `${maintenanceRequestSortBy}:${maintenanceRequestSortOrder}`;
+  const handleSortChange = (value: string) => {
+    const [by, order] = value.split(":");
+    if (!by || (order !== "asc" && order !== "desc")) return;
+    onSortByChange(by);
+    onSortOrderChange(order);
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
       <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
@@ -113,63 +157,60 @@ export const MaintenanceRequestsTab = ({
                 </Select>
               )}
 
-              <Select value={maintenanceRequestFilterPriority} onValueChange={onFilterPriorityChange}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
-                  <SelectValue placeholder="Filter by priority" />
+              <Select value={quickFilterValue} onValueChange={handleQuickFilterChange}>
+                <SelectTrigger className="w-full sm:w-56 bg-white border-amber-300 rounded-xl">
+                  <SelectValue placeholder="Quick filter" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="all">All (no extra filters)</SelectItem>
+                  <SelectItem value="custom" disabled>
+                    Custom (Priority + Category)
+                  </SelectItem>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Priority</SelectLabel>
+                    <SelectItem value="priority:low">Low</SelectItem>
+                    <SelectItem value="priority:normal">Normal</SelectItem>
+                    <SelectItem value="priority:high">High</SelectItem>
+                    <SelectItem value="priority:urgent">Urgent</SelectItem>
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Category</SelectLabel>
+                    <SelectItem value="category:plumbing">Plumbing</SelectItem>
+                    <SelectItem value="category:electrical">Electrical</SelectItem>
+                    <SelectItem value="category:heating">Heating</SelectItem>
+                    <SelectItem value="category:hvac">HVAC</SelectItem>
+                    <SelectItem value="category:appliance">Appliance</SelectItem>
+                    <SelectItem value="category:other">Other</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
 
-              <Select value={maintenanceRequestFilterCategory} onValueChange={onFilterCategoryChange}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
-                  <SelectValue placeholder="Filter by category" />
+              <Select value={sortValue} onValueChange={handleSortChange}>
+                <SelectTrigger className="w-full sm:w-56 bg-white border-amber-300 rounded-xl">
+                  <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="plumbing">Plumbing</SelectItem>
-                  <SelectItem value="electrical">Electrical</SelectItem>
-                  <SelectItem value="heating">Heating</SelectItem>
-                  <SelectItem value="hvac">HVAC</SelectItem>
-                  <SelectItem value="appliance">Appliance</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectGroup>
+                    <SelectLabel>Date</SelectLabel>
+                    <SelectItem value="submitted_at:desc">Newest first</SelectItem>
+                    <SelectItem value="submitted_at:asc">Oldest first</SelectItem>
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Priority</SelectLabel>
+                    <SelectItem value="priority:desc">High → Low</SelectItem>
+                    <SelectItem value="priority:asc">Low → High</SelectItem>
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Status</SelectLabel>
+                    <SelectItem value="status:asc">A → Z</SelectItem>
+                    <SelectItem value="status:desc">Z → A</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
-
-              <Select value={maintenanceRequestSortBy} onValueChange={onSortByChange}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="submitted_at">Date</SelectItem>
-                  <SelectItem value="priority">Priority</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSortOrderChange(maintenanceRequestSortOrder === "asc" ? "desc" : "asc")}
-                className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
-              >
-                {maintenanceRequestSortOrder === "asc" ? (
-                  <>
-                    <ArrowUp className="h-4 w-4 mr-2" />
-                    Ascending
-                  </>
-                ) : (
-                  <>
-                    <ArrowDown className="h-4 w-4 mr-2" />
-                    Descending
-                  </>
-                )}
-              </Button>
 
               <Button onClick={onRefresh} variant="outline" className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl">
                 <RefreshCw className="h-4 w-4 mr-2" />

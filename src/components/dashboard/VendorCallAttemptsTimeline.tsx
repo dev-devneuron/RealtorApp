@@ -173,12 +173,29 @@ const formatCallTranscriptBubbles = (transcript: string): JSX.Element[] => {
   return formatted;
 };
 
+const formatMaybeDateTime = (iso?: string | null): string => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString();
+};
+
+const pickFirst = <T,>(...values: Array<T | null | undefined>): T | undefined => {
+  for (const v of values) {
+    if (v !== undefined && v !== null) return v as T;
+  }
+  return undefined;
+};
+
 export const VendorCallAttemptsTimeline = ({
   attempts,
 }: VendorCallAttemptsTimelineProps) => {
   const [expandedAttempt, setExpandedAttempt] = useState<number | null>(null);
   const [showTranscript, setShowTranscript] = useState<VendorCallAttempt | null>(null);
   const [expandedTranscripts, setExpandedTranscripts] = useState<Set<number>>(new Set());
+  const [expandedMetadataAttempts, setExpandedMetadataAttempts] = useState<Set<number>>(
+    new Set()
+  );
   const [copiedTranscript, setCopiedTranscript] = useState(false);
 
   // Sort attempts by attempt_number (newest first)
@@ -192,6 +209,13 @@ export const VendorCallAttemptsTimeline = ({
       newExpanded.add(attemptId);
     }
     setExpandedTranscripts(newExpanded);
+  };
+
+  const toggleMetadata = (attemptId: number) => {
+    const next = new Set(expandedMetadataAttempts);
+    if (next.has(attemptId)) next.delete(attemptId);
+    else next.add(attemptId);
+    setExpandedMetadataAttempts(next);
   };
 
   const copyToClipboard = async (text: string) => {
@@ -230,15 +254,87 @@ export const VendorCallAttemptsTimeline = ({
             {sortedAttempts.map((attempt, index) => {
               const isExpanded = expandedAttempt === attempt.attempt_id;
               const isTranscriptExpanded = expandedTranscripts.has(attempt.attempt_id);
+              const isMetadataExpanded = expandedMetadataAttempts.has(attempt.attempt_id);
+              const meta = attempt.call_metadata ?? undefined;
+
+              const toolCapture = (meta as any)?.tool_captureVendorResponse;
+              const toolEscalate = (meta as any)?.tool_escalateToNextVendor;
+
+              const requiresAccess = pickFirst<boolean>(
+                (meta as any)?.requires_access_instructions,
+                toolCapture?.requires_access_instructions
+              );
+              const emergencySurcharge = pickFirst<string>(
+                (meta as any)?.emergency_surcharge,
+                toolCapture?.emergency_surcharge
+              );
+              const preferredContactMethod = pickFirst<string>(
+                (meta as any)?.preferred_contact_method,
+                toolCapture?.preferred_contact_method
+              );
+              const availableDate = pickFirst<string>((meta as any)?.available_date, toolCapture?.available_date);
+              const availableWindow = pickFirst<string>(
+                (meta as any)?.available_time_window,
+                toolCapture?.available_time_window
+              );
+
+              const declineReason = pickFirst<string>(
+                (meta as any)?.decline_reason,
+                toolEscalate?.decline_reason
+              );
+              const permanentOptOut = pickFirst<boolean>(
+                (meta as any)?.permanent_opt_out,
+                toolEscalate?.permanent_opt_out
+              );
+              const suggestedCallbackTime = pickFirst<string>(
+                (meta as any)?.suggested_callback_time,
+                toolEscalate?.suggested_callback_time
+              );
+              const retryRecommended = pickFirst<boolean>(
+                (meta as any)?.retry_recommended,
+                toolEscalate?.retry_recommended
+              );
+              const retryDelayMinutes = pickFirst<number>(
+                (meta as any)?.retry_delay_minutes,
+                toolEscalate?.retry_delay_minutes
+              );
+              const callbackScheduled = pickFirst<boolean>(
+                (meta as any)?.callback_scheduled,
+                toolEscalate?.callback_scheduled
+              );
+              const callbackScheduledAt = pickFirst<string>(
+                (meta as any)?.callback_scheduled_at,
+                toolEscalate?.callback_scheduled_at
+              );
+
+              const hasVendorDecisionSignals =
+                requiresAccess !== undefined ||
+                !!emergencySurcharge ||
+                !!preferredContactMethod ||
+                !!availableDate ||
+                !!availableWindow;
+              const hasCallbackRetrySignals =
+                !!suggestedCallbackTime ||
+                retryRecommended !== undefined ||
+                retryDelayMinutes !== undefined ||
+                callbackScheduled !== undefined ||
+                !!callbackScheduledAt ||
+                !!declineReason ||
+                permanentOptOut !== undefined;
+
+              const hasAvailability = attempt.is_available !== undefined && attempt.is_available !== null;
               const hasDetails =
-                attempt.is_available !== null ||
+                hasAvailability ||
                 attempt.earliest_available_time ||
                 attempt.estimated_cost_range ||
                 attempt.vendor_notes ||
                 attempt.initiated_at ||
                 attempt.answered_at ||
                 attempt.completed_at ||
-                attempt.call_duration_seconds;
+                attempt.call_duration_seconds ||
+                hasVendorDecisionSignals ||
+                hasCallbackRetrySignals ||
+                !!meta;
               const hasRecordingOrTranscript = attempt.call_recording_url || attempt.call_transcript;
 
               return (
@@ -285,7 +381,7 @@ export const VendorCallAttemptsTimeline = ({
                             Attempt #{attempt.attempt_number}
                           </span>
                           <span>
-                            {new Date(attempt.initiated_at).toLocaleString()}
+                            {formatMaybeDateTime(attempt.initiated_at)}
                           </span>
                           {attempt.call_duration_seconds && (
                             <span>
@@ -422,9 +518,11 @@ export const VendorCallAttemptsTimeline = ({
                                 className="space-y-3"
                               >
                                 <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 max-h-96 overflow-y-auto">
-                                  <pre className="text-xs text-gray-900 whitespace-pre-wrap font-mono leading-relaxed">
-                                    {attempt.call_transcript}
-                                  </pre>
+                                  <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                                    <div className="space-y-2">
+                                      {formatCallTranscriptBubbles(attempt.call_transcript)}
+                                    </div>
+                                  </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Button
@@ -490,7 +588,7 @@ export const VendorCallAttemptsTimeline = ({
                     >
                       <div className="p-4 space-y-3">
                         {/* Availability */}
-                        {attempt.is_available !== null && (
+                        {hasAvailability && (
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-600">
                               Available:
@@ -551,6 +649,150 @@ export const VendorCallAttemptsTimeline = ({
                           </div>
                         )}
 
+                        {/* Vendor Tool Signals (call_metadata) */}
+                        {(hasVendorDecisionSignals || hasCallbackRetrySignals) && (
+                          <div className="pt-2 border-t border-gray-200 space-y-3">
+                            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                              Vendor Decision Summary (from call tools)
+                            </p>
+
+                            {hasVendorDecisionSignals && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p className="text-xs font-semibold text-blue-900 mb-2">
+                                  Access & emergency details
+                                </p>
+                                <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                                  {requiresAccess !== undefined && (
+                                    <div>
+                                      <span className="text-blue-700">Requires access instructions:</span>
+                                      <span className="ml-2 text-blue-950 font-semibold">
+                                        {requiresAccess ? "Yes" : "No"}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {emergencySurcharge && (
+                                    <div>
+                                      <span className="text-blue-700">Emergency surcharge:</span>
+                                      <span className="ml-2 text-blue-950 font-semibold">{emergencySurcharge}</span>
+                                    </div>
+                                  )}
+                                  {preferredContactMethod && (
+                                    <div>
+                                      <span className="text-blue-700">Preferred contact:</span>
+                                      <span className="ml-2 text-blue-950 font-semibold">{preferredContactMethod}</span>
+                                    </div>
+                                  )}
+                                  {(availableDate || availableWindow) && (
+                                    <div className="sm:col-span-2">
+                                      <span className="text-blue-700">Availability window:</span>
+                                      <span className="ml-2 text-blue-950 font-semibold">
+                                        {[availableDate, availableWindow].filter(Boolean).join(" • ")}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {hasCallbackRetrySignals && (
+                              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                <p className="text-xs font-semibold text-purple-900 mb-2">
+                                  Callback & retry signals
+                                </p>
+                                <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                                  {declineReason && (
+                                    <div className="sm:col-span-2">
+                                      <span className="text-purple-700">Decline reason:</span>
+                                      <span className="ml-2 text-purple-950 font-semibold">{declineReason}</span>
+                                    </div>
+                                  )}
+                                  {permanentOptOut !== undefined && (
+                                    <div>
+                                      <span className="text-purple-700">Permanent opt-out:</span>
+                                      <span className="ml-2 text-purple-950 font-semibold">
+                                        {permanentOptOut ? "Yes" : "No"}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {suggestedCallbackTime && (
+                                    <div>
+                                      <span className="text-purple-700">Callback suggested:</span>
+                                      <span className="ml-2 text-purple-950 font-semibold">{suggestedCallbackTime}</span>
+                                    </div>
+                                  )}
+                                  {callbackScheduled !== undefined && (
+                                    <div>
+                                      <span className="text-purple-700">Callback scheduled:</span>
+                                      <span className="ml-2 text-purple-950 font-semibold">
+                                        {callbackScheduled ? "Yes" : "No"}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {callbackScheduledAt && (
+                                    <div>
+                                      <span className="text-purple-700">Scheduled at:</span>
+                                      <span className="ml-2 text-purple-950 font-semibold">{callbackScheduledAt}</span>
+                                    </div>
+                                  )}
+                                  {retryRecommended !== undefined && (
+                                    <div>
+                                      <span className="text-purple-700">Retry recommended:</span>
+                                      <span className="ml-2 text-purple-950 font-semibold">
+                                        {retryRecommended ? "Yes" : "No"}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {retryDelayMinutes !== undefined && (
+                                    <div>
+                                      <span className="text-purple-700">Retry delay:</span>
+                                      <span className="ml-2 text-purple-950 font-semibold">
+                                        {retryDelayMinutes} min
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Raw call metadata (debug/verification) */}
+                        {meta && (
+                          <div className="pt-2 border-t border-gray-200">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                Raw Call Metadata
+                              </p>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs h-7"
+                                onClick={() => toggleMetadata(attempt.attempt_id)}
+                              >
+                                {isMetadataExpanded ? (
+                                  <>
+                                    <ChevronUp className="h-3.5 w-3.5 mr-1" />
+                                    Hide
+                                  </>
+                                ) : (
+                                  <>
+                                    <ChevronDown className="h-3.5 w-3.5 mr-1" />
+                                    View
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+
+                            {isMetadataExpanded && (
+                              <div className="mt-2 bg-gray-50 rounded-lg border border-gray-200 p-3 max-h-72 overflow-y-auto">
+                                <pre className="text-[11px] leading-relaxed text-gray-900 whitespace-pre-wrap font-mono">
+                                  {JSON.stringify(meta, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Call Metadata */}
                         {(attempt.initiated_at || attempt.answered_at || attempt.completed_at || attempt.call_duration_seconds) && (
                           <div className="pt-2 border-t border-gray-200">
@@ -560,7 +802,7 @@ export const VendorCallAttemptsTimeline = ({
                                 <div>
                                   <span className="text-gray-500">Initiated:</span>
                                   <span className="ml-2 text-gray-900 font-medium">
-                                    {new Date(attempt.initiated_at).toLocaleString()}
+                                    {formatMaybeDateTime(attempt.initiated_at)}
                                   </span>
                                 </div>
                               )}
@@ -568,7 +810,7 @@ export const VendorCallAttemptsTimeline = ({
                                 <div>
                                   <span className="text-gray-500">Answered:</span>
                                   <span className="ml-2 text-gray-900 font-medium">
-                                    {new Date(attempt.answered_at).toLocaleString()}
+                                    {formatMaybeDateTime(attempt.answered_at)}
                                   </span>
                                 </div>
                               )}
@@ -576,7 +818,7 @@ export const VendorCallAttemptsTimeline = ({
                                 <div>
                                   <span className="text-gray-500">Completed:</span>
                                   <span className="ml-2 text-gray-900 font-medium">
-                                    {new Date(attempt.completed_at).toLocaleString()}
+                                    {formatMaybeDateTime(attempt.completed_at)}
                                   </span>
                                 </div>
                               )}
@@ -622,7 +864,7 @@ export const VendorCallAttemptsTimeline = ({
               </DialogTitle>
               <DialogDescription>
                 Attempt #{showTranscript.attempt_number} •{" "}
-                {new Date(showTranscript.initiated_at).toLocaleString()}
+                {formatMaybeDateTime(showTranscript.initiated_at)}
                 {showTranscript.call_duration_seconds && (
                   <> • Duration: {Math.floor(showTranscript.call_duration_seconds / 60)}m {showTranscript.call_duration_seconds % 60}s</>
                 )}

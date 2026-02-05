@@ -1,0 +1,793 @@
+/* Enhanced Calendar Styling - Professional 16-Hour Day View (6 AM - 10 PM) */
+
+.booking-calendar-enhanced {
+  font-family: inherit;
+}
+
+.booking-calendar-enhanced .rbc-calendar {
+  background: transparent;
+}
+
+.booking-calendar-enhanced .rbc-header {
+  padding: 16px 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fef9f3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-header {
+    padding: 12px 8px;
+    font-size: 0.75rem;
+  }
+}
+
+.booking-calendar-enhanced .rbc-header + .rbc-header {
+  border-left: 1px solid #e5e7eb;
+}
+
+.booking-calendar-enhanced .rbc-today {
+  background: #fef3c7 !important;
+  position: relative;
+  box-shadow: inset 0 0 0 1px #fbbf24;
+}
+
+.booking-calendar-enhanced .rbc-today::before {
+  content: 'TODAY';
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+  z-index: 5;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-today::before {
+    font-size: 0.6rem;
+    top: 2px;
+    right: 4px;
+  }
+}
+
+.booking-calendar-enhanced .rbc-off-range-bg {
+  background: #f9fafb;
+  opacity: 0.5;
+}
+
+/* Off days styling - Saturday, Sunday, and non-working days */
+.booking-calendar-enhanced .rbc-off-day {
+  background: #ffffff !important;
+  opacity: 0.7;
+  border-left: 3px solid #e5e7eb !important;
+  position: relative;
+}
+
+.booking-calendar-enhanced .rbc-off-day::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(229, 231, 235, 0.3) 10px,
+    rgba(229, 231, 235, 0.3) 20px
+  );
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Off day time slots */
+.booking-calendar-enhanced .rbc-off-day-slot {
+  background: #fafafa !important;
+  opacity: 0.5;
+  border-top: 1px dashed #e5e7eb !important;
+}
+
+.booking-calendar-enhanced .rbc-day-bg {
+  border-color: #e5e7eb;
+  transition: all 0.2s ease;
+  position: relative;
+  background: #ffffff;
+}
+
+.booking-calendar-enhanced .rbc-day-bg:hover {
+  background: #fef9f3;
+  box-shadow: inset 0 0 0 1px #fbbf24;
+}
+
+.booking-calendar-enhanced .rbc-time-slot {
+  border-top-color: #e5e7eb;
+  min-height: 60px;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-time-slot {
+    min-height: 50px;
+  }
+}
+
+.booking-calendar-enhanced .rbc-time-slot::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #fde68a 20%, #fde68a 80%, transparent);
+  opacity: 0.4;
+}
+
+/* Time period indicators - Morning (6 AM - 12 PM) */
+.booking-calendar-enhanced .rbc-time-slot[data-period="morning"] {
+  background: linear-gradient(to bottom, rgba(255, 251, 235, 0.4), rgba(254, 243, 199, 0.2));
+}
+
+/* Afternoon (12 PM - 6 PM) */
+.booking-calendar-enhanced .rbc-time-slot[data-period="afternoon"] {
+  background: linear-gradient(to bottom, rgba(254, 243, 199, 0.3), rgba(255, 251, 235, 0.2));
+}
+
+/* Evening (6 PM - 10 PM) */
+.booking-calendar-enhanced .rbc-time-slot[data-period="evening"] {
+  background: linear-gradient(to bottom, rgba(255, 251, 235, 0.2), rgba(219, 234, 254, 0.3));
+}
+
+.booking-calendar-enhanced .rbc-time-header-content {
+  border-left-color: #fde68a;
+}
+
+.booking-calendar-enhanced .rbc-time-content {
+  border-top-color: #fde68a;
+}
+
+.booking-calendar-enhanced .rbc-time-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-time-view {
+    border-radius: 8px;
+  }
+}
+
+/* CRITICAL: Ensure time view content allows events to be positioned correctly */
+.booking-calendar-enhanced .rbc-time-view .rbc-time-content {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+/* Ensure day slots allow events to overflow if needed */
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot {
+  position: relative;
+  overflow: visible;
+}
+
+/* Events container must be positioned absolutely by react-big-calendar */
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot .rbc-events-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: visible;
+}
+
+.booking-calendar-enhanced .rbc-month-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-month-view {
+    border-radius: 8px;
+  }
+}
+
+.booking-calendar-enhanced .rbc-day-slot .rbc-time-slot {
+  border-top-color: #fef3c7;
+}
+
+/* CRITICAL: Event positioning - must allow react-big-calendar to position events */
+.booking-calendar-enhanced .rbc-event {
+  border-radius: 8px;
+  padding: 0;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  border: none !important;
+  overflow: hidden;
+  z-index: 1;
+  cursor: pointer;
+  transform-origin: center;
+  width: calc(100% - 8px) !important;
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-event {
+    width: calc(100% - 4px) !important;
+    margin-left: 2px !important;
+    margin-right: 2px !important;
+  }
+}
+
+.booking-calendar-enhanced .rbc-event::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+  z-index: 1;
+}
+
+.booking-calendar-enhanced .rbc-event::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.05) 100%);
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.8;
+}
+
+.booking-calendar-enhanced .rbc-event:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-1px) scale(1.01) !important;
+  z-index: 30 !important;
+}
+
+.booking-calendar-enhanced .rbc-event:active {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.12);
+}
+
+.booking-calendar-enhanced .rbc-event-content {
+  color: white;
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 2;
+  line-height: 1.4;
+}
+
+.booking-calendar-enhanced .rbc-selected {
+  background-color: #fef3c7 !important;
+}
+
+.booking-calendar-enhanced .rbc-show-more {
+  background-color: #fbbf24;
+  color: white;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.booking-calendar-enhanced .rbc-show-more:hover {
+  background-color: #f59e0b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.booking-calendar-enhanced .rbc-toolbar {
+  margin-bottom: 0;
+}
+
+.booking-calendar-enhanced .rbc-toolbar button {
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.booking-calendar-enhanced .rbc-toolbar button:hover {
+  background-color: #fef3c7;
+  transform: translateY(-1px);
+}
+
+.booking-calendar-enhanced .rbc-toolbar button.rbc-active {
+  background-color: #fbbf24;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.booking-calendar-enhanced .rbc-agenda-view table {
+  border-color: #fde68a;
+}
+
+.booking-calendar-enhanced .rbc-agenda-view table thead > tr > th {
+  background: linear-gradient(to bottom, #fffbeb, #fef3c7);
+  border-color: #fde68a;
+  font-weight: 600;
+  color: #1f2937;
+  padding: 12px;
+}
+
+.booking-calendar-enhanced .rbc-agenda-view table tbody > tr > td {
+  border-color: #fef3c7;
+  padding: 12px;
+}
+
+.booking-calendar-enhanced .rbc-agenda-view table tbody > tr:hover {
+  background-color: #fffbeb;
+}
+
+.booking-calendar-enhanced .rbc-agenda-event-cell {
+  padding: 8px;
+}
+
+.booking-calendar-enhanced .rbc-agenda-date-cell {
+  font-weight: 600;
+  color: #92400e;
+}
+
+/* Month view enhancements */
+.booking-calendar-enhanced .rbc-month-row {
+  border-color: #fde68a;
+}
+
+.booking-calendar-enhanced .rbc-date-cell {
+  padding: 8px;
+  font-weight: 500;
+}
+
+.booking-calendar-enhanced .rbc-date-cell > a {
+  color: #1f2937;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.booking-calendar-enhanced .rbc-date-cell > a:hover {
+  background-color: #fef3c7;
+}
+
+.booking-calendar-enhanced .rbc-date-cell.rbc-now > a {
+  background: #fbbf24;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+  transform: scale(1.02);
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Make whole day clickable in month view */
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg:hover {
+  background-color: #fffbeb !important;
+}
+
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg.rbc-off-range-bg {
+  cursor: default;
+}
+
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg.rbc-off-range-bg:hover {
+  background-color: #f9fafb !important;
+}
+
+/* Make the entire day cell clickable in month view */
+.booking-calendar-enhanced .rbc-month-row {
+  cursor: pointer;
+}
+
+.booking-calendar-enhanced .rbc-month-row:hover .rbc-day-bg:not(.rbc-off-range-bg) {
+  background-color: #fffbeb !important;
+}
+
+/* Working hours styling */
+.booking-calendar-enhanced .rbc-event[data-type="working-hours"] {
+  background-color: rgba(251, 191, 36, 0.1) !important;
+  border: 2px dashed #fbbf24 !important;
+  color: #92400e !important;
+  opacity: 0.7 !important;
+}
+
+/* Time slot enhancements - Optimized for 16-hour view (6 AM - 10 PM) */
+.booking-calendar-enhanced .rbc-day-slot {
+  position: relative;
+  min-height: 60px;
+  overflow: visible;
+}
+
+.booking-calendar-enhanced .rbc-day-slot .rbc-time-slot:nth-child(odd) {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5), rgba(255, 251, 235, 0.2));
+}
+
+.booking-calendar-enhanced .rbc-day-slot .rbc-time-slot:nth-child(even) {
+  background: linear-gradient(to bottom, rgba(255, 251, 235, 0.4), rgba(254, 243, 199, 0.3));
+}
+
+.booking-calendar-enhanced .rbc-day-slot .rbc-time-slot:hover {
+  background: linear-gradient(to bottom, rgba(254, 243, 199, 0.6), rgba(251, 191, 36, 0.2)) !important;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1);
+}
+
+/* CRITICAL: Events container positioning - let react-big-calendar handle it */
+.booking-calendar-enhanced .rbc-day-slot .rbc-events-container {
+  margin-right: 0;
+  /* Position is set by react-big-calendar - don't override */
+}
+
+.booking-calendar-enhanced .rbc-time-header-gutter {
+  background: #fef9f3;
+  border-right: 1px solid #e5e7eb;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  min-width: 70px;
+  padding: 8px 12px;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-time-header-gutter {
+    min-width: 60px;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+}
+
+.booking-calendar-enhanced .rbc-time-gutter {
+  background: #fef9f3;
+  border-right: 1px solid #e5e7eb;
+}
+
+.booking-calendar-enhanced .rbc-time-gutter .rbc-timeslot-group {
+  border-bottom: 1px solid #fde68a;
+  min-height: 60px;
+  position: relative;
+}
+
+.booking-calendar-enhanced .rbc-time-gutter .rbc-timeslot-group::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, #fde68a, transparent);
+  opacity: 0.5;
+}
+
+.booking-calendar-enhanced .rbc-time-gutter .rbc-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.8125rem;
+  padding: 4px 8px;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-time-gutter .rbc-label {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+}
+
+.booking-calendar-enhanced .rbc-time-content > * + * > * {
+  border-left-color: #fde68a;
+}
+
+/* Event label styling */
+.booking-calendar-enhanced .rbc-event-label {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-bottom: 2px;
+}
+
+/* Popup styling */
+.booking-calendar-enhanced .rbc-overlay {
+  background: white;
+  border: 2px solid #fbbf24;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+}
+
+.booking-calendar-enhanced .rbc-overlay-header {
+  background: linear-gradient(to right, #fbbf24, #f59e0b);
+  color: white;
+  padding: 14px 16px;
+  border-radius: 12px 12px 0 0;
+  font-weight: 700;
+  font-size: 1rem;
+  margin: -20px -20px 16px -20px;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+/* Current time indicator for day/week views - Enhanced */
+.booking-calendar-enhanced .rbc-current-time-indicator {
+  background: linear-gradient(to right, transparent, #ef4444, transparent);
+  height: 4px;
+  z-index: 20;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.8), 0 0 8px rgba(239, 68, 68, 0.6), 0 0 4px rgba(239, 68, 68, 0.4);
+  animation: pulse-line 2s ease-in-out infinite;
+  position: relative;
+}
+
+.booking-calendar-enhanced .rbc-current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: -8px;
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle, #ef4444, #dc2626);
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 1), 0 0 8px rgba(239, 68, 68, 0.8), 0 0 4px rgba(239, 68, 68, 0.6);
+  border: 3px solid white;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.booking-calendar-enhanced .rbc-current-time-indicator::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #ef4444;
+  animation: ripple 2s ease-out infinite;
+}
+
+@keyframes pulse-line {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.7), 0 0 6px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.9), 0 0 8px rgba(239, 68, 68, 0.7);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes animate-gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Enhanced scrollbar for calendar */
+.booking-calendar-enhanced .rbc-time-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.booking-calendar-enhanced .rbc-time-content::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, #fef3c7, #fde68a);
+  border-radius: 8px;
+  border: 1px solid #fde68a;
+}
+
+.booking-calendar-enhanced .rbc-time-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+  border-radius: 8px;
+  border: 2px solid #fef3c7;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+.booking-calendar-enhanced .rbc-time-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #f59e0b, #d97706);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.15), 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Improved month view event display */
+.booking-calendar-enhanced .rbc-month-view .rbc-event {
+  margin: 1px 2px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .booking-calendar-enhanced .rbc-month-view .rbc-event {
+    margin: 1px;
+    padding: 1px 4px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Better focus states for accessibility */
+.booking-calendar-enhanced .rbc-event:focus {
+  outline: 3px solid #fbbf24;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3), 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.booking-calendar-enhanced .rbc-toolbar button:focus {
+  outline: 3px solid #fbbf24;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
+}
+
+/* Additional creative enhancements */
+.booking-calendar-enhanced .rbc-time-content {
+  background: #ffffff;
+  position: relative;
+}
+
+/* Hour markers enhancement */
+.booking-calendar-enhanced .rbc-time-slot:first-child {
+  border-top: 3px solid #fde68a;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2);
+}
+
+/* Smooth transitions for all interactive elements */
+.booking-calendar-enhanced * {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Shimmer animation for events */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Enhanced month view styling */
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg {
+  background: #ffffff;
+}
+
+.booking-calendar-enhanced .rbc-month-view .rbc-day-bg:hover {
+  background: #fef9f3;
+  box-shadow: inset 0 0 0 1px #fbbf24;
+  transition: all 0.2s ease;
+}
+
+/* Better event labels in month view */
+.booking-calendar-enhanced .rbc-month-view .rbc-event-label {
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced popup styling */
+.booking-calendar-enhanced .rbc-overlay {
+  backdrop-filter: blur(20px);
+  border: 3px solid #fbbf24;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 15px 30px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Loading state enhancement */
+.booking-calendar-enhanced .rbc-loading {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.2) 50%, rgba(251, 191, 36, 0.1) 100%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* CRITICAL FIX: Ensure events are positioned correctly in time slots */
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot .rbc-events-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow: visible !important;
+  pointer-events: none;
+}
+
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot .rbc-events-container .rbc-event {
+  pointer-events: auto;
+  position: absolute !important;
+  /* top, left, height are set by react-big-calendar based on event times */
+  /* We only control width and margins */
+  width: calc(100% - 8px) !important;
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+}
+
+/* Ensure time slots are properly positioned */
+.booking-calendar-enhanced .rbc-time-view .rbc-day-slot {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Modern floating card effect for events */
+.booking-calendar-enhanced .rbc-event {
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Add subtle animation on event mount */
+@keyframes eventFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.booking-calendar-enhanced .rbc-event {
+  animation: eventFadeIn 0.3s ease-out;
+}

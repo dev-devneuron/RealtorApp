@@ -22,7 +22,7 @@ import { ArrowLeft, Calendar, Clock, Phone, Mail, User, Building2, CheckCircle2 
 import { motion } from "framer-motion";
 
 // Backend API base URL
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 /**
  * List of common timezones for the timezone selector

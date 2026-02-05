@@ -21,7 +21,7 @@ import { ArrowLeft, Users, User, Eye, EyeOff } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Backend API base URL
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 const SignIn = () => {
   const navigate = useNavigate();

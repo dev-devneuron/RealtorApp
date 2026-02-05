@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
 // Backend API base URL
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 const ContactSection = () => {
   const itemVariants = {

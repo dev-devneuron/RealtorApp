@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, FileText, Link as LinkIcon, Building2, CheckCircle2, AlertCircle, X, Home, ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://leasing-copilot-mvp.onrender.com";
 
 export default function UploadPage() {
   const navigate = useNavigate();

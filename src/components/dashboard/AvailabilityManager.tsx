@@ -419,7 +419,7 @@ export const AvailabilityManager = ({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-amber-600 border-t-transparent mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-gray-600 mb-4"></div>
           <p className="text-gray-600">Loading preferences...</p>
         </div>
       </div>
@@ -429,18 +429,14 @@ export const AvailabilityManager = ({
   return (
     <div className="space-y-6">
       {/* Working Hours Configuration */}
-      <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
-        <CardHeader className="relative p-6 lg:p-8 border-b border-amber-100/50">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="p-6 lg:p-8 border-b border-gray-200">
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl blur-lg opacity-50" />
-              <div className="relative bg-gradient-to-br from-amber-500 to-amber-600 p-4 rounded-2xl shadow-xl">
-                <Clock className="h-6 w-6 text-white" />
-              </div>
+            <div className="bg-amber-100 p-4 rounded-lg shadow-sm">
+              <Clock className="h-6 w-6 text-amber-600" />
             </div>
             <div>
-              <CardTitle className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+              <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Working Hours
               </CardTitle>
               <CardDescription className="text-sm text-gray-600 mt-1">
@@ -449,7 +445,7 @@ export const AvailabilityManager = ({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="relative p-6 lg:p-8 space-y-6">
+        <CardContent className="p-6 lg:p-8 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="start-time" className="text-sm font-semibold text-gray-700 mb-2 block">
@@ -462,7 +458,7 @@ export const AvailabilityManager = ({
                 onChange={(e) =>
                   setWorkingHours({ ...workingHours, start_time: e.target.value })
                 }
-                className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                className="h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg"
               />
             </div>
             <div>
@@ -476,7 +472,7 @@ export const AvailabilityManager = ({
                 onChange={(e) =>
                   setWorkingHours({ ...workingHours, end_time: e.target.value })
                 }
-                className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                className="h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg"
               />
             </div>
           </div>
@@ -492,7 +488,7 @@ export const AvailabilityManager = ({
                   setWorkingHours({ ...workingHours, timezone: value })
                 }
               >
-                <SelectTrigger className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl">
+                <SelectTrigger className="h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -513,7 +509,7 @@ export const AvailabilityManager = ({
                   setWorkingHours({ ...workingHours, slot_length: parseInt(value) })
                 }
               >
-                <SelectTrigger className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl">
+                <SelectTrigger className="h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -532,12 +528,12 @@ export const AvailabilityManager = ({
               {dayNames.map((day, index) => (
                 <motion.div
                   key={index}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                    className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all ${
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                    className={`flex items-center space-x-2 p-3 rounded-lg border transition-all ${
                     workingHours?.working_days.includes(index)
-                      ? "bg-gradient-to-br from-amber-100 to-amber-50 border-amber-400 shadow-md"
-                      : "bg-white border-amber-200 hover:border-amber-300"
+                      ? "bg-amber-100 border-amber-300 shadow-sm"
+                      : "bg-white border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <Checkbox
@@ -564,7 +560,7 @@ export const AvailabilityManager = ({
           <Button
             onClick={handleSavePreferences}
             disabled={loading}
-            className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl transition-all h-12 px-8 text-base font-semibold"
+            className="w-full sm:w-auto bg-amber-100 hover:bg-amber-200 text-amber-800 shadow-sm hover:shadow transition-all h-12 px-8 text-base font-semibold"
           >
             <Save className="h-5 w-5 mr-2" />
             {loading ? "Saving..." : "Save Preferences"}
@@ -573,19 +569,15 @@ export const AvailabilityManager = ({
       </Card>
 
       {/* Blocked Time Slots */}
-      <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
-        <CardHeader className="relative p-6 lg:p-8 border-b border-amber-100/50">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="p-6 lg:p-8 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl blur-lg opacity-50" />
-                <div className="relative bg-gradient-to-br from-amber-500 to-amber-600 p-4 rounded-2xl shadow-xl">
-                  <Calendar className="h-6 w-6 text-white" />
-                </div>
+              <div className="bg-amber-100 p-4 rounded-lg shadow-sm">
+                <Calendar className="h-6 w-6 text-amber-600" />
               </div>
               <div>
-                <CardTitle className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+                <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
                   Blocked Time Slots
                 </CardTitle>
                 <CardDescription className="text-sm text-gray-600 mt-1">
@@ -596,17 +588,17 @@ export const AvailabilityManager = ({
             <Button
               onClick={() => setShowBlockForm(!showBlockForm)}
               variant="outline"
-              className="border-amber-300 hover:bg-amber-50 hover:border-amber-400 shadow-md hover:shadow-lg transition-all h-12 px-6"
+              className="border-gray-300 hover:bg-gray-50 hover:border-gray-400 shadow-sm hover:shadow transition-all h-12 px-6"
             >
               <Plus className="h-5 w-5 mr-2" />
               Add Block
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="relative p-6 lg:p-8 space-y-4">
+        <CardContent className="p-6 lg:p-8 space-y-4">
           {/* UTC Timezone Notice */}
           {blockedSlots.length > 0 && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
                   <Clock className="h-5 w-5 text-blue-600" />
@@ -628,7 +620,7 @@ export const AvailabilityManager = ({
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-amber-50 to-white p-6 rounded-2xl border-2 border-amber-200 shadow-lg"
+              className="bg-amber-50 p-6 rounded-lg border border-amber-200 shadow-sm"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
@@ -654,7 +646,7 @@ export const AvailabilityManager = ({
                     onChange={(e) =>
                       setNewBlock({ ...newBlock, startDate: e.target.value })
                     }
-                    className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                    className="h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg"
                   />
                 </div>
                 {!newBlock.isFullDay && (
@@ -667,7 +659,7 @@ export const AvailabilityManager = ({
                         onChange={(e) =>
                           setNewBlock({ ...newBlock, startTime: e.target.value })
                         }
-                        className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                        className="h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg"
                       />
                     </div>
                     <div>
@@ -678,7 +670,7 @@ export const AvailabilityManager = ({
                         onChange={(e) =>
                           setNewBlock({ ...newBlock, endTime: e.target.value })
                         }
-                        className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                        className="h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg"
                       />
                     </div>
                   </>
@@ -691,7 +683,7 @@ export const AvailabilityManager = ({
                       setNewBlock({ ...newBlock, slotType: value })
                     }
                   >
-                    <SelectTrigger className="h-12 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl">
+                    <SelectTrigger className="h-12 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -711,7 +703,7 @@ export const AvailabilityManager = ({
                       setNewBlock({ ...newBlock, reason: e.target.value })
                     }
                     placeholder="e.g., Personal appointment, Meeting, Christmas Day..."
-                    className="mt-2 border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                    className="mt-2 border-gray-300 focus:border-gray-400 focus:ring-gray-200 rounded-lg"
                     rows={3}
                   />
                 </div>
@@ -719,7 +711,7 @@ export const AvailabilityManager = ({
               <div className="flex gap-3 mt-6">
                 <Button 
                   onClick={handleAddBlock} 
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md hover:shadow-lg h-12 px-6"
+                  className="bg-amber-100 hover:bg-amber-200 text-amber-800 shadow-sm hover:shadow transition-all h-12 px-6"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Block
@@ -739,7 +731,7 @@ export const AvailabilityManager = ({
                     });
                   }}
                   variant="outline"
-                  className="border-amber-300 hover:bg-amber-50 hover:border-amber-400 h-12 px-6"
+                  className="border-gray-300 hover:bg-gray-50 hover:border-gray-400 h-12 px-6"
                 >
                   Cancel
                 </Button>
@@ -749,8 +741,8 @@ export const AvailabilityManager = ({
 
           {blockedSlots.length === 0 ? (
             <div className="text-center py-12">
-              <div className="inline-flex p-4 bg-amber-100 rounded-full mb-4">
-                <Calendar className="h-12 w-12 text-amber-600" />
+              <div className="inline-flex p-4 bg-gray-100 rounded-full mb-4">
+                <Calendar className="h-12 w-12 text-gray-500" />
               </div>
               <p className="text-gray-500 font-medium text-base">No blocked time slots</p>
             </div>
@@ -762,15 +754,15 @@ export const AvailabilityManager = ({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-amber-50/50 rounded-xl border-2 border-amber-200 hover:border-amber-300 shadow-md hover:shadow-lg transition-all"
+                  className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow transition-all"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs border-gray-300">
                         {slot.slotType || "unavailable"}
                       </Badge>
                       {slot.isFullDay && (
-                        <Badge variant="outline" className="text-xs bg-amber-100 text-amber-800">
+                        <Badge variant="outline" className="text-xs bg-amber-100 text-amber-800 border-0">
                           Full Day
                         </Badge>
                       )}
@@ -782,8 +774,8 @@ export const AvailabilityManager = ({
                       }
                     </div>
                     {(slot.reason || slot.notes) && (
-                      <div className="text-sm text-amber-700 mt-1 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                      <div className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
                         {slot.reason || slot.notes}
                       </div>
                     )}

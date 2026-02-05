@@ -47,17 +47,17 @@ const EventComponent = memo(({ event }: { event: Booking }) => {
   const getStatusGradient = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 border-amber-800 shadow-amber-500/40";
+        return "bg-amber-50 border-amber-200 text-amber-900 shadow-sm";
       case "approved":
-        return "bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 border-emerald-800 shadow-emerald-500/40";
+        return "bg-emerald-50 border-emerald-200 text-emerald-900 shadow-sm";
       case "denied":
-        return "bg-gradient-to-br from-red-500 via-red-600 to-red-700 border-red-800 shadow-red-500/40";
+        return "bg-red-50 border-red-200 text-red-900 shadow-sm";
       case "cancelled":
-        return "bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700 border-gray-800 shadow-gray-500/40";
+        return "bg-gray-50 border-gray-200 text-gray-700 shadow-sm";
       case "rescheduled":
-        return "bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 border-blue-800 shadow-blue-500/40";
+        return "bg-blue-50 border-blue-200 text-blue-900 shadow-sm";
       default:
-        return "bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700 border-gray-800 shadow-gray-500/40";
+        return "bg-gray-50 border-gray-200 text-gray-700 shadow-sm";
     }
   };
 
@@ -88,54 +88,37 @@ const EventComponent = memo(({ event }: { event: Booking }) => {
     : formatTime(event.endAt, true);
 
   return (
-    <div className={`${getStatusGradient(event.status)} text-white p-2.5 sm:p-3 rounded-2xl shadow-2xl border-l-[4px] hover:shadow-3xl hover:scale-[1.03] transition-all duration-400 cursor-pointer group relative overflow-hidden backdrop-blur-md`} style={{
-      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2), 0 5px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
-    }}>
-      {/* Animated shimmer effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer transition-opacity duration-500" />
-      
-      {/* Glow effect on hover */}
-      <div className="absolute -inset-2 bg-gradient-to-r from-white/30 via-white/20 to-transparent opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-400" />
-      
-      {/* Top accent line with gradient */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-      
-      {/* Status indicator dot */}
-      <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-white rounded-full animate-pulse opacity-90 shadow-lg ring-2 ring-white/50" />
-      
+    <div className={`${getStatusGradient(event.status)} p-2 sm:p-2.5 rounded-lg border hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer group relative overflow-hidden`}>
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex-1 min-w-0">
-            <div className="font-extrabold text-xs sm:text-sm leading-tight truncate mb-1 flex items-center gap-2">
-              <span className="text-base sm:text-lg drop-shadow-lg filter drop-shadow-md">{getStatusIcon(event.status)}</span>
-              <span className="truncate drop-shadow-md font-bold">{event.visitor.name}</span>
+            <div className="font-semibold text-xs sm:text-sm leading-tight truncate mb-1 flex items-center gap-1.5">
+              <span className="text-sm sm:text-base">{getStatusIcon(event.status)}</span>
+              <span className="truncate font-medium">{event.visitor.name}</span>
               {/* Call record indicator */}
               {event.callRecord && (event.callRecord.callRecordingUrl || event.callRecord.callTranscript) && (
-                <span className="text-xs opacity-90" title="Has call recording/transcript">📞</span>
+                <span className="text-xs opacity-70" title="Has call recording/transcript">📞</span>
               )}
-      </div>
-            <div className="text-[10px] sm:text-xs opacity-95 truncate font-semibold mb-1.5 flex items-center gap-1.5 pl-1">
-              <span className="opacity-90 text-xs filter drop-shadow-sm">📍</span>
-              <span className="truncate drop-shadow-sm">{event.propertyAddress || `Property #${event.propertyId}`}</span>
+            </div>
+            <div className="text-[10px] sm:text-xs opacity-80 truncate font-medium mb-1 flex items-center gap-1">
+              <span className="opacity-70 text-xs">📍</span>
+              <span className="truncate">{event.propertyAddress || `Property #${event.propertyId}`}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-white/40">
-          <div className="text-[10px] sm:text-xs opacity-95 flex items-center gap-1.5 font-bold">
-            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 drop-shadow-md flex-shrink-0" />
-            <span className="drop-shadow-md">{customerStartTime}</span>
+        <div className="flex items-center justify-between gap-2 mt-1.5 pt-1.5 border-t border-current/20">
+          <div className="text-[10px] sm:text-xs opacity-90 flex items-center gap-1 font-medium">
+            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+            <span>{customerStartTime}</span>
             {customerStartTime !== customerEndTime && (
               <>
-                <span className="opacity-70">-</span>
-                <span className="drop-shadow-md">{customerEndTime}</span>
+                <span className="opacity-60">-</span>
+                <span>{customerEndTime}</span>
               </>
             )}
           </div>
         </div>
       </div>
-      
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
     </div>
   );
 });
@@ -853,44 +836,37 @@ export const BookingCalendar = ({
     return deduplicated;
   }, [bookingEvents, workingHoursEvents, availabilityEvents]);
 
-  // Enhanced custom toolbar with beautiful design
+  // Enhanced custom toolbar with clean design
   const CustomToolbar = ({ label, onNavigate: nav, onView }: any) => {
     return (
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 p-6 bg-gradient-to-br from-white via-amber-50/40 to-blue-50/30 rounded-3xl border-2 border-amber-200/50 shadow-2xl backdrop-blur-md relative overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-blue-200/20 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-200/20 to-amber-200/20 rounded-full blur-2xl -ml-24 -mb-24" />
-        
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity" />
-            <div className="relative p-4 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-2xl shadow-xl group-hover:shadow-2xl transition-all group-hover:scale-105">
-              <CalendarIcon className="h-7 w-7 text-white drop-shadow-lg" />
-            </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 p-4 sm:p-6 bg-white border border-gray-200 rounded-xl shadow-sm relative overflow-hidden">
+        <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+          <div className="p-2.5 sm:p-3 bg-amber-100 rounded-lg shadow-sm">
+            <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
           </div>
           <div>
-            <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-amber-700 via-amber-800 via-blue-700 to-indigo-800 bg-clip-text text-transparent tracking-tight">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 tracking-tight">
               {label}
             </h3>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1 font-medium">View and manage your bookings with ease</p>
+            <p className="text-xs sm:text-sm text-gray-600 mt-0.5 font-medium">View and manage your bookings</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-3 flex-wrap relative z-10">
-          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border-2 border-amber-200/60 shadow-lg">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap relative z-10 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
           <Button
             variant="outline"
             size="sm"
             onClick={() => nav("PREV")}
-              className="h-10 w-10 p-0 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm transition-all hover:scale-110 active:scale-95"
+              className="h-9 w-9 p-0 rounded-md border-gray-300 hover:bg-white hover:border-gray-400 shadow-sm transition-all"
           >
-              <ChevronLeft className="h-5 w-5 text-amber-700" />
+              <ChevronLeft className="h-4 w-4 text-gray-700" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => nav("TODAY")}
-              className="h-10 px-5 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm font-semibold transition-all hover:scale-105 active:scale-95 text-amber-800"
+              className="h-9 px-3 sm:px-4 rounded-md border-gray-300 hover:bg-white hover:border-gray-400 shadow-sm font-medium transition-all text-gray-700 text-xs sm:text-sm"
           >
             Today
           </Button>
@@ -898,21 +874,21 @@ export const BookingCalendar = ({
             variant="outline"
             size="sm"
             onClick={() => nav("NEXT")}
-              className="h-10 w-10 p-0 rounded-xl border-amber-300/60 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-400 shadow-sm transition-all hover:scale-110 active:scale-95"
+              className="h-9 w-9 p-0 rounded-md border-gray-300 hover:bg-white hover:border-gray-400 shadow-sm transition-all"
           >
-              <ChevronRight className="h-5 w-5 text-amber-700" />
+              <ChevronRight className="h-4 w-4 text-gray-700" />
           </Button>
         </div>
 
-          <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border-2 border-amber-200/60 shadow-lg">
+          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
           <Button
             variant={view === "day" ? "default" : "ghost"}
             size="sm"
             onClick={() => onView("day")}
-              className={`h-10 px-5 rounded-xl font-bold transition-all ${
+              className={`h-9 px-3 sm:px-4 rounded-md font-medium transition-all text-xs sm:text-sm ${
               view === "day" 
-                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
-                  : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
+                  ? "bg-white text-gray-900 shadow-sm border border-gray-200" 
+                  : "text-gray-600 hover:bg-white hover:text-gray-900"
             }`}
           >
             Day
@@ -921,10 +897,10 @@ export const BookingCalendar = ({
             variant={view === "week" ? "default" : "ghost"}
             size="sm"
             onClick={() => onView("week")}
-              className={`h-10 px-5 rounded-xl font-bold transition-all ${
+              className={`h-9 px-3 sm:px-4 rounded-md font-medium transition-all text-xs sm:text-sm ${
               view === "week" 
-                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
-                  : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
+                  ? "bg-white text-gray-900 shadow-sm border border-gray-200" 
+                  : "text-gray-600 hover:bg-white hover:text-gray-900"
             }`}
           >
             Week
@@ -933,10 +909,10 @@ export const BookingCalendar = ({
             variant={view === "month" ? "default" : "ghost"}
             size="sm"
             onClick={() => onView("month")}
-              className={`h-10 px-5 rounded-xl font-bold transition-all ${
+              className={`h-9 px-3 sm:px-4 rounded-md font-medium transition-all text-xs sm:text-sm ${
               view === "month" 
-                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 border-2 border-amber-400/50" 
-                  : "hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 text-gray-700 hover:text-amber-800"
+                  ? "bg-white text-gray-900 shadow-sm border border-gray-200" 
+                  : "text-gray-600 hover:bg-white hover:text-gray-900"
             }`}
           >
             Month
@@ -968,19 +944,19 @@ export const BookingCalendar = ({
     );
   };
 
-  // Enhanced event style getter with gradients
+  // Clean event style getter with soft colors
   const eventStyleGetter = (event: any) => {
     // Working hours styling
     if (event.resource?.type === "working-hours") {
       return {
         style: {
-          backgroundColor: "rgba(251, 191, 36, 0.1)",
-          border: "2px dashed #fbbf24",
-          borderRadius: "4px",
+          backgroundColor: "#fef3c7",
+          border: "1px dashed #fbbf24",
+          borderRadius: "6px",
           color: "#92400e",
           padding: "2px 4px",
           fontWeight: "500",
-          opacity: 0.7,
+          opacity: 0.8,
         },
       };
     }
@@ -988,16 +964,15 @@ export const BookingCalendar = ({
     // Availability slot styling
     if (event.resource?.type === "availability") {
       const slotType = event.resource.slotType || "unavailable";
-      const isFullDay = event.resource.isFullDay;
       
       if (slotType === "holiday") {
         return {
           style: {
-            backgroundColor: "rgba(239, 68, 68, 0.15)",
-            border: "2px solid #ef4444",
+            backgroundColor: "#fee2e2",
+            border: "1px solid #fca5a5",
             color: "#991b1b",
-            opacity: 0.8,
-            borderRadius: "4px",
+            opacity: 0.9,
+            borderRadius: "6px",
             padding: "2px 4px",
             fontWeight: "500",
           },
@@ -1006,11 +981,11 @@ export const BookingCalendar = ({
       if (slotType === "off_day") {
         return {
           style: {
-            backgroundColor: "rgba(168, 85, 247, 0.15)",
-            border: "2px solid #a855f7",
+            backgroundColor: "#f3e8ff",
+            border: "1px solid #c4b5fd",
             color: "#6b21a8",
-            opacity: 0.8,
-            borderRadius: "4px",
+            opacity: 0.9,
+            borderRadius: "6px",
             padding: "2px 4px",
             fontWeight: "500",
           },
@@ -1019,66 +994,38 @@ export const BookingCalendar = ({
       if (slotType === "busy") {
         return {
           style: {
-            backgroundColor: "rgba(249, 115, 22, 0.15)",
-            border: "2px dashed #f97316",
+            backgroundColor: "#fed7aa",
+            border: "1px dashed #fb923c",
             color: "#9a3412",
-            opacity: 0.7,
-            borderRadius: "4px",
+            opacity: 0.8,
+            borderRadius: "6px",
             padding: "2px 4px",
             fontWeight: "500",
           },
         };
       }
-      // unavailable, personal - Make them clearly visible with red background
+      // unavailable, personal
       return {
         style: {
-          backgroundColor: "rgba(239, 68, 68, 0.25)", // Red background for better visibility
-          border: "2px solid #ef4444", // Red border
-          color: "#7f1d1d", // Dark red text
-          opacity: 0.95, // More opaque for better visibility
+          backgroundColor: "#fee2e2",
+          border: "1px solid #fca5a5",
+          color: "#991b1b",
+          opacity: 0.9,
           borderRadius: "6px",
           padding: "4px 8px",
-          fontWeight: "700", // Bolder text
-          boxShadow: "0 2px 6px rgba(239, 68, 68, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)", // Red shadow
+          fontWeight: "600",
+          boxShadow: "0 1px 3px rgba(239, 68, 68, 0.2)",
         },
       };
     }
 
-    // Booking styling
-    const status = event.resource?.status || "pending";
-    let backgroundColor = "#fbbf24"; // amber for pending
-    let borderColor = "#f59e0b";
-    
-    switch (status) {
-      case "approved":
-        backgroundColor = "#10b981"; // emerald
-        borderColor = "#059669";
-        break;
-      case "denied":
-        backgroundColor = "#ef4444"; // red
-        borderColor = "#dc2626";
-        break;
-      case "cancelled":
-        backgroundColor = "#6b7280"; // gray
-        borderColor = "#4b5563";
-        break;
-      case "rescheduled":
-        backgroundColor = "#3b82f6"; // blue
-        borderColor = "#2563eb";
-        break;
-    }
-
+    // Booking styling - transparent (handled by EventComponent)
     return {
       style: {
-        backgroundColor,
-        borderRadius: "8px",
-        opacity: 0.95,
-        color: "white",
-        border: `2px solid ${borderColor}`,
-        display: "block",
-        padding: "4px 8px",
-        fontWeight: "500",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        backgroundColor: "transparent",
+        border: "none",
+        padding: 0,
+        boxShadow: "none",
       },
     };
   };
@@ -1097,22 +1044,27 @@ export const BookingCalendar = ({
     if (event.resource?.type === "availability") {
       const slotType = event.resource.slotType || "unavailable";
       const isFullDay = event.resource.isFullDay;
-      // Make all blocked/unavailable slots show with red background for better visibility
-      const bgColor = slotType === "holiday" ? "bg-red-200" 
-        : slotType === "off_day" ? "bg-purple-200"
-        : slotType === "busy" ? "bg-orange-200"
-        : slotType === "unavailable" ? "bg-red-200" // Red background for unavailable slots
-        : slotType === "personal" ? "bg-pink-200"
-        : "bg-red-200"; // Default to red for any other blocked slots
-      const textColor = slotType === "holiday" ? "text-red-900"
-        : slotType === "off_day" ? "text-purple-900"
-        : slotType === "busy" ? "text-orange-900"
-        : slotType === "unavailable" ? "text-red-900" // Dark red text for unavailable slots
-        : slotType === "personal" ? "text-pink-900"
-        : "text-red-900"; // Default to dark red text
+      const bgColor = slotType === "holiday" ? "bg-red-50" 
+        : slotType === "off_day" ? "bg-purple-50"
+        : slotType === "busy" ? "bg-orange-50"
+        : slotType === "unavailable" ? "bg-red-50"
+        : slotType === "personal" ? "bg-pink-50"
+        : "bg-red-50";
+      const textColor = slotType === "holiday" ? "text-red-800"
+        : slotType === "off_day" ? "text-purple-800"
+        : slotType === "busy" ? "text-orange-800"
+        : slotType === "unavailable" ? "text-red-800"
+        : slotType === "personal" ? "text-pink-800"
+        : "text-red-800";
+      const borderColor = slotType === "holiday" ? "border-red-200"
+        : slotType === "off_day" ? "border-purple-200"
+        : slotType === "busy" ? "border-orange-200"
+        : slotType === "unavailable" ? "border-red-200"
+        : slotType === "personal" ? "border-pink-200"
+        : "border-red-200";
       
       return (
-        <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 ${bgColor} ${textColor} rounded-md border-2 border-red-300 shadow-sm`}>
+        <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 ${bgColor} ${textColor} rounded-md border ${borderColor} shadow-sm`}>
           <span className="truncate">{isFullDay ? event.title : event.title.split(":")[0]}</span>
         </div>
       );
@@ -1138,30 +1090,23 @@ export const BookingCalendar = ({
   }, [view]);
 
   return (
-    <Card className="bg-gradient-to-br from-white via-amber-50/40 to-blue-50/30 border-0 shadow-2xl overflow-hidden relative group">
-      {/* Animated background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-amber-500 via-blue-500 to-indigo-500 animate-gradient-x" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.1),transparent_50%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(59,130,246,0.1),transparent_50%)] pointer-events-none" />
-      
-      <CardContent className="relative p-6 lg:p-8">
+    <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden relative">
+      <CardContent className="relative p-4 sm:p-6 lg:p-8">
         {calendarPreferences && (view === "day" || view === "week") && (
-          <div className="mb-6 p-5 bg-gradient-to-r from-amber-50 via-yellow-50/80 to-amber-50 border-2 border-amber-300/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-4 text-sm text-amber-800 shadow-lg backdrop-blur-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 rounded-full blur-2xl -mr-16 -mt-16" />
-            <div className="relative z-10 flex items-center gap-4 w-full sm:w-auto">
-              <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                <Clock className="h-5 w-5 text-white" />
+          <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-amber-50 border border-amber-200 rounded-lg flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 text-sm shadow-sm">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <div className="p-2.5 sm:p-3 bg-amber-100 rounded-lg shadow-sm">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-amber-900 mb-1 text-sm sm:text-base">Working Hours</div>
-                <div className="text-xs sm:text-sm text-amber-700 font-medium">
+                <div className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Working Hours</div>
+                <div className="text-xs sm:text-sm text-gray-700 font-medium">
                   {calendarPreferences.start_time} - {calendarPreferences.end_time}
                   {calendarPreferences.working_days && calendarPreferences.working_days.length > 0 && (
                     <span className="ml-2 text-xs">
                       • {calendarPreferences.working_days
-                        .slice() // Create a copy to avoid mutating original
-                        .sort((a, b) => a - b) // Sort days to ensure consistent order
+                        .slice()
+                        .sort((a, b) => a - b)
                         .map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
                         .join(", ")}
                 </span>
@@ -1169,20 +1114,19 @@ export const BookingCalendar = ({
                 </div>
               </div>
             </div>
-            <div className="relative z-10 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl border-2 border-amber-300/50 text-xs font-bold text-amber-900 shadow-md">
+            <div className="px-3 py-1.5 bg-white rounded-md border border-amber-200 text-xs font-medium text-gray-700 shadow-sm">
               📅 Calendar View: 6:00 AM - 10:00 PM
             </div>
           </div>
         )}
         {(!calendarPreferences || view === "month") && (view === "day" || view === "week") && (
-          <div className="mb-6 p-5 bg-gradient-to-r from-blue-50 via-indigo-50/80 to-blue-50 border-2 border-blue-300/50 rounded-2xl flex items-center gap-4 text-sm text-blue-800 shadow-lg backdrop-blur-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-2xl -mr-16 -mt-16" />
-            <div className="relative z-10 p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
-              <Clock className="h-5 w-5 text-white" />
+          <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3 sm:gap-4 text-sm shadow-sm">
+            <div className="p-2.5 sm:p-3 bg-blue-100 rounded-lg shadow-sm">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             </div>
-            <div className="relative z-10 flex-1">
-              <div className="font-bold text-blue-900 mb-1 text-sm sm:text-base">Calendar View</div>
-              <div className="text-xs sm:text-sm text-blue-700 font-medium">Showing 16-hour day view (6:00 AM - 10:00 PM)</div>
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Calendar View</div>
+              <div className="text-xs sm:text-sm text-gray-700 font-medium">Showing 16-hour day view (6:00 AM - 10:00 PM)</div>
             </div>
           </div>
         )}
@@ -1191,7 +1135,7 @@ export const BookingCalendar = ({
           events={allEvents}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: view === "day" ? (windowWidth < 768 ? 800 : 1000) : view === "week" ? (windowWidth < 768 ? 700 : 900) : 700 }}
+          style={{ height: view === "day" ? (windowWidth < 640 ? 600 : windowWidth < 768 ? 700 : 900) : view === "week" ? (windowWidth < 640 ? 500 : windowWidth < 768 ? 600 : 800) : (windowWidth < 640 ? 500 : 600) }}
           view={view}
           date={date}
           onView={onViewChange}

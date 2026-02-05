@@ -2,7 +2,16 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -59,22 +68,59 @@ export const MaintenanceRequestsTab = ({
   onViewRequest,
   onEditRequest,
 }: MaintenanceRequestsTabProps) => {
+  const quickFilterValue =
+    maintenanceRequestFilterPriority !== "all" && maintenanceRequestFilterCategory !== "all"
+      ? "custom"
+      : maintenanceRequestFilterPriority !== "all"
+        ? `priority:${maintenanceRequestFilterPriority}`
+        : maintenanceRequestFilterCategory !== "all"
+          ? `category:${maintenanceRequestFilterCategory}`
+          : "all";
+
+  const handleQuickFilterChange = (value: string) => {
+    if (value === "all") {
+      onFilterPriorityChange("all");
+      onFilterCategoryChange("all");
+      return;
+    }
+    if (value.startsWith("priority:")) {
+      onFilterPriorityChange(value.replace("priority:", ""));
+      onFilterCategoryChange("all");
+      return;
+    }
+    if (value.startsWith("category:")) {
+      onFilterCategoryChange(value.replace("category:", ""));
+      onFilterPriorityChange("all");
+      return;
+    }
+  };
+
+  const sortValue = `${maintenanceRequestSortBy}:${maintenanceRequestSortOrder}`;
+  const handleSortChange = (value: string) => {
+    const [by, order] = value.split(":");
+    if (!by || (order !== "asc" && order !== "desc")) return;
+    onSortByChange(by);
+    onSortOrderChange(order);
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="bg-white border-b border-gray-200 p-6 sm:p-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                  <AlertTriangle className="h-6 w-6 text-white" />
-                </div>
-                Maintenance Requests
-              </CardTitle>
-              <p className="text-gray-600 text-lg">View and manage maintenance requests from tenants.</p>
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-100 p-4 rounded-lg shadow-sm">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                  Maintenance Requests
+                </CardTitle>
+                <p className="text-gray-600 text-base">View and manage maintenance requests from tenants.</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-sm font-semibold px-4 py-2">
+              <Badge className="bg-amber-100 text-amber-800 border-0 text-sm font-semibold px-4 py-2">
                 {maintenanceRequestsTotal} {maintenanceRequestsTotal === 1 ? "Request" : "Requests"}
               </Badge>
             </div>
@@ -85,7 +131,7 @@ export const MaintenanceRequestsTab = ({
           <div className="mb-6 space-y-4">
             <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
               <Select value={maintenanceRequestFilterStatus} onValueChange={onFilterStatusChange}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                <SelectTrigger className="w-full sm:w-48 bg-white border-gray-300 rounded-lg">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -99,7 +145,7 @@ export const MaintenanceRequestsTab = ({
 
               {userType === "property_manager" && (
                 <Select value={maintenanceRequestFilterProperty} onValueChange={onFilterPropertyChange}>
-                  <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                  <SelectTrigger className="w-full sm:w-48 bg-white border-gray-300 rounded-lg">
                     <SelectValue placeholder="Filter by property" />
                   </SelectTrigger>
                   <SelectContent>
@@ -113,65 +159,62 @@ export const MaintenanceRequestsTab = ({
                 </Select>
               )}
 
-              <Select value={maintenanceRequestFilterPriority} onValueChange={onFilterPriorityChange}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
-                  <SelectValue placeholder="Filter by priority" />
+              <Select value={quickFilterValue} onValueChange={handleQuickFilterChange}>
+                <SelectTrigger className="w-full sm:w-56 bg-white border-gray-300 rounded-lg">
+                  <SelectValue placeholder="Quick filter" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="all">All (no extra filters)</SelectItem>
+                  <SelectItem value="custom" disabled>
+                    Custom (Priority + Category)
+                  </SelectItem>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Priority</SelectLabel>
+                    <SelectItem value="priority:low">Low</SelectItem>
+                    <SelectItem value="priority:normal">Normal</SelectItem>
+                    <SelectItem value="priority:high">High</SelectItem>
+                    <SelectItem value="priority:urgent">Urgent</SelectItem>
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Category</SelectLabel>
+                    <SelectItem value="category:plumbing">Plumbing</SelectItem>
+                    <SelectItem value="category:electrical">Electrical</SelectItem>
+                    <SelectItem value="category:heating">Heating</SelectItem>
+                    <SelectItem value="category:hvac">HVAC</SelectItem>
+                    <SelectItem value="category:appliance">Appliance</SelectItem>
+                    <SelectItem value="category:other">Other</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
 
-              <Select value={maintenanceRequestFilterCategory} onValueChange={onFilterCategoryChange}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
-                  <SelectValue placeholder="Filter by category" />
+              <Select value={sortValue} onValueChange={handleSortChange}>
+                <SelectTrigger className="w-full sm:w-56 bg-white border-gray-300 rounded-lg">
+                  <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="plumbing">Plumbing</SelectItem>
-                  <SelectItem value="electrical">Electrical</SelectItem>
-                  <SelectItem value="heating">Heating</SelectItem>
-                  <SelectItem value="hvac">HVAC</SelectItem>
-                  <SelectItem value="appliance">Appliance</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectGroup>
+                    <SelectLabel>Date</SelectLabel>
+                    <SelectItem value="submitted_at:desc">Newest first</SelectItem>
+                    <SelectItem value="submitted_at:asc">Oldest first</SelectItem>
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Priority</SelectLabel>
+                    <SelectItem value="priority:desc">High → Low</SelectItem>
+                    <SelectItem value="priority:asc">Low → High</SelectItem>
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Status</SelectLabel>
+                    <SelectItem value="status:asc">A → Z</SelectItem>
+                    <SelectItem value="status:desc">Z → A</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
 
-              <Select value={maintenanceRequestSortBy} onValueChange={onSortByChange}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="submitted_at">Date</SelectItem>
-                  <SelectItem value="priority">Priority</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSortOrderChange(maintenanceRequestSortOrder === "asc" ? "desc" : "asc")}
-                className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
-              >
-                {maintenanceRequestSortOrder === "asc" ? (
-                  <>
-                    <ArrowUp className="h-4 w-4 mr-2" />
-                    Ascending
-                  </>
-                ) : (
-                  <>
-                    <ArrowDown className="h-4 w-4 mr-2" />
-                    Descending
-                  </>
-                )}
-              </Button>
-
-              <Button onClick={onRefresh} variant="outline" className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl">
+              <Button onClick={onRefresh} variant="outline" className="bg-white border-gray-300 hover:bg-gray-50 rounded-lg">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -191,18 +234,18 @@ export const MaintenanceRequestsTab = ({
               <p className="text-gray-400 text-sm">Maintenance requests will appear here when tenants submit them.</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <Table>
-                <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
-                  <TableRow className="border-b border-amber-200">
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">ID</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Tenant</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Property</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Issue</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Priority</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Status</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Submitted</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
+                <TableHeader className="bg-gray-50">
+                  <TableRow className="border-b border-gray-200">
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">ID</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Tenant</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Property</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Issue</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Priority</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Submitted</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -212,7 +255,7 @@ export const MaintenanceRequestsTab = ({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="border-b border-gray-100 hover:bg-amber-50/50 transition-colors"
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                     >
                       <TableCell className="py-4 px-6">
                         <span className="font-semibold text-gray-900">#{request.maintenance_request_id}</span>

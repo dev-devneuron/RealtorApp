@@ -75,22 +75,24 @@ export const ChatsTab = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="bg-white border-b border-gray-200 p-6 sm:p-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                  <Phone className="h-6 w-6 text-white" />
-                </div>
-                Call Records & Transcripts
-              </CardTitle>
-              <p className="text-gray-600 text-lg">
-                View all your call history with transcripts, recordings, and detailed analytics.
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-100 p-4 rounded-lg shadow-sm">
+                <Phone className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                  Call Records & Transcripts
+                </CardTitle>
+                <p className="text-gray-600 text-base">
+                  View all your call history with transcripts, recordings, and detailed analytics.
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-sm font-semibold px-4 py-2">
+              <Badge className="bg-amber-100 text-amber-800 border-0 text-sm font-semibold px-4 py-2">
                 {callRecordsTotal} {callRecordsTotal === 1 ? "Call" : "Calls"}
               </Badge>
             </div>
@@ -107,11 +109,11 @@ export const ChatsTab = ({
                   placeholder="Search by caller number, summary, or transcript..."
                   value={callRecordSearch}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 bg-white text-gray-900 placeholder-gray-400"
                 />
               </div>
               <Select value={callRecordFilterStatus} onValueChange={onFilterStatusChange}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+                <SelectTrigger className="w-full sm:w-48 bg-white border-gray-300 rounded-lg">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -124,7 +126,7 @@ export const ChatsTab = ({
               <Button
                 onClick={onRefresh}
                 variant="outline"
-                className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl"
+                className="bg-white border-gray-300 hover:bg-gray-50 rounded-lg"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh

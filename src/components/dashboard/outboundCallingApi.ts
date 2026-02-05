@@ -2,7 +2,7 @@
  * Outbound Calling API Integration
  * 
  * All endpoints require PM authentication and return 403 for non-PM users.
- * Base URL: https://leasing-copilot-mvp.onrender.com
+ * Base URL: http://127.0.0.1:8000
  */
 
 import { API_BASE } from "./constants";

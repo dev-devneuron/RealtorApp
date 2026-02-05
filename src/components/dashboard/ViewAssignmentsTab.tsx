@@ -57,19 +57,21 @@ export const ViewAssignmentsTab = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-8">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="bg-white border-b border-gray-200 p-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                  <ListChecks className="h-6 w-6 text-white" />
-                </div>
-                Property Assignments Overview
-              </CardTitle>
-              <p className="text-gray-600 text-lg">
-                See which properties are assigned to which realtors, and manage unassigned properties
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-100 p-4 rounded-lg shadow-sm">
+                <ListChecks className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                  Property Assignments Overview
+                </CardTitle>
+                <p className="text-gray-600 text-base">
+                  See which properties are assigned to which realtors, and manage unassigned properties
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {/* Filter Dropdown */}
@@ -79,12 +81,12 @@ export const ViewAssignmentsTab = ({
                     <Button
                       variant="outline"
                       size="lg"
-                      className="bg-white hover:bg-amber-50 text-amber-700 border-amber-300 hover:border-amber-400 font-medium transition-all rounded-xl"
+                      className="bg-white border-gray-300 hover:bg-gray-50 text-gray-700 hover:border-gray-400 font-medium transition-all rounded-lg"
                     >
                       <Filter className="h-5 w-5 mr-2" />
                       Filter by Realtor
                       {selectedRealtorFilters.size > 0 && (
-                        <Badge className="ml-2 bg-gradient-to-br from-amber-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                        <Badge className="ml-2 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-semibold border-0">
                           {selectedRealtorFilters.size}
                         </Badge>
                       )}
@@ -92,11 +94,11 @@ export const ViewAssignmentsTab = ({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-80 bg-white border border-amber-200 shadow-2xl rounded-2xl p-0 overflow-hidden"
+                    className="w-80 bg-white border border-gray-200 shadow-sm rounded-lg p-0 overflow-hidden"
                   >
                     {/* Fixed Header */}
-                    <div className="sticky top-0 bg-white z-10 p-4 pb-3 border-b border-amber-200">
-                      <DropdownMenuLabel className="text-gray-900 font-bold text-lg mb-0 px-0">
+                    <div className="sticky top-0 bg-white z-10 p-4 pb-3 border-b border-gray-200">
+                      <DropdownMenuLabel className="text-gray-900 font-semibold text-lg mb-0 px-0">
                         Filter Assignments
                       </DropdownMenuLabel>
                     </div>
@@ -109,7 +111,7 @@ export const ViewAssignmentsTab = ({
                           onClick={onSelectAllFilters}
                           variant="outline"
                           size="sm"
-                          className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300 font-medium rounded-xl text-xs py-2"
+                          className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200 font-medium rounded-lg text-xs py-2"
                         >
                           Select All
                         </Button>
@@ -117,19 +119,19 @@ export const ViewAssignmentsTab = ({
                           onClick={onDeselectAllFilters}
                           variant="outline"
                           size="sm"
-                          className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300 font-medium rounded-xl text-xs py-2"
+                          className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300 font-medium rounded-lg text-xs py-2"
                         >
                           Clear All
                         </Button>
                       </div>
 
-                      <DropdownMenuSeparator className="bg-amber-200 my-2" />
+                      <DropdownMenuSeparator className="bg-gray-200 my-2" />
 
                       {/* Unassigned Properties Option */}
                       <DropdownMenuCheckboxItem
                         checked={selectedRealtorFilters.has("unassigned")}
                         onCheckedChange={() => onFilterToggle("unassigned")}
-                        className="px-2 py-2 rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-1.5"
+                        className="px-2 py-2 rounded-lg hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-1.5"
                       >
                         <div className="flex items-center gap-2.5 w-full">
                           <div className="p-1.5 bg-amber-100 rounded-lg flex-shrink-0">
@@ -144,7 +146,7 @@ export const ViewAssignmentsTab = ({
                         </div>
                       </DropdownMenuCheckboxItem>
 
-                      <DropdownMenuSeparator className="bg-amber-200 my-2" />
+                      <DropdownMenuSeparator className="bg-gray-200 my-2" />
 
                       {/* Realtor Options */}
                       {Object.values(assignmentsData.assigned_properties || {}).map((realtorGroup: any) => (
@@ -152,7 +154,7 @@ export const ViewAssignmentsTab = ({
                           key={realtorGroup.realtor_id}
                           checked={selectedRealtorFilters.has(realtorGroup.realtor_id)}
                           onCheckedChange={() => onFilterToggle(realtorGroup.realtor_id)}
-                          className="px-2 py-2 rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-1.5"
+                          className="px-2 py-2 rounded-lg hover:bg-amber-50 focus:bg-amber-50 cursor-pointer transition-all mb-1.5"
                         >
                           <div className="flex items-center gap-2.5 w-full">
                             <div className="p-1.5 bg-amber-100 rounded-lg flex-shrink-0">
@@ -161,7 +163,7 @@ export const ViewAssignmentsTab = ({
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-gray-900 text-sm truncate">{realtorGroup.realtor_name}</p>
                               <p className="text-xs text-gray-500 truncate">{realtorGroup.realtor_email}</p>
-                              <p className="text-xs font-medium text-amber-600 mt-0.5">
+                              <p className="text-xs font-medium text-amber-800 mt-0.5">
                                 {realtorGroup.count} {realtorGroup.count === 1 ? "property" : "properties"}
                               </p>
                             </div>
@@ -177,7 +179,7 @@ export const ViewAssignmentsTab = ({
                 onClick={onRefresh}
                 variant="outline"
                 size="lg"
-                className="bg-white hover:bg-amber-50 text-amber-700 border-amber-300 hover:border-amber-400 font-medium transition-all rounded-xl"
+                className="bg-white border-gray-300 hover:bg-gray-50 text-gray-700 hover:border-gray-400 font-medium transition-all rounded-lg"
               >
                 <RefreshCw className="h-5 w-5 mr-2" />
                 Refresh Data
@@ -201,39 +203,39 @@ export const ViewAssignmentsTab = ({
               {/* Enhanced Summary Cards */}
               {assignmentsData.summary && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card className="bg-white p-6 border border-amber-100 rounded-2xl hover:shadow-lg transition-all hover:border-amber-200">
+                  <Card className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm hover:shadow transition-all hover:border-gray-300">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-amber-600 mb-2 uppercase tracking-wide">Total Properties</p>
-                        <p className="text-3xl font-bold text-gray-900">{assignmentsData.summary.total_properties || 0}</p>
+                        <p className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">Total Properties</p>
+                        <p className="text-3xl font-semibold text-gray-900">{assignmentsData.summary.total_properties || 0}</p>
                         <p className="text-sm text-gray-500 mt-1">All properties</p>
                       </div>
-                      <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl">
-                        <Building2 className="h-6 w-6 text-white" />
+                      <div className="p-3 bg-blue-100 rounded-lg">
+                        <Building2 className="h-6 w-6 text-blue-600" />
                       </div>
                     </div>
                   </Card>
-                  <Card className="bg-white p-6 border border-amber-100 rounded-2xl hover:shadow-lg transition-all hover:border-amber-200">
+                  <Card className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm hover:shadow transition-all hover:border-gray-300">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-amber-600 mb-2 uppercase tracking-wide">Unassigned</p>
-                        <p className="text-3xl font-bold text-gray-900">{assignmentsData.summary.unassigned_count || 0}</p>
+                        <p className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">Unassigned</p>
+                        <p className="text-3xl font-semibold text-gray-900">{assignmentsData.summary.unassigned_count || 0}</p>
                         <p className="text-sm text-gray-500 mt-1">Need assignment</p>
                       </div>
-                      <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl">
-                        <AlertTriangle className="h-6 w-6 text-white" />
+                      <div className="p-3 bg-amber-100 rounded-lg">
+                        <AlertTriangle className="h-6 w-6 text-amber-600" />
                       </div>
                     </div>
                   </Card>
-                  <Card className="bg-white p-6 border border-amber-100 rounded-2xl hover:shadow-lg transition-all hover:border-amber-200">
+                  <Card className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm hover:shadow transition-all hover:border-gray-300">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-amber-600 mb-2 uppercase tracking-wide">Assigned</p>
-                        <p className="text-3xl font-bold text-gray-900">{assignmentsData.summary.assigned_count || 0}</p>
+                        <p className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">Assigned</p>
+                        <p className="text-3xl font-semibold text-gray-900">{assignmentsData.summary.assigned_count || 0}</p>
                         <p className="text-sm text-gray-500 mt-1">To realtors</p>
                       </div>
-                      <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl">
-                        <CheckCircle2 className="h-6 w-6 text-white" />
+                      <div className="p-3 bg-emerald-100 rounded-lg">
+                        <CheckCircle2 className="h-6 w-6 text-emerald-600" />
                       </div>
                     </div>
                   </Card>
@@ -244,13 +246,13 @@ export const ViewAssignmentsTab = ({
               {assignmentsData.unassigned_properties &&
                 assignmentsData.unassigned_properties.length > 0 &&
                 selectedRealtorFilters.has("unassigned") && (
-                  <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
-                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-4 flex-wrap">
-                      <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                        <AlertTriangle className="h-6 w-6 text-white" />
+                  <div className="bg-amber-50 rounded-lg p-6 border border-amber-200">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-4 flex-wrap">
+                      <div className="bg-amber-100 p-3 rounded-lg shadow-sm">
+                        <AlertTriangle className="h-6 w-6 text-amber-600" />
                       </div>
                       Unassigned Properties
-                      <Badge className="bg-gradient-to-br from-amber-500 to-amber-600 text-white text-lg px-4 py-2 font-bold">
+                      <Badge className="bg-amber-100 text-amber-800 text-lg px-4 py-2 font-semibold border-0">
                         {assignmentsData.unassigned_properties.length}
                       </Badge>
                     </h3>
@@ -262,7 +264,7 @@ export const ViewAssignmentsTab = ({
                           return (
                             <Card
                               key={property.id || idx}
-                              className="bg-white hover:shadow-lg transition-all duration-300 border border-amber-200 rounded-2xl hover:border-amber-300 overflow-hidden cursor-pointer"
+                              className="bg-white hover:shadow transition-all duration-300 border border-gray-200 rounded-lg hover:border-gray-300 overflow-hidden cursor-pointer"
                               onClick={() => onPropertyClick(property)}
                             >
                               <CardHeader className="pb-4 p-4 sm:p-6">
@@ -293,33 +295,33 @@ export const ViewAssignmentsTab = ({
                                       variant={meta.listing_status === "Available" ? "default" : "secondary"}
                                       className={`text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-lg ${
                                         meta.listing_status === "Available"
-                                          ? "bg-gradient-to-br from-amber-500 to-amber-600 text-white"
-                                          : "bg-gray-200 text-gray-700"
+                                          ? "bg-amber-100 text-amber-800 border-0"
+                                          : "bg-gray-100 text-gray-700 border-0"
                                       }`}
                                     >
                                       {meta.listing_status}
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="flex flex-wrap gap-2 font-semibold text-xs sm:text-sm">
-                                  <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700">
+                                <div className="flex flex-wrap gap-2 font-medium text-xs sm:text-sm">
+                                  <span className="border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-gray-50 text-gray-700">
                                     <Bed className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.bedrooms || 0}
                                   </span>
-                                  <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700">
+                                  <span className="border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-gray-50 text-gray-700">
                                     <Bath className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.bathrooms || 0}
                                   </span>
                                   {meta.square_feet && (
-                                    <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700">
+                                    <span className="border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-gray-50 text-gray-700">
                                       <Square className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.square_feet} sqft
                                     </span>
                                   )}
                                 </div>
                                 {meta.property_type && (
-                                  <Badge variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-amber-50 text-amber-700">
+                                  <Badge variant="outline" className="text-xs sm:text-sm font-medium border-gray-300 bg-gray-50 text-gray-700">
                                     {meta.property_type}
                                   </Badge>
                                 )}
-                                <p className="text-xs sm:text-sm text-amber-600 font-medium pt-2 border-t border-amber-200">
+                                <p className="text-xs sm:text-sm text-gray-600 font-medium pt-2 border-t border-gray-200">
                                   Click to view details →
                                 </p>
                               </CardContent>
@@ -332,37 +334,37 @@ export const ViewAssignmentsTab = ({
 
               {/* Assigned Properties by Realtor */}
               {filteredAssignedProperties && (
-                <div className="bg-white rounded-2xl p-6 border border-amber-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                      <Users className="h-6 w-6 text-white" />
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-4">
+                    <div className="bg-amber-100 p-3 rounded-lg shadow-sm">
+                      <Users className="h-6 w-6 text-amber-600" />
                     </div>
                     Assigned Properties by Realtor
                     {selectedRealtorFilters.size > 0 &&
                       selectedRealtorFilters.size <
                         (assignmentsData?.assigned_properties ? Object.keys(assignmentsData.assigned_properties).length + 1 : 1) && (
-                        <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-sm font-semibold">
+                        <Badge className="bg-amber-100 text-amber-800 border-0 text-sm font-semibold">
                           Filtered ({selectedRealtorFilters.size} {selectedRealtorFilters.size === 1 ? "filter" : "filters"})
                         </Badge>
                       )}
                   </h3>
                   {Object.values(filteredAssignedProperties).map((realtorGroup: any) => (
-                    <Card key={realtorGroup.realtor_id} className="mb-8 bg-white shadow-lg border border-amber-200 rounded-2xl overflow-hidden">
-                      <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-t-2xl border-b border-amber-200 p-6">
+                    <Card key={realtorGroup.realtor_id} className="mb-8 bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
+                      <CardHeader className="bg-amber-50 rounded-t-lg border-b border-amber-200 p-6">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                           <div className="flex-1">
-                            <CardTitle className="text-gray-900 text-xl font-bold flex items-center gap-3">
+                            <CardTitle className="text-gray-900 text-xl font-semibold flex items-center gap-3">
                               <div className="p-2 bg-amber-100 rounded-lg">
                                 <User className="h-5 w-5 text-amber-600" />
                               </div>
                               {realtorGroup.realtor_name}
                             </CardTitle>
                             <p className="text-gray-600 mt-2 flex items-center gap-2">
-                              <Mail className="h-4 w-4 text-amber-600" />
+                              <Mail className="h-4 w-4 text-gray-500" />
                               {realtorGroup.realtor_email}
                             </p>
                           </div>
-                          <Badge className="bg-gradient-to-br from-amber-500 to-amber-600 text-white border-2 border-amber-400 text-lg px-4 py-2 font-bold">
+                          <Badge className="bg-amber-100 text-amber-800 border-0 text-lg px-4 py-2 font-semibold">
                             {realtorGroup.count} {realtorGroup.count === 1 ? "Property" : "Properties"}
                           </Badge>
                         </div>
@@ -376,7 +378,7 @@ export const ViewAssignmentsTab = ({
                               return (
                                 <Card
                                   key={property.id || idx}
-                                  className="bg-white hover:shadow-lg transition-all duration-300 border border-amber-200 rounded-2xl hover:border-amber-300 overflow-hidden cursor-pointer"
+                                  className="bg-white hover:shadow transition-all duration-300 border border-gray-200 rounded-lg hover:border-gray-300 overflow-hidden cursor-pointer"
                                   onClick={() => onPropertyClick(property)}
                                 >
                                   <CardHeader className="pb-4 p-4 sm:p-6">
@@ -402,33 +404,33 @@ export const ViewAssignmentsTab = ({
                                           variant={meta.listing_status === "Available" ? "default" : "secondary"}
                                           className={`text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-lg ${
                                             meta.listing_status === "Available"
-                                              ? "bg-gradient-to-br from-amber-500 to-amber-600 text-white"
-                                              : "bg-gray-200 text-gray-700"
+                                              ? "bg-amber-100 text-amber-800 border-0"
+                                              : "bg-gray-100 text-gray-700 border-0"
                                           }`}
                                         >
                                           {meta.listing_status}
                                         </Badge>
                                       )}
                                     </div>
-                                    <div className="flex flex-wrap gap-2 font-semibold text-xs sm:text-sm">
-                                      <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700">
+                                    <div className="flex flex-wrap gap-2 font-medium text-xs sm:text-sm">
+                                      <span className="border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-gray-50 text-gray-700">
                                         <Bed className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.bedrooms || 0}
                                       </span>
-                                      <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700">
+                                      <span className="border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-gray-50 text-gray-700">
                                         <Bath className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.bathrooms || 0}
                                       </span>
                                       {meta.square_feet && (
-                                        <span className="border border-amber-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700">
+                                        <span className="border border-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-gray-50 text-gray-700">
                                           <Square className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" /> {meta.square_feet} sqft
                                         </span>
                                       )}
                                     </div>
                                     {meta.property_type && (
-                                      <Badge variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-amber-50 text-amber-700">
+                                      <Badge variant="outline" className="text-xs sm:text-sm font-medium border-gray-300 bg-gray-50 text-gray-700">
                                         {meta.property_type}
                                       </Badge>
                                     )}
-                                    <p className="text-xs sm:text-sm text-amber-600 font-medium pt-2 border-t border-amber-200">
+                                    <p className="text-xs sm:text-sm text-gray-600 font-medium pt-2 border-t border-gray-200">
                                       Click to view details →
                                     </p>
                                   </CardContent>

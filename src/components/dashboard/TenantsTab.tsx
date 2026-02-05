@@ -113,21 +113,23 @@ export const TenantsTab = ({
         }}
       />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="bg-white border-b border-gray-200 p-6 sm:p-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                Tenant Management
-              </CardTitle>
-              <p className="text-gray-600 text-lg">Manage your tenants and their lease information.</p>
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-100 p-4 rounded-lg shadow-sm">
+                <Users className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                  Tenant Management
+                </CardTitle>
+                <p className="text-gray-600 text-base">Manage your tenants and their lease information.</p>
+              </div>
             </div>
             <Button
               onClick={onShowAddTenant}
-              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl px-6 py-3"
+              className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-lg px-6 py-3"
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Add Tenant
@@ -138,7 +140,7 @@ export const TenantsTab = ({
           {/* Filter Bar */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">
             <Select value={tenantFilterProperty} onValueChange={onFilterPropertyChange}>
-              <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+              <SelectTrigger className="w-full sm:w-48 bg-white border-gray-300 rounded-lg">
                 <SelectValue placeholder="Filter by property" />
               </SelectTrigger>
               <SelectContent>
@@ -151,7 +153,7 @@ export const TenantsTab = ({
               </SelectContent>
             </Select>
             <Select value={tenantFilterActive} onValueChange={onFilterActiveChange}>
-              <SelectTrigger className="w-full sm:w-48 bg-white border-amber-300 rounded-xl">
+              <SelectTrigger className="w-full sm:w-48 bg-white border-gray-300 rounded-lg">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -160,7 +162,7 @@ export const TenantsTab = ({
                 <SelectItem value="inactive">Inactive Only</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={onRefresh} variant="outline" className="bg-white border-amber-300 hover:bg-amber-50 rounded-xl">
+            <Button onClick={onRefresh} variant="outline" className="bg-white border-gray-300 hover:bg-gray-50 rounded-lg">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -179,24 +181,24 @@ export const TenantsTab = ({
               <p className="text-gray-400 text-sm mb-4">Add your first tenant to get started.</p>
               <Button
                 onClick={onShowAddTenant}
-                className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl"
+                className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-lg"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Tenant
               </Button>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <Table>
-                <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
-                  <TableRow className="border-b border-amber-200">
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Name</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Contact</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Property</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Unit</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Lease Period</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Status</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
+                <TableHeader className="bg-gray-50">
+                  <TableRow className="border-b border-gray-200">
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Name</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Contact</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Property</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Unit</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Lease Period</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -206,7 +208,7 @@ export const TenantsTab = ({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="border-b border-gray-100 hover:bg-amber-50/50 transition-colors"
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                     >
                       <TableCell className="py-4 px-6">
                         <p className="font-semibold text-gray-900">{tenant.name || "Unknown"}</p>

@@ -4,7 +4,7 @@
  * Comprehensive interface for managing vendors (CRUD operations)
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -105,13 +105,13 @@ export const VendorManagementTab = ({ userType }: VendorManagementTabProps) => {
   // Only show for Property Managers
   if (userType !== "property_manager") {
     return (
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
         <CardContent className="p-12 text-center">
           <div className="flex flex-col items-center gap-4">
             <div className="p-4 bg-red-100 rounded-full">
               <Shield className="h-8 w-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900">Access Restricted</h3>
+            <h3 className="text-xl font-semibold text-gray-900">Access Restricted</h3>
             <p className="text-gray-600 max-w-md">
               Vendor management is only available to Property Managers.
             </p>
@@ -121,11 +121,7 @@ export const VendorManagementTab = ({ userType }: VendorManagementTabProps) => {
     );
   }
 
-  useEffect(() => {
-    loadVendors();
-  }, []);
-
-  const loadVendors = async () => {
+  const loadVendors = useCallback(async () => {
     try {
       setLoading(true);
       const filters: any = {};
@@ -142,10 +138,25 @@ export const VendorManagementTab = ({ userType }: VendorManagementTabProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [serviceTypeFilter, activeFilter]);
+
+  useEffect(() => {
+    loadVendors();
+  }, [loadVendors]);
 
   const filteredVendors = useMemo(() => {
     let filtered = vendors;
+
+    // Service type filter (client-side for instant UX)
+    if (serviceTypeFilter !== "all") {
+      filtered = filtered.filter((v) => v.service_type === serviceTypeFilter);
+    }
+
+    // Active filter (client-side for instant UX)
+    if (activeFilter !== "all") {
+      const isActive = activeFilter === "active";
+      filtered = filtered.filter((v) => v.is_active === isActive);
+    }
 
     // Search filter
     if (searchQuery) {
@@ -160,7 +171,7 @@ export const VendorManagementTab = ({ userType }: VendorManagementTabProps) => {
     }
 
     return filtered;
-  }, [vendors, searchQuery]);
+  }, [vendors, searchQuery, serviceTypeFilter, activeFilter]);
 
   const handleCreate = async () => {
     try {

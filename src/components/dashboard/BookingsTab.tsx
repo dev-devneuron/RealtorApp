@@ -427,18 +427,15 @@ export const BookingsTab = ({
       whileHover={{ scale: 1.03, y: -4 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <Card className={`${gradient} border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden relative group`}>
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl pointer-events-none group-hover:bg-white/15 transition-colors" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16 blur-2xl pointer-events-none" />
+      <Card className={`${gradient} border border-gray-200 shadow-sm hover:shadow transition-all duration-300 overflow-hidden relative group`}>
         <CardContent className="p-6 lg:p-7 relative z-10">
           <div className="flex items-center justify-between mb-5">
-            <div className={`${iconBg} p-3.5 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+            <div className={`${iconBg} p-3.5 rounded-lg shadow-sm group-hover:scale-105 transition-transform duration-300`}>
               {icon}
             </div>
-            <Sparkles className="h-5 w-5 text-white/30 group-hover:text-white/50 transition-colors" />
           </div>
-          <div className="text-white/90 text-xs sm:text-sm font-semibold mb-2 uppercase tracking-wide">{label}</div>
-          <div className="text-white text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">{value}</div>
+          <div className="text-gray-600 text-xs sm:text-sm font-medium mb-2 uppercase tracking-wide">{label}</div>
+          <div className="text-gray-900 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight">{value}</div>
         </CardContent>
       </Card>
     </motion.div>
@@ -449,49 +446,47 @@ export const BookingsTab = ({
       {/* Enhanced Statistics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6">
         <StatCard
-          icon={<Calendar className="h-6 w-6 text-white" />}
+          icon={<Calendar className="h-6 w-6 text-blue-600" />}
           label="Total Bookings"
           value={stats.total}
-          gradient="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700"
-          iconBg="bg-blue-400/30"
+          gradient="bg-blue-50"
+          iconBg="bg-blue-100"
         />
         <StatCard
-          icon={<Clock className="h-6 w-6 text-white" />}
+          icon={<Clock className="h-6 w-6 text-amber-600" />}
           label="Pending"
           value={stats.pending}
-          gradient="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700"
-          iconBg="bg-amber-400/30"
+          gradient="bg-amber-50"
+          iconBg="bg-amber-100"
         />
         <StatCard
-          icon={<CheckCircle2 className="h-6 w-6 text-white" />}
+          icon={<CheckCircle2 className="h-6 w-6 text-emerald-600" />}
           label="Approved"
           value={stats.approved}
-          gradient="bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700"
-          iconBg="bg-emerald-400/30"
+          gradient="bg-emerald-50"
+          iconBg="bg-emerald-100"
         />
         <StatCard
-          icon={<XCircle className="h-6 w-6 text-white" />}
+          icon={<XCircle className="h-6 w-6 text-red-600" />}
           label="Cancelled"
           value={stats.cancelled}
-          gradient="bg-gradient-to-br from-red-500 via-red-600 to-red-700"
-          iconBg="bg-red-400/30"
+          gradient="bg-red-50"
+          iconBg="bg-red-100"
         />
       </div>
 
       {/* Enhanced Header Card */}
-      <Card className="bg-gradient-to-br from-white via-amber-50/30 to-white border-0 shadow-2xl overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-blue-500/5 pointer-events-none" />
-        <CardHeader className="relative p-6 lg:p-8 border-b border-amber-100/50">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden relative">
+        <CardHeader className="relative p-6 lg:p-8 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl blur-lg opacity-50" />
-                <div className="relative bg-gradient-to-br from-amber-500 to-amber-600 p-4 rounded-2xl shadow-xl">
-                  <Calendar className="h-8 w-8 text-white" />
+                <div className="relative bg-amber-100 p-4 rounded-lg shadow-sm">
+                  <Calendar className="h-8 w-8 text-amber-600" />
                 </div>
               </div>
               <div>
-                <CardTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
+                <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900">
                   Property Tour Bookings
                 </CardTitle>
                 <p className="text-gray-600 mt-1 text-xs sm:text-sm">
@@ -504,14 +499,14 @@ export const BookingsTab = ({
                 onClick={onRefresh} 
                 disabled={loadingBookings} 
                 variant="outline"
-                className="bg-white/80 backdrop-blur-sm border-amber-200 hover:bg-white hover:border-amber-300 shadow-md hover:shadow-lg transition-all"
+                className="bg-white border-gray-300 hover:bg-gray-50 shadow-sm hover:shadow transition-all"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${loadingBookings ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
               <Button
                 onClick={() => setShowManualBookingModal(true)}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md hover:shadow-lg"
+                className="bg-amber-100 hover:bg-amber-200 text-amber-800 shadow-sm hover:shadow transition-all"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Booking
@@ -524,12 +519,12 @@ export const BookingsTab = ({
             {/* First Row: Search and Status */}
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-amber-500 transition-colors z-10" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-gray-600 transition-colors z-10" />
                 <Input
                   placeholder="Search bookings by name, phone, property, or ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all"
+                  className="pl-12 pr-4 h-12 bg-white border border-gray-300 focus:border-gray-400 focus:ring-2 focus:ring-gray-200 rounded-lg shadow-sm hover:shadow transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -541,11 +536,11 @@ export const BookingsTab = ({
                 )}
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[220px] h-12 bg-white/90 backdrop-blur-sm border-2 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl shadow-md hover:shadow-lg transition-all">
-                  <Filter className="h-4 w-4 mr-2 text-amber-600" />
+                <SelectTrigger className="w-full sm:w-[220px] h-12 bg-white border border-gray-300 focus:border-gray-400 focus:ring-2 focus:ring-gray-200 rounded-lg shadow-sm hover:shadow transition-all">
+                  <Filter className="h-4 w-4 mr-2 text-gray-600" />
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-amber-200 shadow-xl">
+                <SelectContent className="rounded-lg border-gray-200 shadow-sm">
                   <SelectItem value="all" className="rounded-lg">All Statuses</SelectItem>
                   <SelectItem value="upcoming-2-days" className="rounded-lg">Upcoming 2 Days</SelectItem>
                   <SelectItem value="pending" className="rounded-lg">Pending</SelectItem>
@@ -564,41 +559,41 @@ export const BookingsTab = ({
           <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                <TabsList className={`inline-flex h-12 items-center justify-center rounded-xl bg-amber-50/70 backdrop-blur-sm p-1.5 border border-amber-200 shadow-md ${hasAssignedPropertiesOrBookings ? 'w-full sm:w-auto' : ''}`}>
+                <TabsList className={`inline-flex h-12 items-center justify-center rounded-lg bg-gray-50 p-1.5 border border-gray-200 shadow-sm ${hasAssignedPropertiesOrBookings ? 'w-full sm:w-auto' : ''}`}>
                   <TabsTrigger 
                     value="list" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 rounded-lg px-6 font-medium transition-all hover:bg-white/50"
                   >
                     List
                   </TabsTrigger>
                   <TabsTrigger 
                     value="day" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 rounded-lg px-6 font-medium transition-all hover:bg-white/50"
                   >
                     Day
                   </TabsTrigger>
                   <TabsTrigger 
                     value="week" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 rounded-lg px-6 font-medium transition-all hover:bg-white/50"
                   >
                     Week
                   </TabsTrigger>
                   <TabsTrigger 
                     value="month" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 rounded-lg px-6 font-medium transition-all hover:bg-white/50"
                   >
                     Month
                   </TabsTrigger>
                   <TabsTrigger 
                     value="stats" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 rounded-lg px-6 font-medium transition-all hover:bg-white/50"
                   >
                     Stats
                   </TabsTrigger>
                   {hasAssignedPropertiesOrBookings && (
                     <TabsTrigger 
                       value="availability" 
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700 rounded-lg px-6 font-semibold transition-all hover:bg-white/50"
+                      className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 rounded-lg px-6 font-medium transition-all hover:bg-white/50"
                     >
                       Availability
                     </TabsTrigger>
@@ -625,13 +620,13 @@ export const BookingsTab = ({
                   exit={{ opacity: 0, height: 0 }}
                   className="mb-6"
                 >
-                  <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-yellow-50/50 to-amber-50 shadow-lg">
+                  <Card className="border border-amber-200 bg-amber-50 shadow-sm">
                     <CardHeader className="p-5">
                       <CardTitle className="text-xl flex items-center gap-3">
-                        <div className="p-2 bg-amber-500 rounded-lg shadow-md">
-                          <Clock className="h-5 w-5 text-white" />
+                        <div className="p-2 bg-amber-100 rounded-lg shadow-sm">
+                          <Clock className="h-5 w-5 text-amber-600" />
                         </div>
-                        <span className="bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent font-bold text-base sm:text-lg">
+                        <span className="text-gray-800 font-semibold text-base sm:text-lg">
                           Pending Bookings ({pendingBookings.length})
                         </span>
                       </CardTitle>
@@ -644,24 +639,24 @@ export const BookingsTab = ({
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className="bg-white rounded-xl p-5 border border-amber-200 hover:shadow-xl hover:border-amber-300 transition-all cursor-pointer group"
+                            className="bg-white rounded-lg p-5 border border-gray-200 hover:shadow-sm hover:border-gray-300 transition-all cursor-pointer group"
                             onClick={() => handleBookingClick(booking)}
                           >
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-3 mb-3">
-                                  <Badge className="bg-amber-500 text-white border-0 shadow-sm">
+                                  <Badge className="bg-amber-100 text-amber-800 border-0 shadow-sm">
                                     {booking.status}
                                   </Badge>
-                                  <span className="font-bold text-base sm:text-lg text-gray-900">{booking.visitor.name}</span>
+                                  <span className="font-semibold text-base sm:text-lg text-gray-900">{booking.visitor.name}</span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
                                   <div className="flex items-center gap-2">
-                                    <MapPin className="h-4 w-4 text-amber-600" />
+                                    <MapPin className="h-4 w-4 text-gray-500" />
                                     <span className="truncate">{booking.propertyAddress || `Property #${booking.propertyId}`}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-amber-600" />
+                                    <Calendar className="h-4 w-4 text-gray-500" />
                                     <span>{formatDateTime(booking.startAt)}</span>
                                   </div>
                                 </div>
@@ -674,7 +669,7 @@ export const BookingsTab = ({
                                     handleApprove(booking.bookingId);
                                   }}
                                   disabled={actionLoading === booking.bookingId}
-                                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
+                                  className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 shadow-sm hover:shadow transition-all"
                                 >
                                   <CheckCircle2 className="h-4 w-4 mr-2" />
                                   Approve
@@ -687,7 +682,7 @@ export const BookingsTab = ({
                                     handleDeny(booking.bookingId);
                                   }}
                                   disabled={actionLoading === booking.bookingId}
-                                  className="shadow-md hover:shadow-lg transition-all"
+                                  className="shadow-sm hover:shadow transition-all"
                                 >
                                   <XCircle className="h-4 w-4 mr-2" />
                                   Deny
@@ -699,7 +694,7 @@ export const BookingsTab = ({
                         {pendingBookings.length > 5 && (
                           <Button
                             variant="outline"
-                            className="w-full border-amber-300 hover:bg-amber-50"
+                            className="w-full border-gray-300 hover:bg-gray-50"
                             onClick={() => setStatusFilter("pending")}
                           >
                             View All {pendingBookings.length} Pending Bookings
@@ -720,14 +715,14 @@ export const BookingsTab = ({
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   >
-                    <RefreshCw className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                    <RefreshCw className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   </motion.div>
                   <p className="text-gray-600 font-medium">Loading bookings...</p>
                 </div>
               ) : filteredBookings.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="inline-flex p-4 bg-amber-100 rounded-full mb-4">
-                    <Calendar className="h-12 w-12 text-amber-600" />
+                  <div className="inline-flex p-4 bg-gray-100 rounded-full mb-4">
+                    <Calendar className="h-12 w-12 text-gray-500" />
                   </div>
                   <p className="text-gray-500 font-medium text-lg">
                     {searchQuery || statusFilter !== "all"
@@ -738,16 +733,17 @@ export const BookingsTab = ({
               ) : (
                 <>
                   {/* Desktop Table View */}
-                  <div className="hidden md:block overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-lg">
-                    <Table>
-                      <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
+                  <div className="hidden md:block">
+                    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                      <Table>
+                      <TableHeader className="bg-gray-50">
                         <TableRow className="hover:bg-transparent">
-                          <TableHead className="font-bold text-amber-900 py-4 px-6">ID</TableHead>
-                          <TableHead className="font-bold text-amber-900 py-4 px-6">Visitor</TableHead>
-                          <TableHead className="font-bold text-amber-900 py-4 px-6">Property</TableHead>
-                          <TableHead className="font-bold text-amber-900 py-4 px-6">Date & Time</TableHead>
-                          <TableHead className="font-bold text-amber-900 py-4 px-6">Status</TableHead>
-                          <TableHead className="font-bold text-amber-900 py-4 px-6">Actions</TableHead>
+                          <TableHead className="font-semibold text-gray-700 py-4 px-6 bg-amber-50">ID</TableHead>
+                          <TableHead className="font-semibold text-gray-700 py-4 px-6 bg-amber-50">Visitor</TableHead>
+                          <TableHead className="font-semibold text-gray-700 py-4 px-6 bg-amber-50">Property</TableHead>
+                          <TableHead className="font-semibold text-gray-700 py-4 px-6 bg-amber-50">Date & Time</TableHead>
+                          <TableHead className="font-semibold text-gray-700 py-4 px-6 bg-amber-50">Status</TableHead>
+                          <TableHead className="font-semibold text-gray-700 py-4 px-6 bg-amber-50">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -757,10 +753,10 @@ export const BookingsTab = ({
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="hover:bg-amber-50/50 transition-colors cursor-pointer border-b border-amber-50"
+                            className="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100"
                             onClick={() => handleBookingClick(booking)}
                           >
-                            <TableCell className="font-semibold text-amber-900 py-4 px-6">#{booking.bookingId}</TableCell>
+                            <TableCell className="font-medium text-gray-800 py-4 px-6">#{booking.bookingId}</TableCell>
                             <TableCell className="py-4 px-6">
                               <div>
                                 <div className="font-semibold text-gray-900">{booking.visitor.name}</div>
@@ -789,7 +785,7 @@ export const BookingsTab = ({
                                       size="sm"
                                       onClick={() => handleApprove(booking.bookingId)}
                                       disabled={actionLoading === booking.bookingId}
-                                      className="bg-emerald-500 hover:bg-emerald-600 h-9 w-9 p-0 shadow-md"
+                                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 h-9 w-9 p-0 shadow-sm"
                                     >
                                       <CheckCircle2 className="h-4 w-4" />
                                     </Button>
@@ -798,7 +794,7 @@ export const BookingsTab = ({
                                       variant="destructive"
                                       onClick={() => handleDeny(booking.bookingId)}
                                       disabled={actionLoading === booking.bookingId}
-                                      className="h-9 w-9 p-0 shadow-md"
+                                      className="h-9 w-9 p-0 shadow-sm"
                                     >
                                       <XCircle className="h-4 w-4" />
                                     </Button>
@@ -810,7 +806,7 @@ export const BookingsTab = ({
                                     variant="destructive"
                                     onClick={() => handleCancel(booking.bookingId)}
                                     disabled={actionLoading === booking.bookingId}
-                                    className="h-9 w-9 p-0 shadow-md"
+                                    className="h-9 w-9 p-0 shadow-sm"
                                   >
                                     <X className="h-4 w-4" />
                                   </Button>
@@ -821,7 +817,7 @@ export const BookingsTab = ({
                                     variant="destructive"
                                     onClick={() => handleDelete(booking.bookingId)}
                                     disabled={actionLoading === booking.bookingId}
-                                    className="h-9 w-9 p-0 shadow-md"
+                                    className="h-9 w-9 p-0 shadow-sm"
                                     title="Delete permanently"
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -833,7 +829,7 @@ export const BookingsTab = ({
                                     variant="destructive"
                                     onClick={() => handleDelete(booking.bookingId)}
                                     disabled={actionLoading === booking.bookingId}
-                                    className="h-9 w-9 p-0 shadow-md"
+                                    className="h-9 w-9 p-0 shadow-sm"
                                     title="Delete permanently"
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -845,6 +841,7 @@ export const BookingsTab = ({
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
                   </div>
 
                   {/* Mobile Card View */}
@@ -855,44 +852,44 @@ export const BookingsTab = ({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="bg-white rounded-xl p-5 border border-amber-200 shadow-md hover:shadow-xl transition-all cursor-pointer"
+                        className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow transition-all cursor-pointer"
                         onClick={() => handleBookingClick(booking)}
                       >
                         <div className="flex items-start justify-between gap-3 mb-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="font-semibold text-sm text-amber-600">#{booking.bookingId}</span>
+                              <span className="font-medium text-sm text-gray-600">#{booking.bookingId}</span>
                               <Badge className={getStatusColor(booking.status)}>
                                 {booking.status}
                               </Badge>
                             </div>
-                            <h3 className="font-bold text-base sm:text-lg mb-3 text-gray-900">{booking.visitor.name}</h3>
+                            <h3 className="font-semibold text-base sm:text-lg mb-3 text-gray-900">{booking.visitor.name}</h3>
                             <div className="space-y-2 text-sm text-gray-600">
                               <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4 text-amber-600" />
+                                <Phone className="h-4 w-4 text-gray-500" />
                                 <span>{booking.visitor.phone}</span>
                               </div>
                               <div className="flex items-start gap-2">
-                                <MapPin className="h-4 w-4 text-amber-600 mt-0.5" />
+                                <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
                                 <span>{booking.propertyAddress || `Property #${booking.propertyId}`}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-amber-600" />
+                                <Calendar className="h-4 w-4 text-gray-500" />
                                 <span>{formatDate(booking.startAt)}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-amber-600" />
+                                <Clock className="h-4 w-4 text-gray-500" />
                                 <span>{formatTime(booking.startAt)}</span>
                               </div>
                             </div>
                           </div>
                         </div>
                         {booking.status === "pending" && (
-                          <div className="flex gap-2 pt-4 border-t border-amber-100" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2 pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                             <Button
                               onClick={() => handleApprove(booking.bookingId)}
                               disabled={actionLoading === booking.bookingId}
-                              className="bg-emerald-500 hover:bg-emerald-600 flex-1 shadow-md"
+                              className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 flex-1 shadow-sm"
                             >
                               <CheckCircle2 className="h-4 w-4 mr-2" />
                               Approve
@@ -901,7 +898,7 @@ export const BookingsTab = ({
                               variant="destructive"
                               onClick={() => handleDeny(booking.bookingId)}
                               disabled={actionLoading === booking.bookingId}
-                              className="flex-1 shadow-md"
+                              className="flex-1 shadow-sm"
                             >
                               <XCircle className="h-4 w-4 mr-2" />
                               Deny
@@ -909,12 +906,12 @@ export const BookingsTab = ({
                           </div>
                         )}
                         {booking.status === "approved" && (
-                          <div className="pt-4 border-t border-amber-100" onClick={(e) => e.stopPropagation()}>
+                          <div className="pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="destructive"
                               onClick={() => handleCancel(booking.bookingId)}
                               disabled={actionLoading === booking.bookingId}
-                              className="w-full shadow-md"
+                              className="w-full shadow-sm"
                             >
                               <X className="h-4 w-4 mr-2" />
                               Cancel Booking

@@ -2,7 +2,7 @@
  * Vendor Management API Integration
  * 
  * All endpoints require PM authentication.
- * Base URL: https://leasing-copilot-mvp.onrender.com
+ * Base URL: http://127.0.0.1:8000
  */
 
 import { API_BASE } from "./constants";
@@ -89,16 +89,22 @@ export interface VendorCallAttempt {
   vapi_call_id?: string;
   call_transcript?: string;
   call_recording_url?: string;
+  /**
+   * Optional tool payload snapshots + extra details from vendor calls.
+   * When present, can include: retry/callback suggestions, access instructions, emergency surcharge, etc.
+   */
+  call_metadata?: Record<string, any> | null;
   call_duration_seconds?: number;
   attempt_number: number;
-  initiated_at: string;
-  answered_at?: string;
-  completed_at?: string;
+  initiated_at?: string | null;
+  answered_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface VendorCallStatus {
   maintenance_request_id: number;
-  vendor_call_status: 'not_started' | 'calling' | 'vendor_accepted' | 'vendor_declined' | 'no_response' | 'paused' | 'cancelled';
+  // Backend may return "pending" when queue exists but is not actively calling yet.
+  vendor_call_status: 'not_started' | 'pending' | 'calling' | 'vendor_accepted' | 'vendor_declined' | 'no_response' | 'paused' | 'cancelled';
   assigned_vendor_id?: number | null;
   queue: VendorCallQueue | null;
   call_attempts: VendorCallAttempt[];
@@ -113,7 +119,7 @@ export interface PropertyVendorSettings {
     start_hour: number;
     end_hour: number;
     timezone: string;
-  };
+  } | null;
 }
 
 // ============================================================================
@@ -504,7 +510,7 @@ export const updatePropertyVendorSettings = async (
       start_hour: number;
       end_hour: number;
       timezone: string;
-    };
+    } | null;
   }
 ): Promise<PropertyVendorSettings> => {
   const token = getAuthToken();
@@ -543,3 +549,4 @@ export const fetchPropertyVendorSettings = async (
 
   return response.json();
 };
+

@@ -41,7 +41,7 @@ export const PropertyDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-6xl max-h-[95vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-amber-50 [&>button]:hover:border-amber-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-amber-600">
+      <DialogContent className="bg-white border border-gray-200 shadow-sm rounded-lg max-w-6xl max-h-[95vh] p-0 overflow-hidden flex flex-col [&>button]:h-10 [&>button]:w-10 [&>button]:right-3 [&>button]:top-3 [&>button]:z-50 [&>button]:bg-white [&>button]:rounded-full [&>button]:shadow-sm [&>button]:border [&>button]:border-gray-300 [&>button]:hover:bg-gray-50 [&>button]:hover:border-gray-400 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:p-0 [&>button>svg]:h-5 [&>button>svg]:w-5 [&>button>svg]:text-gray-700 [&>button>svg]:hover:text-gray-600">
         <div className="flex flex-col lg:flex-row h-full max-h-[95vh] overflow-hidden">
           {/* Image Section */}
           <div className="w-full lg:w-1/2 bg-gray-100 rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none overflow-hidden order-2 lg:order-1 flex-shrink-0">
@@ -56,10 +56,10 @@ export const PropertyDetailModal = ({
                 <div className="absolute top-4 right-4 z-10">
                   <Badge 
                     variant={meta.listing_status === 'Available' ? 'default' : 'secondary'}
-                    className={`text-sm sm:text-base font-bold border-2 ${
+                    className={`text-sm sm:text-base font-semibold ${
                       meta.listing_status === 'Available' 
-                        ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white border-amber-400' 
-                        : 'bg-white/90 text-gray-900 border-gray-300'
+                        ? 'bg-amber-100 text-amber-800 border-0' 
+                        : 'bg-gray-100 text-gray-800 border-0'
                     }`}
                   >
                     {meta.listing_status}
@@ -103,9 +103,9 @@ export const PropertyDetailModal = ({
                         <span className="text-xs sm:text-sm">Delete</span>
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl">
+                    <AlertDialogContent className="bg-white border border-gray-200 shadow-sm rounded-lg">
                       <AlertDialogHeader className="p-6">
-                        <AlertDialogTitle className="text-gray-900 font-bold text-2xl">Delete Property?</AlertDialogTitle>
+                        <AlertDialogTitle className="text-gray-900 font-semibold text-xl sm:text-2xl">Delete Property?</AlertDialogTitle>
                         <AlertDialogDescription className="text-gray-600 text-lg mt-4">
                           Are you sure you want to delete <span className="font-semibold text-amber-600">{meta.address || `Property #${selectedProperty.id}`}</span>? This action cannot be undone.
                         </AlertDialogDescription>
@@ -117,7 +117,7 @@ export const PropertyDetailModal = ({
                         <AlertDialogAction 
                           onClick={onDelete}
                           disabled={deletingProperty}
-                          className="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl px-6 py-3"
+                          className="bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded-lg px-6 py-3"
                         >
                           {deletingProperty ? (
                             <>
@@ -149,143 +149,140 @@ export const PropertyDetailModal = ({
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="details" className="mt-0 space-y-4 sm:space-y-6">
-                      <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-4 sm:p-6 border border-amber-200">
-                  <p className="text-3xl sm:text-4xl font-bold text-amber-600 mb-2">
-                    ${meta.price ? meta.price.toLocaleString() : 'N/A'}
-                  </p>
-                  {meta.property_type && (
-                    <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-white text-amber-700 mt-2">
-                      {meta.property_type}
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Basic Info Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
-                  <span className="text-xs sm:text-sm text-gray-600 font-medium">Bedrooms</span>
-                </div>
-                <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.bedrooms || 0}</p>
-              </div>
-              <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <Bath className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
-                  <span className="text-xs sm:text-sm text-gray-600 font-medium">Bathrooms</span>
-                </div>
-                <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.bathrooms || 0}</p>
-              </div>
-              {meta.square_feet && (
-                <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Square className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
-                    <span className="text-xs sm:text-sm text-gray-600 font-medium">Square Feet</span>
-                  </div>
-                  <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.square_feet.toLocaleString()}</p>
-                </div>
-              )}
-              {meta.lot_size_sqft && (
-                <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Ruler className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
-                    <span className="text-xs sm:text-sm text-gray-600 font-medium">Lot Size</span>
-                  </div>
-                  <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.lot_size_sqft.toLocaleString()} sqft</p>
-                </div>
-              )}
-              {meta.year_built && (
-                <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
-                  <div className="flex items-center gap-2 mb-1">
-                    <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
-                    <span className="text-xs sm:text-sm text-gray-600 font-medium">Year Built</span>
-                  </div>
-                  <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.year_built}</p>
-                </div>
-              )}
-              {meta.days_on_market !== undefined && (
-                <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
-                  <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
-                    <span className="text-xs sm:text-sm text-gray-600 font-medium">Days on Market</span>
-                  </div>
-                  <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.days_on_market}</p>
-                </div>
-              )}
-            </div>
-
-                {/* Additional Details */}
-                <div className="space-y-4">
-              {meta.listing_date && (
-                <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <span className="text-sm sm:text-base text-gray-600 font-medium">Listing Date:</span>
-                  <span className="text-sm sm:text-base font-semibold text-gray-900">{new Date(meta.listing_date).toLocaleDateString()}</span>
-                </div>
-              )}
-
-              {/* Features */}
-              {meta.features && meta.features.length > 0 && (
-                <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Features</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {meta.features.map((feature: string, idx: number) => (
-                      <Badge key={idx} variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-white text-amber-700 px-3 py-1.5">
-                        {feature}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Description */}
-              {meta.description && (
-                <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Description</h3>
-                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{meta.description}</p>
-                </div>
-              )}
-
-                {/* Assignment Status (for PM) */}
-                {userType === "property_manager" && (
-                  <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Assignment Status</h3>
-                    {meta.is_assigned && meta.assigned_to_realtor_name ? (
-                      <div className="flex items-center gap-3">
-                        <User className="h-5 w-5 text-amber-600" />
-                        <div>
-                          <p className="text-sm text-gray-600 font-medium">Assigned to:</p>
-                          <p className="text-base sm:text-lg font-bold text-amber-700">{meta.assigned_to_realtor_name}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <Badge variant="outline" className="bg-white text-amber-700 border-amber-300 text-sm font-medium px-4 py-2">
-                        Unassigned
+                  {/* Price */}
+                  <div className="bg-amber-50 rounded-lg p-4 sm:p-6 border border-amber-200">
+                    <p className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-2">
+                      ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                    </p>
+                    {meta.property_type && (
+                      <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-white text-amber-700 mt-2">
+                        {meta.property_type}
                       </Badge>
                     )}
                   </div>
-                )}
-              </div>
-              </>
-            )}
 
-                  {/* Tenant Assignment Section (for PM) */}
-                  <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <Users className="h-5 w-5 text-green-600" />
-                        Tenant Management
-                      </h3>
+                  {/* Basic Info Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-gray-600 font-medium">Bedrooms</span>
+                      </div>
+                      <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.bedrooms || 0}</p>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Assign a tenant to this property. The property will be marked as "Rented" automatically.
-                    </p>
-                    <Button
-                      onClick={onAssignTenant}
-                      className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl w-full sm:w-auto"
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Assign Tenant to This Property
-                    </Button>
+                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bath className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-gray-600 font-medium">Bathrooms</span>
+                      </div>
+                      <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.bathrooms || 0}</p>
+                    </div>
+                    {meta.square_feet && (
+                      <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Square className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                          <span className="text-xs sm:text-sm text-gray-600 font-medium">Square Feet</span>
+                        </div>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.square_feet.toLocaleString()}</p>
+                      </div>
+                    )}
+                    {meta.lot_size_sqft && (
+                      <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Ruler className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                          <span className="text-xs sm:text-sm text-gray-600 font-medium">Lot Size</span>
+                        </div>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.lot_size_sqft.toLocaleString()} sqft</p>
+                      </div>
+                    )}
+                    {meta.year_built && (
+                      <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                          <span className="text-xs sm:text-sm text-gray-600 font-medium">Year Built</span>
+                        </div>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.year_built}</p>
+                      </div>
+                    )}
+                    {meta.days_on_market !== undefined && (
+                      <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                          <span className="text-xs sm:text-sm text-gray-600 font-medium">Days on Market</span>
+                        </div>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.days_on_market}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Additional Details */}
+                  <div className="space-y-4">
+                    {meta.listing_date && (
+                      <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <span className="text-sm sm:text-base text-gray-600 font-medium">Listing Date:</span>
+                        <span className="text-sm sm:text-base font-semibold text-gray-900">{new Date(meta.listing_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+
+                    {/* Features */}
+                    {meta.features && meta.features.length > 0 && (
+                      <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Features</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {meta.features.map((feature: string, idx: number) => (
+                            <Badge key={idx} variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-white text-amber-700 px-3 py-1.5">
+                              {feature}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    {meta.description && (
+                      <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Description</h3>
+                        <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{meta.description}</p>
+                      </div>
+                    )}
+
+                    {/* Assignment Status */}
+                    <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Assignment Status</h3>
+                      {meta.is_assigned && meta.assigned_to_realtor_name ? (
+                        <div className="flex items-center gap-3">
+                          <User className="h-5 w-5 text-amber-600" />
+                          <div>
+                            <p className="text-sm text-gray-600 font-medium">Assigned to:</p>
+                            <p className="text-base sm:text-lg font-bold text-amber-700">{meta.assigned_to_realtor_name}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <Badge variant="outline" className="bg-white text-amber-700 border-amber-300 text-sm font-medium px-4 py-2">
+                          Unassigned
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Tenant Assignment Section */}
+                    <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                          <Users className="h-5 w-5 text-green-600" />
+                          Tenant Management
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Assign a tenant to this property. The property will be marked as "Rented" automatically.
+                      </p>
+                      <Button
+                        onClick={onAssignTenant}
+                        className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold shadow-sm hover:shadow transition-all rounded-lg w-full sm:w-auto"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Assign Tenant to This Property
+                      </Button>
+                    </div>
                   </div>
                 </TabsContent>
                 <TabsContent value="vendors" className="mt-0">
@@ -299,6 +296,104 @@ export const PropertyDetailModal = ({
             ) : (
               <>
                 {/* Price */}
+                <div className="bg-amber-50 rounded-lg p-4 sm:p-6 border border-amber-200">
+                  <p className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-2">
+                    ${meta.price ? meta.price.toLocaleString() : 'N/A'}
+                  </p>
+                  {meta.property_type && (
+                    <Badge variant="outline" className="text-sm font-medium border-amber-300 bg-white text-amber-700 mt-2">
+                      {meta.property_type}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Basic Info Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                      <span className="text-xs sm:text-sm text-gray-600 font-medium">Bedrooms</span>
+                    </div>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.bedrooms || 0}</p>
+                  </div>
+                  <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Bath className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                      <span className="text-xs sm:text-sm text-gray-600 font-medium">Bathrooms</span>
+                    </div>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.bathrooms || 0}</p>
+                  </div>
+                  {meta.square_feet && (
+                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Square className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-gray-600 font-medium">Square Feet</span>
+                      </div>
+                      <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.square_feet.toLocaleString()}</p>
+                    </div>
+                  )}
+                  {meta.lot_size_sqft && (
+                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Ruler className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-gray-600 font-medium">Lot Size</span>
+                      </div>
+                      <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.lot_size_sqft.toLocaleString()} sqft</p>
+                    </div>
+                  )}
+                  {meta.year_built && (
+                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-gray-600 font-medium">Year Built</span>
+                      </div>
+                      <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.year_built}</p>
+                    </div>
+                  )}
+                  {meta.days_on_market !== undefined && (
+                    <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-gray-600 font-medium">Days on Market</span>
+                      </div>
+                      <p className="text-lg sm:text-xl font-bold text-gray-900">{meta.days_on_market}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Details */}
+                <div className="space-y-4">
+                  {meta.listing_date && (
+                    <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+                      <span className="text-sm sm:text-base text-gray-600 font-medium">Listing Date:</span>
+                      <span className="text-sm sm:text-base font-semibold text-gray-900">{new Date(meta.listing_date).toLocaleDateString()}</span>
+                    </div>
+                  )}
+
+                  {/* Features */}
+                  {meta.features && meta.features.length > 0 && (
+                    <div className="bg-amber-50 rounded-xl p-4 sm:p-6 border border-amber-200">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Features</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {meta.features.map((feature: string, idx: number) => (
+                          <Badge key={idx} variant="outline" className="text-xs sm:text-sm font-medium border-amber-300 bg-white text-amber-700 px-3 py-1.5">
+                            {feature}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {meta.description && (
+                    <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Description</h3>
+                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{meta.description}</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>

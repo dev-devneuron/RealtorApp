@@ -31,11 +31,11 @@ export const PropertyUpdateModal = ({
 }: PropertyUpdateModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-4xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="bg-white border border-gray-200 shadow-sm rounded-lg max-w-4xl max-h-[95vh] overflow-y-auto">
         <DialogHeader className="p-6 pb-4 border-b border-gray-200">
-          <DialogTitle className="text-gray-900 font-bold text-2xl flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
-              <Edit2 className="h-5 w-5 text-white" />
+          <DialogTitle className="text-gray-900 font-semibold text-xl sm:text-2xl flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <Edit2 className="h-5 w-5 text-amber-600" />
             </div>
             Update Property
           </DialogTitle>
@@ -219,7 +219,7 @@ export const PropertyUpdateModal = ({
           <Button 
             onClick={onUpdate}
             disabled={updatingProperty}
-            className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl px-6 py-3"
+            className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-lg px-6 py-3"
           >
             {updatingProperty ? (
               <>

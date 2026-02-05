@@ -125,17 +125,17 @@ export const AnalyticsTab = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6 text-white">
+          <Card className="bg-blue-50 border border-blue-200 shadow-sm hover:shadow transition-shadow">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <Phone className="h-6 w-6" />
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Phone className="h-6 w-6 text-blue-600" />
                 </div>
-                <TrendingUp className="h-5 w-5 opacity-80" />
+                <TrendingUp className="h-5 w-5 text-blue-600" />
               </div>
-              <p className="text-blue-100 text-sm font-medium mb-1">Total Calls</p>
-              <p className="text-4xl font-bold">{analytics.total_outbound_calls}</p>
-              <p className="text-blue-100 text-xs mt-2">Outbound calls made</p>
+              <p className="text-gray-600 text-sm font-medium mb-1">Total Calls</p>
+              <p className="text-4xl font-semibold text-gray-900">{analytics.total_outbound_calls}</p>
+              <p className="text-gray-500 text-xs mt-2">Outbound calls made</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -145,17 +145,17 @@ export const AnalyticsTab = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6 text-white">
+          <Card className="bg-emerald-50 border border-emerald-200 shadow-sm hover:shadow transition-shadow">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <CheckCircle2 className="h-6 w-6" />
+                <div className="p-3 bg-emerald-100 rounded-lg">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
                 </div>
-                <Target className="h-5 w-5 opacity-80" />
+                <Target className="h-5 w-5 text-emerald-600" />
               </div>
-              <p className="text-green-100 text-sm font-medium mb-1">Bookings</p>
-              <p className="text-4xl font-bold">{analytics.estimated_bookings}</p>
-              <p className="text-green-100 text-xs mt-2">Resulting bookings</p>
+              <p className="text-gray-600 text-sm font-medium mb-1">Bookings</p>
+              <p className="text-4xl font-semibold text-gray-900">{analytics.estimated_bookings}</p>
+              <p className="text-gray-500 text-xs mt-2">Resulting bookings</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -165,17 +165,17 @@ export const AnalyticsTab = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <Card className="bg-gradient-to-br from-amber-500 to-amber-600 border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6 text-white">
+          <Card className="bg-amber-50 border border-amber-200 shadow-sm hover:shadow transition-shadow">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <TrendingUp className="h-6 w-6" />
+                <div className="p-3 bg-amber-100 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-amber-600" />
                 </div>
-                <Sparkles className="h-5 w-5 opacity-80" />
+                <Sparkles className="h-5 w-5 text-amber-600" />
               </div>
-              <p className="text-amber-100 text-sm font-medium mb-1">Success Rate</p>
-              <p className="text-4xl font-bold">{successRate}%</p>
-              <p className="text-amber-100 text-xs mt-2">Calls to bookings</p>
+              <p className="text-gray-600 text-sm font-medium mb-1">Success Rate</p>
+              <p className="text-4xl font-semibold text-gray-900">{successRate}%</p>
+              <p className="text-gray-500 text-xs mt-2">Calls to bookings</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -185,17 +185,17 @@ export const AnalyticsTab = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
         >
-          <Card className="bg-gradient-to-br from-red-500 to-red-600 border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6 text-white">
+          <Card className="bg-red-50 border border-red-200 shadow-sm hover:shadow transition-shadow">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <XCircle className="h-6 w-6" />
+                <div className="p-3 bg-red-100 rounded-lg">
+                  <XCircle className="h-6 w-6 text-red-600" />
                 </div>
-                <TrendingDown className="h-5 w-5 opacity-80" />
+                <TrendingDown className="h-5 w-5 text-red-600" />
               </div>
-              <p className="text-red-100 text-sm font-medium mb-1">Opt-outs</p>
-              <p className="text-4xl font-bold">{analytics.opt_outs}</p>
-              <p className="text-red-100 text-xs mt-2">{optOutRate}% opt-out rate</p>
+              <p className="text-gray-600 text-sm font-medium mb-1">Opt-outs</p>
+              <p className="text-4xl font-semibold text-gray-900">{analytics.opt_outs}</p>
+              <p className="text-gray-500 text-xs mt-2">{optOutRate}% opt-out rate</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -205,7 +205,7 @@ export const AnalyticsTab = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Performance Breakdown */}
         <Card className="shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b">
+          <CardHeader className="bg-gray-50 border-b border-gray-200">
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-amber-600" />
               Performance Breakdown
@@ -217,18 +217,18 @@ export const AnalyticsTab = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200"
+                className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500 rounded-lg">
-                    <Phone className="h-5 w-5 text-white" />
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Phone className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Total Outbound Calls</p>
                     <p className="text-sm text-gray-600">All calls initiated</p>
                   </div>
                 </div>
-                <Badge className="bg-blue-500 text-lg px-4 py-2 font-bold">
+                <Badge className="bg-blue-100 text-blue-800 text-lg px-4 py-2 font-semibold border-0">
                   {analytics.total_outbound_calls}
                 </Badge>
               </motion.div>
@@ -237,18 +237,18 @@ export const AnalyticsTab = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200"
+                className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg border border-emerald-200"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-500 rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-white" />
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Estimated Bookings</p>
                     <p className="text-sm text-gray-600">Bookings from calls</p>
                   </div>
                 </div>
-                <Badge className="bg-green-500 text-lg px-4 py-2 font-bold">
+                <Badge className="bg-emerald-100 text-emerald-800 text-lg px-4 py-2 font-semibold border-0">
                   {analytics.estimated_bookings}
                 </Badge>
               </motion.div>
@@ -257,18 +257,18 @@ export const AnalyticsTab = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg border border-amber-200"
+                className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-200"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-500 rounded-lg">
-                    <TrendingUp className="h-5 w-5 text-white" />
+                  <div className="p-2 bg-amber-100 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-amber-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Conversion Rate</p>
                     <p className="text-sm text-gray-600">Calls to bookings</p>
                   </div>
                 </div>
-                <Badge className="bg-amber-500 text-lg px-4 py-2 font-bold">
+                <Badge className="bg-amber-100 text-amber-800 text-lg px-4 py-2 font-semibold border-0">
                   {conversionRate}%
                 </Badge>
               </motion.div>
@@ -277,18 +277,18 @@ export const AnalyticsTab = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
-                className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-red-100 rounded-lg border border-red-200"
+                className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-500 rounded-lg">
-                    <XCircle className="h-5 w-5 text-white" />
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <XCircle className="h-5 w-5 text-red-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Opt-outs</p>
                     <p className="text-sm text-gray-600">Permanent opt-outs</p>
                   </div>
                 </div>
-                <Badge variant="destructive" className="text-lg px-4 py-2 font-bold">
+                <Badge className="bg-red-100 text-red-800 text-lg px-4 py-2 font-semibold border-0">
                   {analytics.opt_outs}
                 </Badge>
               </motion.div>
@@ -297,8 +297,8 @@ export const AnalyticsTab = () => {
         </Card>
 
         {/* Summary Card */}
-        <Card className="shadow-lg bg-gradient-to-br from-amber-50 via-white to-blue-50 border-amber-200">
-          <CardHeader className="border-b border-amber-200">
+        <Card className="shadow-sm bg-white border border-gray-200">
+          <CardHeader className="border-b border-gray-200">
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-600" />
               Campaign Summary

@@ -72,23 +72,25 @@ export const RealtorsTab = ({
 }: RealtorsTabProps) => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-8">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="bg-white border-b border-gray-200 p-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                Manage Realtors
-              </CardTitle>
-              <p className="text-gray-600 text-lg">
-                Add and manage your realtor team members. Create accounts for realtors so they can access their assigned properties.
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-100 p-4 rounded-lg shadow-sm">
+                <Users className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                  Manage Realtors
+                </CardTitle>
+                <p className="text-gray-600 text-base">
+                  Add and manage your realtor team members. Create accounts for realtors so they can access their assigned properties.
+                </p>
+              </div>
             </div>
             <Button
               onClick={() => onShowAddRealtorChange(!showAddRealtor)}
-              className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl px-6 py-3"
+              className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold shadow-sm hover:shadow transition-all rounded-lg px-6 py-3"
             >
               <UserPlus className="h-5 w-5 mr-2" />
               Add New Realtor
@@ -101,11 +103,11 @@ export const RealtorsTab = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-2xl"
+              className="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-lg"
             >
               <div className="flex items-center gap-3 mb-4">
                 <UserPlus className="h-6 w-6 text-amber-600" />
-                <h3 className="text-xl font-bold text-gray-900">Add New Realtor to Your Team</h3>
+                <h3 className="text-xl font-semibold text-gray-900">Add New Realtor to Your Team</h3>
               </div>
               <p className="text-gray-600 mb-6">Fill in the details below to create a new realtor account. They'll receive login credentials.</p>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -115,7 +117,7 @@ export const RealtorsTab = ({
                     type="text"
                     value={newRealtor.name}
                     onChange={(e) => onNewRealtorChange({ ...newRealtor, name: e.target.value })}
-                    className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                    className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 bg-white text-gray-900 transition-all"
                     placeholder="John Doe"
                   />
                 </div>
@@ -125,7 +127,7 @@ export const RealtorsTab = ({
                     type="email"
                     value={newRealtor.email}
                     onChange={(e) => onNewRealtorChange({ ...newRealtor, email: e.target.value })}
-                    className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                    className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 bg-white text-gray-900 transition-all"
                     placeholder="john.doe@company.com"
                   />
                 </div>
@@ -135,7 +137,7 @@ export const RealtorsTab = ({
                     type="password"
                     value={newRealtor.password}
                     onChange={(e) => onNewRealtorChange({ ...newRealtor, password: e.target.value })}
-                    className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                    className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 bg-white text-gray-900 transition-all"
                     placeholder="Choose a secure password"
                   />
                 </div>
@@ -143,7 +145,7 @@ export const RealtorsTab = ({
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   onClick={onAddRealtor}
-                  className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl px-8 py-4 rounded-xl"
+                  className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold shadow-sm hover:shadow px-8 py-4 rounded-lg"
                 >
                   <CheckCircle2 className="h-5 w-5 mr-2" />
                   Create Realtor Account
@@ -151,7 +153,7 @@ export const RealtorsTab = ({
                 <Button
                   onClick={() => onShowAddRealtorChange(false)}
                   variant="outline"
-                  className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-8 py-4 rounded-xl"
+                  className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-8 py-4 rounded-lg"
                 >
                   <X className="h-5 w-5 mr-2" />
                   Cancel
@@ -171,14 +173,14 @@ export const RealtorsTab = ({
               <p className="text-gray-500 font-medium text-lg">No realtors found. Add your first realtor above.</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <Table>
-                <TableHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50">
-                  <TableRow className="border-b border-amber-200">
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Name</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Email</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Contact Number</TableHead>
-                    <TableHead className="font-bold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
+                <TableHeader className="bg-gray-50">
+                  <TableRow className="border-b border-gray-200">
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Name</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Email</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Contact Number</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-6 px-6 text-lg">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -188,7 +190,7 @@ export const RealtorsTab = ({
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: idx * 0.1 }}
-                      className="hover:bg-amber-50/50 transition-all duration-200 group border-b border-gray-100"
+                      className="hover:bg-gray-50 transition-all duration-200 group border-b border-gray-100"
                     >
                       <TableCell className="font-semibold text-gray-900 py-5 px-6">
                         <div className="flex items-center gap-3">
@@ -216,7 +218,7 @@ export const RealtorsTab = ({
                             size="sm"
                             variant="outline"
                             onClick={() => onEditRealtor(realtor)}
-                            className="bg-white hover:bg-amber-50 text-amber-600 border-amber-300 hover:border-amber-400 font-medium transition-all rounded-lg"
+                            className="bg-white border-gray-300 hover:bg-gray-50 text-gray-700 hover:border-gray-400 font-medium transition-all rounded-lg"
                           >
                             <Edit2 className="h-4 w-4 mr-2" />
                             Edit
@@ -231,11 +233,11 @@ export const RealtorsTab = ({
                               }
                             }}
                           >
-                            <DialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogContent className="bg-white border border-gray-200 shadow-sm rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto">
                               <DialogHeader className="p-6 pb-4 border-b border-gray-200">
-                                <DialogTitle className="text-gray-900 font-bold text-2xl flex items-center gap-3">
-                                  <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg">
-                                    <Edit2 className="h-5 w-5 text-white" />
+                                <DialogTitle className="text-gray-900 font-semibold text-xl sm:text-2xl flex items-center gap-3">
+                                  <div className="p-2 bg-amber-100 rounded-lg">
+                                    <Edit2 className="h-5 w-5 text-amber-600" />
                                   </div>
                                   Edit Realtor: {editingRealtor?.name}
                                 </DialogTitle>
@@ -253,7 +255,7 @@ export const RealtorsTab = ({
                                       type="text"
                                       value={editRealtorForm.name}
                                       onChange={(e) => onEditRealtorFormChange({ ...editRealtorForm, name: e.target.value })}
-                                      className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                                      className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 bg-white text-gray-900 transition-all"
                                       placeholder="John Doe"
                                       required
                                     />
@@ -266,7 +268,7 @@ export const RealtorsTab = ({
                                       type="email"
                                       value={editRealtorForm.email}
                                       onChange={(e) => onEditRealtorFormChange({ ...editRealtorForm, email: e.target.value })}
-                                      className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                                      className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 bg-white text-gray-900 transition-all"
                                       placeholder="john.doe@company.com"
                                       required
                                     />
@@ -277,7 +279,7 @@ export const RealtorsTab = ({
                                       type="tel"
                                       value={editRealtorForm.contact}
                                       onChange={(e) => onEditRealtorFormChange({ ...editRealtorForm, contact: e.target.value })}
-                                      className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                                      className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 bg-white text-gray-900 transition-all"
                                       placeholder="555-0123"
                                     />
                                   </div>
@@ -287,7 +289,7 @@ export const RealtorsTab = ({
                                       type="password"
                                       value={editRealtorForm.password}
                                       onChange={(e) => onEditRealtorFormChange({ ...editRealtorForm, password: e.target.value })}
-                                      className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-gray-900 transition-all"
+                                      className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 bg-white text-gray-900 transition-all"
                                       placeholder="Leave blank to keep current password"
                                     />
                                     <p className="text-xs text-gray-500 mt-2">Leave blank if you don't want to change the password</p>
@@ -302,7 +304,7 @@ export const RealtorsTab = ({
                                     onEditRealtorFormChange({ name: "", email: "", password: "", contact: "" });
                                   }}
                                   variant="outline"
-                                  className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3"
+                                  className="border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg px-6 py-3"
                                   disabled={updatingRealtor}
                                 >
                                   <X className="h-4 w-4 mr-2" />
@@ -311,7 +313,7 @@ export const RealtorsTab = ({
                                 <Button
                                   onClick={onUpdateRealtor}
                                   disabled={updatingRealtor || !editRealtorForm.name || !editRealtorForm.email}
-                                  className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl px-6 py-3"
+                                  className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-lg px-6 py-3"
                                 >
                                   {updatingRealtor ? (
                                     <>
@@ -339,27 +341,27 @@ export const RealtorsTab = ({
                                 Delete
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl">
+                            <AlertDialogContent className="bg-white border border-gray-200 shadow-sm rounded-lg">
                               <AlertDialogHeader className="p-6">
-                                <AlertDialogTitle className="text-gray-900 font-bold text-2xl">Delete Realtor: {realtor.name}?</AlertDialogTitle>
-                                <AlertDialogDescription className="text-gray-600 mt-4 space-y-3 text-lg">
+                                <AlertDialogTitle className="text-gray-900 font-semibold text-xl sm:text-2xl">Delete Realtor: {realtor.name}?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-gray-600 mt-4 space-y-3 text-base">
                                   <p className="font-semibold text-gray-900">This will:</p>
-                                  <ul className="list-disc list-inside space-y-2 text-base ml-2">
+                                  <ul className="list-disc list-inside space-y-2 text-sm ml-2">
                                     <li>Move all their properties back to you (unassigned)</li>
                                     <li>Unassign all their bookings</li>
                                     <li>Delete their sources and rule chunks</li>
                                     <li>Remove them from the system</li>
                                   </ul>
-                                  <p className="mt-6 font-bold text-red-600 text-lg">⚠️ This action CANNOT be undone!</p>
+                                  <p className="mt-6 font-semibold text-red-600 text-base">⚠️ This action CANNOT be undone!</p>
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter className="p-6 pt-0">
-                                <AlertDialogCancel className="border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl px-6 py-3">
+                                <AlertDialogCancel className="border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg px-6 py-3">
                                   Cancel
                                 </AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => onDeleteRealtor(realtor.id, realtor.name)}
-                                  className="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl px-6 py-3"
+                                  className="bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded-lg px-6 py-3"
                                 >
                                   Delete Realtor
                                 </AlertDialogAction>

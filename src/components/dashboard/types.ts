@@ -62,7 +62,7 @@ export interface MaintenanceRequest {
   assigned_realtor?: Realtor;
   // Vendor calling fields
   assigned_vendor_id?: number;
-  vendor_call_status?: 'not_started' | 'calling' | 'vendor_accepted' | 'vendor_declined' | 'no_response' | 'paused' | 'cancelled';
+  vendor_call_status?: 'not_started' | 'pending' | 'calling' | 'vendor_accepted' | 'vendor_declined' | 'no_response' | 'paused' | 'cancelled';
   vendor_call_automation_enabled?: boolean;
   [key: string]: any;
 }

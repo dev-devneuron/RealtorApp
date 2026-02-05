@@ -92,10 +92,10 @@ const createMessageBubble = (message: string, speaker: 'assistant' | 'user', ind
       transition={{ delay: index * 0.05 }}
       className={`flex ${isAssistant ? 'justify-start' : 'justify-end'} mb-3`}
     >
-      <div className={`max-w-[80%] sm:max-w-[75%] lg:max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${
+      <div className={`max-w-[80%] sm:max-w-[75%] lg:max-w-[70%] rounded-lg px-4 py-3 shadow-sm ${
         isAssistant 
-          ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 text-blue-900' 
-          : 'bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 text-amber-900'
+          ? 'bg-blue-50 border border-blue-200 text-blue-900' 
+          : 'bg-amber-50 border border-amber-200 text-amber-900'
       }`}>
         <div className="flex items-start gap-2">
           <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
@@ -562,7 +562,7 @@ export const BookingDetailModal = ({
             {/* Call Record (if booking came from phone call) */}
             {booking.callRecord && (booking.callRecord.callRecordingUrl || booking.callRecord.callTranscript || booking.callRecord.vapiCallId) && (
               <section className="space-y-2 sm:space-y-3 lg:space-y-3 xl:space-y-4">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5 space-y-4 shadow-sm">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-5 space-y-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="p-2 bg-blue-100 rounded-lg">
@@ -601,7 +601,7 @@ export const BookingDetailModal = ({
                   
                   {booking.callRecord.callTranscript && (
                     <div className="bg-white rounded-xl border border-blue-200 overflow-hidden">
-                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+                      <div className="flex items-center justify-between p-4 bg-blue-50 border-b border-blue-200">
                         <div className="flex items-center gap-2">
                           <FileText className="h-5 w-5 text-blue-600" />
                           <p className="text-sm font-bold text-gray-800">Call Transcript</p>

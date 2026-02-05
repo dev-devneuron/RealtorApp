@@ -28,13 +28,13 @@ export const OutboundCallingTab = ({ userType }: OutboundCallingTabProps) => {
   // Only show for Property Managers
   if (userType !== "property_manager") {
     return (
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
         <CardContent className="p-12 text-center">
           <div className="flex flex-col items-center gap-4">
             <div className="p-4 bg-red-100 rounded-full">
               <Phone className="h-8 w-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900">Access Restricted</h3>
+            <h3 className="text-xl font-semibold text-gray-900">Access Restricted</h3>
             <p className="text-gray-600 max-w-md">
               Outbound calling features are only available to Property Managers.
               Please contact your administrator if you need access.
@@ -51,43 +51,45 @@ export const OutboundCallingTab = ({ userType }: OutboundCallingTabProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <Card className="bg-white shadow-xl border border-amber-100 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-white border-b border-amber-100 p-6 sm:p-8">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="bg-white border-b border-gray-200 p-6 sm:p-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex-1">
-              <CardTitle className="text-gray-900 text-2xl font-bold flex items-center gap-4 mb-3">
-                <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
-                  <Phone className="h-6 w-6 text-white" />
-                </div>
-                Outbound Calling
-              </CardTitle>
-              <p className="text-gray-600 text-lg">
-                Manage follow-up calls, consent, and track campaign performance.
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-100 p-4 rounded-lg shadow-sm">
+                <Phone className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                  Outbound Calling
+                </CardTitle>
+                <p className="text-gray-600 text-base">
+                  Manage follow-up calls, consent, and track campaign performance.
+                </p>
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
-            <div className="border-b border-amber-100 px-6 pt-4">
+            <div className="border-b border-gray-200 px-6 pt-4">
               <TabsList className="bg-transparent h-auto p-0 gap-2">
                 <TabsTrigger
                   value="candidates"
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-2 font-semibold transition-all"
+                  className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:border-amber-300 rounded-lg px-4 py-2 font-medium transition-all border border-gray-200 hover:bg-gray-50"
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Candidates
                 </TabsTrigger>
                 <TabsTrigger
                   value="contacts"
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-2 font-semibold transition-all"
+                  className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:border-amber-300 rounded-lg px-4 py-2 font-medium transition-all border border-gray-200 hover:bg-gray-50"
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Contacts
                 </TabsTrigger>
                 <TabsTrigger
                   value="analytics"
-                  className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-4 py-2 font-semibold transition-all"
+                  className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:border-amber-300 rounded-lg px-4 py-2 font-medium transition-all border border-gray-200 hover:bg-gray-50"
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics

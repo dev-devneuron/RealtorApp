@@ -3167,10 +3167,10 @@ const Dashboard = () => {
   }, [updateTabScrollState, userType, activeTab]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50/30 relative overflow-x-hidden">
-      {/* Elegant Header */}
+    <main className="min-h-screen bg-gray-50 relative overflow-x-hidden">
+      {/* Clean Header */}
       <motion.header 
-        className="relative bg-white/95 backdrop-blur-sm border-b border-amber-200/50 shadow-sm"
+        className="relative bg-white border-b border-gray-200 shadow-sm"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
@@ -3266,10 +3266,10 @@ const Dashboard = () => {
                     // Always show the name - it will be at least "User" if nothing else
                     return (
                       <>
-                        <p className="text-amber-600 text-2xl sm:text-3xl font-extrabold mb-1">
-                          Welcome back <span className="text-amber-600">{displayNameFinal}</span>!
+                        <p className="text-gray-900 text-2xl sm:text-3xl font-semibold mb-1">
+                          Welcome back <span className="text-gray-900">{displayNameFinal}</span>!
                         </p>
-                        <p className="text-amber-600/80 text-sm">
+                        <p className="text-gray-600 text-sm">
                           {userType === "property_manager" 
                             ? "Manage your properties and team from here."
                             : "View your assigned properties and bookings."}
@@ -3290,7 +3290,7 @@ const Dashboard = () => {
               <Button 
                 asChild 
                 variant="outline"
-                className="bg-white hover:bg-amber-50 text-amber-700 border-amber-200 hover:border-amber-300 font-medium transition-all shadow-sm rounded-2xl"
+                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400 font-medium transition-all shadow-sm rounded-lg"
                 size="sm"
               >
                 <Link to="/">
@@ -3301,7 +3301,7 @@ const Dashboard = () => {
               <Button 
                 asChild 
                 variant="outline"
-                className="bg-white hover:bg-amber-50 text-amber-700 border-amber-200 hover:border-amber-300 font-medium transition-all shadow-sm rounded-2xl"
+                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400 font-medium transition-all shadow-sm rounded-lg"
                 size="sm"
               >
                 <Link to="/uploadpage">
@@ -3312,7 +3312,7 @@ const Dashboard = () => {
               {userType === "property_manager" && (
                 <Button 
                   onClick={() => setActiveTab("phone-numbers")} 
-                  className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all rounded-2xl"
+                  className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-medium shadow-sm hover:shadow transition-all rounded-lg"
                   size="sm"
                 >
                   <Phone className="h-4 w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
@@ -3323,7 +3323,7 @@ const Dashboard = () => {
               <Button 
                 onClick={handleSignOut}
                 variant="outline"
-                className="bg-white hover:bg-red-50 text-red-600 border-red-300 hover:border-red-400 font-medium transition-all shadow-sm rounded-2xl"
+                className="bg-white hover:bg-red-50 text-red-600 border-red-300 hover:border-red-400 font-medium transition-all shadow-sm rounded-lg"
                 size="sm"
               >
                 <LogOut className="h-4 w-4 mr-2" />
@@ -3337,15 +3337,15 @@ const Dashboard = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.8 }}
-              className="mt-4 pt-4 border-t border-amber-200/50"
+              className="mt-4 pt-4 border-t border-gray-200"
             >
-              <div className="flex items-center gap-3 bg-amber-50/80 rounded-2xl p-3 border border-amber-200">
+              <div className="flex items-center gap-3 bg-amber-50 rounded-lg p-3 border border-amber-200">
                 <div className="bg-amber-100 p-2 rounded-lg">
                   <CheckCircle2 className="h-4 w-4 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-amber-800">Your Phone Number</p>
-                  <p className="text-lg font-bold text-amber-900">{myNumber}</p>
+                  <p className="text-sm font-medium text-gray-700">Your Phone Number</p>
+                  <p className="text-lg font-semibold text-gray-900">{myNumber}</p>
                 </div>
               </div>
             </motion.div>
@@ -3365,14 +3365,14 @@ const Dashboard = () => {
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
-                whileHover={{ y: -4 }}
+                className="bg-white rounded-lg shadow-sm hover:shadow transition-all duration-300 p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-300 group"
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">Total Realtors</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Total Realtors</p>
                     <motion.p 
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-3xl font-semibold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
@@ -3382,24 +3382,24 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Active team members</p>
                   </div>
                   <motion.div 
-                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl group-hover:scale-110 transition-transform flex-shrink-0"
-                    whileHover={{ rotate: 15 }}
+                    className="p-2 sm:p-2.5 md:p-3 bg-amber-100 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0"
+                    whileHover={{ rotate: 5 }}
                   >
-                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
-                whileHover={{ y: -4 }}
+                className="bg-white rounded-lg shadow-sm hover:shadow transition-all duration-300 p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-300 group"
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">Total Properties</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Total Properties</p>
                     <motion.p 
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-3xl font-semibold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
@@ -3409,24 +3409,24 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">In your portfolio</p>
                   </div>
                   <motion.div 
-                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl group-hover:scale-110 transition-transform flex-shrink-0"
-                    whileHover={{ rotate: -15 }}
+                    className="p-2 sm:p-2.5 md:p-3 bg-blue-100 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0"
+                    whileHover={{ rotate: -5 }}
                   >
-                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
-                whileHover={{ y: -4 }}
+                className="bg-white rounded-lg shadow-sm hover:shadow transition-all duration-300 p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-300 group"
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">Active Bookings</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Active Bookings</p>
                     <motion.p 
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-3xl font-semibold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
@@ -3436,24 +3436,24 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl group-hover:scale-110 transition-transform flex-shrink-0"
-                    whileHover={{ rotate: 15 }}
+                    className="p-2 sm:p-2.5 md:p-3 bg-emerald-100 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0"
+                    whileHover={{ rotate: 5 }}
                   >
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
-                whileHover={{ y: -4 }}
+                className="bg-white rounded-lg shadow-sm hover:shadow transition-all duration-300 p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-300 group"
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">Total Tenants</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Total Tenants</p>
                     <motion.p 
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-3xl font-semibold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.4, type: "spring" as const }}
@@ -3463,10 +3463,10 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Active tenants</p>
                   </div>
                   <motion.div 
-                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl group-hover:scale-110 transition-transform flex-shrink-0"
-                    whileHover={{ rotate: -15 }}
+                    className="p-2 sm:p-2.5 md:p-3 bg-gray-100 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0"
+                    whileHover={{ rotate: -5 }}
                   >
-                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -3475,14 +3475,14 @@ const Dashboard = () => {
             <>
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
-                whileHover={{ y: -4 }}
+                className="bg-white rounded-lg shadow-sm hover:shadow transition-all duration-300 p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-300 group"
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">My Properties</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">My Properties</p>
                     <motion.p 
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-3xl font-semibold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.8, type: "spring" as const }}
@@ -3492,24 +3492,24 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Assigned to you</p>
                   </div>
                   <motion.div 
-                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl group-hover:scale-110 transition-transform flex-shrink-0"
-                    whileHover={{ rotate: 15 }}
+                    className="p-2 sm:p-2.5 md:p-3 bg-blue-100 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0"
+                    whileHover={{ rotate: 5 }}
                   >
-                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
-                whileHover={{ y: -4 }}
+                className="bg-white rounded-lg shadow-sm hover:shadow transition-all duration-300 p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-300 group"
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">My Bookings</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">My Bookings</p>
                     <motion.p 
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-3xl font-semibold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.0, type: "spring" as const }}
@@ -3519,24 +3519,24 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Scheduled viewings</p>
                   </div>
                   <motion.div 
-                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl group-hover:scale-110 transition-transform flex-shrink-0"
-                    whileHover={{ rotate: -15 }}
+                    className="p-2 sm:p-2.5 md:p-3 bg-emerald-100 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0"
+                    whileHover={{ rotate: -5 }}
                   >
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
-                whileHover={{ y: -4 }}
+                className="bg-white rounded-lg shadow-sm hover:shadow transition-all duration-300 p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-300 group"
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">Property Views</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Property Views</p>
                     <motion.p 
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-3xl font-semibold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.2, type: "spring" as const }}
@@ -3546,24 +3546,24 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Total views this month</p>
                   </div>
                   <motion.div 
-                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl group-hover:scale-110 transition-transform flex-shrink-0"
-                    whileHover={{ rotate: 15 }}
+                    className="p-2 sm:p-2.5 md:p-3 bg-amber-100 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0"
+                    whileHover={{ rotate: 5 }}
                   >
-                    <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
                   </motion.div>
                 </div>
               </motion.div>
 
               <motion.div 
                 variants={itemVariants} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 md:p-6 border border-amber-100 hover:border-amber-200 group"
-                whileHover={{ y: -4 }}
+                className="bg-white rounded-lg shadow-sm hover:shadow transition-all duration-300 p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-300 group"
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">Response Rate</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Response Rate</p>
                     <motion.p 
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-3xl font-semibold text-gray-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 1.4, type: "spring" as const }}
@@ -3573,10 +3573,10 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">Client inquiries</p>
                   </div>
                   <motion.div 
-                    className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl group-hover:scale-110 transition-transform flex-shrink-0"
-                    whileHover={{ rotate: -15 }}
+                    className="p-2 sm:p-2.5 md:p-3 bg-green-100 rounded-lg group-hover:scale-105 transition-transform flex-shrink-0"
+                    whileHover={{ rotate: -5 }}
                   >
-                    <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -3601,7 +3601,7 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mb-6 sm:mb-8 lg:mb-10"
             >
-              <TabsList className="bg-gradient-to-br from-amber-50/90 via-white to-amber-50/70 border-2 border-amber-200/90 rounded-2xl shadow-xl backdrop-blur-sm w-full p-0 overflow-hidden relative z-50">
+              <TabsList className="bg-amber-50 border border-amber-200 rounded-lg shadow-sm w-full p-0 overflow-hidden relative z-50">
                 {/* Scrollable tabs container with responsive scrollbar */}
                 <div
                   ref={tabsScrollRef}
@@ -3631,7 +3631,7 @@ const Dashboard = () => {
                   <>
                     <TabsTrigger 
                       value="realtors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                      className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-300 data-[state=active]:border-2 relative group items-center justify-center flex"
                     >
                       <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                       <span className="hidden xs:inline">Realtors</span>
@@ -3639,7 +3639,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="assign-properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                      className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-300 data-[state=active]:border-2 relative group items-center justify-center flex"
                     >
                       <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                       <span className="hidden lg:inline">Assign Properties</span>
@@ -3648,7 +3648,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="view-assignments" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                      className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-300 data-[state=active]:border-2 relative group items-center justify-center flex"
                     >
                       <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                       <span className="hidden xl:inline">View Assignments</span>
@@ -3658,7 +3658,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="properties" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                      className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-300 data-[state=active]:border-2 relative group items-center justify-center flex"
                     >
                       <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                       <span>Properties</span>
@@ -3666,7 +3666,7 @@ const Dashboard = () => {
                     {userType === "property_manager" && (
                       <TabsTrigger 
                         value="tenants" 
-                        className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                        className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-300 data-[state=active]:border-2 relative group items-center justify-center flex"
                       >
                         <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                         <span>Tenants</span>
@@ -3674,7 +3674,7 @@ const Dashboard = () => {
                     )}
                     <TabsTrigger 
                       value="phone-numbers" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                      className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-300 data-[state=active]:border-2 relative group items-center justify-center flex"
                     >
                       <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                       <span className="hidden xl:inline">Phone Numbers</span>
@@ -3683,7 +3683,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="outbound-calling" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                      className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-300 data-[state=active]:border-2 relative group items-center justify-center flex"
                     >
                       <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                       <span className="hidden xl:inline">Old Customers Reachout</span>
@@ -3693,7 +3693,7 @@ const Dashboard = () => {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="vendors" 
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                      className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-300 data-[state=active]:border-2 relative group items-center justify-center flex"
                     >
                       <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                       <span className="hidden xl:inline">Vendors</span>
@@ -3706,7 +3706,7 @@ const Dashboard = () => {
                 {userType !== "property_manager" && (
                   <TabsTrigger 
                     value="properties" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                    className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-gray-900 data-[state=inactive]:hover:bg-white/50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-200 data-[state=active]:border-2 relative group items-center justify-center flex"
                   >
                       <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                     <span>Properties</span>
@@ -3714,7 +3714,7 @@ const Dashboard = () => {
                 )}
               <TabsTrigger 
                 value="call-forwarding" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                    className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-gray-900 data-[state=inactive]:hover:bg-white/50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-200 data-[state=active]:border-2 relative group items-center justify-center flex"
               >
                 <PhoneForwarded className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                 <span className="hidden xl:inline">Call Forwarding</span>
@@ -3724,7 +3724,7 @@ const Dashboard = () => {
               </TabsTrigger>
                 <TabsTrigger 
                   value="chats" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                    className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-gray-900 data-[state=inactive]:hover:bg-white/50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-200 data-[state=active]:border-2 relative group items-center justify-center flex"
                 >
                       <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                   <span className="hidden xl:inline">Call Records</span>
@@ -3734,7 +3734,7 @@ const Dashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="maintenance-requests" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                    className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-gray-900 data-[state=inactive]:hover:bg-white/50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-200 data-[state=active]:border-2 relative group items-center justify-center flex"
                 >
                   <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                   <span className="hidden xl:inline">Maintenance</span>
@@ -3744,7 +3744,7 @@ const Dashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="bookings" 
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 data-[state=active]:scale-[1.02] rounded-2xl px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-semibold transition-all duration-300 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:text-amber-700 data-[state=inactive]:hover:bg-amber-50/90 data-[state=inactive]:hover:scale-[1.01] border-2 border-transparent data-[state=active]:border-amber-400/40 data-[state=active]:ring-2 data-[state=active]:ring-amber-300/30 relative group items-center justify-center flex"
+                    className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-900 data-[state=active]:font-bold data-[state=active]:shadow-sm rounded-lg px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 pt-2.5 pb-2.5 sm:pt-3 sm:pb-3 md:pt-3.5 md:pb-3.5 lg:pt-3.5 lg:pb-4 xl:pt-4.5 xl:pb-3 font-medium transition-all duration-200 ease-out text-[11px] sm:text-xs md:text-sm lg:text-sm xl:text-sm whitespace-nowrap leading-tight flex-shrink-0 min-h-[48px] sm:min-h-[52px] md:min-h-[56px] lg:min-h-[60px] xl:min-h-[62px] data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-gray-900 data-[state=inactive]:hover:bg-white/50 data-[state=inactive]:hover:scale-[1.01] border border-transparent data-[state=active]:border-amber-200 data-[state=active]:border-2 relative group items-center justify-center flex"
                 >
                   <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5 lg:h-4.5 lg:w-4.5 xl:h-4.5 xl:w-4.5 mr-1 sm:mr-1.5 md:mr-1.5 lg:mr-1.5 xl:mr-2 flex-shrink-0" />
                   <span>Bookings</span>
@@ -3756,7 +3756,7 @@ const Dashboard = () => {
                   aria-label="Scroll tabs left"
                   onClick={() => scrollTabs("left")}
                   disabled={!canScrollLeft}
-                  className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-amber-50/90 via-amber-50/60 to-transparent flex items-center justify-start pl-1 text-amber-500 hover:text-amber-700 transition-colors opacity-100 disabled:opacity-40"
+                  className="absolute inset-y-0 left-0 w-8 bg-gray-100 flex items-center justify-start pl-1 text-gray-600 hover:text-gray-900 transition-colors opacity-100 disabled:opacity-40"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -3765,7 +3765,7 @@ const Dashboard = () => {
                   aria-label="Scroll tabs right"
                   onClick={() => scrollTabs("right")}
                   disabled={!canScrollRight && !forceTabArrows}
-                  className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-amber-50/90 via-amber-50/60 to-transparent flex items-center justify-end pr-1 text-amber-500 hover:text-amber-700 transition-colors opacity-100 disabled:opacity-40"
+                  className="absolute inset-y-0 right-0 w-8 bg-gray-100 flex items-center justify-end pr-1 text-gray-600 hover:text-gray-900 transition-colors opacity-100 disabled:opacity-40"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>

@@ -4,7 +4,7 @@
  * Displays vendor call status, queue, and allows PM to start/pause/cancel calls
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,7 @@ interface VendorCallingSectionProps {
 
 const STATUS_COLORS: Record<string, string> = {
   not_started: "bg-gray-100 text-gray-700 border-gray-300",
+  pending: "bg-slate-100 text-slate-700 border-slate-300",
   calling: "bg-blue-100 text-blue-700 border-blue-300",
   vendor_accepted: "bg-green-100 text-green-700 border-green-300",
   vendor_declined: "bg-orange-100 text-orange-700 border-orange-300",
@@ -53,6 +54,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   not_started: <Clock className="h-4 w-4" />,
+  pending: <Clock className="h-4 w-4" />,
   calling: <Loader2 className="h-4 w-4 animate-spin" />,
   vendor_accepted: <CheckCircle2 className="h-4 w-4" />,
   vendor_declined: <XCircle className="h-4 w-4" />,
@@ -77,30 +79,7 @@ export const VendorCallingSection = ({
     return null;
   }
 
-  // Load initial status
-  useEffect(() => {
-    loadCallStatus();
-  }, [maintenanceRequestId]);
-
-  // Poll for updates when calling is active
-  useEffect(() => {
-    if (!callStatus || callStatus.vendor_call_status !== "calling") {
-      setPolling(false);
-      return;
-    }
-
-    setPolling(true);
-    const interval = setInterval(() => {
-      loadCallStatus(true); // Silent refresh
-    }, 5000); // Poll every 5 seconds
-
-    return () => {
-      clearInterval(interval);
-      setPolling(false);
-    };
-  }, [callStatus?.vendor_call_status, maintenanceRequestId]);
-
-  const loadCallStatus = async (silent = false) => {
+  const loadCallStatus = useCallback(async (silent = false) => {
     try {
       if (!silent) {
         setLoading(true);
@@ -116,7 +95,34 @@ export const VendorCallingSection = ({
         setLoading(false);
       }
     }
-  };
+  }, [maintenanceRequestId]);
+
+  // Load initial status
+  useEffect(() => {
+    loadCallStatus();
+  }, [loadCallStatus]);
+
+  // Poll for updates when queue is active-ish (pending/calling)
+  useEffect(() => {
+    if (
+      !callStatus ||
+      (callStatus.vendor_call_status !== "calling" &&
+        callStatus.vendor_call_status !== "pending")
+    ) {
+      setPolling(false);
+      return;
+    }
+
+    setPolling(true);
+    const interval = setInterval(() => {
+      loadCallStatus(true); // Silent refresh
+    }, 5000); // Poll every 5 seconds
+
+    return () => {
+      clearInterval(interval);
+      setPolling(false);
+    };
+  }, [callStatus?.vendor_call_status, loadCallStatus]);
 
   const handleStartCalls = async () => {
     try {
@@ -205,6 +211,10 @@ export const VendorCallingSection = ({
                     Property: {propertyAddress} • Vendors will be called from vendors assigned to this property
                   </p>
                 )}
+                <p className="text-xs text-gray-500 mt-1">
+                  If Auto-Call is enabled for this property, calls auto-start about 1 minute after the tenant call completes.
+                  Vendor calling uses strict service-type matching (no fallback to unrelated vendors).
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -245,7 +255,7 @@ export const VendorCallingSection = ({
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
-            {status === "not_started" && (
+            {(status === "not_started" || status === "pending") && (
               <Button
                 onClick={handleStartCalls}
                 disabled={actionLoading}
@@ -259,7 +269,7 @@ export const VendorCallingSection = ({
                 ) : (
                   <>
                     <Play className="h-4 w-4 mr-2" />
-                    Start Vendor Calls
+                    {status === "pending" ? "Start / Resume Calls" : "Start Vendor Calls"}
                   </>
                 )}
               </Button>
@@ -432,12 +442,27 @@ export const VendorCallingSection = ({
       )}
 
       {/* Empty State */}
-      {status === "not_started" && attempts.length === 0 && (
+      {status === "not_started" && attempts.length === 0 && !queue && (
         <Card className="border border-gray-200 bg-gray-50">
           <CardContent className="p-6 text-center">
             <AlertTriangle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
             <p className="text-sm text-gray-600">
-              No vendor calls have been initiated yet. Click "Start Vendor Calls" to begin.
+              No vendor calls have been initiated yet. If this request has no matching vendors for its service type,
+              the system will not call unrelated vendors. Configure vendors in the Property → Vendors tab, then start again.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {status === "pending" && attempts.length === 0 && queue && (
+        <Card className="border border-slate-200 bg-slate-50">
+          <CardContent className="p-6">
+            <p className="text-sm text-slate-700">
+              A call queue exists for this request, but it hasn’t started calling yet.
+              It may auto-start shortly (when auto-call is enabled), or you can click “Start / Resume Calls”.
+            </p>
+            <p className="mt-2 text-xs text-slate-600">
+              Note: Vendor SMS/email notifications are disabled by default (backend-controlled). Don’t assume a notification was sent.
             </p>
           </CardContent>
         </Card>
